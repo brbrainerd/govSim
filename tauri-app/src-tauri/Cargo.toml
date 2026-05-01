@@ -19,8 +19,14 @@ tauri-plugin-shell = "2.0"
 serde              = { version = "1", features = ["derive"] }
 serde_json         = "1"
 tokio              = { version = "1.41", features = ["full"] }
+thiserror          = "2"
 
-# UGS core (paths up two levels into the workspace).
+# UGS crates (paths into the shared workspace).
 simulator-core     = { path = "../../crates/simulator-core" }
+simulator-types    = { path = "../../crates/simulator-types" }
 simulator-scenario = { path = "../../crates/simulator-scenario" }
 simulator-snapshot = { path = "../../crates/simulator-snapshot" }
+simulator-systems  = { path = "../../crates/simulator-systems" }
+simulator-law      = { path = "../../crates/simulator-law" }
+simulator-metrics  = { path = "../../crates/simulator-metrics" }
+simulator-telemetry= { path = "../../crates/simulator-telemetry" }
