@@ -72,6 +72,14 @@ enum Cmd {
         #[arg(long)]
         schema: bool,
     },
+    /// Extract IG 2.0 JSON from natural-language policy text via local LLM.
+    LlmExtract {
+        /// Free-text policy description.
+        text: String,
+        /// Pretty-print the JSON output.
+        #[arg(long)]
+        pretty: bool,
+    },
 }
 
 fn main() -> Result<()> {
@@ -84,6 +92,7 @@ fn main() -> Result<()> {
         Cmd::Bench { ticks } => bench(ticks),
         Cmd::Determinism { scenario, ticks } => determinism(scenario, ticks),
         Cmd::LawCompile { file, schema } => law_compile(file, schema),
+        Cmd::LlmExtract { text, pretty } => llm_extract(text, pretty),
     }
 }
 
@@ -354,6 +363,23 @@ fn law_compile(file: Option<PathBuf>, schema: bool) -> Result<()> {
         tracing::warn!(?f, "law compile: not yet implemented (Phase 4)");
     } else {
         eprintln!("law-compile: pass --file or --schema");
+    }
+    Ok(())
+}
+
+fn llm_extract(text: String, pretty: bool) -> Result<()> {
+    use simulator_llm::IgExtractor;
+    use simulator_law::ig2::IgStatement;
+
+    let extractor = IgExtractor::new().map_err(|e| anyhow::anyhow!("{e}"))?;
+    let raw = extractor.extract_raw(&text).map_err(|e| anyhow::anyhow!("{e}"))?;
+
+    if pretty {
+        let stmt: IgStatement = serde_json::from_str(&raw)
+            .map_err(|e| anyhow::anyhow!("parse: {e}"))?;
+        println!("{}", serde_json::to_string_pretty(&stmt)?);
+    } else {
+        println!("{raw}");
     }
     Ok(())
 }
