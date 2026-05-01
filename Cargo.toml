@@ -16,6 +16,7 @@ members = [
     "crates/simulator-scenario",
     "crates/simulator-cli",
     "crates/simulator-telemetry",
+    "crates/simulator-metrics",
     "xtask",
 ]
 # tauri-app/src-tauri is intentionally excluded from the default workspace
@@ -44,6 +45,7 @@ simulator-snapshot    = { path = "crates/simulator-snapshot" }
 simulator-rl          = { path = "crates/simulator-rl" }
 simulator-scenario    = { path = "crates/simulator-scenario" }
 simulator-telemetry   = { path = "crates/simulator-telemetry" }
+simulator-metrics     = { path = "crates/simulator-metrics" }
 
 # ECS
 bevy_ecs       = { version = "0.18", default-features = false }

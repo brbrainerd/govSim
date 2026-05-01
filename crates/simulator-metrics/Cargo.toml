@@ -1,0 +1,18 @@
+[package]
+name        = "simulator-metrics"
+version     = "0.1.0"
+edition.workspace     = true
+license.workspace     = true
+rust-version.workspace = true
+description = "Per-tick metric ring-buffer, Polars-backed query layer, and Bevy collection system."
+
+[dev-dependencies]
+simulator-types = { workspace = true }
+
+[dependencies]
+simulator-core  = { workspace = true }
+bevy_ecs        = { workspace = true }
+polars          = { workspace = true }
+serde           = { workspace = true }
+thiserror       = { workspace = true }
+anyhow          = { workspace = true }

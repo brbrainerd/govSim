@@ -4895,6 +4895,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "simulator-metrics"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bevy_ecs",
+ "polars",
+ "serde",
+ "simulator-core",
+ "simulator-types",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "simulator-net"
 version = "0.1.0"
 dependencies = [
@@ -4928,6 +4941,7 @@ dependencies = [
  "serde_yaml",
  "simulator-calibration",
  "simulator-core",
+ "simulator-law",
  "simulator-snapshot",
  "simulator-systems",
  "simulator-types",
