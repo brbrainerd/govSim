@@ -56,3 +56,20 @@ pub struct GovernmentLedger {
     pub revenue: Money,
     pub expenditure: Money,
 }
+
+/// Cumulative legitimacy debt: rises when popular benefit laws are repealed,
+/// decays slowly. Reduces approval until paid down. Captures the policy-ratchet
+/// dynamic: removing entrenched programs has lasting political cost.
+///
+/// Magnitude is in approval-shock units (0.01 = 1pp approval drop applied per
+/// monthly approval tick until decayed).
+#[derive(Resource, Debug, Clone)]
+pub struct LegitimacyDebt {
+    pub stock: f32,
+    /// Per-monthly-tick decay multiplier; 0.95 ≈ 5%/month.
+    pub decay: f32,
+}
+
+impl Default for LegitimacyDebt {
+    fn default() -> Self { Self { stock: 0.0, decay: 0.95 } }
+}

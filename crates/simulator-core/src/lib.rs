@@ -9,7 +9,7 @@ pub mod tick;
 pub mod world;
 
 pub use phase::Phase;
-pub use resources::{GovernmentLedger, MacroIndicators, PriceLevel, Treasury};
+pub use resources::{GovernmentLedger, LegitimacyDebt, MacroIndicators, PriceLevel, Treasury};
 pub use rng::SimRng;
 pub use tick::SimClock;
 pub use world::Sim;

@@ -72,6 +72,9 @@ pub struct LawRegistry {
 struct RegistryInner {
     by_id: HashMap<LawId, LawHandle>,
     next_id: u64,
+    /// Pending legitimacy-debt events from repeals: drained by the
+    /// legitimacy_update_system each monthly tick.
+    repeal_debt: f32,
 }
 
 impl LawRegistry {
@@ -88,10 +91,16 @@ impl LawRegistry {
 
     /// Replace an existing law atomically. New version's `version` must be
     /// strictly greater. The old law's `effective_until_tick` is set.
+    /// If the old law is a `PerCitizenBenefit`, accumulates legitimacy debt:
+    /// removing entrenched programs incurs a political cost regardless of
+    /// what replaces them.
     pub fn supersede(&self, old: LawId, new: LawHandle, effective_from_tick: u64) -> LawId {
         let mut g = self.inner.write();
         if let Some(prev) = g.by_id.get_mut(&old) {
             prev.effective_until_tick = Some(effective_from_tick);
+            if matches!(prev.effect, LawEffect::PerCitizenBenefit { .. }) {
+                g.repeal_debt += 0.05;
+            }
         }
         let mut new = new;
         if new.id.0 == 0 {
@@ -102,6 +111,25 @@ impl LawRegistry {
         let id = new.id;
         g.by_id.insert(id, new);
         id
+    }
+
+    /// Outright repeal (no replacement). Adds full debt for benefit laws.
+    pub fn repeal(&self, id: LawId, tick: u64) {
+        let mut g = self.inner.write();
+        if let Some(prev) = g.by_id.get_mut(&id) {
+            prev.effective_until_tick = Some(tick);
+            if matches!(prev.effect, LawEffect::PerCitizenBenefit { .. }) {
+                g.repeal_debt += 0.10;
+            }
+        }
+    }
+
+    /// Drain accumulated legitimacy-debt magnitude (called by the update system).
+    pub fn drain_repeal_debt(&self) -> f32 {
+        let mut g = self.inner.write();
+        let d = g.repeal_debt;
+        g.repeal_debt = 0.0;
+        d
     }
 
     pub fn snapshot_active(&self, tick: u64) -> Vec<LawHandle> {

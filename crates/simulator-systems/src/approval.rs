@@ -31,7 +31,7 @@ use simulator_core::{
         ApprovalRating, Citizen, EmploymentStatus, IdeologyVector,
         MonthlyBenefitReceived, MonthlyTaxPaid,
     },
-    MacroIndicators, Phase, Sim, SimClock, SimRng,
+    LegitimacyDebt, MacroIndicators, Phase, Sim, SimClock, SimRng,
 };
 use simulator_types::Score;
 use rand::Rng;
@@ -43,6 +43,7 @@ pub fn approval_system(
     clock: Res<SimClock>,
     rng_res: Res<SimRng>,
     macro_: Res<MacroIndicators>,
+    debt: Res<LegitimacyDebt>,
     mut q: Query<(
         &Citizen,
         &EmploymentStatus,
@@ -53,6 +54,9 @@ pub fn approval_system(
     )>,
 ) {
     if !clock.tick.is_multiple_of(APPROVAL_PERIOD) || clock.tick == 0 { return; }
+
+    // Legitimacy debt is felt by every citizen as a uniform negative shock.
+    let legitimacy_shock = -debt.stock * 0.10;
 
     let gdp = macro_.gdp.to_num::<f64>().max(1.0);
     let macro_tax_rate   = (macro_.government_revenue.to_num::<f64>()     / gdp).clamp(0.0, 1.0) as f32;
@@ -96,7 +100,7 @@ pub fn approval_system(
         let mut rng = rng_res.derive_citizen("approval", clock.tick, citizen.0.0);
         let noise: f32 = (rng.random::<f32>() - 0.5) * 0.002;
 
-        let new_a = (a + employment_shock + tax_shock + spend_shock + reversion + ideology_nudge + noise)
+        let new_a = (a + employment_shock + tax_shock + spend_shock + legitimacy_shock + reversion + ideology_nudge + noise)
             .clamp(0.0, 1.0);
 
         approval.0 = Score::from_num(new_a);
@@ -216,6 +220,36 @@ mod tests {
         assert!(
             right_a < left_a,
             "right-leaning ({right_a}) should have lower approval than left-leaning ({left_a}) under high tax burden"
+        );
+    }
+
+    #[test]
+    fn legitimacy_debt_drags_approval_down() {
+        use simulator_core::LegitimacyDebt;
+        // Two identical sims, one with elevated LegitimacyDebt — its approval
+        // should fall faster.
+        let mut sim_clean = Sim::new([55u8; 32]);
+        let mut sim_debt  = Sim::new([55u8; 32]);
+        register_approval_system(&mut sim_clean);
+        register_approval_system(&mut sim_debt);
+
+        // Inject a sizable legitimacy debt into sim_debt before stepping.
+        sim_debt.world.resource_mut::<LegitimacyDebt>().stock = 1.0;
+
+        spawn_citizen(&mut sim_clean.world, 0, EmploymentStatus::Employed, 0.5);
+        spawn_citizen(&mut sim_debt.world,  0, EmploymentStatus::Employed, 0.5);
+
+        for _ in 0..31 { sim_clean.step(); }
+        for _ in 0..31 { sim_debt.step(); }
+
+        let clean_a: f32 = sim_clean.world
+            .query::<&ApprovalRating>().single(&sim_clean.world).unwrap().0.to_num();
+        let debt_a:  f32 = sim_debt.world
+            .query::<&ApprovalRating>().single(&sim_debt.world).unwrap().0.to_num();
+
+        assert!(
+            debt_a < clean_a,
+            "high-debt sim ({debt_a}) should have lower approval than clean ({clean_a})"
         );
     }
 

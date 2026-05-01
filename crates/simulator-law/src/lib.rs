@@ -13,10 +13,12 @@
 pub mod ig2;
 pub mod dsl;
 pub mod eval;
+pub mod legitimacy;
 pub mod lower;
 pub mod registry;
 pub mod system;
 
+pub use legitimacy::{legitimacy_update_system, register_legitimacy_system};
 pub use registry::{LawHandle, LawId, LawRegistry};
 pub use system::{law_dispatcher_system, register_law_dispatcher, Cadence};
 
