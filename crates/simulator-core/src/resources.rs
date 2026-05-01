@@ -17,6 +17,12 @@ pub struct MacroIndicators {
     pub government_revenue: Money,
     /// Total government expenditure disbursed in the current year (resets each year).
     pub government_expenditure: Money,
+    /// Incumbent party from the last election: 0=none, 1=Progressive, 2=Conservative.
+    pub incumbent_party: u8,
+    /// Tick at which the last election was held.
+    pub last_election_tick: u64,
+    /// Margin of last election victory in [0, 1].
+    pub election_margin: f32,
 }
 
 /// Government balance sheet. Phase 1 just tracks revenue.

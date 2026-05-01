@@ -89,6 +89,9 @@ fn indicators_from_batch(batch: &RecordBatch) -> Result<MacroIndicators, IpcErro
         approval:               col_f32!("approval"),
         government_revenue:     Money::from_num(0.0),
         government_expenditure: Money::from_num(0.0),
+        incumbent_party:        0,
+        last_election_tick:     0,
+        election_margin:        0.0,
     })
 }
 

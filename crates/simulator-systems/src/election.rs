@@ -16,7 +16,7 @@
 use simulator_core::{
     bevy_ecs::prelude::*,
     components::{ApprovalRating, IdeologyVector},
-    Phase, Sim, SimClock,
+    MacroIndicators, Phase, Sim, SimClock,
 };
 
 #[derive(Resource, Default, Debug, Clone)]
@@ -36,6 +36,7 @@ const ELECTION_PERIOD: u64 = 360;
 pub fn election_system(
     clock: Res<SimClock>,
     mut outcome: ResMut<ElectionOutcome>,
+    mut indicators: ResMut<MacroIndicators>,
     q: Query<(&IdeologyVector, &ApprovalRating)>,
 ) {
     if clock.tick % ELECTION_PERIOD != 0 || clock.tick == 0 { return; }
@@ -91,6 +92,12 @@ pub fn election_system(
         margin,
         consecutive_terms: consecutive,
     };
+
+    // Mirror into MacroIndicators so telemetry and IPC see it without
+    // depending on simulator-systems.
+    indicators.incumbent_party    = winner;
+    indicators.last_election_tick = clock.tick;
+    indicators.election_margin    = margin;
 }
 
 pub fn register_election_system(sim: &mut Sim) {

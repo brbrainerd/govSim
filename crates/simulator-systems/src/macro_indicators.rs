@@ -1,9 +1,17 @@
 //! MacroIndicatorsSystem — Phase::Commit.
 //!
-//! Recomputes the `MacroIndicators` resource from live ECS state each tick.
-//! Uses a single pass over all citizens to compute population, GDP (sum of
-//! incomes × 360), Gini coefficient (exact sorted formula), and unemployment
-//! rate. Runs in Phase::Commit so it sees the fully-mutated state.
+//! Split into two cadences for performance:
+//!
+//! Every tick (O(n) cheap pass):
+//!   population, unemployed count, approval sum — updated each tick so
+//!   unemployment and approval are always fresh for the election system.
+//!
+//! Monthly (every 30 ticks, O(n log n)):
+//!   GDP (sum of incomes × 360), Gini coefficient — these don't need
+//!   sub-monthly resolution and the Gini sort dominates at large n.
+//!
+//! Yearly (every 360 ticks):
+//!   Flush GovernmentLedger → MacroIndicators and reset for next year.
 
 use simulator_core::{
     bevy_ecs::prelude::*,
@@ -12,66 +20,64 @@ use simulator_core::{
 };
 use simulator_types::Money;
 
+const GINI_PERIOD: u64 = 30;
+
 pub fn macro_indicators_system(
     clock: Res<SimClock>,
     mut indicators: ResMut<MacroIndicators>,
     mut ledger: ResMut<GovernmentLedger>,
     q: Query<(&Citizen, &Income, &Wealth, &EmploymentStatus, &ApprovalRating)>,
 ) {
-    // Recompute every tick but skip tick 0 (pre-spawn, world is empty).
     if clock.tick == 0 { return; }
 
+    let compute_gini = clock.tick % GINI_PERIOD == 0;
+
     let mut population: u64 = 0;
-    let mut gdp = Money::from_num(0);
     let mut unemployed: u64 = 0;
     let mut approval_sum: f64 = 0.0;
-    // Collect annualised incomes for Gini (sorted).
-    let mut incomes: Vec<f64> = Vec::new();
+    // Only allocate for Gini on the monthly cadence.
+    let mut incomes: Vec<f64> = if compute_gini {
+        Vec::with_capacity(indicators.population as usize + 128)
+    } else {
+        Vec::new()
+    };
+
+    let mut gdp = Money::from_num(0);
 
     for (_c, income, _wealth, emp, approval) in q.iter() {
         population += 1;
-        let annual = income.0 * Money::from_num(360);
-        gdp += annual;
-        let inc_f64 = annual.to_num::<f64>().max(0.0);
-        incomes.push(inc_f64);
-        if matches!(emp, EmploymentStatus::Unemployed) {
-            unemployed += 1;
-        }
+        if matches!(emp, EmploymentStatus::Unemployed) { unemployed += 1; }
         approval_sum += approval.0.to_num::<f64>();
+
+        if compute_gini {
+            let annual = income.0 * Money::from_num(360);
+            gdp += annual;
+            incomes.push(annual.to_num::<f64>().max(0.0));
+        }
     }
 
-    let gini = if incomes.len() < 2 { 0.0 } else { gini_sorted(&mut incomes) };
-
-    let unemployment = if population == 0 {
-        0.0
-    } else {
+    indicators.population = population;
+    indicators.unemployment = if population == 0 { 0.0 } else {
         unemployed as f32 / population as f32
     };
-
-    let approval = if population == 0 {
-        0.0
-    } else {
+    indicators.approval = if population == 0 { 0.0 } else {
         (approval_sum / population as f64) as f32
     };
 
-    indicators.population = population;
-    indicators.gdp = gdp;
-    indicators.gini = gini;
-    indicators.unemployment = unemployment;
-    indicators.approval = approval;
-    // inflation requires price-level model — remains 0.0 until Phase 3.
+    if compute_gini {
+        indicators.gdp  = gdp;
+        indicators.gini = if incomes.len() < 2 { 0.0 } else { gini_sorted(&mut incomes) };
+    }
 
-    // Flush ledger to MacroIndicators once per year; reset for next year.
     if clock.tick % 360 == 0 {
         indicators.government_revenue     = ledger.revenue;
         indicators.government_expenditure = ledger.expenditure;
-        ledger.revenue      = Money::from_num(0);
-        ledger.expenditure  = Money::from_num(0);
+        ledger.revenue     = Money::from_num(0);
+        ledger.expenditure = Money::from_num(0);
     }
 }
 
 /// Exact Gini via sorted O(n log n) formula.
-/// G = (2 * Σ (rank_i * income_i)) / (n * total) - (n+1)/n
 fn gini_sorted(v: &mut Vec<f64>) -> f32 {
     v.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
     let n = v.len() as f64;
@@ -99,10 +105,8 @@ mod tests {
 
     #[test]
     fn gini_perfect_inequality() {
-        // One person has all the income.
         let mut v = vec![0.0, 0.0, 0.0, 100.0];
         let g = gini_sorted(&mut v);
-        // Exact formula: G = (2*(1*0+2*0+3*0+4*100)/(4*100)) - 5/4 = 8/4 - 5/4 = 3/4 = 0.75
         assert!((g - 0.75).abs() < 1e-5, "perfect inequality → Gini=0.75, got {g}");
     }
 }

@@ -34,14 +34,20 @@ pub fn tick_telemetry_system(
     // (tracing-subscriber's json layer, or jq on the default fmt layer) can
     // parse them without a dedicated serialization crate here.
     tracing::info!(
-        tick           = clock.tick,
-        year           = clock.date.year,
-        quarter        = clock.date.quarter,
-        population     = indicators.population,
-        gdp_cents      = indicators.gdp.to_num::<i64>(),
-        gini           = indicators.gini,
-        unemployment   = indicators.unemployment,
-        treasury_cents = treasury.balance.to_num::<i64>(),
+        tick               = clock.tick,
+        year               = clock.date.year,
+        quarter            = clock.date.quarter,
+        population         = indicators.population,
+        gdp_cents          = indicators.gdp.to_num::<i64>(),
+        gini               = indicators.gini,
+        unemployment       = indicators.unemployment,
+        approval           = indicators.approval,
+        treasury_cents     = treasury.balance.to_num::<i64>(),
+        revenue_cents      = indicators.government_revenue.to_num::<i64>(),
+        expenditure_cents  = indicators.government_expenditure.to_num::<i64>(),
+        incumbent_party    = indicators.incumbent_party,
+        last_election_tick = indicators.last_election_tick,
+        election_margin    = indicators.election_margin,
         "tick_telemetry"
     );
 }
