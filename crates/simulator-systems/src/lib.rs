@@ -12,13 +12,15 @@ use simulator_types::Money;
 
 pub mod employment {}
 pub mod education {}
-pub mod opinion {}
+pub mod opinion;
 pub mod election {}
 pub mod judicial {}
 pub mod enforcement {}
 pub mod media {}
 pub mod migration {}
 pub mod birth_death {}
+
+pub use opinion::{build_influence_graph, register_opinion_system};
 
 /// Flat 20% income tax remitted on the first day of every month
 /// (we cheat with a 30-day month for now). Demonstrates the
@@ -40,7 +42,10 @@ pub fn taxation_system(
 }
 
 /// Convenience: register every Phase-1 System on the schedule.
+/// Caller must subsequently call `build_influence_graph` and insert the
+/// resource before ticking (scenario spawn determines n_citizens).
 pub fn register_phase1_systems(sim: &mut Sim) {
     sim.schedule_mut()
         .add_systems(taxation_system.in_set(Phase::Mutate));
+    register_opinion_system(sim);
 }

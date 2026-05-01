@@ -31,6 +31,10 @@ jobs:
         run: cargo test --workspace
       - name: hello-world tick
         run: cargo run -p simulator-cli -- run --scenario scenarios/hello.yaml --ticks 100
+      - name: determinism (smoke_100k × 100 ticks)
+        run: cargo run -p simulator-cli -- determinism --scenario scenarios/smoke_100k.yaml --ticks 100
+      - name: ig2 schema round-trip
+        run: cargo run -p simulator-cli -- law-compile --schema
 
   deny:
     name: cargo-deny

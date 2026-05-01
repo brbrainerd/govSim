@@ -9,6 +9,8 @@ description = "Influence/transaction/message graph with petgraph + CSR projectio
 [dependencies]
 simulator-core  = { workspace = true }
 simulator-types = { workspace = true }
+bevy_ecs        = { workspace = true }
 petgraph        = { workspace = true }
 sprs            = { workspace = true }
-bevy_ecs        = { workspace = true }
+rand            = { workspace = true }
+rand_chacha     = { workspace = true }

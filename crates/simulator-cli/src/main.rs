@@ -134,6 +134,8 @@ fn run(
         None
     };
 
+    let use_phase1 = compiled.is_none();
+
     if let Some(CompiledLaw::Direct { program, cadence, effect }) = compiled {
         register_law_dispatcher(&mut sim);
         let registry = sim.world.resource::<LawRegistry>().clone();
@@ -154,6 +156,16 @@ fn run(
     let spawn_start = Instant::now();
     scenario.spawn_population(&mut sim);
     let spawn_elapsed = spawn_start.elapsed();
+
+    if use_phase1 {
+        // Build the influence graph after spawn so we know n_citizens.
+        // p=0.002 → ~200 neighbours per citizen for 100K population.
+        simulator_systems::build_influence_graph(
+            &mut sim,
+            scenario.population.citizens as usize,
+            0.0001,
+        );
+    }
 
     let start = Instant::now();
     for _ in 0..total {
@@ -185,6 +197,11 @@ fn determinism(path: PathBuf, ticks: u64) -> Result<()> {
         let mut sim = Sim::new(scenario.seed);
         simulator_systems::register_phase1_systems(&mut sim);
         scenario.spawn_population(&mut sim);
+        simulator_systems::build_influence_graph(
+            &mut sim,
+            scenario.population.citizens as usize,
+            0.0001,
+        );
         for _ in 0..ticks {
             sim.step();
         }
