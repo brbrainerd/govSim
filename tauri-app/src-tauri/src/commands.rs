@@ -1019,5 +1019,106 @@ mod region_stats_tests {
     }
 }
 
+#[cfg(test)]
+mod effect_magnitude_tests {
+    use super::effect_magnitude;
+    use simulator_law::registry::LawEffect;
+
+    // ── PerCitizenIncomeTax ───────────────────────────────────────────────────
+
+    #[test]
+    fn income_tax_parses_rate_from_dsl_source() {
+        let e = LawEffect::PerCitizenIncomeTax { scope: "taxpayer", owed_def: "owed" };
+        // DSL template: "scope taxpayer { define owed = income * 0.250000 }"
+        let src = "scope taxpayer { define owed = income * 0.250000 }";
+        assert_eq!(effect_magnitude(&e, Some(src)).as_deref(), Some("25.0%"));
+    }
+
+    #[test]
+    fn income_tax_rounds_rate_to_one_decimal() {
+        let e = LawEffect::PerCitizenIncomeTax { scope: "taxpayer", owed_def: "owed" };
+        // 0.333333 × 100 = 33.3333… → "33.3%"
+        let src = "scope taxpayer { define owed = income * 0.333333 }";
+        assert_eq!(effect_magnitude(&e, Some(src)).as_deref(), Some("33.3%"));
+    }
+
+    #[test]
+    fn income_tax_returns_none_when_no_source() {
+        let e = LawEffect::PerCitizenIncomeTax { scope: "taxpayer", owed_def: "owed" };
+        assert_eq!(effect_magnitude(&e, None), None);
+    }
+
+    #[test]
+    fn income_tax_returns_none_for_malformed_source() {
+        let e = LawEffect::PerCitizenIncomeTax { scope: "taxpayer", owed_def: "owed" };
+        // No '*' separator — rsplit returns the whole string, which won't parse as f64
+        let src = "this is not valid DSL";
+        assert_eq!(effect_magnitude(&e, Some(src)), None);
+    }
+
+    // ── PerCitizenBenefit ─────────────────────────────────────────────────────
+
+    #[test]
+    fn benefit_parses_amount_from_dsl_source() {
+        let e = LawEffect::PerCitizenBenefit { scope: "citizen", amount_def: "amount" };
+        // DSL template: "scope citizen { define amount = 500.000000 }"
+        let src = "scope citizen { define amount = 500.000000 }";
+        assert_eq!(effect_magnitude(&e, Some(src)).as_deref(), Some("$500/mo"));
+    }
+
+    #[test]
+    fn benefit_rounds_amount_to_whole_dollar() {
+        let e = LawEffect::PerCitizenBenefit { scope: "citizen", amount_def: "amount" };
+        let src = "scope citizen { define amount = 1234.567890 }";
+        // toFixed(0) of 1234.56789 → "1235"
+        assert_eq!(effect_magnitude(&e, Some(src)).as_deref(), Some("$1235/mo"));
+    }
+
+    #[test]
+    fn benefit_returns_none_when_no_source() {
+        let e = LawEffect::PerCitizenBenefit { scope: "citizen", amount_def: "amount" };
+        assert_eq!(effect_magnitude(&e, None), None);
+    }
+
+    // ── Abatement ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn abatement_formats_pu_and_cost_directly() {
+        let e = LawEffect::Abatement { pollution_reduction_pu: 0.5, cost_per_pu: 10_000.0 };
+        // No source needed — values come directly from the variant fields
+        assert_eq!(
+            effect_magnitude(&e, None).as_deref(),
+            Some("0.50 PU · $10000/PU"),
+        );
+    }
+
+    #[test]
+    fn abatement_ignores_source_string() {
+        let e = LawEffect::Abatement { pollution_reduction_pu: 1.0, cost_per_pu: 5_000.0 };
+        // Source is irrelevant for Abatement — result should be the same with or without it
+        let with_src    = effect_magnitude(&e, Some("irrelevant source"));
+        let without_src = effect_magnitude(&e, None);
+        assert_eq!(with_src, without_src);
+        assert_eq!(with_src.as_deref(), Some("1.00 PU · $5000/PU"));
+    }
+
+    // ── Other variants return None ────────────────────────────────────────────
+
+    #[test]
+    fn registration_marker_returns_none() {
+        let e = LawEffect::RegistrationMarker {
+            basis:     simulator_law::ig2::AmountBasis::AnnualIncome,
+            threshold: 1000.0,
+        };
+        assert_eq!(effect_magnitude(&e, None), None);
+    }
+
+    #[test]
+    fn audit_returns_none() {
+        let e = LawEffect::Audit { selection_prob: 0.05, penalty_rate: 2.0 };
+        assert_eq!(effect_magnitude(&e, None), None);
+    }
+}
+
 #[tauri::command]
 pub fn ping() -> &'static str { "pong" }

@@ -71,6 +71,7 @@
   // ── Series — no hardcoded colours; LineChart reads --chart-N CSS vars ───────
   const gdpSeries          = $derived([{ name: "GDP",         data: rows.map(r => r.gdp) }]);
   const unemploymentSeries = $derived([{ name: "Unemployment", data: rows.map(r => r.unemployment) }]);
+  const inflationSeries    = $derived([{ name: "Inflation",    data: rows.map(r => r.inflation) }]);
   const approvalSeries     = $derived([{ name: "Approval",    data: rows.map(r => r.approval) }]);
   const giniSeries         = $derived([
     { name: "Income Gini", data: rows.map(r => r.gini) },
@@ -184,9 +185,10 @@
       <StatCard label="Wealth Gini"  value={cs.wealth_gini.toFixed(3)}                                     sparkData={sparkOf("wealth_gini")} onclick={() => navigate("citizens")} clickLabel="View citizen wealth distribution" />
       <StatCard label="Treasury"     value={formatMoney(cs.treasury_balance)} trend={trendOf("treasury_balance")} sparkData={sparkOf("treasury_balance")} color={cs.treasury_balance < 0 ? "danger" : "default"} />
     </div>
-    <div class="chart-row">
+    <div class="chart-row chart-row--3">
       <LineChart title="GDP" xLabels={xLabels} series={gdpSeries} yFormatter={formatMoney}  markLines={lawMarkLines} markBands={crisisBands} />
       <LineChart title="Unemployment" xLabels={xLabels} series={unemploymentSeries} yMin={0} yMax={1} yFormatter={pct}  markLines={lawMarkLines} markBands={crisisBands} />
+      <LineChart title="Inflation" xLabels={xLabels} series={inflationSeries} yFormatter={pct} markLines={lawMarkLines} markBands={crisisBands} yMarkLines={[{y: 0.02, label: "2% target", color: "var(--color-success, #22c55e)"}]} />
     </div>
   </section>
 
