@@ -30,7 +30,8 @@
       "Bash(cargo clippy *)",
       "Bash(grep -v \"^$\")",
       "Bash(grep -E \"^\\(test |FAILED|error|ok$\\)\")",
-      "Bash(grep -E \"^test |FAILED|ok$\")"
+      "Bash(grep -E \"^test |FAILED|ok$\")",
+      "Bash(awk '{sum += $4} END {print \"total tests: \" sum}')"
     ]
   }
 }

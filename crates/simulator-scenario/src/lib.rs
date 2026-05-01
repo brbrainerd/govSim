@@ -249,6 +249,7 @@ fn savings_rate_for_age(age: u8) -> f32 {
 mod tests {
     use super::*;
     use simulator_core::{CivicRights, LegitimacyDebt, PollutionStock, RightsLedger, SimClock};
+    use simulator_snapshot::{load_snapshot, save_snapshot, state_hash};
     use simulator_systems::register_phase1_systems;
 
     fn minimal_scenario() -> Scenario {
@@ -303,6 +304,37 @@ mod tests {
             "approval out of range: {}", macro_.approval);
         // Pollution mirrored monthly (fires at tick 30 and 60).
         assert!(macro_.pollution_stock >= 0.0, "pollution_stock should be non-negative");
+    }
+
+    #[test]
+    fn snapshot_replay_round_trip_deterministic() {
+        // Run to tick 60, snapshot, continue both runs to tick 90.
+        // The continuous run and the restored run must produce identical state hashes.
+        let scenario = minimal_scenario(); // crisis_prob_pct=0 → deterministic
+
+        let (blob, hash_continuous) = {
+            let mut sim = Sim::new(scenario.seed);
+            register_phase1_systems(&mut sim);
+            scenario.spawn_population(&mut sim);
+            scenario.configure_world(&mut sim);
+            for _ in 0..60 { sim.step(); }
+            let blob = save_snapshot(&mut sim.world).expect("save failed");
+            for _ in 60..90 { sim.step(); }
+            (blob, state_hash(&mut sim.world))
+        };
+
+        let hash_restored = {
+            let mut sim = Sim::new(scenario.seed);
+            register_phase1_systems(&mut sim);
+            load_snapshot(&mut sim.world, &blob).expect("load failed");
+            for _ in 60..90 { sim.step(); }
+            state_hash(&mut sim.world)
+        };
+
+        assert_eq!(
+            hash_continuous, hash_restored,
+            "snapshot round-trip broke determinism at tick 90"
+        );
     }
 
     #[test]

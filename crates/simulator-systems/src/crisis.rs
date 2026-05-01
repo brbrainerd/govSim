@@ -50,6 +50,8 @@ const RECESSION_LAYOFF_RATE: f64 = 0.03;
 const PANDEMIC_SICK_RATE: f64 = 0.20;
 /// Productivity penalty applied to sick citizens at Pandemic onset [0, 1].
 const PANDEMIC_PRODUCTIVITY_DRAG: f32 = 0.15;
+/// Productivity restored per citizen when a Pandemic expires (partial recovery pulse).
+const PANDEMIC_RECOVERY_BOOST: f32 = 0.08;
 
 /// Compute a severity multiplier (≥ 1.0) for crisis duration based on the
 /// macroeconomic state at onset. High unemployment or empty Treasury makes
@@ -108,7 +110,15 @@ pub fn crisis_system(
     if crisis.kind != CrisisKind::None {
         crisis.remaining_ticks = crisis.remaining_ticks.saturating_sub(CRISIS_PERIOD);
         if crisis.remaining_ticks == 0 {
+            let expiring = crisis.kind;
             *crisis = CrisisState::default();
+            // Pandemic expiry: partial productivity recovery pulse for all citizens.
+            if expiring == CrisisKind::Pandemic {
+                for (_citizen, mut prod) in productivity_q.iter_mut() {
+                    let new_p = (prod.0.to_num::<f32>() + PANDEMIC_RECOVERY_BOOST).clamp(0.0, 1.0);
+                    prod.0 = Score::from_num(new_p);
+                }
+            }
         }
         return;
     }

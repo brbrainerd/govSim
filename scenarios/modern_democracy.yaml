@@ -1,0 +1,27 @@
+name: modern_democracy
+description: >
+  Contemporary baseline: full universal suffrage and civil liberties, low
+  legitimacy debt, modest pollution stock. Useful as a reference against which
+  policy experiments can be compared.
+
+seed: [42,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+ticks: 720    # 2 simulated years
+
+population:
+  citizens: 5000
+  corporations: 0
+  regions: 16
+  income_mean_monthly: 3500.0   # median OECD monthly wage
+  unemployment_rate: 0.05
+  corruption_level: 0.02
+
+# 0x1FF = all 9 CivicRights flags set (universal suffrage + 8 other rights).
+initial_rights: 511
+
+# Low but non-zero baseline pollution (modern regulatory environment).
+initial_pollution: 0.5
+
+# Near-zero legitimacy debt — stable democratic norms in place.
+initial_legitimacy_debt: 0.05
+
+crisis_prob_pct: 2   # realistic monthly crisis probability

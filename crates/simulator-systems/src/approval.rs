@@ -31,13 +31,19 @@ use simulator_core::{
         ApprovalRating, Citizen, EmploymentStatus, IdeologyVector,
         MonthlyBenefitReceived, MonthlyTaxPaid,
     },
-    LegitimacyDebt, MacroIndicators, Phase, RightsLedger, Sim, SimClock, SimRng,
+    LegitimacyDebt, MacroIndicators, Phase, PollutionStock, RightsLedger, Sim, SimClock, SimRng,
 };
 use simulator_types::Score;
 use rand::Rng;
 
 const APPROVAL_PERIOD: u64 = 30;
 
+/// Pollution PU above this baseline creates an approval drag.
+const POLLUTION_BASELINE: f64 = 1.0;
+/// Per-PU-above-baseline monthly approval drag (uniform across citizens).
+const POLLUTION_APPROVAL_COEFF: f32 = 0.002;
+
+#[allow(clippy::too_many_arguments)]
 #[allow(clippy::type_complexity)]
 pub fn approval_system(
     clock: Res<SimClock>,
@@ -45,6 +51,7 @@ pub fn approval_system(
     macro_: Res<MacroIndicators>,
     debt: Res<LegitimacyDebt>,
     rights: Res<RightsLedger>,
+    pollution: Res<PollutionStock>,
     mut q: Query<(
         &Citizen,
         &EmploymentStatus,
@@ -58,6 +65,14 @@ pub fn approval_system(
 
     // Legitimacy debt is felt by every citizen as a uniform negative shock.
     let legitimacy_shock = -debt.stock * 0.10;
+
+    // Pollution above the natural baseline drags approval uniformly.
+    // High pollution signals government failure to manage externalities.
+    let pollution_shock: f32 = if pollution.stock > POLLUTION_BASELINE {
+        -((pollution.stock - POLLUTION_BASELINE) as f32) * POLLUTION_APPROVAL_COEFF
+    } else {
+        0.0
+    };
 
     // Rights-expansion honeymoon: linear decay over ~12 months from the last grant.
     const HONEYMOON_TICKS: u64 = 360;
@@ -113,7 +128,9 @@ pub fn approval_system(
         let mut rng = rng_res.derive_citizen("approval", clock.tick, citizen.0.0);
         let noise: f32 = (rng.random::<f32>() - 0.5) * 0.002;
 
-        let new_a = (a + employment_shock + tax_shock + spend_shock + legitimacy_shock + honeymoon_shock + reversion + ideology_nudge + noise)
+        let new_a = (a + employment_shock + tax_shock + spend_shock
+            + legitimacy_shock + pollution_shock + honeymoon_shock
+            + reversion + ideology_nudge + noise)
             .clamp(0.0, 1.0);
 
         approval.0 = Score::from_num(new_a);
@@ -292,6 +309,33 @@ mod tests {
         assert!(
             debt_a < clean_a,
             "high-debt sim ({debt_a}) should have lower approval than clean ({clean_a})"
+        );
+    }
+
+    #[test]
+    fn high_pollution_drags_approval_below_clean() {
+        use simulator_core::PollutionStock;
+        let mut sim_clean = Sim::new([33u8; 32]);
+        let mut sim_dirty = Sim::new([33u8; 32]);
+        register_approval_system(&mut sim_clean);
+        register_approval_system(&mut sim_dirty);
+
+        sim_dirty.world.resource_mut::<PollutionStock>().stock = 10.0; // well above baseline of 1.0
+
+        spawn_citizen(&mut sim_clean.world, 0, EmploymentStatus::Employed, 0.5);
+        spawn_citizen(&mut sim_dirty.world, 0, EmploymentStatus::Employed, 0.5);
+
+        for _ in 0..31 { sim_clean.step(); }
+        for _ in 0..31 { sim_dirty.step(); }
+
+        let clean_a: f32 = sim_clean.world
+            .query::<&ApprovalRating>().single(&sim_clean.world).unwrap().0.to_num();
+        let dirty_a: f32 = sim_dirty.world
+            .query::<&ApprovalRating>().single(&sim_dirty.world).unwrap().0.to_num();
+
+        assert!(
+            dirty_a < clean_a,
+            "high-pollution sim ({dirty_a}) should have lower approval than clean ({clean_a})"
         );
     }
 

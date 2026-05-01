@@ -1,0 +1,28 @@
+name: pre_rights_era
+description: >
+  Historical start state: no civic rights granted, elevated pollution from
+  early industrialisation, moderate legitimacy debt from authoritarian governance.
+  Use this to study the dynamics of rights expansion under popular pressure.
+
+seed: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]
+ticks: 1080   # 3 simulated years
+
+population:
+  citizens: 2000
+  corporations: 0
+  regions: 8
+  income_mean_monthly: 1800.0   # pre-industrial wage (lower mean)
+  unemployment_rate: 0.18       # high structural unemployment
+  corruption_level: 0.12        # elevated graft
+
+# No rights at game start; player must legislate them.
+initial_rights: 0
+
+# ~2 PU: visible but not catastrophic industrial pollution.
+initial_pollution: 2.0
+
+# Moderate legitimacy debt from suppression of previous rights movements.
+initial_legitimacy_debt: 0.4
+
+# Suppress random crises for a clean baseline run; set to 2 for realistic play.
+crisis_prob_pct: 0

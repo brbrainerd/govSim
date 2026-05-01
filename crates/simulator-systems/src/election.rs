@@ -16,7 +16,7 @@
 use simulator_core::{
     bevy_ecs::prelude::*,
     components::{ApprovalRating, IdeologyVector, LegalStatusFlags, LegalStatuses},
-    MacroIndicators, Phase, Sim, SimClock,
+    CrisisKind, CrisisState, LegitimacyDebt, MacroIndicators, Phase, Sim, SimClock,
 };
 
 #[derive(Resource, Default, Debug, Clone)]
@@ -37,6 +37,8 @@ pub fn election_system(
     clock: Res<SimClock>,
     mut outcome: ResMut<ElectionOutcome>,
     mut indicators: ResMut<MacroIndicators>,
+    debt: Res<LegitimacyDebt>,
+    crisis: Res<CrisisState>,
     q: Query<(&LegalStatuses, &IdeologyVector, &ApprovalRating)>,
 ) {
     if !clock.tick.is_multiple_of(ELECTION_PERIOD) || clock.tick == 0 { return; }
@@ -71,6 +73,29 @@ pub fn election_system(
     }
 
     if n == 0 { return; }
+
+    // Legitimacy debt drag: each unit of accumulated debt reduces the incumbent's
+    // vote share proportionally — people punish a government that has eroded norms.
+    let legitimacy_drag = debt.stock as f64 * 0.05 * n as f64;
+    if outcome.incumbent == 1 {
+        vote_a = (vote_a - legitimacy_drag).max(0.0);
+    } else if outcome.incumbent == 2 {
+        vote_b = (vote_b - legitimacy_drag).max(0.0);
+    }
+
+    // Crisis modifiers: rally effect for War/NaturalDisaster, penalty for Recession/Pandemic.
+    let crisis_bonus: f64 = match crisis.kind {
+        CrisisKind::War             =>  0.05 * n as f64,
+        CrisisKind::NaturalDisaster =>  0.02 * n as f64,
+        CrisisKind::Recession       => -0.10 * n as f64,
+        CrisisKind::Pandemic        => -0.03 * n as f64,
+        CrisisKind::None            =>  0.0,
+    };
+    if outcome.incumbent == 1 {
+        vote_a = (vote_a + crisis_bonus).max(0.0);
+    } else if outcome.incumbent == 2 {
+        vote_b = (vote_b + crisis_bonus).max(0.0);
+    }
 
     // Incumbency fatigue: each term beyond 2 applies a drag on the incumbent's
     // total equal to 5% of the registered electorate, making long rule less sticky.
@@ -163,6 +188,41 @@ mod tests {
         let outcome = sim.world.resource::<ElectionOutcome>();
         assert_eq!(outcome.incumbent, 1, "progressive should win with left-leaning electorate");
         assert!(outcome.margin > 0.0);
+    }
+
+    #[test]
+    fn high_legitimacy_debt_hurts_incumbent() {
+        use simulator_core::LegitimacyDebt;
+        // Balanced electorate (5 left, 5 right, neutral approval) with Party A incumbent.
+        // High legitimacy debt should drag Party A's votes and flip the outcome.
+        let mut sim_clean = Sim::new([3u8; 32]);
+        let mut sim_debt  = Sim::new([3u8; 32]);
+        register_election_system(&mut sim_clean);
+        register_election_system(&mut sim_debt);
+
+        sim_clean.world.resource_mut::<ElectionOutcome>().incumbent = 1;
+        sim_debt.world.resource_mut::<ElectionOutcome>().incumbent  = 1;
+
+        // Inject high legitimacy debt only in sim_debt.
+        sim_debt.world.resource_mut::<LegitimacyDebt>().stock = 3.0;
+
+        // Balanced ideology, neutral approval — without debt both should stay at A.
+        for i in 0..5 { spawn(&mut sim_clean.world, i, -0.05, 0.5); }
+        for i in 5..10 { spawn(&mut sim_clean.world, i, 0.05, 0.5); }
+        for i in 0..5 { spawn(&mut sim_debt.world, i, -0.05, 0.5); }
+        for i in 5..10 { spawn(&mut sim_debt.world, i, 0.05, 0.5); }
+
+        for _ in 0..=360 { sim_clean.step(); }
+        for _ in 0..=360 { sim_debt.step(); }
+
+        let clean_margin = sim_clean.world.resource::<ElectionOutcome>().margin;
+        let debt_margin  = sim_debt.world.resource::<ElectionOutcome>().margin;
+
+        // Debt should reduce Party A's margin (possibly flipping to B).
+        assert!(
+            debt_margin < clean_margin || sim_debt.world.resource::<ElectionOutcome>().incumbent == 2,
+            "legitimacy debt should reduce or flip incumbent's margin (clean={clean_margin:.3}, debt={debt_margin:.3})"
+        );
     }
 
     #[test]
