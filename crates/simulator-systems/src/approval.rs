@@ -19,10 +19,18 @@
 //! MacroIndicators.approval is set to the population mean in macro_indicators_system.
 //!
 //! Fiscal convention: ideology[0] in [-1,1] where +1 = left (pro-spending), -1 = right (anti-tax).
+//!
+//! Per-citizen fiscal shocks (Phase 22): if MonthlyTaxPaid / MonthlyBenefitReceived
+//! are present, the individual effective tax rate and benefit ratio replace the
+//! macro-level proxy for more accurate, heterogeneous responses. Citizens without
+//! those components fall back to the aggregate macro signal.
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    components::{ApprovalRating, Citizen, EmploymentStatus, IdeologyVector},
+    components::{
+        ApprovalRating, Citizen, EmploymentStatus, IdeologyVector,
+        MonthlyBenefitReceived, MonthlyTaxPaid,
+    },
     MacroIndicators, Phase, Sim, SimClock, SimRng,
 };
 use simulator_types::Score;
@@ -30,20 +38,27 @@ use rand::Rng;
 
 const APPROVAL_PERIOD: u64 = 30;
 
+#[allow(clippy::type_complexity)]
 pub fn approval_system(
     clock: Res<SimClock>,
     rng_res: Res<SimRng>,
     macro_: Res<MacroIndicators>,
-    mut q: Query<(&Citizen, &EmploymentStatus, &IdeologyVector, &mut ApprovalRating)>,
+    mut q: Query<(
+        &Citizen,
+        &EmploymentStatus,
+        &IdeologyVector,
+        &mut ApprovalRating,
+        Option<&MonthlyTaxPaid>,
+        Option<&MonthlyBenefitReceived>,
+    )>,
 ) {
     if !clock.tick.is_multiple_of(APPROVAL_PERIOD) || clock.tick == 0 { return; }
 
     let gdp = macro_.gdp.to_num::<f64>().max(1.0);
-    // Effective tax burden and spending ratios relative to GDP, capped at sane ranges.
-    let tax_rate   = (macro_.government_revenue.to_num::<f64>()     / gdp).clamp(0.0, 1.0) as f32;
-    let spend_rate = (macro_.government_expenditure.to_num::<f64>() / gdp).clamp(0.0, 1.0) as f32;
+    let macro_tax_rate   = (macro_.government_revenue.to_num::<f64>()     / gdp).clamp(0.0, 1.0) as f32;
+    let macro_spend_rate = (macro_.government_expenditure.to_num::<f64>() / gdp).clamp(0.0, 1.0) as f32;
 
-    for (citizen, emp, ideology, mut approval) in q.iter_mut() {
+    for (citizen, emp, ideology, mut approval, tax_opt, benefit_opt) in q.iter_mut() {
         let a = approval.0.to_num::<f32>();
 
         let employment_shock = match emp {
@@ -54,16 +69,28 @@ pub fn approval_system(
             EmploymentStatus::OutOfLaborForce => -0.001_f32,
         };
 
-        // ideology[0]: +1 = left (pro-state), -1 = right (anti-tax).
-        let econ = ideology.0[0]; // [-1, 1]
+        let econ = ideology.0[0]; // [-1, 1], +1 = left, -1 = right
 
-        // Right-leaning citizens penalise high taxes more: weight = (1 - econ) / 2 ∈ [0, 1].
-        let tax_shock = -tax_rate * (1.0 - econ) * 0.01;
+        // Per-citizen effective tax rate: tax paid / (income proxy via monthly cycle).
+        // Falls back to macro aggregate when not tracked.
+        let citizen_tax_rate = tax_opt
+            .map(|t| {
+                let monthly = macro_.gdp.to_num::<f64>() / macro_.population.max(1) as f64 / 12.0;
+                (t.0.to_num::<f64>() / monthly.max(1.0)).clamp(0.0, 1.0) as f32
+            })
+            .unwrap_or(macro_tax_rate);
 
-        // Left-leaning citizens reward high spending more: weight = (1 + econ) / 2 ∈ [0, 1].
-        let spend_shock = spend_rate * (1.0 + econ) * 0.005;
+        let citizen_benefit_rate = benefit_opt
+            .map(|b| {
+                let monthly = macro_.gdp.to_num::<f64>() / macro_.population.max(1) as f64 / 12.0;
+                (b.0.to_num::<f64>() / monthly.max(1.0)).clamp(0.0, 1.0) as f32
+            })
+            .unwrap_or(macro_spend_rate);
 
-        let reversion = (0.5 - a) * 0.02;
+        let tax_shock   = -citizen_tax_rate   * (1.0 - econ) * 0.01;
+        let spend_shock =  citizen_benefit_rate * (1.0 + econ) * 0.005;
+
+        let reversion     = (0.5 - a) * 0.02;
         let ideology_nudge = econ * 0.001;
 
         let mut rng = rng_res.derive_citizen("approval", clock.tick, citizen.0.0);
@@ -75,6 +102,7 @@ pub fn approval_system(
         approval.0 = Score::from_num(new_a);
     }
 }
+
 
 pub fn register_approval_system(sim: &mut Sim) {
     sim.schedule_mut()
