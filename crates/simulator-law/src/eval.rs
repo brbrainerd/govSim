@@ -90,6 +90,12 @@ pub fn eval_expr(e: &Expr, ctx: &EvalCtx) -> Value {
             let av = eval_expr(a, ctx); let bv = eval_expr(b, ctx);
             max_value(av, bv)
         }
+        Expr::Let { name, value, body } => {
+            let v = eval_expr(value, ctx);
+            let mut child_ctx = ctx.clone();
+            child_ctx.bindings.insert(name.clone(), v);
+            eval_expr(body, &child_ctx)
+        }
     }
 }
 
@@ -180,6 +186,29 @@ fn max_value(a: Value, b: Value) -> Value {
 mod tests {
     use super::*;
     use crate::dsl::{ast::Item, parse_program, typecheck_program};
+
+    #[test]
+    fn let_binding_evaluates() {
+        let src = r#"
+            scope TaxCalc(citizen: money) {
+              def owed : money =
+                let r = 0.25 in r * citizen.income
+            }
+        "#;
+        let prog = parse_program(src).unwrap();
+        typecheck_program(&prog).unwrap();
+        let scope = &prog.scopes[0];
+        let Item::Definition { body, .. } = &scope.items[0];
+        let mut ctx = EvalCtx { bindings: HashMap::new(), field_bindings: HashMap::new() };
+        ctx.field_bindings.insert(
+            ("citizen".into(), "income".into()),
+            Value::Money(Money::from_num(10_000.0_f64)),
+        );
+        let result = eval_default(body, &ctx).as_money();
+        let expected = 2_500.0_f64;
+        assert!((result.to_num::<f64>() - expected).abs() < 0.01,
+            "expected {expected}, got {}", result.to_num::<f64>());
+    }
 
     #[test]
     fn three_bracket_tax() {

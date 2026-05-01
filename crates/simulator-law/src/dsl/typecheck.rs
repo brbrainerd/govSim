@@ -145,6 +145,12 @@ fn check_expr(e: &Expr, env: &HashMap<String, Type>) -> Result<Type, TypeError> 
             }
             Ok(ta)
         }
+        Expr::Let { name, value, body } => {
+            let vt = check_expr(value, env)?;
+            let mut child_env = env.clone();
+            child_env.insert(name.clone(), vt);
+            check_expr(body, &child_env)
+        }
     }
 }
 

@@ -56,6 +56,8 @@ pub enum Expr {
     If { cond: Box<Expr>, then_: Box<Expr>, else_: Box<Expr> },
     Min(Box<Expr>, Box<Expr>),
     Max(Box<Expr>, Box<Expr>),
+    /// `let name = value in body` — bind a local name in `body`.
+    Let { name: String, value: Box<Expr>, body: Box<Expr> },
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]

@@ -23,7 +23,7 @@ enum Tok<'a> {
     Gt, Ge, Lt, Le, EqEq, Neq,
     AndAnd, OrOr, Bang,
     KwScope, KwDef, KwException, KwIf, KwThen, KwElse, KwTrue, KwFalse,
-    KwMin, KwMax,
+    KwMin, KwMax, KwLet, KwIn,
     KwMoney, KwBool, KwInt, KwRate,
 }
 
@@ -135,6 +135,8 @@ impl<'a> Lexer<'a> {
             "false" => Tok::KwFalse,
             "min" => Tok::KwMin,
             "max" => Tok::KwMax,
+            "let" => Tok::KwLet,
+            "in"  => Tok::KwIn,
             "money" => Tok::KwMoney,
             "bool" => Tok::KwBool,
             "int" => Tok::KwInt,
@@ -374,6 +376,18 @@ impl<'a> Parser<'a> {
                 self.expect(&Tok::RParen)?;
                 Ok(Expr::Max(Box::new(a), Box::new(b)))
             }
+            Some(Tok::KwLet) => {
+                let name = self.parse_ident()?;
+                self.expect(&Tok::Eq)?;
+                let value = self.parse_expr()?;
+                self.expect(&Tok::KwIn)?;
+                let body = self.parse_expr()?;
+                Ok(Expr::Let {
+                    name,
+                    value: Box::new(value),
+                    body: Box::new(body),
+                })
+            }
             Some(Tok::Ident(name)) => {
                 if self.peek() == Some(&Tok::Dot) {
                     self.bump();
@@ -423,5 +437,34 @@ mod tests {
         let scope = &p.scopes[0];
         let Item::Definition { body, .. } = &scope.items[0];
         assert_eq!(body.exceptions.len(), 2);
+    }
+
+    #[test]
+    fn let_binding_parses() {
+        let src = r#"
+            scope Calc(x: money) {
+              def result : money =
+                let r = 0.15 in r * x
+            }
+        "#;
+        let p = parse_program(src).unwrap();
+        let scope = &p.scopes[0];
+        let Item::Definition { body, .. } = &scope.items[0];
+        // base should be a Let expression
+        assert!(matches!(&body.base, Expr::Let { name, .. } if name == "r"));
+    }
+
+    #[test]
+    fn nested_let_bindings_parse() {
+        let src = r#"
+            scope Tax(citizen: money) {
+              def owed : money =
+                let inc = citizen.income in
+                let thresh = 50000.0 in
+                if inc > thresh then 0.30 * inc else 0.20 * inc
+            }
+        "#;
+        let p = parse_program(src).unwrap();
+        assert_eq!(p.scopes[0].items.len(), 1);
     }
 }
