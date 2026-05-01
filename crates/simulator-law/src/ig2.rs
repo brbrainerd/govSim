@@ -140,6 +140,26 @@ pub enum Computation {
         rate: f64,
         cadence: LowerCadence,
     },
+    /// Universal Basic Income: a flat unconditional payment to every citizen,
+    /// regardless of income, wealth, or employment status.
+    UniversalBenefit {
+        /// Transfer amount per period (in simulation currency units).
+        amount: f64,
+        cadence: LowerCadence,
+    },
+    /// Negative Income Tax (Friedman 1962): citizens receive
+    /// `max(0, guarantee - taper_rate * annual_income)`.
+    /// When `annual_income == 0`, the full `guarantee` is paid; the benefit
+    /// phases out linearly at rate `taper_rate` and hits zero at
+    /// `guarantee / taper_rate` income. Citizens above that break-even
+    /// receive nothing (their tax is handled by a separate income-tax law).
+    NegativeIncomeTax {
+        /// Income guarantee — benefit when income = 0.
+        guarantee: f64,
+        /// Phase-out rate: benefit reduction per $1 of income [0, 1].
+        taper_rate: f64,
+        cadence: LowerCadence,
+    },
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]

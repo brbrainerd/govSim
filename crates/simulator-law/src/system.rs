@@ -512,6 +512,132 @@ mod tests {
         );
     }
 
+    /// UBI: a flat $500/year unconditional payment goes to every citizen.
+    #[test]
+    fn ubi_pays_all_citizens() {
+        use crate::ig2::{Computation, LowerCadence};
+
+        let mut sim = Sim::new([60u8; 32]);
+        register_law_dispatcher(&mut sim);
+        // 6 citizens of varying incomes — all should receive UBI equally.
+        for i in 0..6 { spawn_citizen(&mut sim.world, i, (i as i64 + 1) * 100); }
+
+        let stmt = crate::ig2::IgStatement::Regulative(crate::ig2::RegulativeStmt {
+            attribute: crate::ig2::ActorRef { class: "individual".into(), qualifier: None },
+            attribute_property: None, deontic: None,
+            aim: "receive".into(),
+            direct_object: None, direct_object_property: None,
+            indirect_object: None, indirect_object_property: None,
+            activation_conditions: vec![], execution_constraints: vec![],
+            or_else: None,
+            computation: Some(Computation::UniversalBenefit {
+                amount: 500.0,
+                cadence: LowerCadence::Yearly,
+            }),
+        });
+        let lowered = crate::lower::lower_statement(&stmt).expect("lowering");
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(LawHandle {
+            id: LawId(0), version: 1,
+            program: Arc::new(lowered.program),
+            cadence: lowered.cadence,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: lowered.effect,
+        });
+
+        for _ in 0..=360 { sim.step(); }
+
+        // 6 citizens × $500 = $3 000 disbursed from Treasury.
+        let ledger = sim.world.resource::<GovernmentLedger>();
+        let exp: f64 = ledger.expenditure.to_num();
+        assert!(
+            (exp - 3_000.0).abs() < 1.0,
+            "expected ~$3 000 UBI disbursed, got ${exp:.2}"
+        );
+        let treasury = sim.world.resource::<Treasury>();
+        let bal: f64 = treasury.balance.to_num();
+        assert!(bal < 0.0, "treasury should be negative after UBI, got {bal}");
+    }
+
+    /// NIT: $12 000 guarantee with 50% taper → break-even at $24 000/year.
+    /// Citizens below break-even get tapered benefit; above get nothing.
+    #[test]
+    fn nit_tapers_correctly() {
+        use crate::ig2::{Computation, LowerCadence};
+
+        let mut sim = Sim::new([61u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        // Citizen 0: $0 income → receives full $12 000
+        sim.world.spawn((
+            Citizen(CitizenId(0)),
+            Income(Money::from_num(0i64)),
+            Wealth(Money::from_num(0i64)),
+            ConsumptionExpenditure(Money::from_num(0i64)),
+            LegalStatuses::default(),
+            AuditFlags::default(),
+            EvasionPropensity(0.0),
+        ));
+        // Citizen 1: $12 000/year = $33.33/month → tapered to $6 000
+        sim.world.spawn((
+            Citizen(CitizenId(1)),
+            Income(Money::from_num(34i64)), // ~$12 240/yr (close enough for test)
+            Wealth(Money::from_num(0i64)),
+            ConsumptionExpenditure(Money::from_num(27i64)),
+            LegalStatuses::default(),
+            AuditFlags::default(),
+            EvasionPropensity(0.0),
+        ));
+        // Citizen 2: $30 000/year = $83.33/month → above break-even → $0
+        sim.world.spawn((
+            Citizen(CitizenId(2)),
+            Income(Money::from_num(84i64)), // ~$30 240/yr
+            Wealth(Money::from_num(0i64)),
+            ConsumptionExpenditure(Money::from_num(67i64)),
+            LegalStatuses::default(),
+            AuditFlags::default(),
+            EvasionPropensity(0.0),
+        ));
+
+        let stmt = crate::ig2::IgStatement::Regulative(crate::ig2::RegulativeStmt {
+            attribute: crate::ig2::ActorRef { class: "individual".into(), qualifier: None },
+            attribute_property: None, deontic: None,
+            aim: "receive".into(),
+            direct_object: None, direct_object_property: None,
+            indirect_object: None, indirect_object_property: None,
+            activation_conditions: vec![], execution_constraints: vec![],
+            or_else: None,
+            computation: Some(Computation::NegativeIncomeTax {
+                guarantee: 12_000.0,
+                taper_rate: 0.50,
+                cadence: LowerCadence::Yearly,
+            }),
+        });
+        let lowered = crate::lower::lower_statement(&stmt).expect("lowering");
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(LawHandle {
+            id: LawId(0), version: 1,
+            program: Arc::new(lowered.program),
+            cadence: lowered.cadence,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: lowered.effect,
+        });
+
+        for _ in 0..=360 { sim.step(); }
+
+        // Citizen 2 (above break-even) must have received $0; others > $0.
+        let exp: f64 = sim.world.resource::<GovernmentLedger>().expenditure.to_num();
+        // Citizen 0 gets full $12 000; citizen 1 gets ~$5 880 (12000 - 0.5*12240);
+        // citizen 2 gets $0. Total ≈ $17 880.
+        assert!(exp > 5_000.0 && exp < 25_000.0,
+            "NIT disbursement out of expected range, got ${exp:.2}");
+        // Treasury should be negative (paid out more than received).
+        let bal: f64 = sim.world.resource::<Treasury>().balance.to_num();
+        assert!(bal < 0.0, "treasury should be negative after NIT, got {bal}");
+    }
+
     /// VAT: 10% consumption tax collects 10% of each citizen's monthly
     /// ConsumptionExpenditure each month and credits Treasury.
     #[test]

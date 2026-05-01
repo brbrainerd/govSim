@@ -64,6 +64,12 @@ pub fn lower_statement(stmt: &IgStatement) -> Result<Lowered, LowerError> {
         Computation::WealthTax { exemption, rate, cadence } => {
             lower_wealth_tax(*exemption, *rate, *cadence)
         }
+        Computation::UniversalBenefit { amount, cadence } => {
+            lower_universal_benefit(*amount, *cadence)
+        }
+        Computation::NegativeIncomeTax { guarantee, taper_rate, cadence } => {
+            lower_negative_income_tax(*guarantee, *taper_rate, *cadence)
+        }
     }
 }
 
@@ -337,6 +343,60 @@ fn lower_consumption_tax(rate: f64, cadence: LowerCadence) -> Result<Lowered, Lo
     Ok(Lowered {
         program: Program { scopes: vec![scope] },
         effect: LawEffect::PerCitizenIncomeTax { scope: "ConsumptionTax", owed_def: "vat_owed" },
+        cadence: cadence_to_runtime(cadence),
+    })
+}
+
+/// Universal Basic Income: flat unconditional payment to every citizen.
+/// DSL body = `amount` with no guards.
+fn lower_universal_benefit(amount: f64, cadence: LowerCadence) -> Result<Lowered, LowerError> {
+    let body = DefaultExpr { base: money(amount), exceptions: vec![] };
+    let scope = Scope {
+        name: "UniversalBenefit".into(),
+        params: vec![ParamDecl { name: "citizen".into(), ty: Type::Money }],
+        items: vec![Item::Definition { name: "ubi_amount".into(), ty: Type::Money, body }],
+    };
+    Ok(Lowered {
+        program: Program { scopes: vec![scope] },
+        effect: LawEffect::PerCitizenBenefit { scope: "UniversalBenefit", amount_def: "ubi_amount" },
+        cadence: cadence_to_runtime(cadence),
+    })
+}
+
+/// Negative Income Tax: `benefit = max(0, guarantee - taper_rate * income)`.
+///
+/// DSL (last-wins exceptions):
+///   base   = guarantee                          -- full benefit if no exception fires
+///   exc 1  = (income > 0) → guarantee - taper*income  -- taper when earning
+///   exc 2  = (income >= breakeven) → 0.0        -- zero above break-even
+///
+/// Break-even = guarantee / taper_rate.
+fn lower_negative_income_tax(guarantee: f64, taper_rate: f64, cadence: LowerCadence) -> Result<Lowered, LowerError> {
+    let breakeven = guarantee / taper_rate;
+    let income = || Expr::Field { obj: "citizen".into(), field: "income".into() };
+
+    // Taper value: guarantee - taper_rate * citizen.income
+    let tapered = sub(money(guarantee), mul(money(taper_rate), income()));
+
+    // Exception 1: when income > 0, apply the taper formula.
+    let exc1 = (gt(income(), money(0.0)), tapered);
+
+    // Exception 2: when income >= breakeven (income > breakeven - ε, approximated
+    // as income > breakeven), benefit is zero.
+    let exc2 = (gt(income(), money(breakeven)), money(0.0));
+
+    let body = DefaultExpr {
+        base: money(guarantee),
+        exceptions: vec![exc1, exc2],
+    };
+    let scope = Scope {
+        name: "NegativeIncomeTax".into(),
+        params: vec![ParamDecl { name: "citizen".into(), ty: Type::Money }],
+        items: vec![Item::Definition { name: "nit_amount".into(), ty: Type::Money, body }],
+    };
+    Ok(Lowered {
+        program: Program { scopes: vec![scope] },
+        effect: LawEffect::PerCitizenBenefit { scope: "NegativeIncomeTax", amount_def: "nit_amount" },
         cadence: cadence_to_runtime(cadence),
     })
 }
