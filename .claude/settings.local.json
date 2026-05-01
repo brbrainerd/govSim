@@ -32,7 +32,9 @@
       "Bash(grep -E \"^\\(test |FAILED|error|ok$\\)\")",
       "Bash(grep -E \"^test |FAILED|ok$\")",
       "Bash(awk '{sum += $4} END {print \"total tests: \" sum}')",
-      "Bash(awk '{sum += $4} END {print sum \" tests, 0 failed\"}')"
+      "Bash(awk '{sum += $4} END {print sum \" tests, 0 failed\"}')",
+      "Bash(npm run *)",
+      "Bash(npm install *)"
     ]
   }
 }
