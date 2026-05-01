@@ -10,7 +10,8 @@ use simulator_core::{
     components::{
         Age, ApprovalRating, AuditFlagBits, AuditFlags, Citizen, ConsumptionExpenditure,
         EmploymentStatus, EvasionPropensity, Health, IdeologyVector, Income, LegalStatusFlags,
-        LegalStatuses, Location, Productivity, SavingsRate, Sex, Wealth,
+        LegalStatuses, Location, MonthlyBenefitReceived, MonthlyTaxPaid, Productivity,
+        SavingsRate, Sex, Wealth,
     },
     Sim,
 };
@@ -180,6 +181,8 @@ impl Scenario {
                     evasion,
                     SavingsRate(savings_rate_for_age(age)),
                     ConsumptionExpenditure(income * Money::from_num(4) / Money::from_num(5)),
+                    MonthlyTaxPaid::default(),
+                    MonthlyBenefitReceived::default(),
                 ),
             ));
         }

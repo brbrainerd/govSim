@@ -10,7 +10,8 @@ use simulator_core::{
     bevy_ecs::prelude::*,
     components::{
         AuditFlagBits, AuditFlags, Citizen, ConsumptionExpenditure, EvasionPropensity,
-        Health, Income, LegalStatusFlags, LegalStatuses, Productivity, Wealth,
+        Health, Income, LegalStatusFlags, LegalStatuses, MonthlyBenefitReceived,
+        MonthlyTaxPaid, Productivity, Wealth,
     },
     GovernmentLedger, MacroIndicators, Phase, Sim, SimClock, SimRng, Treasury,
 };
@@ -63,9 +64,20 @@ pub fn law_dispatcher_system(
         &mut LegalStatuses,
         Option<&AuditFlags>,
         Option<&EvasionPropensity>,
+        Option<&mut MonthlyTaxPaid>,
+        Option<&mut MonthlyBenefitReceived>,
     )>,
 ) {
     let active = registry.snapshot_active(clock.tick);
+
+    // Reset monthly accumulators at the start of each monthly period.
+    if clock.tick.is_multiple_of(30) && clock.tick != 0 {
+        for (.., tax_opt, benefit_opt) in q.iter_mut() {
+            if let Some(mut t) = tax_opt { t.0 = Money::from_num(0); }
+            if let Some(mut b) = benefit_opt { b.0 = Money::from_num(0); }
+        }
+    }
+
     if active.is_empty() { return; }
 
     let tick = clock.tick;
@@ -80,7 +92,7 @@ pub fn law_dispatcher_system(
                 let Some(body) = find_body(&h.program, scope, owed_def) else { continue; };
                 let mut ctx = base_ctx.clone();
                 let mut collected = Money::from_num(0);
-                for (_, income, health_opt, prod_opt, consumption_opt, mut wealth, _, _, _) in q.iter_mut() {
+                for (_, income, health_opt, prod_opt, consumption_opt, mut wealth, _, _, _, tax_opt, _) in q.iter_mut() {
                     let annual = income.0 * Money::from_num(360);
                     ctx.field_bindings.insert(("citizen".into(), "income".into()), Value::Money(annual));
                     ctx.field_bindings.insert(("citizen".into(), "wealth".into()), Value::Money(wealth.0));
@@ -96,6 +108,7 @@ pub fn law_dispatcher_system(
                     if let Value::Money(owed) = eval_default(body, &ctx) {
                         wealth.0 -= owed;
                         collected += owed;
+                        if let Some(mut t) = tax_opt { t.0 += owed; }
                     }
                 }
                 treasury.balance += collected;
@@ -105,7 +118,7 @@ pub fn law_dispatcher_system(
                 let Some(body) = find_body(&h.program, scope, amount_def) else { continue; };
                 let mut ctx = base_ctx.clone();
                 let mut disbursed = Money::from_num(0);
-                for (_, income, health_opt, prod_opt, consumption_opt, mut wealth, _, _, _) in q.iter_mut() {
+                for (_, income, health_opt, prod_opt, consumption_opt, mut wealth, _, _, _, _, benefit_opt) in q.iter_mut() {
                     let annual = income.0 * Money::from_num(360);
                     ctx.field_bindings.insert(("citizen".into(), "income".into()), Value::Money(annual));
                     ctx.field_bindings.insert(("citizen".into(), "wealth".into()), Value::Money(wealth.0));
@@ -121,13 +134,14 @@ pub fn law_dispatcher_system(
                     if let Value::Money(paid) = eval_default(body, &ctx) {
                         wealth.0 += paid;
                         disbursed += paid;
+                        if let Some(mut b) = benefit_opt { b.0 += paid; }
                     }
                 }
                 treasury.balance -= disbursed;
                 ledger.expenditure += disbursed;
             }
             LawEffect::RegistrationMarker { basis, threshold } => {
-                for (_, income, _, _, _, wealth, mut legal, _, _) in q.iter_mut() {
+                for (_, income, _, _, _, wealth, mut legal, _, _, _, _) in q.iter_mut() {
                     let value: f64 = match basis {
                         AmountBasis::AnnualIncome => income.0.to_num::<f64>() * 360.0,
                         AmountBasis::Wealth => wealth.0.to_num::<f64>(),
@@ -142,7 +156,7 @@ pub fn law_dispatcher_system(
             LawEffect::Audit { selection_prob, penalty_rate } => {
                 let label = format!("audit_{}", h.id.0);
                 let mut collected = Money::from_num(0);
-                for (citizen_opt, income, _, _, _, mut wealth, _, audit_opt, evasion_opt) in q.iter_mut() {
+                for (citizen_opt, income, _, _, _, mut wealth, _, audit_opt, evasion_opt, tax_opt, _) in q.iter_mut() {
                     let (Some(citizen), Some(audit), Some(evasion)) =
                         (citizen_opt, audit_opt, evasion_opt) else { continue; };
                     if !audit.0.contains(AuditFlagBits::FLAGGED_INCOME) { continue; }
@@ -153,6 +167,7 @@ pub fn law_dispatcher_system(
                     let penalty = annual * Money::from_num(evasion.0) * Money::from_num(penalty_rate);
                     wealth.0 -= penalty;
                     collected += penalty;
+                    if let Some(mut t) = tax_opt { t.0 += penalty; }
                 }
                 treasury.balance += collected;
                 ledger.revenue += collected;
@@ -211,7 +226,7 @@ mod tests {
     use crate::lower::lower_statement;
     use simulator_core::components::{
         AuditFlagBits, AuditFlags, Citizen, ConsumptionExpenditure, EvasionPropensity,
-        Income, LegalStatuses, Wealth,
+        Income, LegalStatuses, MonthlyBenefitReceived, MonthlyTaxPaid, Wealth,
     };
     use simulator_core::Sim;
     use simulator_types::{CitizenId, Money};
@@ -228,6 +243,8 @@ mod tests {
             LegalStatuses::default(),
             AuditFlags::default(),
             EvasionPropensity(0.0),
+            MonthlyTaxPaid::default(),
+            MonthlyBenefitReceived::default(),
         ));
     }
 
@@ -241,6 +258,8 @@ mod tests {
             LegalStatuses::default(),
             AuditFlags(AuditFlagBits::FLAGGED_INCOME),
             EvasionPropensity(evasion),
+            MonthlyTaxPaid::default(),
+            MonthlyBenefitReceived::default(),
         ));
     }
 
@@ -842,6 +861,64 @@ mod tests {
             (rev - 1_000.0).abs() < 1.0,
             "expected ~$1 000 in revenue ledger, got ${rev:.2}"
         );
+    }
+
+    /// MonthlyTaxPaid accumulator: after a tax law fires, each citizen's
+    /// MonthlyTaxPaid reflects their individual tax contribution.
+    #[test]
+    fn monthly_tax_paid_tracks_per_citizen_amount() {
+        use crate::ig2::{Computation, Deontic, LowerCadence, TaxBracket};
+
+        let mut sim = Sim::new([99u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        // Citizen 0: $500/month → $180k/year → 20% = $36 000/year
+        // Citizen 1: $100/month → $36k/year → 20% = $7 200/year
+        spawn_citizen(&mut sim.world, 0, 500);
+        spawn_citizen(&mut sim.world, 1, 100);
+
+        let stmt = IgStatement::Regulative(RegulativeStmt {
+            attribute: ActorRef { class: "individual".into(), qualifier: None },
+            attribute_property: None,
+            deontic: Some(Deontic::Must),
+            aim: "pay".into(),
+            direct_object: None, direct_object_property: None,
+            indirect_object: None, indirect_object_property: None,
+            activation_conditions: vec![], execution_constraints: vec![],
+            or_else: None,
+            computation: Some(Computation::BracketedTax {
+                basis: AmountBasis::AnnualIncome,
+                threshold: 0.0,
+                brackets: vec![TaxBracket { floor: 0.0, ceil: None, rate: 0.20 }],
+                cadence: LowerCadence::Yearly,
+            }),
+        });
+        let lowered = crate::lower::lower_statement(&stmt).expect("lowering");
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(LawHandle {
+            id: LawId(0), version: 1,
+            program: Arc::new(lowered.program),
+            cadence: lowered.cadence,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: lowered.effect,
+        });
+
+        for _ in 0..=360 { sim.step(); }
+
+        let mut paid: Vec<(u64, f64)> = sim.world
+            .query::<(&Citizen, &MonthlyTaxPaid)>()
+            .iter(&sim.world)
+            .map(|(c, t)| (c.0.0, t.0.to_num::<f64>()))
+            .collect();
+        paid.sort_by_key(|(id, _)| *id);
+
+        // The annual tax fires once at tick 360; MonthlyTaxPaid is reset at that
+        // same monthly boundary and then immediately written by the tax law.
+        assert!(paid[0].1 > paid[1].1,
+            "citizen 0 (higher income) should have paid more tax than citizen 1, got {:?}", paid);
+        assert!(paid[0].1 > 0.0, "citizen 0 should have non-zero MonthlyTaxPaid");
+        assert!(paid[1].1 > 0.0, "citizen 1 should have non-zero MonthlyTaxPaid");
     }
 
     /// Audit law: 100% selection rate catches all flagged evaders; honest

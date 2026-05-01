@@ -17,7 +17,7 @@ use simulator_core::{
     components::{
         Age, AuditFlags, Citizen, ConsumptionExpenditure, EmploymentStatus, EvasionPropensity,
         Health, IdeologyVector, Income, LegalStatusFlags, LegalStatuses, Location,
-        Productivity, SavingsRate, Sex, Wealth,
+        MonthlyBenefitReceived, MonthlyTaxPaid, Productivity, SavingsRate, Sex, Wealth,
     },
     Phase, Sim, SimClock, SimRng,
 };
@@ -84,6 +84,8 @@ pub fn birth_death_system(
                 EvasionPropensity(0.0),
                 SavingsRate(0.05),
                 ConsumptionExpenditure(income * Money::from_num(4) / Money::from_num(5)),
+                MonthlyTaxPaid::default(),
+                MonthlyBenefitReceived::default(),
             ),
         ));
     }

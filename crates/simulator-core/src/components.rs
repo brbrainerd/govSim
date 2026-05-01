@@ -93,6 +93,16 @@ impl Default for SavingsRate {
     fn default() -> Self { Self(0.20) }
 }
 
+/// Total tax deducted from this citizen in the current month by the law dispatcher.
+/// Reset to zero at each monthly firing; accumulates across multiple active tax laws.
+#[derive(Component, Copy, Clone, Debug, Default)]
+pub struct MonthlyTaxPaid(pub Money);
+
+/// Total benefit transferred to this citizen in the current month by the law dispatcher.
+/// Reset to zero at each monthly firing; accumulates across multiple active benefit laws.
+#[derive(Component, Copy, Clone, Debug, Default)]
+pub struct MonthlyBenefitReceived(pub Money);
+
 // --- Behavioral ---------------------------------------------------------
 
 /// Fraction of income a citizen attempts to hide from tax authorities [0, 1].
