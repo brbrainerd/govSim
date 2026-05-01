@@ -1024,4 +1024,124 @@ mod tests {
             "expected revenue ~${expected:.0}, got ${rev:.2}"
         );
     }
+
+    /// Abatement law: when the Treasury is well-funded, a monthly firing should
+    /// reduce PollutionStock by the full `pollution_reduction_pu` and debit the
+    /// Treasury by `pollution_reduction_pu * cost_per_pu`.
+    #[test]
+    fn abatement_law_reduces_pollution_stock() {
+        use crate::ig2::{Computation, LowerCadence};
+
+        let mut sim = Sim::new([55u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        // Set initial world state — no citizens needed; abatement is global.
+        sim.world.resource_mut::<PollutionStock>().stock = 5.0;
+        // Fund Treasury: 1 000 000 >> 5 000 full cost → fully affordable.
+        sim.world.resource_mut::<Treasury>().balance = Money::from_num(1_000_000i64);
+
+        let stmt = IgStatement::Regulative(RegulativeStmt {
+            attribute: ActorRef { class: "government".into(), qualifier: None },
+            attribute_property: None,
+            deontic: None,
+            aim: "abate".into(),
+            direct_object: None, direct_object_property: None,
+            indirect_object: None, indirect_object_property: None,
+            activation_conditions: vec![], execution_constraints: vec![],
+            or_else: None,
+            computation: Some(Computation::EnvironmentalAbatement {
+                pollution_reduction_pu: 0.5,
+                cost_per_pu: 10_000.0, // full cost = $5 000/month
+                cadence: LowerCadence::Monthly,
+            }),
+        });
+        let lowered = lower_statement(&stmt).expect("lowering failed");
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(LawHandle {
+            id: LawId(0), version: 1,
+            program: Arc::new(lowered.program),
+            cadence: lowered.cadence,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: lowered.effect,
+        });
+
+        // Step 31: schedule runs at tick=30, monthly law fires.
+        for _ in 0..31 { sim.step(); }
+
+        let stock = sim.world.resource::<PollutionStock>().stock;
+        // Expect 5.0 - 0.5 = 4.5 (exact; no decay without consumption load).
+        assert!(
+            (stock - 4.5).abs() < 0.001,
+            "abatement should reduce pollution from 5.0 to ~4.5, got {stock:.4}"
+        );
+
+        let bal: f64 = sim.world.resource::<Treasury>().balance.to_num();
+        assert!(
+            (bal - 995_000.0).abs() < 1.0,
+            "treasury should drop by $5 000 (0.5 PU × $10 000), got bal={bal:.2}"
+        );
+
+        let exp: f64 = sim.world.resource::<GovernmentLedger>().expenditure.to_num();
+        assert!(
+            (exp - 5_000.0).abs() < 1.0,
+            "expenditure ledger should record $5 000, got {exp:.2}"
+        );
+    }
+
+    /// Abatement partial-afford: when Treasury can only cover half the full cost,
+    /// exactly half the abatement is applied and the Treasury is drained to ~0.
+    #[test]
+    fn abatement_partial_proportional_to_treasury() {
+        use crate::ig2::{Computation, LowerCadence};
+
+        let mut sim = Sim::new([56u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        sim.world.resource_mut::<PollutionStock>().stock = 4.0;
+        // Treasury can cover exactly half: full cost = 1.0 PU × 10 000 = 10 000;
+        // treasury = 5 000 → affordable_fraction = 0.5.
+        sim.world.resource_mut::<Treasury>().balance = Money::from_num(5_000i64);
+
+        let stmt = IgStatement::Regulative(RegulativeStmt {
+            attribute: ActorRef { class: "government".into(), qualifier: None },
+            attribute_property: None,
+            deontic: None,
+            aim: "abate".into(),
+            direct_object: None, direct_object_property: None,
+            indirect_object: None, indirect_object_property: None,
+            activation_conditions: vec![], execution_constraints: vec![],
+            or_else: None,
+            computation: Some(Computation::EnvironmentalAbatement {
+                pollution_reduction_pu: 1.0,
+                cost_per_pu: 10_000.0,
+                cadence: LowerCadence::Monthly,
+            }),
+        });
+        let lowered = lower_statement(&stmt).expect("lowering failed");
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(LawHandle {
+            id: LawId(0), version: 1,
+            program: Arc::new(lowered.program),
+            cadence: lowered.cadence,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: lowered.effect,
+        });
+
+        for _ in 0..31 { sim.step(); }
+
+        let stock = sim.world.resource::<PollutionStock>().stock;
+        // Expect 4.0 - 0.5 = 3.5 (half the 1.0 PU).
+        assert!(
+            (stock - 3.5).abs() < 0.001,
+            "partial abatement should reduce pollution from 4.0 to ~3.5, got {stock:.4}"
+        );
+
+        let bal: f64 = sim.world.resource::<Treasury>().balance.to_num();
+        assert!(
+            bal.abs() < 1.0,
+            "treasury should be ~0 after spending all $5 000, got {bal:.2}"
+        );
+    }
 }
