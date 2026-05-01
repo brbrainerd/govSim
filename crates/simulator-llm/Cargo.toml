@@ -1,0 +1,18 @@
+[package]
+name        = "simulator-llm"
+version     = "0.1.0"
+edition.workspace     = true
+license.workspace     = true
+rust-version.workspace = true
+description = "llama.cpp client, continuous batching, KV cache, persona cache, grammar-constrained decoding."
+
+[dependencies]
+reqwest     = { workspace = true }
+tokio       = { workspace = true }
+serde       = { workspace = true }
+serde_json  = { workspace = true }
+lru         = { workspace = true }
+tokenizers  = { workspace = true }
+hnsw_rs     = { workspace = true }
+tracing     = { workspace = true }
+thiserror   = { workspace = true }

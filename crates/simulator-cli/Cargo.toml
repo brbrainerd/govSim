@@ -1,0 +1,21 @@
+[package]
+name        = "simulator-cli"
+version     = "0.1.0"
+edition.workspace     = true
+license.workspace     = true
+rust-version.workspace = true
+description = "ugs CLI: scenario runner, replay, bench, law compile."
+
+[[bin]]
+name = "ugs"
+path = "src/main.rs"
+
+[dependencies]
+simulator-core        = { workspace = true }
+simulator-scenario    = { workspace = true }
+simulator-snapshot    = { workspace = true }
+simulator-telemetry   = { workspace = true }
+simulator-types       = { workspace = true }
+clap                  = { workspace = true }
+anyhow                = { workspace = true }
+tracing               = { workspace = true }

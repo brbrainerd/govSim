@@ -1,0 +1,139 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/simulator-types",
+    "crates/simulator-core",
+    "crates/simulator-systems",
+    "crates/simulator-econ",
+    "crates/simulator-net",
+    "crates/simulator-llm",
+    "crates/simulator-agents",
+    "crates/simulator-law",
+    "crates/simulator-ipc",
+    "crates/simulator-calibration",
+    "crates/simulator-snapshot",
+    "crates/simulator-rl",
+    "crates/simulator-scenario",
+    "crates/simulator-cli",
+    "crates/simulator-telemetry",
+    "xtask",
+]
+# tauri-app/src-tauri is intentionally excluded from the default workspace
+# until Phase 7 — it pulls in heavy Tauri build deps.
+exclude = ["tauri-app/src-tauri"]
+
+[workspace.package]
+edition      = "2024"
+rust-version = "1.95"
+license      = "Apache-2.0"
+repository   = "https://github.com/your-org/ugs"
+
+[workspace.dependencies]
+# Internal
+simulator-types       = { path = "crates/simulator-types" }
+simulator-core        = { path = "crates/simulator-core" }
+simulator-systems     = { path = "crates/simulator-systems" }
+simulator-econ        = { path = "crates/simulator-econ" }
+simulator-net         = { path = "crates/simulator-net" }
+simulator-llm         = { path = "crates/simulator-llm" }
+simulator-agents      = { path = "crates/simulator-agents" }
+simulator-law         = { path = "crates/simulator-law" }
+simulator-ipc         = { path = "crates/simulator-ipc" }
+simulator-calibration = { path = "crates/simulator-calibration" }
+simulator-snapshot    = { path = "crates/simulator-snapshot" }
+simulator-rl          = { path = "crates/simulator-rl" }
+simulator-scenario    = { path = "crates/simulator-scenario" }
+simulator-telemetry   = { path = "crates/simulator-telemetry" }
+
+# ECS
+bevy_ecs       = { version = "0.18", default-features = false }
+bevy_tasks     = { version = "0.18", default-features = false }
+bevy_reflect   = { version = "0.18", default-features = false }
+
+# Async / concurrency
+tokio          = { version = "1", features = ["full"] }
+parking_lot    = "0.12"
+rayon          = "1"
+dashmap        = "6"
+
+# Numerics
+fixed          = "1"
+nalgebra       = "0.34"
+sprs           = "0.11"
+
+# RNG / hashing
+rand           = "0.9"
+rand_chacha    = "0.9"
+rand_distr     = "0.5"
+blake3         = "1"
+ahash          = "0.8"
+
+# Serialization
+serde          = { version = "1", features = ["derive"] }
+serde_json     = "1"
+serde_yaml     = "0.9"
+bincode        = "2"
+zstd           = "0.13"
+schemars       = "0.8"
+
+# Graph
+petgraph       = "0.8"
+
+# Data
+polars         = { version = "0.53", features = ["lazy", "parquet", "dtype-full"] }
+arrow          = "56"
+arrow-flight   = "56"
+
+# IPC / RPC
+tonic          = "0.14"
+prost          = "0.14"
+capnp          = "0.25"
+capnp-rpc      = "0.25"
+shared_memory  = "0.12"
+
+# Networking / HTTP
+reqwest        = { version = "0.13", features = ["json", "stream"] }
+
+# Compiler infra
+chumsky          = "0.12"
+cranelift        = "0.120"
+cranelift-jit    = "0.120"
+cranelift-module = "0.120"
+wasmtime         = "33"
+
+# LLM-side
+tokenizers     = "0.23"
+hnsw_rs        = "0.3"
+candle-core    = "0.7"
+candle-nn      = "0.7"
+lru            = "0.16"
+
+# Observability
+tracing            = "0.1"
+tracing-subscriber = "0.3"
+
+# CLI / config
+clap          = { version = "4", features = ["derive"] }
+toml          = "0.8"
+
+# Testing
+proptest      = "1"
+insta         = "1"
+criterion     = "0.7"
+
+# Misc
+smallvec  = "1"
+bitflags  = "2"
+bytemuck  = "1"
+thiserror = "2"
+anyhow    = "1"
+
+[profile.release]
+opt-level     = 3
+lto           = "fat"
+codegen-units = 1
+debug         = "line-tables-only"
+
+[profile.sim]
+inherits      = "release"
+panic         = "abort"

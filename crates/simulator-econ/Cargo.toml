@@ -1,0 +1,16 @@
+[package]
+name        = "simulator-econ"
+version     = "0.1.0"
+edition.workspace     = true
+license.workspace     = true
+rust-version.workspace = true
+description = "Behavioral economics: bounded rationality, principal-agent corruption, contagion."
+
+[dependencies]
+simulator-core   = { workspace = true }
+simulator-types  = { workspace = true }
+simulator-net    = { workspace = true }
+nalgebra         = { workspace = true }
+rand             = { workspace = true }
+rand_distr       = { workspace = true }
+bevy_ecs         = { workspace = true }

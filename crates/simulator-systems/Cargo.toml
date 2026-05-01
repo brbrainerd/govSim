@@ -1,0 +1,16 @@
+[package]
+name        = "simulator-systems"
+version     = "0.1.0"
+edition.workspace     = true
+license.workspace     = true
+rust-version.workspace = true
+description = "Built-in ECS Systems: tax, employment, education, opinion, election, judicial, enforcement, media, migration, birth/death."
+
+[dependencies]
+simulator-core    = { workspace = true }
+simulator-types   = { workspace = true }
+simulator-econ    = { workspace = true }
+bevy_ecs          = { workspace = true }
+petgraph          = { workspace = true }
+rayon             = { workspace = true }
+tracing           = { workspace = true }

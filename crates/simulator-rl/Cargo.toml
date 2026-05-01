@@ -1,0 +1,13 @@
+[package]
+name        = "simulator-rl"
+version     = "0.1.0"
+edition.workspace     = true
+license.workspace     = true
+rust-version.workspace = true
+description = "Adversarial RL harness: Rust-side gymnasium-compatible environment for CleanRL sidecar."
+
+[dependencies]
+simulator-core = { workspace = true }
+tonic          = { workspace = true }
+prost          = { workspace = true }
+tracing        = { workspace = true }

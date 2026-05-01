@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo --version)",
+      "Bash(rustc --version)",
+      "Bash(cargo check *)",
+      "Bash(rustup check *)",
+      "Bash(rustup toolchain *)",
+      "Bash(rustup self *)",
+      "Bash(rustup update *)",
+      "Bash(cargo test *)",
+      "Bash(git add *)",
+      "Bash(git -c user.email=ugs@local -c user.name=UGS commit -q -m 'Phase 0: workspace scaffold + hello-world tick *)"
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+[package]
+name        = "simulator-types"
+version     = "0.1.0"
+edition.workspace     = true
+license.workspace     = true
+rust-version.workspace = true
+description = "Shared primitives for UGS: typed IDs, fixed-point Money, dates."
+
+[dependencies]
+serde    = { workspace = true }
+fixed    = { workspace = true }
+bytemuck = { workspace = true }
+bitflags = { workspace = true }

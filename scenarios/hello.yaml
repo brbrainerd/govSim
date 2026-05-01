@@ -1,0 +1,8 @@
+name: hello
+description: |
+  Phase 0 smoke test. Empty schedule; just ticks the clock.
+seed: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
+ticks: 1000
+population:
+  citizens: 0
+  corporations: 0

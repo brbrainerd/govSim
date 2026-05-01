@@ -1,0 +1,27 @@
+[project]
+name            = "ugs-sidecars"
+version         = "0.1.0"
+description     = "AgentTorch + PsychSim + CleanRL sidecars for the Universal Government Simulator"
+requires-python = ">=3.11,<3.12"
+
+dependencies = [
+    "torch==2.5.1",
+    "numpy>=1.26,<2.2",
+    "pyarrow>=18.0",
+    "pydantic>=2.9",
+]
+
+[project.optional-dependencies]
+agenttorch = [
+    "torch-geometric>=2.6",
+]
+psychsim = []
+rl = [
+    "gymnasium>=0.29",
+    "stable-baselines3>=2.4",
+]
+
+[tool.uv]
+package          = false
+managed          = true
+dev-dependencies = ["pytest>=8.3", "ruff>=0.6"]

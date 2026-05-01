@@ -1,0 +1,40 @@
+/target
+**/*.rs.bk
+Cargo.lock.bak
+
+# Python sidecars
+.venv/
+__pycache__/
+*.pyc
+.uv/
+uv.lock.bak
+
+# Tauri
+tauri-app/ui/node_modules/
+tauri-app/ui/dist/
+tauri-app/src-tauri/target/
+
+# Data (large)
+data/vdem/*.parquet
+data/vdem/*.csv
+data/vdem/*.rds
+data/grammars/*.bin
+
+# Models
+*.gguf
+*.safetensors
+
+# Snapshots
+*.ugs-snapshot
+*.zst
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Profiling
+*.tracy
+*.perfetto-trace
+flamegraph.svg

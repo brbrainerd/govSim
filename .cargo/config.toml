@@ -1,0 +1,5 @@
+[alias]
+xtask = "run --package xtask --"
+
+[profile.sim]
+# target-cpu=native enabled only for the `sim` profile, set via env in xtask.
