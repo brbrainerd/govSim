@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use simulator_core::{
     bevy_ecs::prelude::*,
     components::{
-        AuditFlagBits, AuditFlags, Citizen, EvasionPropensity,
+        AuditFlagBits, AuditFlags, Citizen, ConsumptionExpenditure, EvasionPropensity,
         Health, Income, LegalStatusFlags, LegalStatuses, Productivity, Wealth,
     },
     GovernmentLedger, MacroIndicators, Phase, Sim, SimClock, SimRng, Treasury,
@@ -58,6 +58,7 @@ pub fn law_dispatcher_system(
         &Income,
         Option<&Health>,
         Option<&Productivity>,
+        Option<&ConsumptionExpenditure>,
         &mut Wealth,
         &mut LegalStatuses,
         Option<&AuditFlags>,
@@ -79,9 +80,12 @@ pub fn law_dispatcher_system(
                 let Some(body) = find_body(&h.program, scope, owed_def) else { continue; };
                 let mut ctx = base_ctx.clone();
                 let mut collected = Money::from_num(0);
-                for (_, income, health_opt, prod_opt, mut wealth, _, _, _) in q.iter_mut() {
+                for (_, income, health_opt, prod_opt, consumption_opt, mut wealth, _, _, _) in q.iter_mut() {
                     let annual = income.0 * Money::from_num(360);
                     ctx.field_bindings.insert(("citizen".into(), "income".into()), Value::Money(annual));
+                    if let Some(c) = consumption_opt {
+                        ctx.field_bindings.insert(("citizen".into(), "consumption".into()), Value::Money(c.0));
+                    }
                     if let Some(h) = health_opt {
                         ctx.field_bindings.insert(("citizen".into(), "health".into()), Value::Rate(h.0.to_num::<f64>()));
                     }
@@ -100,9 +104,12 @@ pub fn law_dispatcher_system(
                 let Some(body) = find_body(&h.program, scope, amount_def) else { continue; };
                 let mut ctx = base_ctx.clone();
                 let mut disbursed = Money::from_num(0);
-                for (_, income, health_opt, prod_opt, mut wealth, _, _, _) in q.iter_mut() {
+                for (_, income, health_opt, prod_opt, consumption_opt, mut wealth, _, _, _) in q.iter_mut() {
                     let annual = income.0 * Money::from_num(360);
                     ctx.field_bindings.insert(("citizen".into(), "income".into()), Value::Money(annual));
+                    if let Some(c) = consumption_opt {
+                        ctx.field_bindings.insert(("citizen".into(), "consumption".into()), Value::Money(c.0));
+                    }
                     if let Some(h) = health_opt {
                         ctx.field_bindings.insert(("citizen".into(), "health".into()), Value::Rate(h.0.to_num::<f64>()));
                     }
@@ -118,7 +125,7 @@ pub fn law_dispatcher_system(
                 ledger.expenditure += disbursed;
             }
             LawEffect::RegistrationMarker { basis, threshold } => {
-                for (_, income, _, _, wealth, mut legal, _, _) in q.iter_mut() {
+                for (_, income, _, _, _, wealth, mut legal, _, _) in q.iter_mut() {
                     let value: f64 = match basis {
                         AmountBasis::AnnualIncome => income.0.to_num::<f64>() * 360.0,
                         AmountBasis::Wealth => wealth.0.to_num::<f64>(),
@@ -133,7 +140,7 @@ pub fn law_dispatcher_system(
             LawEffect::Audit { selection_prob, penalty_rate } => {
                 let label = format!("audit_{}", h.id.0);
                 let mut collected = Money::from_num(0);
-                for (citizen_opt, income, _, _, mut wealth, _, audit_opt, evasion_opt) in q.iter_mut() {
+                for (citizen_opt, income, _, _, _, mut wealth, _, audit_opt, evasion_opt) in q.iter_mut() {
                     let (Some(citizen), Some(audit), Some(evasion)) =
                         (citizen_opt, audit_opt, evasion_opt) else { continue; };
                     if !audit.0.contains(AuditFlagBits::FLAGGED_INCOME) { continue; }
@@ -201,7 +208,8 @@ mod tests {
     use crate::ig2::IgStatement;
     use crate::lower::lower_statement;
     use simulator_core::components::{
-        AuditFlagBits, AuditFlags, Citizen, EvasionPropensity, Income, LegalStatuses, Wealth,
+        AuditFlagBits, AuditFlags, Citizen, ConsumptionExpenditure, EvasionPropensity,
+        Income, LegalStatuses, Wealth,
     };
     use simulator_core::Sim;
     use simulator_types::{CitizenId, Money};
@@ -209,10 +217,12 @@ mod tests {
     use crate::registry::{LawHandle, LawId};
 
     fn spawn_citizen(world: &mut bevy_ecs::world::World, id: u64, monthly_income: i64) {
+        let income = Money::from_num(monthly_income);
         world.spawn((
             Citizen(CitizenId(id)),
-            Income(Money::from_num(monthly_income)),
+            Income(income),
             Wealth(Money::from_num(0i64)),
+            ConsumptionExpenditure(income * Money::from_num(4) / Money::from_num(5)), // 80%
             LegalStatuses::default(),
             AuditFlags::default(),
             EvasionPropensity(0.0),
@@ -220,10 +230,12 @@ mod tests {
     }
 
     fn spawn_corrupt_citizen(world: &mut bevy_ecs::world::World, id: u64, monthly_income: i64, evasion: f32) {
+        let income = Money::from_num(monthly_income);
         world.spawn((
             Citizen(CitizenId(id)),
-            Income(Money::from_num(monthly_income)),
+            Income(income),
             Wealth(Money::from_num(100_000i64)),
+            ConsumptionExpenditure(income * Money::from_num(4) / Money::from_num(5)),
             LegalStatuses::default(),
             AuditFlags(AuditFlagBits::FLAGGED_INCOME),
             EvasionPropensity(evasion),
@@ -495,6 +507,56 @@ mod tests {
         assert!(
             exp_low.abs() < 1.0,
             "low-unemployment: expected ~$0 disbursed, got ${exp_low:.2}"
+        );
+    }
+
+    /// VAT: 10% consumption tax collects 10% of each citizen's monthly
+    /// ConsumptionExpenditure each month and credits Treasury.
+    #[test]
+    fn consumption_tax_credits_treasury() {
+        use crate::ig2::{Computation, LowerCadence};
+
+        let mut sim = Sim::new([40u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        // 5 citizens: $500/month income → $400/month consumption (80%)
+        for i in 0..5 { spawn_citizen(&mut sim.world, i, 500); }
+
+        let stmt = crate::ig2::IgStatement::Regulative(crate::ig2::RegulativeStmt {
+            attribute: crate::ig2::ActorRef { class: "individual".into(), qualifier: None },
+            attribute_property: None,
+            deontic: None,
+            aim: "pay".into(),
+            direct_object: None, direct_object_property: None,
+            indirect_object: None, indirect_object_property: None,
+            activation_conditions: vec![], execution_constraints: vec![],
+            or_else: None,
+            computation: Some(Computation::ConsumptionTax {
+                rate: 0.10,
+                cadence: LowerCadence::Monthly,
+            }),
+        });
+        let lowered = crate::lower::lower_statement(&stmt).expect("lowering");
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(LawHandle {
+            id: LawId(0), version: 1,
+            program: Arc::new(lowered.program),
+            cadence: lowered.cadence,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: lowered.effect,
+        });
+
+        // Run 1 year (12 monthly firings at ticks 30, 60, ..., 360).
+        for _ in 0..=360 { sim.step(); }
+
+        let treasury = sim.world.resource::<Treasury>();
+        let bal: f64 = treasury.balance.to_num();
+        // 5 citizens × $400/mo × 10% VAT × 12 months = $2 400
+        let expected = 5.0 * 400.0 * 0.10 * 12.0;
+        assert!(
+            (bal - expected).abs() < 1.0,
+            "expected ~${expected:.0} in treasury from VAT, got ${bal:.2}"
         );
     }
 

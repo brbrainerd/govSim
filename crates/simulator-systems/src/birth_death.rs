@@ -15,8 +15,9 @@
 use simulator_core::{
     bevy_ecs::prelude::*,
     components::{
-        Age, AuditFlags, Citizen, EmploymentStatus, EvasionPropensity, Health, IdeologyVector,
-        Income, LegalStatusFlags, LegalStatuses, Location, Productivity, Sex, Wealth,
+        Age, AuditFlags, Citizen, ConsumptionExpenditure, EmploymentStatus, EvasionPropensity,
+        Health, IdeologyVector, Income, LegalStatusFlags, LegalStatuses, Location,
+        Productivity, Sex, Wealth,
     },
     Phase, Sim, SimClock, SimRng,
 };
@@ -78,6 +79,7 @@ pub fn birth_death_system(
             LegalStatuses(LegalStatusFlags::MINOR | LegalStatusFlags::CITIZEN),
             AuditFlags::default(),
             EvasionPropensity(0.0), // newborns are honest
+            ConsumptionExpenditure(income * Money::from_num(4) / Money::from_num(5)),
         ));
     }
 }

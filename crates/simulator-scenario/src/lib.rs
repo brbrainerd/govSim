@@ -8,9 +8,9 @@ use serde::{Deserialize, Serialize};
 
 use simulator_core::{
     components::{
-        Age, ApprovalRating, AuditFlagBits, AuditFlags, Citizen, EmploymentStatus, EvasionPropensity,
-        Health, IdeologyVector, Income, LegalStatusFlags, LegalStatuses, Location, Productivity,
-        Sex, Wealth,
+        Age, ApprovalRating, AuditFlagBits, AuditFlags, Citizen, ConsumptionExpenditure,
+        EmploymentStatus, EvasionPropensity, Health, IdeologyVector, Income, LegalStatusFlags,
+        LegalStatuses, Location, Productivity, Sex, Wealth,
     },
     Sim,
 };
@@ -175,6 +175,7 @@ impl Scenario {
                 legal,
                 audit,
                 evasion,
+                ConsumptionExpenditure(income * Money::from_num(4) / Money::from_num(5)),
             ));
         }
     }

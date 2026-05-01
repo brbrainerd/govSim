@@ -78,6 +78,11 @@ bitflags! {
 #[derive(Component, Copy, Clone, Debug, Default)]
 pub struct AuditFlags(pub AuditFlagBits);
 
+/// Monthly household consumption spending (≈ 0.8 × monthly income by default).
+/// Updated by the consumption system each tick once income changes.
+#[derive(Component, Copy, Clone, Debug, Default)]
+pub struct ConsumptionExpenditure(pub Money);
+
 // --- Behavioral ---------------------------------------------------------
 
 /// Fraction of income a citizen attempts to hide from tax authorities [0, 1].

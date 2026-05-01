@@ -25,6 +25,7 @@ pub fn citizen_schema() -> HashMap<&'static str, Type> {
     let mut m = HashMap::new();
     m.insert("income",       Type::Money);
     m.insert("wealth",       Type::Money);
+    m.insert("consumption",  Type::Money);
     m.insert("health",       Type::Rate);
     m.insert("productivity", Type::Rate);
     m

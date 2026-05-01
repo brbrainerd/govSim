@@ -14,8 +14,9 @@ use serde::{Deserialize, Serialize};
 use simulator_core::{
     MacroIndicators, SimClock, SimRng, Treasury,
     components::{
-        Age, ApprovalRating, AuditFlags, Citizen, EmploymentStatus, EvasionPropensity, Health,
-        IdeologyVector, Income, LegalStatuses, Location, Productivity, Sex, Wealth,
+        Age, ApprovalRating, AuditFlags, Citizen, ConsumptionExpenditure, EmploymentStatus,
+        EvasionPropensity, Health, IdeologyVector, Income, LegalStatuses, Location,
+        Productivity, Sex, Wealth,
     },
 };
 use simulator_net::graph::InfluenceGraph;
@@ -24,7 +25,7 @@ use simulator_types::{CitizenId, Money, RegionId, Score};
 
 use crate::SnapshotError;
 
-const SNAPSHOT_VERSION: u32 = 5;
+const SNAPSHOT_VERSION: u32 = 6;
 
 #[derive(Serialize, Deserialize)]
 struct SnapshotHeader {
@@ -53,6 +54,7 @@ struct CitizenRow {
     audit_flags: u32,
     approval: u32,  // Score bits
     evasion_propensity: f32,
+    consumption: i128,  // Money bits (monthly ConsumptionExpenditure)
 }
 
 #[derive(Serialize, Deserialize)]
@@ -92,10 +94,10 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
             &Citizen, &Age, &Sex, &Location, &Health,
             &Income, &Wealth, &EmploymentStatus, &Productivity,
             &IdeologyVector, &LegalStatuses, &AuditFlags, &ApprovalRating,
-            &EvasionPropensity,
+            &EvasionPropensity, &ConsumptionExpenditure,
         )>()
         .iter(world)
-        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af, ar, ep)| CitizenRow {
+        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af, ar, ep, ce)| CitizenRow {
             id:                 c.0.0,
             age:                a.0,
             sex:                *s as u8,
@@ -110,6 +112,7 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
             audit_flags:        af.0.bits(),
             approval:           ar.0.to_bits(),
             evasion_propensity: ep.0,
+            consumption:        ce.0.to_bits(),
         })
         .collect();
 
@@ -244,6 +247,7 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<(u64, u64), Snaps
             LegalStatuses(LegalStatusFlags::from_bits_truncate(r.legal_flags)),
             AuditFlags(AuditFlagBits::from_bits_truncate(r.audit_flags)),
             EvasionPropensity(r.evasion_propensity),
+            ConsumptionExpenditure(Money::from_bits(r.consumption)),
         ));
     }
 

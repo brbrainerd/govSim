@@ -124,6 +124,13 @@ pub enum Computation {
         penalty_rate: f64,
         cadence: LowerCadence,
     },
+    /// Flat-rate consumption tax (VAT / GST). Applied to each citizen's monthly
+    /// `ConsumptionExpenditure` component. Revenue credited to Treasury.
+    ConsumptionTax {
+        /// Tax rate as a fraction of consumption expenditure [0, 1].
+        rate: f64,
+        cadence: LowerCadence,
+    },
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]

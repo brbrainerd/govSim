@@ -8,8 +8,9 @@ use bevy_ecs::world::World;
 use blake3::Hasher;
 use simulator_core::{MacroIndicators, SimClock, Treasury};
 use simulator_core::components::{
-    Age, ApprovalRating, AuditFlags, Citizen, EmploymentStatus, EvasionPropensity, Health,
-    IdeologyVector, Income, LegalStatuses, Location, Productivity, Sex, Wealth,
+    Age, ApprovalRating, AuditFlags, Citizen, ConsumptionExpenditure, EmploymentStatus,
+    EvasionPropensity, Health, IdeologyVector, Income, LegalStatuses, Location,
+    Productivity, Sex, Wealth,
 };
 use simulator_types::CitizenId;
 
@@ -19,7 +20,7 @@ pub type StateHash = [u8; 32];
 type CitizenRow = (
     CitizenId, Age, Sex, Location, Health, Income, Wealth,
     EmploymentStatus, Productivity, IdeologyVector, LegalStatuses, AuditFlags, ApprovalRating,
-    EvasionPropensity,
+    EvasionPropensity, ConsumptionExpenditure,
 );
 
 /// Compute a deterministic hash of every citizen component + global resources.
@@ -44,10 +45,11 @@ pub fn state_hash(world: &mut World) -> StateHash {
             &AuditFlags,
             &ApprovalRating,
             &EvasionPropensity,
+            &ConsumptionExpenditure,
         )>()
         .iter(world)
-        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af, ar, ep)| {
-            (c.0, *a, *s, *l, *h, *i, *w, *e, *p, *iv, *ls, *af, *ar, *ep)
+        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af, ar, ep, ce)| {
+            (c.0, *a, *s, *l, *h, *i, *w, *e, *p, *iv, *ls, *af, *ar, *ep, *ce)
         })
         .collect();
 
@@ -55,7 +57,7 @@ pub fn state_hash(world: &mut World) -> StateHash {
 
     let mut hasher = Hasher::new();
 
-    for (id, age, sex, loc, health, income, wealth, emp, prod, ideology, legal, audit, approval, evasion) in
+    for (id, age, sex, loc, health, income, wealth, emp, prod, ideology, legal, audit, approval, evasion, consumption) in
         &citizens
     {
         hasher.update(&id.0.to_le_bytes());
@@ -76,6 +78,7 @@ pub fn state_hash(world: &mut World) -> StateHash {
         hasher.update(&audit.0.bits().to_le_bytes());
         hasher.update(&approval.0.to_bits().to_le_bytes());
         hasher.update(&evasion.0.to_bits().to_le_bytes());
+        hasher.update(&consumption.0.to_bits().to_le_bytes());
     }
 
     // Mix in global resources.

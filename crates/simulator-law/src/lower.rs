@@ -58,6 +58,9 @@ pub fn lower_statement(stmt: &IgStatement) -> Result<Lowered, LowerError> {
         Computation::AuditEnforcement { selection_prob, penalty_rate, cadence } => {
             lower_audit(*selection_prob, *penalty_rate, *cadence)
         }
+        Computation::ConsumptionTax { rate, cadence } => {
+            lower_consumption_tax(*rate, *cadence)
+        }
     }
 }
 
@@ -309,6 +312,28 @@ fn lower_conditional_transfer(
             scope: "ConditionalTransfer",
             amount_def: "transfer_amount",
         },
+        cadence: cadence_to_runtime(cadence),
+    })
+}
+
+/// Flat-rate consumption tax / VAT: `vat_owed = citizen.consumption * rate`.
+/// Reuses `PerCitizenIncomeTax` effect so the dispatcher deducts from Wealth
+/// and credits Treasury — the only difference is the DSL references
+/// `citizen.consumption` rather than `citizen.income`.
+fn lower_consumption_tax(rate: f64, cadence: LowerCadence) -> Result<Lowered, LowerError> {
+    let consumption = Expr::Field { obj: "citizen".into(), field: "consumption".into() };
+    let body = DefaultExpr {
+        base: mul(money(rate), consumption),
+        exceptions: vec![],
+    };
+    let scope = Scope {
+        name: "ConsumptionTax".into(),
+        params: vec![ParamDecl { name: "citizen".into(), ty: Type::Money }],
+        items: vec![Item::Definition { name: "vat_owed".into(), ty: Type::Money, body }],
+    };
+    Ok(Lowered {
+        program: Program { scopes: vec![scope] },
+        effect: LawEffect::PerCitizenIncomeTax { scope: "ConsumptionTax", owed_def: "vat_owed" },
         cadence: cadence_to_runtime(cadence),
     })
 }
