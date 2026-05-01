@@ -28,6 +28,10 @@ enum Cmd {
         /// Override the scenario tick count.
         #[arg(long)]
         ticks: Option<u64>,
+        /// Optional UGS-Catala law file to enact at tick 0. If absent, the
+        /// hardcoded 20%-flat `taxation_system` is used instead.
+        #[arg(long)]
+        law: Option<PathBuf>,
     },
     /// Replay from a snapshot (Phase 1).
     Replay {
@@ -49,7 +53,7 @@ enum Cmd {
 fn main() -> Result<()> {
     simulator_telemetry::init();
     match Cli::parse().cmd {
-        Cmd::Run { scenario, ticks } => run(scenario, ticks),
+        Cmd::Run { scenario, ticks, law } => run(scenario, ticks, law),
         Cmd::Replay { snapshot } => {
             tracing::warn!(?snapshot, "replay: not yet implemented (Phase 1)");
             Ok(())
@@ -62,13 +66,44 @@ fn main() -> Result<()> {
     }
 }
 
-fn run(path: PathBuf, override_ticks: Option<u64>) -> Result<()> {
+fn run(path: PathBuf, override_ticks: Option<u64>, law_path: Option<PathBuf>) -> Result<()> {
+    use simulator_law::{
+        dsl::{parse_program, typecheck_program},
+        register_law_dispatcher, Cadence, LawHandle, LawId, LawRegistry,
+    };
+    use simulator_law::registry::LawEffect;
+    use std::sync::Arc;
+
     let scenario = Scenario::load(&path)?;
     tracing::info!(name = %scenario.name, "loaded scenario");
 
     let total = override_ticks.unwrap_or(scenario.ticks);
     let mut sim = Sim::new(scenario.seed);
-    simulator_systems::register_phase1_systems(&mut sim);
+
+    if let Some(law_path) = law_path.as_ref() {
+        // Compile the .ugscat file and enact it via the registry.
+        let src = std::fs::read_to_string(law_path)?;
+        let program = parse_program(&src).map_err(|e| anyhow::anyhow!("parse: {e}"))?;
+        typecheck_program(&program).map_err(|e| anyhow::anyhow!("typecheck: {e}"))?;
+        register_law_dispatcher(&mut sim);
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        let handle = LawHandle {
+            id: LawId(0),
+            version: 1,
+            program: Arc::new(program),
+            cadence: Cadence::Yearly,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: LawEffect::PerCitizenIncomeTax {
+                scope: "IncomeTax",
+                owed_def: "tax_owed",
+            },
+        };
+        let id = registry.enact(handle);
+        tracing::info!(?id, "enacted law from {}", law_path.display());
+    } else {
+        simulator_systems::register_phase1_systems(&mut sim);
+    }
 
     let spawn_start = Instant::now();
     scenario.spawn_population(&mut sim);

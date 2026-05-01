@@ -1,0 +1,16 @@
+# Progressive income tax — worked example from blueprint §6.6.
+# Brackets in USD: 0%, 10%, 22%, 35%.
+
+scope IncomeTax(citizen: money) {
+  def tax_owed : money =
+        0.0
+    exception (citizen.income > 12000.0) =
+        0.10 * (min(citizen.income, 50000.0) - 12000.0)
+    exception (citizen.income > 50000.0) =
+        0.10 * (50000.0 - 12000.0) +
+        0.22 * (min(citizen.income, 200000.0) - 50000.0)
+    exception (citizen.income > 200000.0) =
+        0.10 * (50000.0 - 12000.0) +
+        0.22 * (200000.0 - 50000.0) +
+        0.35 * (citizen.income - 200000.0)
+}
