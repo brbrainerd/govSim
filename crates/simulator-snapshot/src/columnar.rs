@@ -24,7 +24,7 @@ use simulator_types::{CitizenId, Money, RegionId, Score};
 
 use crate::SnapshotError;
 
-const SNAPSHOT_VERSION: u32 = 2;
+const SNAPSHOT_VERSION: u32 = 3;
 
 #[derive(Serialize, Deserialize)]
 struct SnapshotHeader {
@@ -63,6 +63,11 @@ struct ResourceBlock {
     unemployment: f32,
     inflation: f32,
     approval: f32,
+    government_revenue: i128,
+    government_expenditure: i128,
+    incumbent_party: u8,
+    last_election_tick: u64,
+    election_margin: f32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -127,13 +132,18 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
     };
 
     let resources = ResourceBlock {
-        treasury:     treasury.balance.to_bits(),
-        population:   macro_.population,
-        gdp:          macro_.gdp.to_bits(),
-        gini:         macro_.gini,
-        unemployment: macro_.unemployment,
-        inflation:    macro_.inflation,
-        approval:     macro_.approval,
+        treasury:               treasury.balance.to_bits(),
+        population:             macro_.population,
+        gdp:                    macro_.gdp.to_bits(),
+        gini:                   macro_.gini,
+        unemployment:           macro_.unemployment,
+        inflation:              macro_.inflation,
+        approval:               macro_.approval,
+        government_revenue:     macro_.government_revenue.to_bits(),
+        government_expenditure: macro_.government_expenditure.to_bits(),
+        incumbent_party:        macro_.incumbent_party,
+        last_election_tick:     macro_.last_election_tick,
+        election_margin:        macro_.election_margin,
     };
 
     // Encode with bincode then compress.
@@ -182,12 +192,17 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<(u64, u64), Snaps
     }
     {
         let mut macro_ = world.resource_mut::<MacroIndicators>();
-        macro_.population   = resources.population;
-        macro_.gdp          = Money::from_bits(resources.gdp);
-        macro_.gini         = resources.gini;
-        macro_.unemployment = resources.unemployment;
-        macro_.inflation    = resources.inflation;
-        macro_.approval     = resources.approval;
+        macro_.population             = resources.population;
+        macro_.gdp                    = Money::from_bits(resources.gdp);
+        macro_.gini                   = resources.gini;
+        macro_.unemployment           = resources.unemployment;
+        macro_.inflation              = resources.inflation;
+        macro_.approval               = resources.approval;
+        macro_.government_revenue     = Money::from_bits(resources.government_revenue);
+        macro_.government_expenditure = Money::from_bits(resources.government_expenditure);
+        macro_.incumbent_party        = resources.incumbent_party;
+        macro_.last_election_tick     = resources.last_election_tick;
+        macro_.election_margin        = resources.election_margin;
     }
 
     // Restore influence graph if present.
