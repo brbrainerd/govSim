@@ -160,6 +160,17 @@ pub enum Computation {
         taper_rate: f64,
         cadence: LowerCadence,
     },
+    /// Environmental abatement program: removes `pollution_reduction_pu`
+    /// pollution units per firing at a Treasury cost of `cost_per_pu` per
+    /// unit removed. Treasury is debited proportional to what it can afford;
+    /// partial abatement applies when funds are insufficient.
+    EnvironmentalAbatement {
+        /// Pollution units (PU) targeted for removal per firing.
+        pollution_reduction_pu: f64,
+        /// Treasury cost in simulation currency cents per PU removed.
+        cost_per_pu: f64,
+        cadence: LowerCadence,
+    },
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]

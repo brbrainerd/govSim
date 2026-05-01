@@ -13,7 +13,8 @@ use simulator_core::{
         Health, Income, LegalStatusFlags, LegalStatuses, MonthlyBenefitReceived,
         MonthlyTaxPaid, Productivity, Wealth,
     },
-    GovernmentLedger, MacroIndicators, Phase, PollutionStock, Sim, SimClock, SimRng, Treasury,
+    CrisisState, GovernmentLedger, LegitimacyDebt, MacroIndicators, Phase,
+    PollutionStock, RightsLedger, Sim, SimClock, SimRng, Treasury,
 };
 use rand::Rng;
 use simulator_types::Money;
@@ -55,6 +56,9 @@ pub fn law_dispatcher_system(
     mut treasury: ResMut<Treasury>,
     mut ledger: ResMut<GovernmentLedger>,
     mut pollution: ResMut<PollutionStock>,
+    debt: Res<LegitimacyDebt>,
+    rights: Res<RightsLedger>,
+    crisis: Res<CrisisState>,
     mut q: Query<(
         Option<&Citizen>,
         &Income,
@@ -82,7 +86,7 @@ pub fn law_dispatcher_system(
     if active.is_empty() { return; }
 
     let tick = clock.tick;
-    let base_ctx = make_dispatch_ctx(tick, &macro_, &treasury);
+    let base_ctx = make_dispatch_ctx(tick, &macro_, &treasury, &debt, &rights, &crisis, &pollution);
     for h in &active {
         if !h.cadence.fires_at(tick) { continue; }
 
@@ -194,14 +198,22 @@ pub fn law_dispatcher_system(
 
 /// Build the base EvalCtx pre-loaded with time bindings and macro aggregates.
 /// Each law's per-citizen loop clones this and inserts citizen-specific fields.
-fn make_dispatch_ctx(tick: u64, macro_: &MacroIndicators, treasury: &Treasury) -> EvalCtx {
+fn make_dispatch_ctx(
+    tick: u64,
+    macro_: &MacroIndicators,
+    treasury: &Treasury,
+    debt: &LegitimacyDebt,
+    rights: &RightsLedger,
+    crisis: &CrisisState,
+    pollution: &PollutionStock,
+) -> EvalCtx {
     let mut b = HashMap::new();
     // Time
     b.insert("tick".into(),    Value::Int(tick as i64));
     b.insert("year".into(),    Value::Int((tick / 360) as i64));
     b.insert("quarter".into(), Value::Int(((tick / 90) % 4) as i64));
     b.insert("month".into(),   Value::Int(((tick / 30) % 12) as i64));
-    // Macro aggregates — pre-computed by MacroIndicators each tick
+    // Macro aggregates
     b.insert("unemployment".into(),           Value::Rate(macro_.unemployment as f64));
     b.insert("inflation".into(),              Value::Rate(macro_.inflation as f64));
     b.insert("gini".into(),                   Value::Rate(macro_.gini as f64));
@@ -211,7 +223,23 @@ fn make_dispatch_ctx(tick: u64, macro_: &MacroIndicators, treasury: &Treasury) -
     b.insert("government_revenue".into(),     Value::Money(macro_.government_revenue));
     b.insert("government_expenditure".into(), Value::Money(macro_.government_expenditure));
     b.insert("treasury_balance".into(),       Value::Money(treasury.balance));
+    // Externalities & political state (v10)
+    b.insert("pollution_stock".into(),        Value::Rate(pollution.stock));
+    b.insert("legitimacy_debt".into(),        Value::Rate(debt.stock as f64));
+    b.insert("rights_granted".into(),         Value::Int(rights.granted.bits() as i64));
+    b.insert("crisis_kind".into(),            Value::Int(crisis_kind_to_int(crisis)));
+    b.insert("crisis_remaining".into(),       Value::Int(crisis.remaining_ticks as i64));
     EvalCtx { bindings: b, field_bindings: HashMap::new() }
+}
+
+fn crisis_kind_to_int(crisis: &CrisisState) -> i64 {
+    match crisis.kind {
+        simulator_core::CrisisKind::None            => 0,
+        simulator_core::CrisisKind::War             => 1,
+        simulator_core::CrisisKind::Pandemic        => 2,
+        simulator_core::CrisisKind::Recession       => 3,
+        simulator_core::CrisisKind::NaturalDisaster => 4,
+    }
 }
 
 fn find_body<'p>(

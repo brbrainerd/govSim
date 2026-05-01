@@ -13,7 +13,7 @@ use simulator_core::{
         LegalStatuses, Location, MonthlyBenefitReceived, MonthlyTaxPaid, Productivity,
         SavingsRate, Sex, Wealth,
     },
-    Sim,
+    CivicRights, LegitimacyDebt, PollutionStock, RightsLedger, Sim,
 };
 use simulator_types::{CitizenId, Money, RegionId, Score};
 
@@ -28,6 +28,21 @@ pub struct Scenario {
     pub ticks: u64,
     #[serde(default)]
     pub population: PopulationSpec,
+    /// Civic rights granted at tick 0 as a bitmask over CivicRights flags.
+    /// If absent, no rights are pre-granted (historical start state).
+    /// Example: 0x1FF grants all nine defined rights.
+    #[serde(default)]
+    pub initial_rights: Option<u32>,
+    /// Starting pollution stock (PU). Defaults to 0.0 (pre-industrial).
+    #[serde(default)]
+    pub initial_pollution: Option<f64>,
+    /// Override the monthly crisis probability (percent, 0–100).
+    /// If absent, uses the value of `UGS_CRISIS_PROB_PCT` env var (default 2).
+    #[serde(default)]
+    pub crisis_prob_pct: Option<u32>,
+    /// Starting legitimacy debt stock. Defaults to 0.0.
+    #[serde(default)]
+    pub initial_legitimacy_debt: Option<f32>,
 }
 
 fn default_seed() -> [u8; 32] { [0u8; 32] }
@@ -185,6 +200,36 @@ impl Scenario {
                     MonthlyBenefitReceived::default(),
                 ),
             ));
+        }
+    }
+
+    /// Apply scenario-level world configuration (rights, pollution, debt).
+    /// Call this after `spawn_population` and after all systems are registered,
+    /// before the first `sim.step()`.
+    pub fn configure_world(&self, sim: &mut Sim) {
+        let world = &mut sim.world;
+
+        if let Some(rights_bits) = self.initial_rights {
+            let mut ledger = world.resource_mut::<RightsLedger>();
+            let rights = CivicRights::from_bits_truncate(rights_bits);
+            ledger.granted       = rights;
+            ledger.historical_max = rights;
+            // Tick 0 — no honeymoon at game start.
+            ledger.last_expansion_tick = 0;
+        }
+
+        if let Some(stock) = self.initial_pollution {
+            world.resource_mut::<PollutionStock>().stock = stock.max(0.0);
+        }
+
+        if let Some(debt) = self.initial_legitimacy_debt {
+            world.resource_mut::<LegitimacyDebt>().stock = debt.max(0.0);
+        }
+
+        if let Some(pct) = self.crisis_prob_pct {
+            // Write to the env var that crisis_system reads for its probability override.
+            // SAFETY: single-threaded scenario setup; no concurrent threads at this point.
+            unsafe { std::env::set_var("UGS_CRISIS_PROB_PCT", pct.min(100).to_string()); }
         }
     }
 }

@@ -35,13 +35,17 @@
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    components::ApprovalRating,
-    CrisisKind, CrisisState, Phase, Sim, SimClock, SimRng,
+    components::{ApprovalRating, Citizen, EmploymentStatus},
+    CrisisKind, CrisisState, Phase, Sim, SimClock, SimRng, Treasury,
 };
-use simulator_types::Score;
+use simulator_types::{Money, Score};
 use rand::Rng;
 
 const CRISIS_PERIOD: u64 = 30; // monthly check
+/// Fraction of Treasury drained at War onset (mobilization costs).
+const WAR_TREASURY_DRAIN: f64 = 0.10;
+/// Fraction of employed citizens laid off at Recession onset.
+const RECESSION_LAYOFF_RATE: f64 = 0.03;
 
 fn crisis_prob_pct() -> u32 {
     std::env::var("UGS_CRISIS_PROB_PCT")
@@ -65,11 +69,14 @@ const CRISIS_TABLE: &[CrisisSpec] = &[
     CrisisSpec { kind: CrisisKind::NaturalDisaster, onset_shock: -0.03, cost_multiplier: 0.30, min_ticks:  30, max_ticks:  90 },
 ];
 
+#[allow(clippy::too_many_arguments)]
 pub fn crisis_system(
     clock: Res<SimClock>,
     rng_res: Res<SimRng>,
     mut crisis: ResMut<CrisisState>,
+    mut treasury: ResMut<Treasury>,
     mut approvals: Query<&mut ApprovalRating>,
+    mut employment_q: Query<(&Citizen, &mut EmploymentStatus)>,
 ) {
     if !clock.tick.is_multiple_of(CRISIS_PERIOD) || clock.tick == 0 { return; }
 
@@ -97,11 +104,32 @@ pub fn crisis_system(
     crisis.onset_shock      = spec.onset_shock;
     crisis.cost_multiplier  = spec.cost_multiplier;
 
-    // Broadcast onset approval shock to all citizens.
+    // --- Onset approval shock ---
     let shock = spec.onset_shock;
     for mut ap in approvals.iter_mut() {
         let new_a = (ap.0.to_num::<f32>() + shock).clamp(0.0, 1.0);
         ap.0 = Score::from_num(new_a);
+    }
+
+    // --- Crisis-specific economic onset effects ---
+    match spec.kind {
+        CrisisKind::War => {
+            // Mobilization cost: drain a fraction of Treasury.
+            let drain = Money::from_num(treasury.balance.to_num::<f64>() * WAR_TREASURY_DRAIN);
+            treasury.balance = (treasury.balance - drain).max(Money::from_num(0));
+        }
+        CrisisKind::Recession => {
+            // Layoff wave: flip RECESSION_LAYOFF_RATE of employed citizens to Unemployed.
+            let mut layoff_rng = rng_res.derive("crisis_layoff", clock.tick);
+            for (_citizen, mut status) in employment_q.iter_mut() {
+                if *status == EmploymentStatus::Employed
+                    && layoff_rng.random::<f64>() < RECESSION_LAYOFF_RATE
+                {
+                    *status = EmploymentStatus::Unemployed;
+                }
+            }
+        }
+        _ => {}
     }
 }
 

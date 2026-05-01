@@ -70,6 +70,9 @@ pub fn lower_statement(stmt: &IgStatement) -> Result<Lowered, LowerError> {
         Computation::NegativeIncomeTax { guarantee, taper_rate, cadence } => {
             lower_negative_income_tax(*guarantee, *taper_rate, *cadence)
         }
+        Computation::EnvironmentalAbatement { pollution_reduction_pu, cost_per_pu, cadence } => {
+            lower_abatement(*pollution_reduction_pu, *cost_per_pu, *cadence)
+        }
     }
 }
 
@@ -421,6 +424,23 @@ fn lower_wealth_tax(exemption: f64, rate: f64, cadence: LowerCadence) -> Result<
     Ok(Lowered {
         program: Program { scopes: vec![scope] },
         effect: LawEffect::PerCitizenIncomeTax { scope: "WealthTax", owed_def: "tax_owed" },
+        cadence: cadence_to_runtime(cadence),
+    })
+}
+
+/// Environmental abatement: the DSL scope is a no-op placeholder — the actual
+/// Treasury debit + PollutionStock reduction is handled entirely by the
+/// dispatcher via `LawEffect::Abatement`.
+fn lower_abatement(pollution_reduction_pu: f64, cost_per_pu: f64, cadence: LowerCadence) -> Result<Lowered, LowerError> {
+    let body = DefaultExpr { base: Expr::LitMoney(0.0), exceptions: vec![] };
+    let scope = Scope {
+        name: "EnvironmentalAbatement".into(),
+        params: vec![ParamDecl { name: "policy".into(), ty: Type::Money }],
+        items: vec![Item::Definition { name: "noop".into(), ty: Type::Money, body }],
+    };
+    Ok(Lowered {
+        program: Program { scopes: vec![scope] },
+        effect: LawEffect::Abatement { pollution_reduction_pu, cost_per_pu },
         cadence: cadence_to_runtime(cadence),
     })
 }

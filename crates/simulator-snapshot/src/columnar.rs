@@ -12,7 +12,8 @@
 use bevy_ecs::world::World;
 use serde::{Deserialize, Serialize};
 use simulator_core::{
-    MacroIndicators, PriceLevel, SimClock, SimRng, Treasury,
+    CrisisKind, CrisisState, LegitimacyDebt, MacroIndicators, PollutionStock, PriceLevel,
+    RightsLedger, SimClock, SimRng, Treasury,
     components::{
         Age, ApprovalRating, AuditFlags, Citizen, ConsumptionExpenditure, EmploymentStatus,
         EvasionPropensity, Health, IdeologyVector, Income, LegalStatuses, Location,
@@ -25,7 +26,7 @@ use simulator_types::{CitizenId, Money, RegionId, Score};
 
 use crate::SnapshotError;
 
-const SNAPSHOT_VERSION: u32 = 9;
+const SNAPSHOT_VERSION: u32 = 10;
 
 #[derive(Serialize, Deserialize)]
 struct SnapshotHeader {
@@ -75,6 +76,18 @@ struct ResourceBlock {
     election_margin: f32,
     consecutive_terms: u32,
     price_level: f64,
+    // v10 additions
+    legitimacy_debt_stock: f32,
+    legitimacy_debt_decay: f32,
+    rights_granted: u32,
+    rights_historical_max: u32,
+    rights_last_expansion_tick: u64,
+    crisis_kind: u8,
+    crisis_remaining_ticks: u64,
+    crisis_cost_multiplier: f32,
+    pollution_stock: f64,
+    pollution_decay: f64,
+    pollution_emission_rate: f64,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -83,6 +96,26 @@ struct GraphBlock {
     row_ptr: Vec<u32>,
     col_ind: Vec<u32>,
     weights: Vec<f32>,
+}
+
+fn crisis_kind_to_u8(k: CrisisKind) -> u8 {
+    match k {
+        CrisisKind::None            => 0,
+        CrisisKind::War             => 1,
+        CrisisKind::Pandemic        => 2,
+        CrisisKind::Recession       => 3,
+        CrisisKind::NaturalDisaster => 4,
+    }
+}
+
+fn crisis_kind_from_u8(v: u8) -> CrisisKind {
+    match v {
+        1 => CrisisKind::War,
+        2 => CrisisKind::Pandemic,
+        3 => CrisisKind::Recession,
+        4 => CrisisKind::NaturalDisaster,
+        _ => CrisisKind::None,
+    }
 }
 
 /// Serialize the world to a zstd-compressed bincode snapshot.
@@ -142,7 +175,11 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
         initial_population,
     };
 
-    let price_level = world.resource::<PriceLevel>().level;
+    let price_level  = world.resource::<PriceLevel>().level;
+    let debt         = world.resource::<LegitimacyDebt>().clone();
+    let rights       = world.resource::<RightsLedger>().clone();
+    let crisis       = world.resource::<CrisisState>().clone();
+    let pollution    = world.resource::<PollutionStock>().clone();
 
     let resources = ResourceBlock {
         treasury:               treasury.balance.to_bits(),
@@ -160,6 +197,17 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
         election_margin:        macro_.election_margin,
         consecutive_terms:      macro_.consecutive_terms,
         price_level,
+        legitimacy_debt_stock:       debt.stock,
+        legitimacy_debt_decay:       debt.decay,
+        rights_granted:              rights.granted.bits(),
+        rights_historical_max:       rights.historical_max.bits(),
+        rights_last_expansion_tick:  rights.last_expansion_tick,
+        crisis_kind:                 crisis_kind_to_u8(crisis.kind),
+        crisis_remaining_ticks:      crisis.remaining_ticks,
+        crisis_cost_multiplier:      crisis.cost_multiplier,
+        pollution_stock:             pollution.stock,
+        pollution_decay:             pollution.decay,
+        pollution_emission_rate:     pollution.emission_rate,
     };
 
     // Encode with bincode then compress.
@@ -225,6 +273,30 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<(u64, u64), Snaps
     {
         let mut pl = world.resource_mut::<PriceLevel>();
         pl.level = resources.price_level;
+    }
+    {
+        let mut debt = world.resource_mut::<LegitimacyDebt>();
+        debt.stock = resources.legitimacy_debt_stock;
+        debt.decay = resources.legitimacy_debt_decay;
+    }
+    {
+        use simulator_core::CivicRights;
+        let mut rights = world.resource_mut::<RightsLedger>();
+        rights.granted              = CivicRights::from_bits_truncate(resources.rights_granted);
+        rights.historical_max       = CivicRights::from_bits_truncate(resources.rights_historical_max);
+        rights.last_expansion_tick  = resources.rights_last_expansion_tick;
+    }
+    {
+        let mut crisis = world.resource_mut::<CrisisState>();
+        crisis.kind              = crisis_kind_from_u8(resources.crisis_kind);
+        crisis.remaining_ticks   = resources.crisis_remaining_ticks;
+        crisis.cost_multiplier   = resources.crisis_cost_multiplier;
+    }
+    {
+        let mut pollution = world.resource_mut::<PollutionStock>();
+        pollution.stock         = resources.pollution_stock;
+        pollution.decay         = resources.pollution_decay;
+        pollution.emission_rate = resources.pollution_emission_rate;
     }
 
     // Restore influence graph if present.
@@ -321,12 +393,10 @@ mod tests {
     #[test]
     fn save_load_round_trip_tick() {
         let mut sim = Sim::new([1u8; 32]);
-        // Run a few ticks with an empty world (no citizens needed for the tick test).
         for _ in 0..5 { sim.step(); }
         let blob = save_snapshot(&mut sim.world).expect("save");
         assert!(!blob.is_empty());
 
-        // Fresh sim — restore into it.
         let mut sim2 = Sim::new([0u8; 32]);
         let (n, _init) = load_snapshot(&mut sim2.world, &blob).expect("load");
         assert_eq!(n, 0);
@@ -335,5 +405,42 @@ mod tests {
             sim2.world.resource::<Treasury>().balance,
             sim.world.resource::<Treasury>().balance
         );
+    }
+
+    #[test]
+    fn save_load_preserves_new_resources() {
+        use simulator_core::{CivicRights, CrisisKind, CrisisState, LegitimacyDebt,
+                             PollutionStock, RightsLedger};
+
+        let mut sim = Sim::new([7u8; 32]);
+
+        // Mutate each new resource to non-default values.
+        sim.world.resource_mut::<LegitimacyDebt>().stock = 0.42;
+        {
+            let mut r = sim.world.resource_mut::<RightsLedger>();
+            r.grant(CivicRights::UNIVERSAL_SUFFRAGE | CivicRights::FREE_SPEECH, 3);
+        }
+        {
+            let mut c = sim.world.resource_mut::<CrisisState>();
+            c.kind = CrisisKind::Pandemic;
+            c.remaining_ticks = 120;
+            c.cost_multiplier = 0.4;
+        }
+        sim.world.resource_mut::<PollutionStock>().stock = 2.71;
+
+        let blob = save_snapshot(&mut sim.world).expect("save");
+
+        let mut sim2 = Sim::new([0u8; 32]);
+        load_snapshot(&mut sim2.world, &blob).expect("load");
+
+        assert!((sim2.world.resource::<LegitimacyDebt>().stock - 0.42).abs() < 1e-6);
+        let r2 = sim2.world.resource::<RightsLedger>();
+        assert!(r2.granted.contains(CivicRights::UNIVERSAL_SUFFRAGE));
+        assert!(r2.granted.contains(CivicRights::FREE_SPEECH));
+        assert_eq!(r2.last_expansion_tick, 3);
+        let c2 = sim2.world.resource::<CrisisState>();
+        assert_eq!(c2.kind, CrisisKind::Pandemic);
+        assert_eq!(c2.remaining_ticks, 120);
+        assert!((sim2.world.resource::<PollutionStock>().stock - 2.71).abs() < 1e-6);
     }
 }
