@@ -1,0 +1,129 @@
+/* ─────────────────────────────────────────────────────────────────
+ * COLORS — semantic palette
+ *
+ * Layer 1 (palette):  raw hue scales — never used directly by components
+ * Layer 2 (semantic): role-based tokens (--color-bg, --color-text-…) —
+ *                     this is what components reference
+ * Layer 3 (per-theme): dark/light mappings of semantic → palette
+ *
+ * Two themes: dark (default) and light. Toggled by [data-theme="light"]
+ * on <html>.
+ * ───────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Layer 1: palette ───────────────────────────────────────── */
+
+  /* Slate (neutral) */
+  --slate-50:  #f8fafc;  --slate-100: #f1f5f9;  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;  --slate-400: #94a3b8;  --slate-500: #64748b;
+  --slate-600: #475569;  --slate-700: #334155;  --slate-800: #1e293b;
+  --slate-900: #0f172a;  --slate-950: #020617;
+
+  /* Indigo (brand) */
+  --indigo-50:  #eef2ff;  --indigo-100: #e0e7ff;  --indigo-200: #c7d2fe;
+  --indigo-300: #a5b4fc;  --indigo-400: #818cf8;  --indigo-500: #6366f1;
+  --indigo-600: #4f46e5;  --indigo-700: #4338ca;  --indigo-800: #3730a3;
+  --indigo-900: #312e81;
+
+  /* Functional */
+  --green-500: #22c55e;  --green-600: #16a34a;  --green-700: #15803d;
+  --amber-500: #f59e0b;  --amber-600: #d97706;
+  --red-500:   #ef4444;  --red-600:   #dc2626;
+  --sky-500:   #38bdf8;  --sky-600:   #0284c7;
+
+  /* ── Layer 2: semantic tokens (default = dark theme) ─────────── */
+
+  /* Backgrounds (lowest = furthest back) */
+  --color-bg:           var(--slate-950);
+  --color-surface-1:    #1a1d27;
+  --color-surface-2:    #232735;
+  --color-surface-3:    #2e3344;
+  --color-surface-elev: var(--slate-800);
+
+  /* Borders */
+  --color-border-subtle: #2a2d3a;
+  --color-border-strong: #3a3f50;
+
+  /* Text */
+  --color-text-primary:   var(--slate-200);
+  --color-text-secondary: var(--slate-400);
+  --color-text-muted:     var(--slate-500);
+  --color-text-inverse:   var(--slate-900);
+
+  /* Brand */
+  --color-brand:          var(--indigo-500);
+  --color-brand-hover:    var(--indigo-400);
+  --color-brand-active:   var(--indigo-600);
+  --color-brand-subtle:   rgba(99, 102, 241, 0.15);
+  --color-on-brand:       #ffffff;
+
+  /* Functional roles */
+  --color-success:        var(--green-500);
+  --color-success-subtle: rgba(34, 197, 94, 0.15);
+  --color-warning:        var(--amber-500);
+  --color-warning-subtle: rgba(245, 158, 11, 0.15);
+  --color-danger:         var(--red-500);
+  --color-danger-subtle:  rgba(239, 68, 68, 0.15);
+  --color-info:           var(--sky-500);
+  --color-info-subtle:    rgba(56, 189, 248, 0.15);
+
+  /* Focus ring */
+  --color-focus-ring:     var(--indigo-400);
+
+  /* ── Chart palette (categorical, 8 series) ──────────────────── */
+  --chart-1: #6366f1;  /* indigo */
+  --chart-2: #22c55e;  /* green */
+  --chart-3: #f59e0b;  /* amber */
+  --chart-4: #ef4444;  /* red */
+  --chart-5: #06b6d4;  /* cyan */
+  --chart-6: #ec4899;  /* pink */
+  --chart-7: #8b5cf6;  /* violet */
+  --chart-8: #84cc16;  /* lime */
+
+  /* ── Backwards-compat aliases (old token names) ─────────────── */
+  --bg:      var(--color-bg);
+  --surface: var(--color-surface-1);
+  --border:  var(--color-border-subtle);
+  --text:    var(--color-text-primary);
+  --muted:   var(--color-text-muted);
+  --accent:  var(--color-brand);
+  --good:    var(--color-success);
+  --warn:    var(--color-warning);
+  --danger:  var(--color-danger);
+  --info:    var(--color-info);
+  --fg:      var(--color-text-primary);
+}
+
+/* ── Light theme overrides ─────────────────────────────────────── */
+:root[data-theme="light"] {
+  --color-bg:           var(--slate-50);
+  --color-surface-1:    #ffffff;
+  --color-surface-2:    var(--slate-100);
+  --color-surface-3:    var(--slate-200);
+  --color-surface-elev: #ffffff;
+
+  --color-border-subtle: var(--slate-200);
+  --color-border-strong: var(--slate-300);
+
+  --color-text-primary:   var(--slate-900);
+  --color-text-secondary: var(--slate-700);
+  --color-text-muted:     var(--slate-500);
+  --color-text-inverse:   var(--slate-50);
+
+  --color-brand:          var(--indigo-600);
+  --color-brand-hover:    var(--indigo-700);
+  --color-brand-active:   var(--indigo-800);
+  --color-brand-subtle:   var(--indigo-100);
+
+  --color-success-subtle: rgba(34, 197, 94, 0.10);
+  --color-warning-subtle: rgba(245, 158, 11, 0.10);
+  --color-danger-subtle:  rgba(239, 68, 68, 0.10);
+  --color-info-subtle:    rgba(56, 189, 248, 0.10);
+}
+
+/* ── Color-blind safe palette (opt-in via [data-cb="safe"]) ────── */
+:root[data-cb="safe"] {
+  --chart-1: #0173b2;  --chart-2: #de8f05;  --chart-3: #029e73;
+  --chart-4: #cc78bc;  --chart-5: #ca9161;  --chart-6: #fbafe4;
+  --chart-7: #949494;  --chart-8: #ece133;
+}

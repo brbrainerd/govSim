@@ -42,6 +42,7 @@ mod tests {
 
     fn make_dummy_benefit_law(id: u64) -> LawHandle {
         LawHandle {
+            source: None,
             id: LawId(id),
             version: 1,
             program: Arc::new(Program {

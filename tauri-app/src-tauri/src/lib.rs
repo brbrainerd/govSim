@@ -41,6 +41,14 @@ pub fn run() {
             commands::repeal_law,
             commands::get_law_effect,
             commands::export_metrics_parquet,
+            commands::save_sim_snapshot,
+            commands::get_counterfactual_diff,
+            commands::run_monte_carlo,
+            commands::get_citizen_distribution,
+            commands::get_law_dsl_source,
+            commands::step_and_get_state,
+            commands::get_citizen_scatter,
+            commands::get_region_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

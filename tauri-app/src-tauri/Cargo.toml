@@ -29,4 +29,10 @@ simulator-snapshot = { path = "../../crates/simulator-snapshot" }
 simulator-systems  = { path = "../../crates/simulator-systems" }
 simulator-law      = { path = "../../crates/simulator-law" }
 simulator-metrics  = { path = "../../crates/simulator-metrics" }
-simulator-telemetry= { path = "../../crates/simulator-telemetry" }
+simulator-telemetry      = { path = "../../crates/simulator-telemetry" }
+simulator-counterfactual = { path = "../../crates/simulator-counterfactual" }
+
+[dev-dependencies]
+# Explicit dev-dep so region_stats_tests can reference World without relying on
+# the transitive re-export from simulator-core. Pin matches the workspace version.
+bevy_ecs = { version = "0.18", default-features = false }

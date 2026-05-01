@@ -17,6 +17,8 @@ use simulator_telemetry::register_telemetry_system;
 pub struct SimBundle {
     pub sim:           Sim,
     pub scenario_name: String,
+    /// Snapshot blob saved at `snapshot_tick` for counterfactual analysis.
+    pub snapshot:      Option<(u64, Vec<u8>)>,
 }
 
 pub struct AppState {
@@ -62,7 +64,7 @@ pub fn build_sim_from_scenario(scenario: &Scenario) -> SimBundle {
     register_metrics_system(&mut sim);
     register_telemetry_system(&mut sim);
     scenario.spawn_population(&mut sim);
-    SimBundle { sim, scenario_name: scenario.name.clone() }
+    SimBundle { sim, scenario_name: scenario.name.clone(), snapshot: None }
 }
 
 // ---- Helpers ---------------------------------------------------------------

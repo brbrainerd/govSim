@@ -1,0 +1,57 @@
+/* Typography tokens. Sizes follow a 1.2 modular scale anchored at 14px. */
+
+:root {
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Menlo', 'Consolas', monospace;
+
+  /* Sizes */
+  --font-size-xs:    11px;
+  --font-size-sm:    12px;
+  --font-size-base:  13px;
+  --font-size-md:    14px;
+  --font-size-lg:    16px;
+  --font-size-xl:    18px;
+  --font-size-2xl:   22px;
+  --font-size-3xl:   28px;
+  --font-size-4xl:   36px;
+
+  /* Line heights */
+  --line-height-tight:  1.15;
+  --line-height-normal: 1.5;
+  --line-height-loose:  1.75;
+
+  /* Weights */
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  /* Letter spacing */
+  --letter-spacing-tight:  -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide:   0.04em;
+}
+
+/* Compact — tighter text for information-dense layouts */
+:root[data-density="compact"] {
+  --font-size-xs:    10px;
+  --font-size-sm:    11px;
+  --font-size-base:  12px;
+  --font-size-md:    13px;
+  --font-size-lg:    15px;
+  --font-size-xl:    17px;
+  --font-size-2xl:   20px;
+  --font-size-3xl:   25px;
+}
+
+/* Spacious — larger text for comfort / accessibility */
+:root[data-density="spacious"] {
+  --font-size-xs:    12px;
+  --font-size-sm:    13px;
+  --font-size-base:  14px;
+  --font-size-md:    16px;
+  --font-size-lg:    18px;
+  --font-size-xl:    20px;
+  --font-size-2xl:   24px;
+  --font-size-3xl:   30px;
+}

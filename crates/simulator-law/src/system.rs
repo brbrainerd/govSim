@@ -333,6 +333,7 @@ mod tests {
         });
         let lowered = lower_statement(&stmt).expect("lowering failed");
         LawHandle {
+            source: None,
             id: LawId(0),
             version: 1,
             program: Arc::new(lowered.program),
@@ -406,6 +407,7 @@ mod tests {
         let lowered = lower_statement(&stmt).expect("lowering");
         let registry = sim.world.resource::<LawRegistry>().clone();
         registry.enact(LawHandle {
+            source: None,
             id: LawId(0), version: 1,
             program: Arc::new(lowered.program),
             cadence: lowered.cadence,
@@ -462,6 +464,7 @@ mod tests {
         let lowered = crate::lower::lower_statement(&stmt).expect("lowering");
         let registry = sim.world.resource::<LawRegistry>().clone();
         registry.enact(LawHandle {
+            source: None,
             id: LawId(0), version: 1,
             program: Arc::new(lowered.program),
             cadence: lowered.cadence,
@@ -533,6 +536,7 @@ mod tests {
             }],
         });
         let handle = LawHandle {
+            source: None,
             id: LawId(42),
             version: 1,
             program,
@@ -613,6 +617,7 @@ mod tests {
         let lowered_20 = make_flat_tax(0.20);
         let registry = sim.world.resource::<LawRegistry>().clone();
         let id_20 = registry.enact(LawHandle {
+            source: None,
             id: LawId(0), version: 1,
             program: Arc::new(lowered_20.program),
             cadence: lowered_20.cadence,
@@ -637,6 +642,7 @@ mod tests {
         // Supersede with 10% tax, effective from tick 361.
         let lowered_10 = make_flat_tax(0.10);
         registry.supersede(id_20, LawHandle {
+            source: None,
             id: LawId(0), version: 2,
             program: Arc::new(lowered_10.program),
             cadence: lowered_10.cadence,
@@ -683,6 +689,7 @@ mod tests {
         let lowered = crate::lower::lower_statement(&stmt).expect("lowering");
         let registry = sim.world.resource::<LawRegistry>().clone();
         registry.enact(LawHandle {
+            source: None,
             id: LawId(0), version: 1,
             program: Arc::new(lowered.program),
             cadence: lowered.cadence,
@@ -762,6 +769,7 @@ mod tests {
         let lowered = crate::lower::lower_statement(&stmt).expect("lowering");
         let registry = sim.world.resource::<LawRegistry>().clone();
         registry.enact(LawHandle {
+            source: None,
             id: LawId(0), version: 1,
             program: Arc::new(lowered.program),
             cadence: lowered.cadence,
@@ -812,6 +820,7 @@ mod tests {
         let lowered = crate::lower::lower_statement(&stmt).expect("lowering");
         let registry = sim.world.resource::<LawRegistry>().clone();
         registry.enact(LawHandle {
+            source: None,
             id: LawId(0), version: 1,
             program: Arc::new(lowered.program),
             cadence: lowered.cadence,
@@ -883,6 +892,7 @@ mod tests {
         let lowered = crate::lower::lower_statement(&stmt).expect("lowering");
         let registry = sim.world.resource::<LawRegistry>().clone();
         registry.enact(LawHandle {
+            source: None,
             id: LawId(0), version: 1,
             program: Arc::new(lowered.program),
             cadence: lowered.cadence,
@@ -942,6 +952,7 @@ mod tests {
         let lowered = crate::lower::lower_statement(&stmt).expect("lowering");
         let registry = sim.world.resource::<LawRegistry>().clone();
         registry.enact(LawHandle {
+            source: None,
             id: LawId(0), version: 1,
             program: Arc::new(lowered.program),
             cadence: lowered.cadence,
@@ -999,6 +1010,7 @@ mod tests {
         let lowered = crate::lower::lower_statement(&stmt).expect("lowering");
         let registry = sim.world.resource::<LawRegistry>().clone();
         registry.enact(LawHandle {
+            source: None,
             id: LawId(0), version: 1,
             program: Arc::new(lowered.program),
             cadence: lowered.cadence,
@@ -1058,6 +1070,7 @@ mod tests {
         let lowered = lower_statement(&stmt).expect("lowering failed");
         let registry = sim.world.resource::<LawRegistry>().clone();
         registry.enact(LawHandle {
+            source: None,
             id: LawId(0), version: 1,
             program: Arc::new(lowered.program),
             cadence: lowered.cadence,
@@ -1121,6 +1134,7 @@ mod tests {
         let lowered = lower_statement(&stmt).expect("lowering failed");
         let registry = sim.world.resource::<LawRegistry>().clone();
         registry.enact(LawHandle {
+            source: None,
             id: LawId(0), version: 1,
             program: Arc::new(lowered.program),
             cadence: lowered.cadence,
@@ -1182,6 +1196,7 @@ mod tests {
             }],
         });
         let handle = LawHandle {
+            source: None,
             id: LawId(0), version: 1,
             program,
             cadence: Cadence::Yearly,
@@ -1263,6 +1278,7 @@ mod tests {
             }],
         });
         let handle = LawHandle {
+            source: None,
             id: LawId(0), version: 1,
             program,
             cadence: Cadence::Yearly,

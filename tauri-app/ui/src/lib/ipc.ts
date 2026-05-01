@@ -53,11 +53,18 @@ export interface CurrentState {
   incumbent_party: number;
   election_margin: number;
   consecutive_terms: number;
+  last_election_tick: number;
+  /** Fixed election cycle length in ticks (always 360 = 1 simulated year). */
+  election_cycle: number;
 }
 
 export interface LawInfo {
   id: number;
   effect_kind: "income_tax" | "benefit" | "registration" | "audit" | "abatement" | string;
+  /** Human-readable name (e.g. "Income Tax", "Abatement"). */
+  label: string;
+  /** Key parameter string, e.g. "25.0%", "$500/mo", "0.50 PU · $10000/PU". Null for unsupported types. */
+  magnitude: string | null;
   cadence: string;
   enacted_tick: number;
   repealed: boolean;
@@ -132,6 +139,11 @@ export async function listLaws(): Promise<LawInfo[]> {
   return invoke<LawInfo[]>("list_laws");
 }
 
+/** Returns the original DSL source of a law (or null if not preserved). */
+export async function getLawDslSource(law_id: number): Promise<string | null> {
+  return invoke<string | null>("get_law_dsl_source", { lawId: law_id });
+}
+
 /** Enact a flat income tax at the given rate [0, 1]. Returns the new law ID. */
 export async function enactFlatTax(rate: number): Promise<number> {
   return invoke<number>("enact_flat_tax", { params: { rate } });
@@ -176,4 +188,162 @@ export async function exportMetricsParquet(path: string): Promise<void> {
 /** Health check. */
 export async function ping(): Promise<string> {
   return invoke<string>("ping");
+}
+
+// ── Counterfactual / Monte Carlo ─────────────────────────────────────────────
+
+export interface CausalEstimateDto {
+  enacted_tick: number;
+  window_ticks: number;
+  did_approval: number | null;
+  did_gdp: number | null;
+  did_pollution: number | null;
+  did_unemployment: number | null;
+  did_legitimacy: number | null;
+  did_treasury: number | null;
+  treatment_post_approval: number;
+  treatment_post_gdp: number;
+}
+
+export interface MonteCarloSummaryDto {
+  n_runs: number;
+  mean_did_approval:     number | null;
+  std_did_approval:      number | null;
+  p5_did_approval:       number | null;
+  p95_did_approval:      number | null;
+  mean_did_gdp:          number | null;
+  std_did_gdp:           number | null;
+  p5_did_gdp:            number | null;
+  p95_did_gdp:           number | null;
+  mean_did_pollution:    number | null;
+  std_did_pollution:     number | null;
+  p5_did_pollution:      number | null;
+  p95_did_pollution:     number | null;
+  mean_did_unemployment: number | null;
+  std_did_unemployment:  number | null;
+  p5_did_unemployment:   number | null;
+  p95_did_unemployment:  number | null;
+  mean_did_legitimacy:   number | null;
+  std_did_legitimacy:    number | null;
+  p5_did_legitimacy:     number | null;
+  p95_did_legitimacy:    number | null;
+  mean_did_treasury:     number | null;
+  std_did_treasury:      number | null;
+  p5_did_treasury:       number | null;
+  p95_did_treasury:      number | null;
+}
+
+/**
+ * Save the current sim state as the counterfactual fork point.
+ * Returns the tick at which the snapshot was taken.
+ * Call this BEFORE enacting a law you wish to analyse.
+ */
+export async function saveSimSnapshot(): Promise<number> {
+  return invoke<number>("save_sim_snapshot");
+}
+
+/**
+ * Single-run counterfactual DiD: forks from the saved snapshot, enacts
+ * the specified law in the treatment arm, steps both by `window_ticks`,
+ * and returns one DiD estimate.
+ */
+export async function getCounterfactualDiff(
+  law_id: number,
+  window_ticks: number = 30
+): Promise<CausalEstimateDto> {
+  return invoke<CausalEstimateDto>("get_counterfactual_diff", {
+    lawId: law_id,
+    windowTicks: window_ticks,
+  });
+}
+
+// ── Citizen distribution ─────────────────────────────────────────────────────
+
+export interface HistogramDto {
+  edges: number[];
+  counts: number[];
+  min: number;
+  max: number;
+  mean: number;
+  n: number;
+}
+
+export interface CitizenDistributionDto {
+  income: HistogramDto;
+  wealth: HistogramDto;
+  health: HistogramDto;
+  productivity: HistogramDto;
+  n_citizens: number;
+}
+
+/** Returns histograms of citizen-level income, wealth, health, and productivity. */
+export async function getCitizenDistribution(regionId?: number): Promise<CitizenDistributionDto> {
+  return invoke<CitizenDistributionDto>("get_citizen_distribution", {
+    regionId: regionId ?? null,
+  });
+}
+
+// ── Citizen scatter ──────────────────────────────────────────────────────────
+
+/**
+ * Returns up to `maxPoints` correlated citizen tuples [income, wealth, health, productivity].
+ * Sampled uniformly when the world has more citizens than requested.
+ */
+export async function getCitizenScatter(maxPoints: number = 500, regionId?: number): Promise<[number, number, number, number][]> {
+  return invoke<[number, number, number, number][]>("get_citizen_scatter", {
+    maxPoints,
+    regionId: regionId ?? null,
+  });
+}
+
+// ── Batched step ─────────────────────────────────────────────────────────────
+
+/**
+ * Advance the sim by `ticks` and return tick + full state snapshot in one call.
+ * Replaces four separate round-trips used by autostep, cutting IPC overhead ~75%.
+ */
+export interface StepResultDto {
+  tick:    number;
+  state:   CurrentState;
+  metrics: TickRow[];
+  laws:    LawInfo[];
+}
+
+export async function stepAndGetState(
+  ticks:         number = 1,
+  metricsWindow: number = 360,
+): Promise<StepResultDto> {
+  return invoke<StepResultDto>("step_and_get_state", { ticks, metricsWindow });
+}
+
+/**
+ * Monte Carlo counterfactual: runs `n_runs` forked simulations and
+ * returns mean/std/P5/P95 of the DiD distribution.
+ */
+export async function runMonteCarlo(
+  law_id: number,
+  window_ticks: number = 30,
+  n_runs: number = 20
+): Promise<MonteCarloSummaryDto> {
+  return invoke<MonteCarloSummaryDto>("run_monte_carlo", {
+    lawId: law_id,
+    windowTicks: window_ticks,
+    nRuns: n_runs,
+  });
+}
+
+// ── Region stats ─────────────────────────────────────────────────────────────
+
+export interface RegionStatsDto {
+  region_id:         number;
+  population:        number;
+  mean_approval:     number;
+  mean_income:       number;
+  unemployment_rate: number;
+  mean_health:       number;
+}
+
+/** Returns per-region aggregate stats computed on demand from citizen components. */
+export async function getRegionStats(): Promise<RegionStatsDto[]> {
+  return invoke<RegionStatsDto[]>("get_region_stats");
 }

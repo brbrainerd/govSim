@@ -31,7 +31,8 @@ pub struct ElectionOutcome {
     pub consecutive_terms: u32,
 }
 
-const ELECTION_PERIOD: u64 = 360;
+/// Ticks between elections (one simulated year = 360 ticks).
+pub const ELECTION_PERIOD: u64 = 360;
 
 pub fn election_system(
     clock: Res<SimClock>,

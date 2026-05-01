@@ -346,6 +346,7 @@ mod tests {
 
         fn dummy_benefit_handle() -> LawHandle {
             LawHandle {
+                source: None,
                 id: LawId(1), version: 1,
                 program: Arc::new(Program {
                     scopes: vec![Scope { name: "X".into(), params: vec![], items: vec![] }],

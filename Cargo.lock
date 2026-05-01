@@ -4829,6 +4829,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "simulator-counterfactual"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "simulator-core",
+ "simulator-law",
+ "simulator-metrics",
+ "simulator-scenario",
+ "simulator-snapshot",
+ "simulator-systems",
+ "thiserror 2.0.18",
+ "tracing",
+]
+
+[[package]]
 name = "simulator-econ"
 version = "0.1.0"
 dependencies = [

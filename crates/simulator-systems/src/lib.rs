@@ -33,7 +33,7 @@ pub use approval::register_approval_system;
 pub use crisis::register_crisis_system;
 pub use education::register_age_advance_system;
 pub use birth_death::register_birth_death_system;
-pub use election::{register_election_system, ElectionOutcome};
+pub use election::{register_election_system, ElectionOutcome, ELECTION_PERIOD};
 pub use employment::register_employment_system;
 pub use health::register_health_system;
 pub use income_update::register_income_update_system;

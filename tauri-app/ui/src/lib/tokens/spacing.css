@@ -1,0 +1,46 @@
+/* Spacing scale — 4px base unit. Use these instead of magic numbers. */
+
+:root {
+  --space-0:  0;
+  --space-1:  2px;   /* hairline */
+  --space-2:  4px;   /* tight */
+  --space-3:  8px;   /* default */
+  --space-4:  12px;
+  --space-5:  16px;  /* section */
+  --space-6:  20px;
+  --space-7:  24px;  /* large */
+  --space-8:  32px;
+  --space-9:  40px;
+  --space-10: 48px;
+  --space-11: 64px;
+  --space-12: 80px;
+
+  /* Density modifier — applied by overriding key space steps below */
+  --density-scale: 1;
+}
+
+/* Compact — tighter spacing for information-dense layouts */
+:root[data-density="compact"] {
+  --density-scale: 0.85;
+  --space-3:  6px;
+  --space-4:  10px;
+  --space-5:  13px;
+  --space-6:  17px;
+  --space-7:  20px;
+  --space-8:  26px;
+  --space-9:  32px;
+  --space-10: 40px;
+}
+
+/* Spacious — more breathing room */
+:root[data-density="spacious"] {
+  --density-scale: 1.20;
+  --space-3:  10px;
+  --space-4:  14px;
+  --space-5:  20px;
+  --space-6:  26px;
+  --space-7:  30px;
+  --space-8:  40px;
+  --space-9:  52px;
+  --space-10: 62px;
+}

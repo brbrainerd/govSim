@@ -1,23 +1,80 @@
 <script lang="ts">
   import { sim, ui, navigate, tickToDate } from "$lib/store.svelte";
-  import { stepSim, getCurrentState, getMetricsRows, listLaws } from "$lib/ipc";
+  import { stepAndGetState } from "$lib/ipc";
   import { beginLoad, endLoad, setError } from "$lib/store.svelte";
+  import { toast } from "$lib/toasts.svelte";
+  import ThemeToggle from "./ui/ThemeToggle.svelte";
+  import PlayControls from "./ui/PlayControls.svelte";
+  import { toggle as toggleAutostep } from "$lib/autostep.svelte";
+  import { openPalette } from "$lib/commands.svelte";
+  import { SHORTCUTS } from "$lib/routes";
+  import { onMount, onDestroy } from "svelte";
+
+  // Keyboard shortcuts:
+  //   Space    → toggle auto-step (when not in a form field)
+  //   ?        → open command palette
+  //   g d/l/p/c/e/s → go-to-view two-key sequence (à la Gmail / GitHub)
+  let gPrefix = false;
+  let gTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function onKey(e: KeyboardEvent) {
+    const tag = (e.target as HTMLElement).tagName;
+    const inField = ["INPUT", "TEXTAREA", "SELECT"].includes(tag);
+    if (inField) { gPrefix = false; return; }
+
+    // ── Two-key "g <letter>" navigation ──────────────────────────
+    if (gPrefix) {
+      const view = SHORTCUTS[e.key];
+      if (view) { e.preventDefault(); navigate(view); }
+      gPrefix = false;
+      if (gTimer) { clearTimeout(gTimer); gTimer = null; }
+      return;
+    }
+    if (e.key === "g" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      gPrefix = true;
+      gTimer = setTimeout(() => { gPrefix = false; }, 500);
+      return;
+    }
+
+    // ── Single-key shortcuts ──────────────────────────────────────
+    if (e.code === "Space") {
+      if (!sim.loaded) return;
+      e.preventDefault();
+      toggleAutostep();
+      return;
+    }
+    if (e.key === "?") {
+      e.preventDefault();
+      openPalette();
+      return;
+    }
+  }
+  onMount(()   => window.addEventListener("keydown", onKey));
+  onDestroy(() => {
+    window.removeEventListener("keydown", onKey);
+    if (gTimer) clearTimeout(gTimer);
+  });
 
   async function handleStep(n: number) {
     if (!sim.loaded) return;
     beginLoad();
     try {
-      sim.tick       = await stepSim(n);
-      sim.currentState = await getCurrentState();
-      sim.metricsRows  = await getMetricsRows(360);
-      sim.laws         = await listLaws();
+      const result     = await stepAndGetState(n, 360);
+      sim.tick         = result.tick;
+      sim.currentState = result.state;
+      sim.metricsRows  = result.metrics;
+      sim.laws         = result.laws;
     } catch (e) {
       setError(String(e));
+      toast.error(e, "Step failed");
     } finally {
       endLoad();
     }
   }
 </script>
+
+<!-- Skip-to-content link — visually hidden until focused (AC-001) -->
+<a class="skip-link" href="#main-content">Skip to main content</a>
 
 <div class="shell">
   <!-- ── Sidebar ── -->
@@ -27,19 +84,28 @@
       <span class="logo-text">UGS</span>
     </div>
 
-    <ul class="nav-links">
+    <ul class="nav-links" role="list">
       <li class:active={ui.view === "dashboard"}>
-        <button onclick={() => navigate("dashboard")}>📊 Dashboard</button>
+        <button onclick={() => navigate("dashboard")} aria-current={ui.view === "dashboard" ? "page" : undefined}>📊 Dashboard</button>
       </li>
       <li class:active={ui.view === "laws"}>
-        <button onclick={() => navigate("laws")}>📜 Active Laws</button>
+        <button onclick={() => navigate("laws")} aria-current={ui.view === "laws" ? "page" : undefined}>📜 Active Laws</button>
       </li>
       <li class:active={ui.view === "propose"}>
-        <button onclick={() => navigate("propose")}>⚖️ Propose Law</button>
+        <button onclick={() => navigate("propose")} aria-current={ui.view === "propose" ? "page" : undefined}>⚖️ Propose Law</button>
+      </li>
+      <li class:active={ui.view === "citizens"}>
+        <button onclick={() => navigate("citizens")} aria-current={ui.view === "citizens" ? "page" : undefined}>👥 Citizens</button>
+      </li>
+      <li class:active={ui.view === "elections"}>
+        <button onclick={() => navigate("elections")} aria-current={ui.view === "elections" ? "page" : undefined}>🗳 Elections</button>
+      </li>
+      <li class:active={ui.view === "regions"}>
+        <button onclick={() => navigate("regions")} aria-current={ui.view === "regions" ? "page" : undefined}>🗺 Regions</button>
       </li>
       {#if ui.view === "effect"}
       <li class:active={true}>
-        <button onclick={() => navigate("effect")}>📈 Law Effect</button>
+        <button onclick={() => navigate("effect")} aria-current="page">📈 Law Effect</button>
       </li>
       {/if}
     </ul>
@@ -52,20 +118,37 @@
         <span class="tick-date">{tickToDate(sim.tick)}</span>
       </div>
       <div class="step-buttons">
-        <button class="btn-step" onclick={() => handleStep(1)}  disabled={sim.loading}>+1</button>
-        <button class="btn-step" onclick={() => handleStep(30)} disabled={sim.loading}>+30</button>
-        <button class="btn-step" onclick={() => handleStep(360)} disabled={sim.loading}>+1yr</button>
+        <button class="btn-step" onclick={() => handleStep(1)}   disabled={sim.loading} aria-label="Step 1 tick">+1</button>
+        <button class="btn-step" onclick={() => handleStep(30)}  disabled={sim.loading} aria-label="Step 30 ticks">+30</button>
+        <button class="btn-step" onclick={() => handleStep(360)} disabled={sim.loading} aria-label="Step 1 year (360 ticks)">+1yr</button>
       </div>
+      <PlayControls />
     </div>
     {/if}
 
     <div class="sidebar-footer">
-      <button class="btn-scenario" onclick={() => navigate("start")}>⚙ Scenarios</button>
+      <button
+        class="btn-palette"
+        onclick={openPalette}
+        title="Open command palette (Cmd+K or ?)"
+      >
+        🔍 <span>Commands</span> <kbd class="kbd-hint">?</kbd>
+      </button>
+      <ThemeToggle />
+      <div class="footer-row">
+        <button class="btn-scenario" onclick={() => navigate("settings")} title="Open settings (g s)">⚙ Settings</button>
+        <button class="btn-scenario" onclick={() => navigate("start")} title="Switch scenario">📁 Scenarios</button>
+      </div>
     </div>
   </nav>
 
+  <!-- ── Visually-hidden aria-live region: announces tick / date changes to screen readers ── -->
+  <div class="sr-only" aria-live="polite" aria-atomic="true">
+    {#if sim.loaded}Tick {sim.tick}, {tickToDate(sim.tick)}{/if}
+  </div>
+
   <!-- ── Main content ── -->
-  <main class="content">
+  <main id="main-content" class="content">
     {#if sim.loading}
     <div class="loading-bar"></div>
     {/if}
@@ -160,7 +243,36 @@
 }
 .btn-step:disabled { opacity: .4; cursor: default; }
 
-.sidebar-footer { margin-top: auto; }
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.btn-palette {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  text-align: left;
+}
+.btn-palette:hover { border-color: var(--color-border-strong); color: var(--color-text-primary); }
+.btn-palette span  { flex: 1; }
+.footer-row { display: flex; gap: var(--space-2); }
+.footer-row .btn-scenario { flex: 1; }
+.kbd-hint {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  background: var(--color-surface-2);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+}
 .btn-scenario {
   width: 100%;
   background: transparent;

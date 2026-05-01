@@ -2,12 +2,22 @@ use std::sync::Arc;
 
 use simulator_core::{CrisisState, LegitimacyDebt, MacroIndicators, PollutionStock,
                      PriceLevel, RightsLedger, SimClock, Treasury};
+use simulator_core::components::{ApprovalRating, EmploymentStatus, Health, Income, Location, Productivity, Wealth};
+use simulator_counterfactual::{
+    estimate::CausalEstimate,
+    monte_carlo::{MonteCarloRunner, MonteCarloSummary},
+    pair::CounterfactualPair,
+};
 use simulator_law::{
     dsl::{parser::parse_program, typecheck::typecheck_program},
+    register_crisis_link_system, register_law_dispatcher, register_legitimacy_system,
     registry::{LawEffect, LawHandle},
     Cadence, LawId, LawRegistry,
 };
-use simulator_metrics::{MetricStore, TickRow, WindowDiff, WindowSummary};
+use simulator_metrics::{register_metrics_system, MetricStore, TickRow, WindowDiff, WindowSummary};
+use simulator_snapshot::save_snapshot;
+use simulator_systems::{register_phase1_systems, ELECTION_PERIOD};
+use simulator_telemetry::register_telemetry_system;
 
 use crate::state::{AppState, IpcError, IpcResult, crisis_kind_u8};
 
@@ -93,6 +103,9 @@ pub struct CurrentStateDto {
     pub incumbent_party:        u8,
     pub election_margin:        f32,
     pub consecutive_terms:      u32,
+    pub last_election_tick:     u64,
+    /// Fixed election cycle length in ticks (currently always 360 = 1 simulated year).
+    pub election_cycle:         u64,
 }
 
 #[tauri::command]
@@ -133,6 +146,8 @@ pub async fn get_current_state(
         incumbent_party:        ind.incumbent_party,
         election_margin:        ind.election_margin,
         consecutive_terms:      ind.consecutive_terms,
+        last_election_tick:     ind.last_election_tick,
+        election_cycle:         ELECTION_PERIOD,
     })
 }
 
@@ -142,6 +157,8 @@ pub async fn get_current_state(
 pub struct LawInfoDto {
     pub id:           u64,
     pub effect_kind:  String,
+    pub label:        String,
+    pub magnitude:    Option<String>,
     pub cadence:      String,
     pub enacted_tick: u64,
     pub repealed:     bool,
@@ -157,6 +174,37 @@ fn effect_kind_str(e: &LawEffect) -> String {
     }
 }
 
+fn effect_label_str(e: &LawEffect) -> String {
+    match e {
+        LawEffect::PerCitizenIncomeTax { .. } => "Income Tax".into(),
+        LawEffect::PerCitizenBenefit   { .. } => "Citizen Benefit".into(),
+        LawEffect::RegistrationMarker  { .. } => "Registration".into(),
+        LawEffect::Audit               { .. } => "Audit".into(),
+        LawEffect::Abatement           { .. } => "Abatement".into(),
+    }
+}
+
+fn effect_magnitude(e: &LawEffect, src: Option<&str>) -> Option<String> {
+    match e {
+        LawEffect::PerCitizenIncomeTax { .. } => {
+            let s = src?;
+            // DSL: "scope taxpayer { define owed = income * 0.250000 }"
+            let rate: f64 = s.rsplit('*').next()?.split_whitespace().next()?.parse().ok()?;
+            Some(format!("{:.1}%", rate * 100.0))
+        }
+        LawEffect::PerCitizenBenefit { .. } => {
+            let s = src?;
+            // DSL: "scope citizen { define amount = 500.000000 }"
+            let amount: f64 = s.rsplit('=').next()?.split_whitespace().next()?.parse().ok()?;
+            Some(format!("${:.0}/mo", amount))
+        }
+        LawEffect::Abatement { pollution_reduction_pu, cost_per_pu } => {
+            Some(format!("{:.2} PU · ${:.0}/PU", pollution_reduction_pu, cost_per_pu))
+        }
+        _ => None,
+    }
+}
+
 #[tauri::command]
 pub async fn list_laws(state: tauri::State<'_, AppState>) -> IpcResult<Vec<LawInfoDto>> {
     let guard = state.sim.lock().await;
@@ -167,6 +215,8 @@ pub async fn list_laws(state: tauri::State<'_, AppState>) -> IpcResult<Vec<LawIn
     let infos = registry.snapshot_active(tick).iter().map(|h| LawInfoDto {
         id:           h.id.0,
         effect_kind:  effect_kind_str(&h.effect),
+        label:        effect_label_str(&h.effect),
+        magnitude:    effect_magnitude(&h.effect, h.source.as_ref().map(|s| s.as_str())),
         cadence:      format!("{:?}", h.cadence),
         enacted_tick: h.effective_from_tick,
         repealed:     h.effective_until_tick.is_some(),
@@ -184,14 +234,20 @@ pub async fn enact_flat_tax(
 ) -> IpcResult<u64> {
     let rate = params.rate.clamp(0.0, 1.0);
     let src  = format!("scope taxpayer {{ define owed = income * {rate:.6} }}");
+    let dsl_src = Arc::new(src.clone());
     let prog = parse_program(&src).map_err(|e| IpcError(format!("dsl: {e:?}")))?;
     typecheck_program(&prog).map_err(|e| IpcError(format!("typecheck: {e:?}")))?;
 
     let mut guard = state.sim.lock().await;
     let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
     let tick = bundle.sim.tick();
+    // Auto-snapshot before enactment so Monte Carlo can fork from this point.
+    if let Ok(blob) = save_snapshot(&mut bundle.sim.world) {
+        bundle.snapshot = Some((tick, blob));
+    }
     let registry = bundle.sim.world.resource::<LawRegistry>().clone();
     let id = registry.enact(LawHandle {
+        source:               Some(dsl_src),
         id:                   LawId(0),
         version:              1,
         program:              Arc::new(prog),
@@ -213,14 +269,19 @@ pub async fn enact_ubi(
 ) -> IpcResult<u64> {
     let amount = params.monthly_amount.max(0.0);
     let src    = format!("scope citizen {{ define amount = {amount:.6} }}");
+    let dsl_src = Arc::new(src.clone());
     let prog   = parse_program(&src).map_err(|e| IpcError(format!("dsl: {e:?}")))?;
     typecheck_program(&prog).map_err(|e| IpcError(format!("typecheck: {e:?}")))?;
 
     let mut guard = state.sim.lock().await;
     let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
     let tick = bundle.sim.tick();
+    if let Ok(blob) = save_snapshot(&mut bundle.sim.world) {
+        bundle.snapshot = Some((tick, blob));
+    }
     let registry = bundle.sim.world.resource::<LawRegistry>().clone();
     let id = registry.enact(LawHandle {
+        source:               Some(dsl_src),
         id:                   LawId(0),
         version:              1,
         program:              Arc::new(prog),
@@ -243,15 +304,20 @@ pub async fn enact_abatement(
     state: tauri::State<'_, AppState>,
     params: AbatementParams,
 ) -> IpcResult<u64> {
-    let src  = "scope env { define dummy = 0.0 }";
+    let src  = "scope Env() { }";
+    let dsl_src = Arc::new(src.to_string());
     let prog = parse_program(src).map_err(|e| IpcError(format!("dsl: {e:?}")))?;
     typecheck_program(&prog).map_err(|e| IpcError(format!("typecheck: {e:?}")))?;
 
     let mut guard = state.sim.lock().await;
     let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
     let tick = bundle.sim.tick();
+    if let Ok(blob) = save_snapshot(&mut bundle.sim.world) {
+        bundle.snapshot = Some((tick, blob));
+    }
     let registry = bundle.sim.world.resource::<LawRegistry>().clone();
     let id = registry.enact(LawHandle {
+        source:               Some(dsl_src),
         id:                   LawId(0),
         version:              1,
         program:              Arc::new(prog),
@@ -358,6 +424,599 @@ pub async fn export_metrics_parquet(
     let store = bundle.sim.world.resource::<MetricStore>();
     store.save_parquet(std::path::Path::new(&path))
         .map_err(|e| IpcError(e.to_string()))
+}
+
+// ---- Snapshot / counterfactual ─────────────────────────────────────────────
+
+/// Save the current simulation state as a reusable fork point.
+/// Returns the tick at which the snapshot was taken.
+#[tauri::command]
+pub async fn save_sim_snapshot(state: tauri::State<'_, AppState>) -> IpcResult<u64> {
+    let mut guard = state.sim.lock().await;
+    let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
+    let tick = bundle.sim.tick();
+    let blob = save_snapshot(&mut bundle.sim.world)
+        .map_err(|e| IpcError(format!("snapshot: {e}")))?;
+    bundle.snapshot = Some((tick, blob));
+    Ok(tick)
+}
+
+/// Single counterfactual DiD estimate — one treatment vs one control run.
+///
+/// Uses the stored snapshot as the fork point and the specified law as the
+/// treatment. Returns `None` for each field when the window lacks data.
+#[derive(serde::Serialize)]
+pub struct CausalEstimateDto {
+    pub enacted_tick:            u64,
+    pub window_ticks:            u64,
+    pub did_approval:            Option<f32>,
+    pub did_gdp:                 Option<f64>,
+    pub did_pollution:           Option<f64>,
+    pub did_unemployment:        Option<f32>,
+    pub did_legitimacy:          Option<f32>,
+    pub did_treasury:            Option<f64>,
+    pub treatment_post_approval: f32,
+    pub treatment_post_gdp:      f64,
+}
+
+impl From<CausalEstimate> for CausalEstimateDto {
+    fn from(e: CausalEstimate) -> Self {
+        Self {
+            enacted_tick:            e.enacted_tick,
+            window_ticks:            e.window_ticks,
+            did_approval:            e.did_approval,
+            did_gdp:                 e.did_gdp,
+            did_pollution:           e.did_pollution,
+            did_unemployment:        e.did_unemployment,
+            did_legitimacy:          e.did_legitimacy,
+            did_treasury:            e.did_treasury,
+            treatment_post_approval: e.treatment_post_approval,
+            treatment_post_gdp:      e.treatment_post_gdp,
+        }
+    }
+}
+
+fn register_all_for_cf(sim: &mut simulator_core::Sim) {
+    register_phase1_systems(sim);
+    register_law_dispatcher(sim);
+    register_crisis_link_system(sim);
+    register_legitimacy_system(sim);
+    register_metrics_system(sim);
+    register_telemetry_system(sim);
+}
+
+fn law_template_from_registry(
+    registry: &LawRegistry,
+    law_id: u64,
+    fork_tick: u64,
+) -> IpcResult<LawHandle> {
+    registry
+        .snapshot_active(fork_tick)
+        .into_iter()
+        .find(|h| h.id.0 == law_id)
+        .ok_or_else(|| IpcError(format!("law {law_id} not found in registry at tick {fork_tick}")))
+}
+
+/// Single-run counterfactual DiD.
+#[tauri::command]
+pub async fn get_counterfactual_diff(
+    state:        tauri::State<'_, AppState>,
+    law_id:       u64,
+    window_ticks: u64,
+) -> IpcResult<CausalEstimateDto> {
+    let guard = state.sim.lock().await;
+    let bundle = guard.as_ref().ok_or_else(IpcError::no_sim)?;
+
+    let (fork_tick, blob) = bundle
+        .snapshot
+        .as_ref()
+        .map(|(t, b)| (*t, b.clone()))
+        .ok_or_else(|| IpcError("no snapshot saved — call save_sim_snapshot first".into()))?;
+
+    let registry = bundle.sim.world.resource::<LawRegistry>().clone();
+    let template = law_template_from_registry(&registry, law_id, bundle.sim.tick())?;
+
+    let mut pair = CounterfactualPair::from_blob(&blob, register_all_for_cf)
+        .map_err(|e| IpcError(format!("fork: {e}")))?;
+    pair.apply_treatment(LawHandle {
+        effective_from_tick: fork_tick,
+        ..template
+    });
+    pair.step_both(window_ticks as u32);
+
+    Ok(pair.compute_did(fork_tick, window_ticks).into())
+}
+
+/// Monte Carlo summary DTO.
+#[derive(serde::Serialize)]
+pub struct MonteCarloSummaryDto {
+    pub n_runs:                   usize,
+    pub mean_did_approval:        Option<f32>,
+    pub std_did_approval:         Option<f32>,
+    pub p5_did_approval:          Option<f32>,
+    pub p95_did_approval:         Option<f32>,
+    pub mean_did_gdp:             Option<f64>,
+    pub std_did_gdp:              Option<f64>,
+    pub p5_did_gdp:               Option<f64>,
+    pub p95_did_gdp:              Option<f64>,
+    pub mean_did_pollution:       Option<f64>,
+    pub std_did_pollution:        Option<f64>,
+    pub p5_did_pollution:         Option<f64>,
+    pub p95_did_pollution:        Option<f64>,
+    pub mean_did_unemployment:    Option<f32>,
+    pub std_did_unemployment:     Option<f32>,
+    pub p5_did_unemployment:      Option<f32>,
+    pub p95_did_unemployment:     Option<f32>,
+    pub mean_did_legitimacy:      Option<f32>,
+    pub std_did_legitimacy:       Option<f32>,
+    pub p5_did_legitimacy:        Option<f32>,
+    pub p95_did_legitimacy:       Option<f32>,
+    pub mean_did_treasury:        Option<f64>,
+    pub std_did_treasury:         Option<f64>,
+    pub p5_did_treasury:          Option<f64>,
+    pub p95_did_treasury:         Option<f64>,
+}
+
+impl From<MonteCarloSummary> for MonteCarloSummaryDto {
+    fn from(s: MonteCarloSummary) -> Self {
+        Self {
+            n_runs:                s.n_runs,
+            mean_did_approval:     s.mean_did_approval,
+            std_did_approval:      s.std_did_approval,
+            p5_did_approval:       s.p5_did_approval,
+            p95_did_approval:      s.p95_did_approval,
+            mean_did_gdp:          s.mean_did_gdp,
+            std_did_gdp:           s.std_did_gdp,
+            p5_did_gdp:            s.p5_did_gdp,
+            p95_did_gdp:           s.p95_did_gdp,
+            mean_did_pollution:    s.mean_did_pollution,
+            std_did_pollution:     s.std_did_pollution,
+            p5_did_pollution:      s.p5_did_pollution,
+            p95_did_pollution:     s.p95_did_pollution,
+            mean_did_unemployment: s.mean_did_unemployment,
+            std_did_unemployment:  s.std_did_unemployment,
+            p5_did_unemployment:   s.p5_did_unemployment,
+            p95_did_unemployment:  s.p95_did_unemployment,
+            mean_did_legitimacy:   s.mean_did_legitimacy,
+            std_did_legitimacy:    s.std_did_legitimacy,
+            p5_did_legitimacy:     s.p5_did_legitimacy,
+            p95_did_legitimacy:    s.p95_did_legitimacy,
+            mean_did_treasury:     s.mean_did_treasury,
+            std_did_treasury:      s.std_did_treasury,
+            p5_did_treasury:       s.p5_did_treasury,
+            p95_did_treasury:      s.p95_did_treasury,
+        }
+    }
+}
+
+/// Run Monte Carlo counterfactual simulation and return summary statistics.
+#[tauri::command]
+pub async fn run_monte_carlo(
+    state:        tauri::State<'_, AppState>,
+    law_id:       u64,
+    window_ticks: u64,
+    n_runs:       u32,
+) -> IpcResult<MonteCarloSummaryDto> {
+    let guard = state.sim.lock().await;
+    let bundle = guard.as_ref().ok_or_else(IpcError::no_sim)?;
+
+    let (fork_tick, blob) = bundle
+        .snapshot
+        .as_ref()
+        .map(|(t, b)| (*t, b.clone()))
+        .ok_or_else(|| IpcError("no snapshot saved — call save_sim_snapshot first".into()))?;
+
+    let registry = bundle.sim.world.resource::<LawRegistry>().clone();
+    let template = law_template_from_registry(&registry, law_id, bundle.sim.tick())?;
+    let template = LawHandle {
+        effective_from_tick: fork_tick,
+        ..template
+    };
+
+    let runner = MonteCarloRunner::new(n_runs, window_ticks);
+    let estimates = runner.run(&blob, fork_tick, template, register_all_for_cf);
+
+    Ok(MonteCarloSummary::from_estimates(&estimates).into())
+}
+
+// ---- Citizen distribution ──────────────────────────────────────────────────
+
+/// A histogram of citizen-level values bucketed into `n_buckets` equal-width bins.
+#[derive(serde::Serialize)]
+pub struct HistogramDto {
+    /// Left edge of each bucket.
+    pub edges:  Vec<f64>,
+    /// Count of citizens in each bucket.
+    pub counts: Vec<u32>,
+    pub min:    f64,
+    pub max:    f64,
+    pub mean:   f64,
+    pub n:      u32,
+}
+
+impl HistogramDto {
+    fn from_values(values: Vec<f64>, n_buckets: usize) -> Self {
+        let n = values.len() as u32;
+        if values.is_empty() {
+            return Self { edges: vec![], counts: vec![], min: 0.0, max: 0.0, mean: 0.0, n: 0 };
+        }
+        let min  = values.iter().cloned().fold(f64::INFINITY, f64::min);
+        let max  = values.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        let mean = values.iter().sum::<f64>() / values.len() as f64;
+        let range = (max - min).max(1e-9);
+        let bucket_w = range / n_buckets as f64;
+
+        let mut counts = vec![0u32; n_buckets];
+        let mut edges  = Vec::with_capacity(n_buckets);
+        for i in 0..n_buckets { edges.push(min + i as f64 * bucket_w); }
+
+        for v in &values {
+            let idx = (((v - min) / bucket_w) as usize).min(n_buckets - 1);
+            counts[idx] += 1;
+        }
+        Self { edges, counts, min, max, mean, n }
+    }
+}
+
+#[derive(serde::Serialize)]
+pub struct CitizenDistributionDto {
+    pub income:       HistogramDto,
+    pub wealth:       HistogramDto,
+    pub health:       HistogramDto,
+    pub productivity: HistogramDto,
+    pub n_citizens:   u32,
+}
+
+/// Pure inner function — testable without Tauri state.
+fn citizen_distribution_core(
+    w:         &mut simulator_core::bevy_ecs::world::World,
+    region_id: Option<u32>,
+) -> CitizenDistributionDto {
+    let mut income_vals = Vec::new();
+    let mut wealth_vals = Vec::new();
+    let mut health_vals = Vec::new();
+    let mut prod_vals   = Vec::new();
+
+    for (inc, wlt, hlt, prd, loc) in w
+        .query::<(&Income, &Wealth, &Health, &Productivity, &Location)>()
+        .iter(w)
+    {
+        if region_id.map_or(true, |id| loc.0.0 == id) {
+            income_vals.push(inc.0.to_num::<f64>());
+            wealth_vals.push(wlt.0.to_num::<f64>());
+            health_vals.push(hlt.0.to_num::<f64>());
+            prod_vals.push(prd.0.to_num::<f64>());
+        }
+    }
+
+    let n_citizens = income_vals.len() as u32;
+    CitizenDistributionDto {
+        income:       HistogramDto::from_values(income_vals,  12),
+        wealth:       HistogramDto::from_values(wealth_vals,  12),
+        health:       HistogramDto::from_values(health_vals,  10),
+        productivity: HistogramDto::from_values(prod_vals,    10),
+        n_citizens,
+    }
+}
+
+#[tauri::command]
+pub async fn get_citizen_distribution(
+    state:     tauri::State<'_, AppState>,
+    region_id: Option<u32>,
+) -> IpcResult<CitizenDistributionDto> {
+    let mut guard = state.sim.lock().await;
+    let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
+    Ok(citizen_distribution_core(&mut bundle.sim.world, region_id))
+}
+
+/// Correlated citizen sample for scatter-plot visualisation.
+/// Each entry is [income, wealth, health, productivity].
+/// Returns at most `max_points` citizens, sampled uniformly when the world
+/// has more citizens than requested (deterministic stride-based sampling).
+#[tauri::command]
+pub async fn get_citizen_scatter(
+    state:      tauri::State<'_, AppState>,
+    max_points: u32,
+    region_id:  Option<u32>,
+) -> IpcResult<Vec<[f64; 4]>> {
+    let mut guard = state.sim.lock().await;
+    let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
+    let w = &mut bundle.sim.world;
+
+    // Single pass; filter by region when requested.
+    let all: Vec<[f64; 4]> = w
+        .query::<(&Income, &Wealth, &Health, &Productivity, &Location)>()
+        .iter(w)
+        .filter(|(_, _, _, _, loc)| region_id.map_or(true, |id| loc.0.0 == id))
+        .map(|(inc, wlt, hlt, prd, _)| [
+            inc.0.to_num::<f64>(),
+            wlt.0.to_num::<f64>(),
+            hlt.0.to_num::<f64>(),
+            prd.0.to_num::<f64>(),
+        ])
+        .collect();
+
+    // Stride-based subsample so scatter is representative.
+    let out = if all.len() <= max_points as usize {
+        all
+    } else {
+        let stride = all.len() as f64 / max_points as f64;
+        (0..max_points as usize)
+            .map(|i| all[(i as f64 * stride) as usize])
+            .collect()
+    };
+
+    Ok(out)
+}
+
+// ---- Batched step + state ─────────────────────────────────────────────────
+
+/// Result of `step_and_get_state`: all data the UI needs per tick, in one IPC call.
+/// Replaces four separate round-trips (step_sim + get_current_state + get_metrics_rows
+/// + list_laws), cutting autostep IPC overhead by ~75%.
+#[derive(serde::Serialize)]
+pub struct StepResultDto {
+    pub tick:    u64,
+    pub state:   CurrentStateDto,
+    pub metrics: Vec<TickRow>,
+    pub laws:    Vec<LawInfoDto>,
+}
+
+#[tauri::command]
+pub async fn step_and_get_state(
+    state:          tauri::State<'_, AppState>,
+    ticks:          u32,
+    metrics_window: u32,
+) -> IpcResult<StepResultDto> {
+    let mut guard = state.sim.lock().await;
+    let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
+    for _ in 0..ticks { bundle.sim.step(); }
+    let tick = bundle.sim.tick();
+    let w = &bundle.sim.world;
+
+    // Build CurrentStateDto directly (same logic as get_current_state)
+    let clock     = w.resource::<SimClock>();
+    let ind       = w.resource::<MacroIndicators>();
+    let treasury  = w.resource::<Treasury>();
+    let price     = w.resource::<PriceLevel>();
+    let pollution = w.resource::<PollutionStock>();
+    let debt      = w.resource::<LegitimacyDebt>();
+    let rights    = w.resource::<RightsLedger>();
+    let crisis    = w.resource::<CrisisState>();
+    let cs = CurrentStateDto {
+        tick,
+        approval:               ind.approval,
+        population:             ind.population,
+        gdp:                    ind.gdp.to_num::<f64>(),
+        gini:                   ind.gini,
+        wealth_gini:            ind.wealth_gini,
+        unemployment:           ind.unemployment,
+        inflation:              ind.inflation,
+        gov_revenue:            ind.government_revenue.to_num::<f64>(),
+        gov_expenditure:        ind.government_expenditure.to_num::<f64>(),
+        treasury_balance:       treasury.balance.to_num::<f64>(),
+        price_level:            price.level,
+        pollution_stock:        pollution.stock,
+        legitimacy_debt:        debt.stock,
+        rights_granted_bits:    rights.granted.bits(),
+        crisis_kind:            crisis_kind_u8(crisis.kind),
+        crisis_remaining_ticks: crisis.remaining_ticks,
+        incumbent_party:        ind.incumbent_party,
+        election_margin:        ind.election_margin,
+        consecutive_terms:      ind.consecutive_terms,
+        last_election_tick:     ind.last_election_tick,
+        election_cycle:         ELECTION_PERIOD,
+    };
+    let _ = clock; // silence unused-variable warning (tick already captured above)
+
+    // Last `metrics_window` metric rows
+    let store = w.resource::<MetricStore>();
+    let all: Vec<TickRow> = store.rows().cloned().collect();
+    let start = all.len().saturating_sub(metrics_window as usize);
+    let metrics = all[start..].to_vec();
+
+    // Active laws
+    let registry = w.resource::<LawRegistry>();
+    let laws = registry.snapshot_active(tick).iter().map(|h| LawInfoDto {
+        id:           h.id.0,
+        effect_kind:  effect_kind_str(&h.effect),
+        label:        effect_label_str(&h.effect),
+        magnitude:    effect_magnitude(&h.effect, h.source.as_ref().map(|s| s.as_str())),
+        cadence:      format!("{:?}", h.cadence),
+        enacted_tick: h.effective_from_tick,
+        repealed:     h.effective_until_tick.is_some(),
+    }).collect();
+
+    Ok(StepResultDto { tick, state: cs, metrics, laws })
+}
+
+/// Return the original DSL source text for a law, if preserved at enactment.
+#[tauri::command]
+pub async fn get_law_dsl_source(
+    state:  tauri::State<'_, AppState>,
+    law_id: u64,
+) -> IpcResult<Option<String>> {
+    let guard = state.sim.lock().await;
+    let bundle = guard.as_ref().ok_or_else(IpcError::no_sim)?;
+    let registry = bundle.sim.world.resource::<LawRegistry>();
+    let handle = registry.get_handle(LawId(law_id))
+        .ok_or_else(|| IpcError(format!("law {law_id} not found")))?;
+    Ok(handle.source.as_deref().cloned())
+}
+
+/// Per-region aggregate statistics, computed on demand from citizen components.
+#[derive(serde::Serialize)]
+pub struct RegionStatsDto {
+    pub region_id:        u32,
+    pub population:       u64,
+    pub mean_approval:    f32,
+    pub mean_income:      f64,
+    pub unemployment_rate: f32,
+    pub mean_health:      f32,
+}
+
+/// Aggregate citizen components by region and return one record per region.
+/// Regions with zero citizens are omitted. Pure function for testability.
+fn aggregate_region_stats(w: &mut simulator_core::bevy_ecs::world::World) -> Vec<RegionStatsDto> {
+    // Accumulator: region_id → (n, sum_approval, sum_income, n_unemployed, sum_health)
+    let mut acc: std::collections::HashMap<u32, (u64, f64, f64, u64, f64)> = Default::default();
+
+    let mut q = w.query::<(&Location, &ApprovalRating, &Income, &EmploymentStatus, &Health)>();
+    for (loc, approval, income, employment, health) in q.iter(w) {
+        let e = acc.entry(loc.0.0).or_default();
+        e.0 += 1;
+        e.1 += approval.0.to_num::<f64>();
+        e.2 += income.0.to_num::<f64>();
+        if *employment == EmploymentStatus::Unemployed { e.3 += 1; }
+        e.4 += health.0.to_num::<f64>();
+    }
+
+    let mut result: Vec<RegionStatsDto> = acc.into_iter().map(|(region_id, (n, sum_a, sum_i, n_unemp, sum_h))| {
+        RegionStatsDto {
+            region_id,
+            population:        n,
+            mean_approval:     (sum_a / n as f64) as f32,
+            mean_income:       sum_i / n as f64,
+            unemployment_rate: (n_unemp as f64 / n as f64) as f32,
+            mean_health:       (sum_h / n as f64) as f32,
+        }
+    }).collect();
+    result.sort_by_key(|r| r.region_id);
+    result
+}
+
+/// IPC wrapper — delegates to `aggregate_region_stats`.
+#[tauri::command]
+pub async fn get_region_stats(
+    state: tauri::State<'_, AppState>,
+) -> IpcResult<Vec<RegionStatsDto>> {
+    let mut guard = state.sim.lock().await;
+    let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
+    Ok(aggregate_region_stats(&mut bundle.sim.world))
+}
+
+#[cfg(test)]
+mod region_stats_tests {
+    use super::*;
+    use simulator_core::{
+        Sim,
+        components::{
+            Age, ApprovalRating, AuditFlags, Citizen, EmploymentStatus, Health,
+            IdeologyVector, Income, LegalStatuses, Location, Productivity, Sex, Wealth,
+        },
+    };
+    use simulator_types::{CitizenId, Money, RegionId, Score};
+
+    fn spawn_citizen(
+        world: &mut bevy_ecs::world::World,
+        id:         u64,
+        region:     u32,
+        approval:   f32,
+        income:     f64,
+        employed:   bool,
+        health:     f32,
+    ) {
+        world.spawn((
+            Citizen(CitizenId(id)),
+            Age(35),
+            Sex::Male,
+            Location(RegionId(region)),
+            ApprovalRating(Score::from_num(approval)),
+            Income(Money::from_num(income as i64)),
+            if employed { EmploymentStatus::Employed } else { EmploymentStatus::Unemployed },
+            Health(Score::from_num(health)),
+            Wealth(Money::from_num(5000_i32)),
+            Productivity(Score::from_num(0.7_f32)),
+            IdeologyVector([0.0f32; 5]),
+            LegalStatuses(Default::default()),
+            AuditFlags(Default::default()),
+        ));
+    }
+
+    #[test]
+    fn empty_world_returns_no_regions() {
+        let mut sim = Sim::new([0u8; 32]);
+        let stats = aggregate_region_stats(&mut sim.world);
+        assert!(stats.is_empty(), "no citizens → no region records");
+    }
+
+    #[test]
+    fn single_region_aggregates_correctly() {
+        let mut sim = Sim::new([1u8; 32]);
+        // 2 citizens in region 0: one employed, one unemployed
+        spawn_citizen(&mut sim.world, 0, 0, 0.8, 3000.0, true,  0.9);
+        spawn_citizen(&mut sim.world, 1, 0, 0.4, 1000.0, false, 0.5);
+
+        let stats = aggregate_region_stats(&mut sim.world);
+        assert_eq!(stats.len(), 1);
+        let r = &stats[0];
+        assert_eq!(r.region_id, 0);
+        assert_eq!(r.population, 2);
+        assert!((r.mean_approval - 0.6).abs() < 0.01, "mean approval: {}", r.mean_approval);
+        assert!((r.mean_income - 2000.0).abs() < 1.0,  "mean income: {}",   r.mean_income);
+        assert!((r.unemployment_rate - 0.5).abs() < 0.01, "unemployment: {}", r.unemployment_rate);
+        assert!((r.mean_health - 0.7).abs() < 0.01,    "mean health: {}",   r.mean_health);
+    }
+
+    #[test]
+    fn multiple_regions_sorted_by_id() {
+        let mut sim = Sim::new([2u8; 32]);
+        spawn_citizen(&mut sim.world, 0, 2, 0.6, 3000.0, true, 0.7);
+        spawn_citizen(&mut sim.world, 1, 0, 0.5, 2000.0, true, 0.8);
+        spawn_citizen(&mut sim.world, 2, 1, 0.7, 4000.0, true, 0.6);
+
+        let stats = aggregate_region_stats(&mut sim.world);
+        assert_eq!(stats.len(), 3);
+        assert_eq!(stats[0].region_id, 0);
+        assert_eq!(stats[1].region_id, 1);
+        assert_eq!(stats[2].region_id, 2);
+    }
+
+    #[test]
+    fn fully_unemployed_region_shows_100pct() {
+        let mut sim = Sim::new([3u8; 32]);
+        spawn_citizen(&mut sim.world, 0, 5, 0.3, 500.0, false, 0.4);
+        spawn_citizen(&mut sim.world, 1, 5, 0.3, 500.0, false, 0.4);
+
+        let stats = aggregate_region_stats(&mut sim.world);
+        assert_eq!(stats.len(), 1);
+        assert!((stats[0].unemployment_rate - 1.0).abs() < 0.01);
+    }
+
+    // ── citizen_distribution_core tests ──────────────────────────────────────
+
+    #[test]
+    fn distribution_no_filter_returns_all_citizens() {
+        let mut sim = Sim::new([10u8; 32]);
+        spawn_citizen(&mut sim.world, 0, 0, 0.6, 2000.0, true,  0.7);
+        spawn_citizen(&mut sim.world, 1, 1, 0.5, 3000.0, true,  0.8);
+        spawn_citizen(&mut sim.world, 2, 2, 0.4, 1000.0, false, 0.5);
+
+        let dto = citizen_distribution_core(&mut sim.world, None);
+        assert_eq!(dto.n_citizens, 3, "all 3 citizens returned with no filter");
+        assert!((dto.income.mean - 2000.0).abs() < 1.0, "mean income: {}", dto.income.mean);
+    }
+
+    #[test]
+    fn distribution_region_filter_returns_only_matching_citizens() {
+        let mut sim = Sim::new([11u8; 32]);
+        spawn_citizen(&mut sim.world, 0, 0, 0.6, 5000.0, true,  0.9);
+        spawn_citizen(&mut sim.world, 1, 0, 0.6, 3000.0, true,  0.9);
+        spawn_citizen(&mut sim.world, 2, 1, 0.4, 1000.0, false, 0.5); // different region
+
+        let dto = citizen_distribution_core(&mut sim.world, Some(0));
+        assert_eq!(dto.n_citizens, 2, "only region-0 citizens");
+        assert!((dto.income.mean - 4000.0).abs() < 1.0, "mean income for region 0: {}", dto.income.mean);
+    }
+
+    #[test]
+    fn distribution_filter_nonexistent_region_returns_zero() {
+        let mut sim = Sim::new([12u8; 32]);
+        spawn_citizen(&mut sim.world, 0, 0, 0.6, 2000.0, true, 0.7);
+
+        let dto = citizen_distribution_core(&mut sim.world, Some(99));
+        assert_eq!(dto.n_citizens, 0, "region 99 has no citizens");
+    }
 }
 
 #[tauri::command]

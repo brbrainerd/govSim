@@ -1,23 +1,21 @@
 <script lang="ts">
-  import {
-    sim, navigate, beginLoad, endLoad, setError,
-  } from "$lib/store.svelte";
+  import { sim, navigate } from "$lib/store.svelte";
   import {
     enactFlatTax, enactUbi, enactAbatement, listLaws,
   } from "$lib/ipc";
+  import { toast } from "$lib/toasts.svelte";
 
   type LawKind = "income_tax" | "ubi" | "abatement";
 
+  let enacting:        boolean = $state(false);
   let kind:            LawKind = $state("income_tax");
   let taxRate:         number  = $state(0.25);
   let ubiAmount:       number  = $state(500);
   let pollRedux:       number  = $state(0.5);
   let costPerPu:       number  = $state(10_000);
-  let statusMsg:       string  = $state("");
 
   async function submit() {
-    beginLoad();
-    statusMsg = "";
+    enacting = true;
     try {
       let id: number;
       if (kind === "income_tax") {
@@ -28,20 +26,21 @@
         id = await enactAbatement(pollRedux, costPerPu);
       }
       sim.laws = await listLaws();
-      statusMsg = `✓ Law #${id} enacted at tick ${sim.tick}.`;
+      toast.success(`Law #${id} enacted at tick ${sim.tick}.`);
+      navigate("laws");
     } catch (e) {
-      setError(String(e));
+      toast.error(e, "Failed to enact law");
     } finally {
-      endLoad();
+      enacting = false;
     }
   }
 
   // Rough fiscal estimates displayed in the preview panel.
-  const estimatedAnnualCost = $derived(() => {
+  const estimatedAnnualCost = $derived.by(() => {
     if (kind === "income_tax") {
-      // Tax raises revenue; show positive impact.
+      // Flat tax revenue ≈ GDP * rate * 12 months (per-citizen proxy: GDP = Σ incomes).
       return sim.currentState
-        ? sim.currentState.population * sim.currentState.mean_income * taxRate * 12
+        ? sim.currentState.gdp * taxRate * 12
         : null;
     } else if (kind === "ubi") {
       return sim.currentState ? sim.currentState.population * ubiAmount * 12 : null;
@@ -55,6 +54,77 @@
     if (Math.abs(n) >= 1e6) return `$${(n/1e6).toFixed(1)}M`;
     return `$${n.toLocaleString()}`;
   }
+
+  // ── Affordability metrics ─────────────────────────────────────────────────
+
+  /** Estimated monthly cost (+) or revenue (-) to Treasury. */
+  const monthlyImpact = $derived.by((): number | null => {
+    if (!sim.currentState) return null;
+    if (kind === "income_tax") return -(sim.currentState.gdp * taxRate); // revenue (negative cost)
+    if (kind === "ubi")        return sim.currentState.population * ubiAmount;
+    return pollRedux * costPerPu; // abatement monthly cost
+  });
+
+  /** Estimated annual as % of GDP. */
+  const pctOfGdp = $derived.by((): number | null => {
+    if (estimatedAnnualCost === null || !sim.currentState || sim.currentState.gdp === 0) return null;
+    return Math.abs(estimatedAnnualCost) / sim.currentState.gdp;
+  });
+
+  /** For net-cost laws: how many months can treasury sustain the monthly drain? */
+  const monthsTreasury = $derived.by((): number | null => {
+    if (monthlyImpact === null || monthlyImpact <= 0) return null; // income_tax is revenue
+    if (!sim.currentState || sim.currentState.treasury_balance <= 0) return 0;
+    return Math.floor(sim.currentState.treasury_balance / monthlyImpact);
+  });
+
+  type Afford = "good" | "warn" | "danger";
+  const affordability = $derived.by((): Afford | null => {
+    if (estimatedAnnualCost === null || !sim.currentState) return null;
+    if (kind === "income_tax") {
+      // Tax: warn if rate > 50% (high approval drag), danger if > 80%
+      if (taxRate > 0.8)  return "danger";
+      if (taxRate > 0.5)  return "warn";
+      return "good";
+    }
+    // Cost laws: compare against annual revenue proxy
+    const annualRevenue = sim.currentState.gov_revenue * 12;
+    const ratio = estimatedAnnualCost / Math.max(annualRevenue, 1);
+    if (ratio > 1.5)  return "danger";
+    if (ratio > 0.5)  return "warn";
+    return "good";
+  });
+
+  const affordLabel: Record<Afford, string> = {
+    good:   "✓ Fiscally sustainable",
+    warn:   "⚠ Expensive — monitor treasury",
+    danger: "🔴 High fiscal risk",
+  };
+
+  // ── Badge preview ─────────────────────────────────────────────────────────
+
+  /**
+   * Mirrors effect_magnitude() in Rust so the user sees exactly what string
+   * will appear in the Laws table before they enact the law.
+   */
+  const previewMagnitude = $derived.by((): string => {
+    if (kind === "income_tax") return `${(taxRate * 100).toFixed(1)}%`;
+    if (kind === "ubi")        return `$${ubiAmount.toFixed(0)}/mo`;
+    return `${pollRedux.toFixed(2)} PU · $${costPerPu.toFixed(0)}/PU`;
+  });
+
+  const previewLabel: Record<LawKind, string> = {
+    income_tax: "Income Tax",
+    ubi:        "Citizen Benefit",
+    abatement:  "Abatement",
+  };
+
+  /** Maps proposal kind → effect_kind used by Rust/LawsView badge CSS classes. */
+  const BADGE_KIND: Record<LawKind, string> = {
+    income_tax: "income_tax",
+    ubi:        "benefit",    // Rust effect_kind for UBI is "benefit"
+    abatement:  "abatement",
+  };
 </script>
 
 <div class="proposal-view">
@@ -108,12 +178,8 @@
       </div>
       {/if}
 
-      {#if statusMsg}
-      <p class="status-msg">{statusMsg}</p>
-      {/if}
-
-      <button class="btn-enact" onclick={submit} disabled={sim.loading || !sim.loaded}>
-        {sim.loading ? "Enacting…" : "Enact Law"}
+      <button class="btn-enact" onclick={submit} disabled={enacting || !sim.loaded}>
+        {enacting ? "Enacting…" : "Enact Law"}
       </button>
     </div>
 
@@ -123,18 +189,53 @@
       <div class="estimate-row">
         <span class="est-label">{kind === "income_tax" ? "Est. annual revenue" : "Est. annual cost"}</span>
         <span class="est-value">
-          {#if estimatedAnnualCost?.()}
-            {fmt(estimatedAnnualCost()!)}
+          {#if estimatedAnnualCost !== null}
+            {fmt(Math.abs(estimatedAnnualCost))}
           {:else}
             —
           {/if}
         </span>
+        {#if pctOfGdp !== null}
+        <span class="est-pct">{(pctOfGdp * 100).toFixed(1)}% of GDP per year</span>
+        {/if}
+        {#if monthlyImpact !== null}
+        <span class="est-monthly">
+          {monthlyImpact >= 0 ? "Costs" : "Generates"} {fmt(Math.abs(monthlyImpact))}/month
+        </span>
+        {/if}
       </div>
+
+      <!-- Table badge preview -->
+      <div class="badge-preview">
+        <span class="bp-label">Will appear in table as</span>
+        <span class="bp-row">
+          <span class="badge badge-{BADGE_KIND[kind]}">{previewLabel[kind]}</span>
+          <span class="bp-magnitude">{previewMagnitude}</span>
+        </span>
+      </div>
+
+      <!-- Affordability badge -->
+      {#if affordability !== null}
+      <div class="afford-badge afford-badge--{affordability}">
+        {affordLabel[affordability]}
+      </div>
+      {/if}
+
+      <!-- Treasury runway (cost laws only) -->
+      {#if monthsTreasury !== null}
+      <div class="runway-row">
+        <span class="runway-label">Treasury runway</span>
+        <span class="runway-value {monthsTreasury < 6 ? 'runway-danger' : monthsTreasury < 18 ? 'runway-warn' : ''}">
+          {monthsTreasury} months
+        </span>
+      </div>
+      {/if}
 
       {#if sim.currentState}
       <div class="context-block">
         <h4>Current context</h4>
-        <div class="ctx-row"><span>Treasury</span><span>{fmt(sim.currentState.treasury_balance)}</span></div>
+        <div class="ctx-row"><span>Treasury</span><span class={sim.currentState.treasury_balance < 0 ? "ctx-danger" : ""}>{fmt(sim.currentState.treasury_balance)}</span></div>
+        <div class="ctx-row"><span>Annual Revenue</span><span>{fmt(sim.currentState.gov_revenue * 12)}</span></div>
         <div class="ctx-row"><span>Population</span><span>{sim.currentState.population.toLocaleString()}</span></div>
         <div class="ctx-row"><span>Approval</span><span>{(sim.currentState.approval * 100).toFixed(1)}%</span></div>
         {#if kind === "abatement"}
@@ -243,7 +344,6 @@ input[type="number"] { width: 100%; }
 .hint { font-size: 12px; color: var(--muted); }
 .field-label { font-size: 12px; color: var(--muted); margin-bottom: 0; }
 
-.status-msg { color: var(--good); font-size: 13px; }
 
 .btn-enact {
   background: var(--accent);
@@ -279,8 +379,62 @@ input[type="number"] { width: 100%; }
   flex-direction: column;
   gap: 4px;
 }
-.est-label { font-size: 11px; color: var(--muted); }
-.est-value { font-size: 22px; font-weight: 700; }
+.est-label   { font-size: 11px; color: var(--muted); }
+.est-value   { font-size: 22px; font-weight: 700; }
+.est-pct     { font-size: 11px; color: var(--muted); }
+.est-monthly { font-size: 12px; color: var(--muted); }
+
+.badge-preview {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bp-label     { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+.bp-row       { display: flex; align-items: center; gap: 8px; }
+.bp-magnitude { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Badge colours reused from LawsView */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.badge-income_tax  { background: rgba(99,102,241,.20);  color: #818cf8; }
+.badge-benefit     { background: rgba(34,197,94,.20);   color: #4ade80; }
+.badge-abatement   { background: rgba(56,189,248,.20);  color: #38bdf8; }
+
+.afford-badge {
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+}
+.afford-badge--good   { background: rgba(34,197,94,.15);  color: var(--good,   #22c55e); border: 1px solid rgba(34,197,94,.3); }
+.afford-badge--warn   { background: rgba(245,158,11,.15); color: var(--warn,   #f59e0b); border: 1px solid rgba(245,158,11,.3); }
+.afford-badge--danger { background: rgba(239,68,68,.15);  color: var(--danger, #ef4444); border: 1px solid rgba(239,68,68,.3); }
+
+.runway-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+.runway-label { color: var(--muted); }
+.runway-value { font-weight: 600; }
+.runway-warn  { color: var(--warn, #f59e0b); }
+.runway-danger { color: var(--danger, #ef4444); }
+
+.ctx-danger { color: var(--danger, #ef4444); font-weight: 600; }
 
 .context-block, .notes-block {
   background: var(--surface);

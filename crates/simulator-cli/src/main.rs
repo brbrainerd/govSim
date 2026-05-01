@@ -167,6 +167,7 @@ fn run(
         register_law_dispatcher(&mut sim);
         let registry = sim.world.resource::<LawRegistry>().clone();
         let id = registry.enact(LawHandle {
+            source: None,
             id: LawId(0),
             version: 1,
             program: Arc::new(program),
@@ -258,6 +259,7 @@ fn determinism(path: PathBuf, ticks: u64) -> Result<()> {
             typecheck_program(&lowered.program).map_err(|e| anyhow::anyhow!("{e}"))?;
             let registry = sim.world.resource::<LawRegistry>().clone();
             registry.enact(LawHandle {
+                source: None,
                 id: LawId(0),
                 version: 1,
                 program: Arc::new(lowered.program),

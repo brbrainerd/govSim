@@ -4,6 +4,7 @@
     beginLoad, endLoad, setError,
   } from "$lib/store.svelte";
   import { loadScenario, getCurrentState, getMetricsRows, listLaws } from "$lib/ipc";
+  import { toast } from "$lib/toasts.svelte";
 
   const BUILT_IN_SCENARIOS = [
     {
@@ -35,8 +36,10 @@
       sim.laws            = await listLaws();
       sim.loaded          = true;
       navigate("dashboard");
+      toast.success(`Scenario "${loaded}" loaded.`);
     } catch (e) {
       setError(String(e));
+      toast.error(e, "Load scenario failed");
     } finally {
       endLoad();
     }
@@ -92,6 +95,13 @@
   <div class="err-msg">⚠ {sim.error}</div>
   {/if}
 </div>
+
+{#if sim.loading}
+<div class="load-overlay" role="status" aria-label="Loading scenario…">
+  <div class="load-spinner"></div>
+  <span class="load-label">Loading scenario…</span>
+</div>
+{/if}
 
 <style>
 .start-view {
@@ -166,4 +176,34 @@ h1 { font-size: 28px; font-weight: 800; margin-bottom: 12px; }
 .btn-load:disabled { opacity: .4; }
 
 .err-msg { color: var(--danger); font-size: 13px; margin-top: 16px; }
+
+/* Loading overlay */
+.load-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+.load-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255,255,255,.15);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+.load-label {
+  font-size: 14px;
+  color: rgba(255,255,255,.85);
+  letter-spacing: .3px;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 </style>

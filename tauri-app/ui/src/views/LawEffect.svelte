@@ -1,19 +1,34 @@
 <script lang="ts">
   import { sim, ui, navigate, formatMoney, pct, tickToDate } from "$lib/store.svelte";
-  import { getLawEffect }       from "$lib/ipc";
-  import type { LawEffectDto }  from "$lib/ipc";
-  import LineChart              from "../components/LineChart.svelte";
+  import { getLawEffect, runMonteCarlo }                     from "$lib/ipc";
+  import type { LawEffectDto, MonteCarloSummaryDto }         from "$lib/ipc";
+  import { ciBarStyle }                                      from "$lib/chart-utils";
+  import Tabs      from "../components/ui/Tabs.svelte";
+  import Spinner   from "../components/ui/Spinner.svelte";
+  import LineChart from "../components/LineChart.svelte";
 
-  let effect:     LawEffectDto | null = $state(null);
-  let windowSize: number              = $state(30);
-  let loading:    boolean             = $state(false);
-  let error:      string              = $state("");
+  let lawEffect:  LawEffectDto | null        = $state(null);
+  let mcResult:   MonteCarloSummaryDto | null = $state(null);
+  let windowSize: number                      = $state(30);
+  let nRuns:      number                      = $state(20);
+  let loading:    boolean                     = $state(false);
+  let mcLoading:  boolean                     = $state(false);
+  let error:      string                      = $state("");
+  let mcError:    string                      = $state("");
+  let activeTab:  string                      = $state("overview");
+
+  const TABS = [
+    { id: "overview",  label: "Δ Overview" },
+    { id: "detail",    label: "Window Detail" },
+    { id: "causal",    label: "Counterfactual DiD" },
+  ];
 
   async function fetchEffect() {
     if (ui.effectLawId === null) return;
     loading = true; error = "";
+    mcResult = null; mcError = "";
     try {
-      effect = await getLawEffect(ui.effectEnactedTick, windowSize);
+      lawEffect = await getLawEffect(ui.effectEnactedTick, windowSize);
     } catch (e) {
       error = String(e);
     } finally {
@@ -21,22 +36,32 @@
     }
   }
 
-  // Fetch on mount and whenever windowSize changes.
+  async function fetchMonteCarlo() {
+    if (ui.effectLawId === null) return;
+    mcLoading = true; mcError = ""; mcResult = null;
+    try {
+      mcResult = await runMonteCarlo(ui.effectLawId, windowSize, nRuns);
+    } catch (e) {
+      mcError = String(e);
+    } finally {
+      mcLoading = false;
+    }
+  }
+
+  // Fetch on mount and whenever windowSize / law changes.
   $effect(() => {
     void windowSize;
     void ui.effectLawId;
     fetchEffect();
   });
 
-  // Comparison chart data.
-  const compRows = $derived(() => {
-    if (!effect) return { labels: [], pre: [], post: [] };
-    const labels = ["Approval", "Unemployment", "Legitimacy Debt"];
-    return {
-      labels,
-      pre:  [effect.pre.mean_approval,  effect.pre.mean_unemployment,  effect.pre.mean_legitimacy],
-      post: [effect.post.mean_approval, effect.post.mean_unemployment, effect.post.mean_legitimacy],
-    };
+  // Auto-trigger Monte Carlo when the palette command `sim.monte_carlo.run` fires.
+  $effect(() => {
+    if (!ui.triggerMC) return;
+    ui.triggerMC = false;
+    // Switch to the Counterfactual DiD tab so the result is visible.
+    activeTab = "causal";
+    fetchMonteCarlo();
   });
 
   function deltaColor(v: number, positiveGood: boolean): string {
@@ -49,26 +74,62 @@
     return (v >= 0 ? "+" : "") + fmt(v);
   }
 
-  const approvalSeries = $derived(effect ? [
-    { name: "Pre",  data: [effect.pre.min_approval,  effect.pre.mean_approval,  effect.pre.max_approval],  color: "#6b7280" },
-    { name: "Post", data: [effect.post.min_approval, effect.post.mean_approval, effect.post.max_approval], color: "#6366f1" },
-  ] : []);
+  function fmtDeltaOpt(v: number | null, fmt: (n: number) => string): string {
+    if (v === null) return "—";
+    return (v >= 0 ? "+" : "") + fmt(v);
+  }
 
-  const gdpSeries = $derived(effect ? [
-    { name: "Pre",  data: [effect.pre.min_gdp,  effect.pre.mean_gdp,  effect.pre.max_gdp],  color: "#6b7280" },
-    { name: "Post", data: [effect.post.min_gdp, effect.post.mean_gdp, effect.post.max_gdp], color: "#22c55e" },
-  ] : []);
+  /** Width pct for the CI bar relative to the p5–p95 range. */
+  // ── Sparkline data derived from the global metric ring-buffer ─────────────
+  // Slices sim.metricsRows for the pre+post window around the enacted tick.
+  // No extra IPC call needed — the ring-buffer already has all historical rows.
+
+  const windowRows = $derived.by(() => {
+    if (!lawEffect) return [];
+    const fromTick = lawEffect.pre.from_tick;
+    const toTick   = lawEffect.post.to_tick;
+    return sim.metricsRows.filter(r => r.tick >= fromTick && r.tick <= toTick);
+  });
+
+  const sparkLabels  = $derived(windowRows.map(r => tickToDate(r.tick)));
+
+  const approvalSpark = $derived([
+    { name: "Approval %", data: windowRows.map(r => r.approval * 100) },
+  ]);
+
+  const gdpSpark = $derived([
+    { name: "GDP", data: windowRows.map(r => r.gdp) },
+  ]);
+
+  const unemploySpark = $derived([
+    { name: "Unemployment %", data: windowRows.map(r => r.unemployment * 100) },
+  ]);
+
+  // Vertical mark-line at the enacted tick
+  const enactMark = $derived(
+    lawEffect
+      ? [{ x: tickToDate(ui.effectEnactedTick), label: "Enacted", color: "var(--color-warning)" }]
+      : []
+  );
+
+  /** Law from the active-laws list, for the title tag. May be null if already repealed. */
+  const currentLaw = $derived(
+    ui.effectLawId !== null ? (sim.laws.find(l => l.id === ui.effectLawId) ?? null) : null
+  );
 </script>
 
 <div class="effect-view">
   <div class="page-header">
     <h1>
       Law Effect
-      {#if ui.effectLawId !== null}<span class="id-tag">#{ ui.effectLawId }</span>{/if}
+      {#if ui.effectLawId !== null}<span class="id-tag">#{ui.effectLawId}</span>{/if}
+      {#if currentLaw}<span class="kind-tag">{currentLaw.label}</span>{/if}
+      {#if currentLaw?.magnitude}<span class="kind-tag">{currentLaw.magnitude}</span>{/if}
     </h1>
     <button class="btn-back" onclick={() => navigate("laws")}>← Laws</button>
   </div>
 
+  <!-- Window size selector -->
   <div class="controls">
     <p class="field-label">Window size (ticks each side)</p>
     <div class="control-row">
@@ -80,43 +141,93 @@
   </div>
 
   {#if loading}
-  <div class="loading-msg">Computing…</div>
+  <div class="loading-msg"><Spinner size="sm" /> Computing…</div>
   {:else if error}
   <div class="error-msg">⚠ {error}</div>
-  {:else if effect}
+  {:else if lawEffect}
 
-  <!-- ── Delta summary cards ── -->
-  <div class="delta-grid">
-    {#each [
-      ["Approval",     fmtDelta(effect.delta_approval,     pct),         deltaColor(effect.delta_approval,     true)],
-      ["Unemployment", fmtDelta(effect.delta_unemployment, pct),         deltaColor(effect.delta_unemployment, false)],
-      ["GDP",          fmtDelta(effect.delta_gdp,          formatMoney), deltaColor(effect.delta_gdp,          true)],
-      ["Pollution",    fmtDelta(effect.delta_pollution,    v => v.toFixed(3) + " PU"), deltaColor(effect.delta_pollution, false)],
-      ["Legitimacy D.",fmtDelta(effect.delta_legitimacy,  v => v.toFixed(4)), deltaColor(effect.delta_legitimacy, false)],
-      ["Treasury",     fmtDelta(effect.delta_treasury,    formatMoney),  deltaColor(effect.delta_treasury,     true)],
-    ] as [label, val, col]}
-    <div class="delta-card">
-      <span class="d-label">{label}</span>
-      <span class="d-value" style="color:{col}">{val}</span>
-      <span class="d-sub">post − pre</span>
+  <Tabs tabs={TABS} bind:active={activeTab} />
+
+  <!-- ─── Tab: Δ Overview ─────────────────────────────────────── -->
+  {#if activeTab === "overview"}
+  <div role="tabpanel" id="panel-overview" aria-labelledby="tab-overview">
+    <div class="delta-grid">
+      {#each [
+        ["Approval",      fmtDelta(lawEffect.delta_approval,     pct),         deltaColor(lawEffect.delta_approval,     true)],
+        ["Unemployment",  fmtDelta(lawEffect.delta_unemployment, pct),         deltaColor(lawEffect.delta_unemployment, false)],
+        ["GDP",           fmtDelta(lawEffect.delta_gdp,          formatMoney), deltaColor(lawEffect.delta_gdp,          true)],
+        ["Pollution",     fmtDelta(lawEffect.delta_pollution,    v => v.toFixed(3) + " PU"), deltaColor(lawEffect.delta_pollution, false)],
+        ["Legitimacy D.", fmtDelta(lawEffect.delta_legitimacy,   v => v.toFixed(4)), deltaColor(lawEffect.delta_legitimacy, false)],
+        ["Treasury",      fmtDelta(lawEffect.delta_treasury,     formatMoney),  deltaColor(lawEffect.delta_treasury,     true)],
+      ] as [label, val, col]}
+      <div class="delta-card">
+        <span class="d-label">{label}</span>
+        <span class="d-value" style="color:{col}">{val}</span>
+        <span class="d-sub">post − pre (naive)</span>
+      </div>
+      {/each}
     </div>
-    {/each}
+
+    <p class="overview-note">
+      Naive before/after difference — not causal. See <button class="inline-link" onclick={() => activeTab = "causal"}>Counterfactual DiD</button> for a controlled estimate.
+    </p>
   </div>
 
-  <!-- ── Before / After table ── -->
-  <div class="table-section">
+  <!-- ─── Tab: Window Detail ──────────────────────────────────── -->
+  {:else if activeTab === "detail"}
+  <div role="tabpanel" id="panel-detail" aria-labelledby="tab-detail">
+
+    <!-- Mini sparklines — sliced from the global metric ring-buffer -->
+    {#if windowRows.length > 0}
+    <div class="spark-grid">
+      <div class="spark-panel">
+        <span class="spark-label">Approval %</span>
+        <LineChart
+          series={approvalSpark}
+          xLabels={sparkLabels}
+          yMin={0}
+          yMax={100}
+          height="80px"
+          markLines={enactMark}
+        />
+      </div>
+      <div class="spark-panel">
+        <span class="spark-label">GDP</span>
+        <LineChart
+          series={gdpSpark}
+          xLabels={sparkLabels}
+          height="80px"
+          markLines={enactMark}
+        />
+      </div>
+      <div class="spark-panel">
+        <span class="spark-label">Unemployment %</span>
+        <LineChart
+          series={unemploySpark}
+          xLabels={sparkLabels}
+          yMin={0}
+          yMax={100}
+          height="80px"
+          markLines={enactMark}
+        />
+      </div>
+    </div>
+    {:else}
+    <p class="spark-empty">No metric history in range — run more simulation ticks.</p>
+    {/if}
+
     <table class="effect-table">
       <thead>
-        <tr><th>Metric</th><th>Pre-window avg</th><th>Post-window avg</th><th>Δ</th></tr>
+        <tr><th>Metric</th><th>Pre avg</th><th>Post avg</th><th>Δ</th></tr>
       </thead>
       <tbody>
         {#each [
-          ["Approval",       effect.pre.mean_approval,     effect.post.mean_approval,     effect.delta_approval,     pct,         true],
-          ["Unemployment",   effect.pre.mean_unemployment, effect.post.mean_unemployment, effect.delta_unemployment, pct,         false],
-          ["GDP",            effect.pre.mean_gdp,          effect.post.mean_gdp,          effect.delta_gdp,          formatMoney, true],
-          ["Pollution",      effect.pre.mean_pollution,    effect.post.mean_pollution,     effect.delta_pollution,    (v:number)=>v.toFixed(3), false],
-          ["Legitimacy Debt",effect.pre.mean_legitimacy,   effect.post.mean_legitimacy,    effect.delta_legitimacy,   (v:number)=>v.toFixed(4), false],
-          ["Treasury",       effect.pre.mean_treasury,     effect.post.mean_treasury,      effect.delta_treasury,     formatMoney, true],
+          ["Approval",       lawEffect.pre.mean_approval,     lawEffect.post.mean_approval,     lawEffect.delta_approval,     pct,         true],
+          ["Unemployment",   lawEffect.pre.mean_unemployment, lawEffect.post.mean_unemployment, lawEffect.delta_unemployment, pct,         false],
+          ["GDP",            lawEffect.pre.mean_gdp,          lawEffect.post.mean_gdp,          lawEffect.delta_gdp,          formatMoney, true],
+          ["Pollution",      lawEffect.pre.mean_pollution,    lawEffect.post.mean_pollution,     lawEffect.delta_pollution,    (v:number)=>v.toFixed(3), false],
+          ["Legitimacy Debt",lawEffect.pre.mean_legitimacy,   lawEffect.post.mean_legitimacy,    lawEffect.delta_legitimacy,   (v:number)=>v.toFixed(4), false],
+          ["Treasury",       lawEffect.pre.mean_treasury,     lawEffect.post.mean_treasury,      lawEffect.delta_treasury,     formatMoney, true],
         ] as [label, pre, post, delta, fmt, posGood]}
         <tr>
           <td>{label}</td>
@@ -129,12 +240,213 @@
         {/each}
       </tbody>
     </table>
+    <div class="window-meta">
+      Pre: ticks {lawEffect.pre.from_tick}–{lawEffect.pre.to_tick} ({lawEffect.pre.n_rows} rows) &nbsp;|&nbsp;
+      Post: ticks {lawEffect.post.from_tick}–{lawEffect.post.to_tick} ({lawEffect.post.n_rows} rows)
+    </div>
   </div>
 
-  <div class="window-meta">
-    Pre-window: ticks {effect.pre.from_tick}–{effect.pre.to_tick} ({effect.pre.n_rows} rows) &nbsp;|&nbsp;
-    Post-window: ticks {effect.post.from_tick}–{effect.post.to_tick} ({effect.post.n_rows} rows)
+  <!-- ─── Tab: Counterfactual DiD ─────────────────────────────── -->
+  {:else if activeTab === "causal"}
+  <div role="tabpanel" id="panel-causal" aria-labelledby="tab-causal">
+    <div class="mc-header">
+      <p class="mc-desc">
+        Forks the sim at enactment, runs treatment/control pairs with varied seeds,
+        and returns the DiD distribution.
+      </p>
+      <div class="mc-controls">
+        <label for="nruns-sel" class="field-label">Runs</label>
+        <select id="nruns-sel" bind:value={nRuns}>
+          {#each [5, 10, 20, 50] as n}
+          <option value={n}>{n}</option>
+          {/each}
+        </select>
+        <button class="btn-mc" onclick={fetchMonteCarlo} disabled={mcLoading}>
+          {#if mcLoading}<Spinner size="sm" />{:else}▶ Run MC{/if}
+        </button>
+      </div>
+    </div>
+
+    {#if mcLoading}
+    <div class="loading-msg">Running {nRuns} simulations…</div>
+    {:else if mcError}
+    <div class="error-msg">⚠ {mcError}</div>
+    {:else if mcResult}
+
+    <div class="mc-grid">
+      <!-- Approval DiD CI -->
+      <div class="mc-card">
+        <div class="mc-card-header">
+          <span class="mc-metric">Approval DiD</span>
+          <span class="mc-runs">{mcResult.n_runs} runs</span>
+        </div>
+        <div class="mc-value" style="color:{deltaColor(mcResult.mean_did_approval ?? 0, true)}">
+          {fmtDeltaOpt(mcResult.mean_did_approval, pct)}
+          {#if mcResult.std_did_approval !== null}
+          <span class="mc-std">± {pct(mcResult.std_did_approval)}</span>
+          {/if}
+        </div>
+        {#if mcResult.p5_did_approval !== null && mcResult.p95_did_approval !== null}
+        <div class="ci-bar-wrap">
+          <div class="ci-bar" style={ciBarStyle(mcResult.mean_did_approval, mcResult.p5_did_approval, mcResult.p95_did_approval)}>
+            <div class="ci-range"></div>
+            <div class="ci-mean-line"></div>
+          </div>
+          <div class="ci-labels">
+            <span>P5: {fmtDeltaOpt(mcResult.p5_did_approval, pct)}</span>
+            <span>P95: {fmtDeltaOpt(mcResult.p95_did_approval, pct)}</span>
+          </div>
+        </div>
+        {/if}
+      </div>
+
+      <!-- GDP DiD -->
+      <div class="mc-card">
+        <div class="mc-card-header">
+          <span class="mc-metric">GDP DiD</span>
+          <span class="mc-runs">{mcResult.n_runs} runs</span>
+        </div>
+        <div class="mc-value" style="color:{deltaColor(mcResult.mean_did_gdp ?? 0, true)}">
+          {fmtDeltaOpt(mcResult.mean_did_gdp, formatMoney)}
+          {#if mcResult.std_did_gdp !== null}
+          <span class="mc-std">± {formatMoney(mcResult.std_did_gdp)}</span>
+          {/if}
+        </div>
+        {#if mcResult.p5_did_gdp !== null && mcResult.p95_did_gdp !== null}
+        <div class="ci-bar-wrap">
+          <div class="ci-bar" style={ciBarStyle(mcResult.mean_did_gdp, mcResult.p5_did_gdp, mcResult.p95_did_gdp)}>
+            <div class="ci-range"></div>
+            <div class="ci-mean-line"></div>
+          </div>
+          <div class="ci-labels">
+            <span>P5: {fmtDeltaOpt(mcResult.p5_did_gdp, formatMoney)}</span>
+            <span>P95: {fmtDeltaOpt(mcResult.p95_did_gdp, formatMoney)}</span>
+          </div>
+        </div>
+        {/if}
+      </div>
+
+      <!-- Pollution DiD -->
+      <div class="mc-card">
+        <div class="mc-card-header">
+          <span class="mc-metric">Pollution DiD</span>
+          <span class="mc-runs">{mcResult.n_runs} runs</span>
+        </div>
+        <div class="mc-value" style="color:{deltaColor(mcResult.mean_did_pollution ?? 0, false)}">
+          {fmtDeltaOpt(mcResult.mean_did_pollution, v => v.toFixed(4) + " PU")}
+          {#if mcResult.std_did_pollution !== null}
+          <span class="mc-std">± {mcResult.std_did_pollution.toFixed(4)} PU</span>
+          {/if}
+        </div>
+        {#if mcResult.p5_did_pollution !== null && mcResult.p95_did_pollution !== null}
+        <div class="ci-bar-wrap">
+          <div class="ci-bar" style={ciBarStyle(mcResult.mean_did_pollution, mcResult.p5_did_pollution, mcResult.p95_did_pollution)}>
+            <div class="ci-range"></div>
+            <div class="ci-mean-line"></div>
+          </div>
+          <div class="ci-labels">
+            <span>P5: {fmtDeltaOpt(mcResult.p5_did_pollution, v => v.toFixed(4) + " PU")}</span>
+            <span>P95: {fmtDeltaOpt(mcResult.p95_did_pollution, v => v.toFixed(4) + " PU")}</span>
+          </div>
+        </div>
+        {/if}
+      </div>
+
+      <!-- Unemployment DiD -->
+      <div class="mc-card">
+        <div class="mc-card-header">
+          <span class="mc-metric">Unemployment DiD</span>
+          <span class="mc-runs">{mcResult.n_runs} runs</span>
+        </div>
+        <div class="mc-value" style="color:{deltaColor(-(mcResult.mean_did_unemployment ?? 0), true)}">
+          {fmtDeltaOpt(mcResult.mean_did_unemployment, v => (v * 100).toFixed(2) + " pp")}
+          {#if mcResult.std_did_unemployment !== null}
+          <span class="mc-std">± {(mcResult.std_did_unemployment * 100).toFixed(2)} pp</span>
+          {/if}
+        </div>
+        {#if mcResult.p5_did_unemployment !== null && mcResult.p95_did_unemployment !== null}
+        <div class="ci-bar-wrap">
+          <div class="ci-bar" style={ciBarStyle(mcResult.mean_did_unemployment, mcResult.p5_did_unemployment, mcResult.p95_did_unemployment)}>
+            <div class="ci-range"></div>
+            <div class="ci-mean-line"></div>
+          </div>
+          <div class="ci-labels">
+            <span>P5: {fmtDeltaOpt(mcResult.p5_did_unemployment, v => (v * 100).toFixed(2) + " pp")}</span>
+            <span>P95: {fmtDeltaOpt(mcResult.p95_did_unemployment, v => (v * 100).toFixed(2) + " pp")}</span>
+          </div>
+        </div>
+        {/if}
+      </div>
+
+      <!-- Legitimacy Debt DiD -->
+      <div class="mc-card">
+        <div class="mc-card-header">
+          <span class="mc-metric">Legitimacy Debt DiD</span>
+          <span class="mc-runs">{mcResult.n_runs} runs</span>
+        </div>
+        <div class="mc-value" style="color:{deltaColor(-(mcResult.mean_did_legitimacy ?? 0), true)}">
+          {fmtDeltaOpt(mcResult.mean_did_legitimacy, v => v.toFixed(4))}
+          {#if mcResult.std_did_legitimacy !== null}
+          <span class="mc-std">± {mcResult.std_did_legitimacy.toFixed(4)}</span>
+          {/if}
+        </div>
+        {#if mcResult.p5_did_legitimacy !== null && mcResult.p95_did_legitimacy !== null}
+        <div class="ci-bar-wrap">
+          <div class="ci-bar" style={ciBarStyle(mcResult.mean_did_legitimacy, mcResult.p5_did_legitimacy, mcResult.p95_did_legitimacy)}>
+            <div class="ci-range"></div>
+            <div class="ci-mean-line"></div>
+          </div>
+          <div class="ci-labels">
+            <span>P5: {fmtDeltaOpt(mcResult.p5_did_legitimacy, v => v.toFixed(4))}</span>
+            <span>P95: {fmtDeltaOpt(mcResult.p95_did_legitimacy, v => v.toFixed(4))}</span>
+          </div>
+        </div>
+        {/if}
+      </div>
+
+      <!-- Treasury DiD -->
+      <div class="mc-card">
+        <div class="mc-card-header">
+          <span class="mc-metric">Treasury DiD</span>
+          <span class="mc-runs">{mcResult.n_runs} runs</span>
+        </div>
+        <div class="mc-value" style="color:{deltaColor(mcResult.mean_did_treasury ?? 0, true)}">
+          {fmtDeltaOpt(mcResult.mean_did_treasury, formatMoney)}
+          {#if mcResult.std_did_treasury !== null}
+          <span class="mc-std">± {formatMoney(mcResult.std_did_treasury)}</span>
+          {/if}
+        </div>
+        {#if mcResult.p5_did_treasury !== null && mcResult.p95_did_treasury !== null}
+        <div class="ci-bar-wrap">
+          <div class="ci-bar" style={ciBarStyle(mcResult.mean_did_treasury, mcResult.p5_did_treasury, mcResult.p95_did_treasury)}>
+            <div class="ci-range"></div>
+            <div class="ci-mean-line"></div>
+          </div>
+          <div class="ci-labels">
+            <span>P5: {fmtDeltaOpt(mcResult.p5_did_treasury, formatMoney)}</span>
+            <span>P95: {fmtDeltaOpt(mcResult.p95_did_treasury, formatMoney)}</span>
+          </div>
+        </div>
+        {/if}
+      </div>
+    </div>
+
+    <p class="mc-note">
+      DiD = (treatment_post − treatment_pre) − (control_post − control_pre).
+      Each run uses a different post-enactment RNG seed. The snapshot was taken
+      automatically at enactment tick {ui.effectEnactedTick}.
+      All CI bars show exact P5/P95 from the Monte Carlo distribution.
+      Inverted metrics (negative = good): Pollution, Unemployment, Legitimacy Debt.
+    </p>
+
+    {:else}
+    <div class="mc-placeholder">
+      Click <strong>▶ Run MC</strong> to run counterfactual simulations.
+      A snapshot was saved automatically when the law was enacted.
+    </div>
+    {/if}
   </div>
+  {/if}
 
   {/if}
 </div>
@@ -156,11 +468,20 @@ h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap:
   border-radius: 4px;
   padding: 2px 8px;
 }
+.kind-tag {
+  font-size: 12px;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-weight: 500;
+  letter-spacing: .2px;
+}
 .btn-back { background: transparent; color: var(--muted); border: 1px solid var(--border); }
 
 .controls { margin-bottom: 20px; }
-.controls label { margin-bottom: 8px; }
-.control-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.control-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 .control-row button {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -170,16 +491,17 @@ h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap:
 }
 .control-row button.active { border-color: var(--accent); color: var(--accent); background: rgba(99,102,241,.12); }
 .enacted-label { font-size: 12px; color: var(--muted); margin-left: 8px; }
-.field-label { font-size: 12px; color: var(--muted); margin-bottom: 0; }
+.field-label { font-size: 12px; color: var(--muted); margin: 0; }
 
-.loading-msg, .error-msg { color: var(--muted); padding: 40px 0; text-align: center; }
+.loading-msg, .error-msg { color: var(--muted); padding: 20px 0; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .error-msg { color: var(--danger); }
 
+/* Delta overview grid */
 .delta-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 10px;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 .delta-card {
   background: var(--surface);
@@ -194,7 +516,52 @@ h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap:
 .d-value { font-size: 20px; font-weight: 700; line-height: 1.1; }
 .d-sub   { font-size: 10px; color: var(--muted); }
 
-.table-section { margin-bottom: 12px; }
+.overview-note {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.inline-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Window detail sparklines */
+.spark-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.spark-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+}
+.spark-label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin-bottom: 6px;
+}
+.spark-empty {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  padding: 20px 0;
+  margin-bottom: 16px;
+}
+
+/* Detail table */
 .effect-table {
   width: 100%;
   border-collapse: collapse;
@@ -203,6 +570,7 @@ h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap:
   border-radius: var(--radius);
   border: 1px solid var(--border);
   overflow: hidden;
+  margin-bottom: 8px;
 }
 .effect-table th {
   text-align: left;
@@ -218,6 +586,85 @@ h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap:
   border-bottom: 1px solid var(--border);
 }
 .effect-table tr:last-child td { border-bottom: none; }
-
 .window-meta { font-size: 11px; color: var(--muted); }
+
+/* Monte Carlo tab */
+.mc-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.mc-desc { font-size: 12px; color: var(--muted); }
+.mc-controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.mc-controls select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  border-radius: var(--radius);
+  padding: 4px 8px;
+  font-size: 13px;
+}
+.btn-mc {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-mc:disabled { opacity: .5; cursor: wait; }
+
+.mc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.mc-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+.mc-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.mc-metric { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+.mc-runs   { font-size: 11px; color: var(--muted); }
+.mc-value  { font-size: 22px; font-weight: 700; line-height: 1.1; margin-bottom: 10px; }
+.mc-std    { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 4px; }
+
+/* CI bar */
+.ci-bar-wrap { margin-top: 6px; }
+.ci-bar {
+  position: relative;
+  height: 8px;
+  background: var(--surface);
+  border-radius: 4px;
+  overflow: visible;
+  margin-bottom: 4px;
+}
+.ci-range {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: var(--ci-left);
+  right: var(--ci-right);
+  background: rgba(99,102,241,.25);
+  border-radius: 4px;
+}
+.ci-mean-line {
+  position: absolute;
+  top: -3px; bottom: -3px;
+  left: var(--ci-mean);
+  width: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+}
+.ci-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.mc-note { font-size: 11px; color: var(--muted); line-height: 1.5; }
+.mc-placeholder { text-align: center; color: var(--muted); padding: 20px 0; font-size: 13px; }
 </style>

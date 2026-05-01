@@ -22,6 +22,9 @@ pub struct LawHandle {
     pub id: LawId,
     pub version: u32,
     pub program: Arc<Program>,
+    /// Original DSL source text (for display, audit, advanced editing).
+    /// Optional because programmatic-only laws may skip it.
+    pub source: Option<Arc<String>>,
     pub cadence: Cadence,
     pub effective_from_tick: u64,
     pub effective_until_tick: Option<u64>,
@@ -168,5 +171,16 @@ impl LawRegistry {
             })
             .cloned()
             .collect()
+    }
+
+    /// Returns a clone of the handle with the given id, regardless of whether
+    /// it is currently active. Returns `None` if no such id exists.
+    pub fn get_handle(&self, id: LawId) -> Option<LawHandle> {
+        self.inner.read().by_id.get(&id).cloned()
+    }
+
+    /// Returns clones of every handle (active and repealed) in the registry.
+    pub fn snapshot_all(&self) -> Vec<LawHandle> {
+        self.inner.read().by_id.values().cloned().collect()
     }
 }

@@ -1,0 +1,34 @@
+/* Layered shadows for elevation. Tuned for dark theme; light theme overrides. */
+
+:root {
+  --shadow-sm:
+    0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md:
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lg:
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-xl:
+    0 8px 16px rgba(0, 0, 0, 0.5),
+    0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-focus-ring:
+    0 0 0 3px var(--color-brand-subtle);
+
+  /* Backwards-compat alias */
+  --shadow: var(--shadow-sm);
+}
+
+:root[data-theme="light"] {
+  --shadow-sm:
+    0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md:
+    0 2px 4px rgba(15, 23, 42, 0.08),
+    0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-lg:
+    0 4px 12px rgba(15, 23, 42, 0.10),
+    0 2px 4px rgba(15, 23, 42, 0.06);
+  --shadow-xl:
+    0 12px 24px rgba(15, 23, 42, 0.12),
+    0 4px 8px rgba(15, 23, 42, 0.08);
+}

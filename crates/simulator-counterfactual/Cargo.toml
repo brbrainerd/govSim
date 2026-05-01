@@ -1,0 +1,20 @@
+[package]
+name        = "simulator-counterfactual"
+version     = "0.1.0"
+edition.workspace     = true
+license.workspace     = true
+rust-version.workspace = true
+description = "Counterfactual / DiD estimation — forks a sim at enactment and compares treatment vs control arms."
+
+[dependencies]
+simulator-core     = { workspace = true }
+simulator-snapshot = { workspace = true }
+simulator-metrics  = { workspace = true }
+simulator-law      = { workspace = true }
+serde              = { workspace = true }
+thiserror          = { workspace = true }
+tracing            = { workspace = true }
+
+[dev-dependencies]
+simulator-systems  = { workspace = true }
+simulator-scenario = { workspace = true }
