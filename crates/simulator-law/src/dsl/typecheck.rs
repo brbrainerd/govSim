@@ -20,13 +20,36 @@ pub enum TypeError {
     BadOp { op: BinOp, lhs: Type, rhs: Type },
 }
 
-/// Schema of an actor parameter — fields the DSL can reach via `actor.field`.
-/// Phase 4 vertical slice hardcodes a single `citizen` schema; later this
-/// will be derived from the ECS Component registry.
+/// Per-citizen fields accessible via `citizen.field` in the DSL.
 pub fn citizen_schema() -> HashMap<&'static str, Type> {
     let mut m = HashMap::new();
-    m.insert("income", Type::Money);
-    m.insert("wealth", Type::Money);
+    m.insert("income",       Type::Money);
+    m.insert("wealth",       Type::Money);
+    m.insert("health",       Type::Rate);
+    m.insert("productivity", Type::Rate);
+    m
+}
+
+/// Macro-level global bindings pre-declared in every scope.
+/// Laws can reference these by bare identifier (e.g. `unemployment > 0.05`).
+/// Values are injected at dispatch time from `MacroIndicators` + `Treasury`.
+pub fn law_globals_schema() -> HashMap<&'static str, Type> {
+    let mut m = HashMap::new();
+    // Time
+    m.insert("tick",     Type::Int);
+    m.insert("year",     Type::Int);
+    m.insert("quarter",  Type::Int);
+    m.insert("month",    Type::Int);
+    // Macro aggregates
+    m.insert("unemployment",           Type::Rate);
+    m.insert("inflation",              Type::Rate);
+    m.insert("gini",                   Type::Rate);
+    m.insert("approval",               Type::Rate);
+    m.insert("gdp",                    Type::Money);
+    m.insert("population",             Type::Int);
+    m.insert("government_revenue",     Type::Money);
+    m.insert("government_expenditure", Type::Money);
+    m.insert("treasury_balance",       Type::Money);
     m
 }
 
@@ -36,7 +59,11 @@ pub fn typecheck_program(prog: &Program) -> Result<(), TypeError> {
 }
 
 fn typecheck_scope(s: &Scope) -> Result<(), TypeError> {
-    let mut env: HashMap<String, Type> = HashMap::new();
+    // Globals are available in every scope; scope params and definitions shadow them.
+    let mut env: HashMap<String, Type> = law_globals_schema()
+        .into_iter()
+        .map(|(k, v)| (k.to_string(), v))
+        .collect();
     for p in &s.params { env.insert(p.name.clone(), p.ty); }
     for item in &s.items {
         match item {

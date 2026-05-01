@@ -12,7 +12,7 @@ use simulator_core::{
         AuditFlagBits, AuditFlags, Citizen, EvasionPropensity,
         Income, LegalStatusFlags, LegalStatuses, Wealth,
     },
-    GovernmentLedger, Phase, Sim, SimClock, SimRng, Treasury,
+    GovernmentLedger, MacroIndicators, Phase, Sim, SimClock, SimRng, Treasury,
 };
 use rand::Rng;
 use simulator_types::Money;
@@ -49,6 +49,7 @@ impl Cadence {
 pub fn law_dispatcher_system(
     clock: Res<SimClock>,
     rng_res: Res<SimRng>,
+    macro_: Res<MacroIndicators>,
     registry: Res<LawRegistry>,
     mut treasury: ResMut<Treasury>,
     mut ledger: ResMut<GovernmentLedger>,
@@ -65,6 +66,7 @@ pub fn law_dispatcher_system(
     if active.is_empty() { return; }
 
     let tick = clock.tick;
+    let base_ctx = make_dispatch_ctx(tick, &macro_, &treasury);
     for h in &active {
         if !h.cadence.fires_at(tick) { continue; }
 
@@ -73,7 +75,7 @@ pub fn law_dispatcher_system(
         match h.effect {
             LawEffect::PerCitizenIncomeTax { scope, owed_def } => {
                 let Some(body) = find_body(&h.program, scope, owed_def) else { continue; };
-                let mut ctx = make_clock_ctx(tick);
+                let mut ctx = base_ctx.clone();
                 let mut collected = Money::from_num(0);
                 for (_, income, mut wealth, _, _, _) in q.iter_mut() {
                     let annual = income.0 * Money::from_num(360);
@@ -90,7 +92,7 @@ pub fn law_dispatcher_system(
             }
             LawEffect::PerCitizenBenefit { scope, amount_def } => {
                 let Some(body) = find_body(&h.program, scope, amount_def) else { continue; };
-                let mut ctx = make_clock_ctx(tick);
+                let mut ctx = base_ctx.clone();
                 let mut disbursed = Money::from_num(0);
                 for (_, income, mut wealth, _, _, _) in q.iter_mut() {
                     let annual = income.0 * Money::from_num(360);
@@ -140,13 +142,26 @@ pub fn law_dispatcher_system(
     }
 }
 
-fn make_clock_ctx(tick: u64) -> EvalCtx {
-    let mut bindings = HashMap::new();
-    bindings.insert("tick".into(),    Value::Int(tick as i64));
-    bindings.insert("year".into(),    Value::Int((tick / 360) as i64));
-    bindings.insert("quarter".into(), Value::Int(((tick / 90) % 4) as i64));
-    bindings.insert("month".into(),   Value::Int(((tick / 30) % 12) as i64));
-    EvalCtx { bindings, field_bindings: HashMap::new() }
+/// Build the base EvalCtx pre-loaded with time bindings and macro aggregates.
+/// Each law's per-citizen loop clones this and inserts citizen-specific fields.
+fn make_dispatch_ctx(tick: u64, macro_: &MacroIndicators, treasury: &Treasury) -> EvalCtx {
+    let mut b = HashMap::new();
+    // Time
+    b.insert("tick".into(),    Value::Int(tick as i64));
+    b.insert("year".into(),    Value::Int((tick / 360) as i64));
+    b.insert("quarter".into(), Value::Int(((tick / 90) % 4) as i64));
+    b.insert("month".into(),   Value::Int(((tick / 30) % 12) as i64));
+    // Macro aggregates — pre-computed by MacroIndicators each tick
+    b.insert("unemployment".into(),           Value::Rate(macro_.unemployment as f64));
+    b.insert("inflation".into(),              Value::Rate(macro_.inflation as f64));
+    b.insert("gini".into(),                   Value::Rate(macro_.gini as f64));
+    b.insert("approval".into(),               Value::Rate(macro_.approval as f64));
+    b.insert("gdp".into(),                    Value::Money(macro_.gdp));
+    b.insert("population".into(),             Value::Int(macro_.population as i64));
+    b.insert("government_revenue".into(),     Value::Money(macro_.government_revenue));
+    b.insert("government_expenditure".into(), Value::Money(macro_.government_expenditure));
+    b.insert("treasury_balance".into(),       Value::Money(treasury.balance));
+    EvalCtx { bindings: b, field_bindings: HashMap::new() }
 }
 
 fn find_body<'p>(
@@ -392,6 +407,85 @@ mod tests {
             });
         assert_eq!(registered, 1);
         assert_eq!(unregistered, 1);
+    }
+
+    /// Automatic-stabiliser: a benefit law conditioned on `unemployment > 0.05`
+    /// should disburse when unemployment is high and pay nothing when it is low.
+    #[test]
+    fn benefit_law_fires_on_high_unemployment() {
+        use crate::dsl::ast::{BinOp, DefaultExpr, Expr, Item, ParamDecl, Program, Scope, Type};
+        use crate::registry::{LawHandle, LawId, LawEffect};
+        use crate::system::Cadence;
+        use simulator_core::MacroIndicators;
+        use std::sync::Arc;
+
+        // Build a synthetic DSL program: def amount : money = if unemployment > 0.05 then 500.0 else 0.0
+        let body = DefaultExpr {
+            base: Expr::If {
+                cond: Box::new(Expr::BinOp {
+                    op: BinOp::Gt,
+                    lhs: Box::new(Expr::Ident("unemployment".into())),
+                    rhs: Box::new(Expr::LitRate(0.05)),
+                }),
+                then_: Box::new(Expr::LitMoney(500.0)),
+                else_: Box::new(Expr::LitMoney(0.0)),
+            },
+            exceptions: vec![],
+        };
+        let program = Arc::new(Program {
+            scopes: vec![Scope {
+                name: "UnemploymentBenefit".into(),
+                params: vec![ParamDecl { name: "citizen".into(), ty: Type::Money }],
+                items: vec![Item::Definition {
+                    name: "amount".into(),
+                    ty: Type::Money,
+                    body,
+                }],
+            }],
+        });
+        let handle = LawHandle {
+            id: LawId(42),
+            version: 1,
+            program,
+            cadence: Cadence::Yearly,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: LawEffect::PerCitizenBenefit {
+                scope: "UnemploymentBenefit",
+                amount_def: "amount",
+            },
+        };
+
+        // --- High unemployment scenario ---
+        let mut sim = Sim::new([30u8; 32]);
+        register_law_dispatcher(&mut sim);
+        for i in 0..4 { spawn_citizen(&mut sim.world, i, 100); }
+        // Set unemployment to 10%.
+        sim.world.resource_mut::<MacroIndicators>().unemployment = 0.10;
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(handle.clone());
+        for _ in 0..=360 { sim.step(); }
+        let exp_high: f64 = sim.world.resource::<GovernmentLedger>().expenditure.to_num();
+        // 4 citizens × $500 = $2 000
+        assert!(
+            (exp_high - 2_000.0).abs() < 1.0,
+            "high-unemployment: expected ~$2000 disbursed, got ${exp_high:.2}"
+        );
+
+        // --- Low unemployment scenario ---
+        let mut sim2 = Sim::new([31u8; 32]);
+        register_law_dispatcher(&mut sim2);
+        for i in 0..4 { spawn_citizen(&mut sim2.world, i, 100); }
+        // Set unemployment to 2% — below threshold.
+        sim2.world.resource_mut::<MacroIndicators>().unemployment = 0.02;
+        let registry2 = sim2.world.resource::<LawRegistry>().clone();
+        registry2.enact(handle);
+        for _ in 0..=360 { sim2.step(); }
+        let exp_low: f64 = sim2.world.resource::<GovernmentLedger>().expenditure.to_num();
+        assert!(
+            exp_low.abs() < 1.0,
+            "low-unemployment: expected ~$0 disbursed, got ${exp_low:.2}"
+        );
     }
 
     /// Audit law: 100% selection rate catches all flagged evaders; honest

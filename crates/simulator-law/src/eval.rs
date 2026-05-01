@@ -36,6 +36,7 @@ impl Value {
 
 /// Runtime binding environment passed to `eval_*`. Caller sets up actor
 /// fields under `field_bindings` and scope params under `bindings`.
+#[derive(Clone)]
 pub struct EvalCtx {
     pub bindings: HashMap<String, Value>,
     pub field_bindings: HashMap<(String, String), Value>,
