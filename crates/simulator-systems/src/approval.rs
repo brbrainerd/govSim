@@ -1,23 +1,29 @@
 //! ApprovalRatingSystem — Phase::Mutate, monthly.
 //!
 //! Each citizen's approval of the current government is updated based on their
-//! employment status and economic ideology alignment.
+//! employment status, fiscal policy, and economic ideology alignment.
 //!
 //! Model:
-//!   Δapproval = employment_shock + reversion + ideology_nudge + noise
+//!   Δapproval = employment_shock + tax_shock + spend_shock + reversion + ideology_nudge + noise
 //!
 //! - employment_shock: +0.002 if employed, -0.004 if unemployed, else 0
+//! - tax_shock: ideology-weighted penalty from effective tax rate;
+//!   right-leaning citizens (ideology[0] < 0) react more negatively to high taxes
+//! - spend_shock: ideology-weighted boost from government spending ratio;
+//!   left-leaning citizens (ideology[0] > 0) react more positively to high spending
 //! - reversion: (0.5 - approval) * 0.02 (slow mean-reversion to neutral)
 //! - ideology_nudge: econ_axis * 0.001
 //! - noise: ±0.001 random walk
 //! - Clamped to [0.0, 1.0]
 //!
 //! MacroIndicators.approval is set to the population mean in macro_indicators_system.
+//!
+//! Fiscal convention: ideology[0] in [-1,1] where +1 = left (pro-spending), -1 = right (anti-tax).
 
 use simulator_core::{
     bevy_ecs::prelude::*,
     components::{ApprovalRating, Citizen, EmploymentStatus, IdeologyVector},
-    Phase, Sim, SimClock, SimRng,
+    MacroIndicators, Phase, Sim, SimClock, SimRng,
 };
 use simulator_types::Score;
 use rand::Rng;
@@ -27,9 +33,15 @@ const APPROVAL_PERIOD: u64 = 30;
 pub fn approval_system(
     clock: Res<SimClock>,
     rng_res: Res<SimRng>,
+    macro_: Res<MacroIndicators>,
     mut q: Query<(&Citizen, &EmploymentStatus, &IdeologyVector, &mut ApprovalRating)>,
 ) {
     if !clock.tick.is_multiple_of(APPROVAL_PERIOD) || clock.tick == 0 { return; }
+
+    let gdp = macro_.gdp.to_num::<f64>().max(1.0);
+    // Effective tax burden and spending ratios relative to GDP, capped at sane ranges.
+    let tax_rate   = (macro_.government_revenue.to_num::<f64>()     / gdp).clamp(0.0, 1.0) as f32;
+    let spend_rate = (macro_.government_expenditure.to_num::<f64>() / gdp).clamp(0.0, 1.0) as f32;
 
     for (citizen, emp, ideology, mut approval) in q.iter_mut() {
         let a = approval.0.to_num::<f32>();
@@ -42,15 +54,22 @@ pub fn approval_system(
             EmploymentStatus::OutOfLaborForce => -0.001_f32,
         };
 
-        let reversion = (0.5 - a) * 0.02;
+        // ideology[0]: +1 = left (pro-state), -1 = right (anti-tax).
+        let econ = ideology.0[0]; // [-1, 1]
 
-        // ideology.0[0] is the economic axis in [-1, 1].
-        let ideology_nudge = ideology.0[0] * 0.001;
+        // Right-leaning citizens penalise high taxes more: weight = (1 - econ) / 2 ∈ [0, 1].
+        let tax_shock = -tax_rate * (1.0 - econ) * 0.01;
+
+        // Left-leaning citizens reward high spending more: weight = (1 + econ) / 2 ∈ [0, 1].
+        let spend_shock = spend_rate * (1.0 + econ) * 0.005;
+
+        let reversion = (0.5 - a) * 0.02;
+        let ideology_nudge = econ * 0.001;
 
         let mut rng = rng_res.derive_citizen("approval", clock.tick, citizen.0.0);
         let noise: f32 = (rng.random::<f32>() - 0.5) * 0.002;
 
-        let new_a = (a + employment_shock + reversion + ideology_nudge + noise)
+        let new_a = (a + employment_shock + tax_shock + spend_shock + reversion + ideology_nudge + noise)
             .clamp(0.0, 1.0);
 
         approval.0 = Score::from_num(new_a);
@@ -65,15 +84,22 @@ pub fn register_approval_system(sim: &mut Sim) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use simulator_core::Sim;
+    use simulator_core::{MacroIndicators, Sim};
     use simulator_core::components::{
         Age, Citizen, EmploymentStatus, IdeologyVector, Income, Location,
         LegalStatuses, AuditFlags, Productivity, Sex, Wealth, Health,
     };
     use simulator_types::{CitizenId, Money, RegionId, Score};
 
-    fn spawn_citizen(world: &mut bevy_ecs::world::World, id: u64, emp: EmploymentStatus, approval: f32) {
-        use bevy_ecs::world::World;
+    fn spawn_citizen_ideology(
+        world: &mut bevy_ecs::world::World,
+        id: u64,
+        emp: EmploymentStatus,
+        approval: f32,
+        ideology_econ: f32,
+    ) {
+        let mut iv = [0.0f32; 5];
+        iv[0] = ideology_econ;
         world.spawn((
             Citizen(CitizenId(id)),
             Age(35),
@@ -84,11 +110,15 @@ mod tests {
             Wealth(Money::from_num(10000_i32)),
             emp,
             Productivity(Score::from_num(0.7_f32)),
-            IdeologyVector([0.0; 5]),
+            IdeologyVector(iv),
             ApprovalRating(Score::from_num(approval)),
             LegalStatuses(Default::default()),
             AuditFlags(Default::default()),
         ));
+    }
+
+    fn spawn_citizen(world: &mut bevy_ecs::world::World, id: u64, emp: EmploymentStatus, approval: f32) {
+        spawn_citizen_ideology(world, id, emp, approval, 0.0);
     }
 
     #[test]
@@ -113,5 +143,95 @@ mod tests {
         let (_, unemployed_a) = approvals[1];
         assert!(employed_a > 0.5, "employed approval should rise above 0.5, got {employed_a}");
         assert!(unemployed_a < 0.5, "unemployed approval should fall below 0.5, got {unemployed_a}");
+    }
+
+    #[test]
+    fn right_leaning_loses_more_approval_under_high_taxes() {
+        // High tax burden: government collects 40% of GDP.
+        // Right-leaning citizen (ideology=-1) should lose more approval than left-leaning (+1).
+        let mut sim_right = Sim::new([7u8; 32]);
+        let mut sim_left  = Sim::new([7u8; 32]);
+        register_approval_system(&mut sim_right);
+        register_approval_system(&mut sim_left);
+
+        let gdp = Money::from_num(1_000_000_i64);
+        let revenue = Money::from_num(400_000_i64); // 40% effective tax rate
+
+        {
+            let mut m = sim_right.world.resource_mut::<MacroIndicators>();
+            m.gdp = gdp;
+            m.government_revenue = revenue;
+        }
+        {
+            let mut m = sim_left.world.resource_mut::<MacroIndicators>();
+            m.gdp = gdp;
+            m.government_revenue = revenue;
+        }
+
+        // Both start at 0.5 approval, employed, same seed — only ideology differs.
+        spawn_citizen_ideology(&mut sim_right.world, 0, EmploymentStatus::Employed, 0.5, -1.0);
+        spawn_citizen_ideology(&mut sim_left.world,  0, EmploymentStatus::Employed, 0.5,  1.0);
+
+        // 31 steps: schedule runs at tick=30 (step 31), triggering the monthly system.
+        for _ in 0..31 { sim_right.step(); }
+        for _ in 0..31 { sim_left.step(); }
+
+        let right_a: f32 = sim_right.world
+            .query::<&ApprovalRating>()
+            .single(&sim_right.world)
+            .unwrap().0.to_num();
+        let left_a: f32 = sim_left.world
+            .query::<&ApprovalRating>()
+            .single(&sim_left.world)
+            .unwrap().0.to_num();
+
+        assert!(
+            right_a < left_a,
+            "right-leaning ({right_a}) should have lower approval than left-leaning ({left_a}) under high tax burden"
+        );
+    }
+
+    #[test]
+    fn left_leaning_gains_more_approval_from_high_spending() {
+        // High government spending: 50% of GDP.
+        // Left-leaning citizen should gain more approval than right-leaning.
+        let mut sim_right = Sim::new([11u8; 32]);
+        let mut sim_left  = Sim::new([11u8; 32]);
+        register_approval_system(&mut sim_right);
+        register_approval_system(&mut sim_left);
+
+        let gdp = Money::from_num(1_000_000_i64);
+        let expenditure = Money::from_num(500_000_i64); // 50% spending ratio
+
+        {
+            let mut m = sim_right.world.resource_mut::<MacroIndicators>();
+            m.gdp = gdp;
+            m.government_expenditure = expenditure;
+        }
+        {
+            let mut m = sim_left.world.resource_mut::<MacroIndicators>();
+            m.gdp = gdp;
+            m.government_expenditure = expenditure;
+        }
+
+        spawn_citizen_ideology(&mut sim_right.world, 0, EmploymentStatus::Employed, 0.5, -1.0);
+        spawn_citizen_ideology(&mut sim_left.world,  0, EmploymentStatus::Employed, 0.5,  1.0);
+
+        for _ in 0..31 { sim_right.step(); }
+        for _ in 0..31 { sim_left.step(); }
+
+        let right_a: f32 = sim_right.world
+            .query::<&ApprovalRating>()
+            .single(&sim_right.world)
+            .unwrap().0.to_num();
+        let left_a: f32 = sim_left.world
+            .query::<&ApprovalRating>()
+            .single(&sim_left.world)
+            .unwrap().0.to_num();
+
+        assert!(
+            left_a > right_a,
+            "left-leaning ({left_a}) should have higher approval than right-leaning ({right_a}) under high spending"
+        );
     }
 }
