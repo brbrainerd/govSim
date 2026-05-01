@@ -1,0 +1,19 @@
+name: australia_2022
+description: |
+  Australia 2022 — calibrated from V-Dem v16 and World Bank GDP/capita.
+  Run `cargo xtask vdem ingest` then `ugs calibrate --country AUS --year 2022`
+  to regenerate the calibration parameters below.
+seed: [65,85,83,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,32,22]
+ticks: 730
+population:
+  citizens: 25000
+  corporations: 0
+  regions: 8
+  # Calibrated from V-Dem v16 AUS 2022:
+  #   GDP/capita ~$55,000 USD/year → ~$4,583/month
+  #   v2x_polyarchy=0.89, v2x_libdem=0.86, v2x_egaldem=0.73
+  #   baseline_unemployment = 0.20 - 0.73*0.15 ≈ 9.1%
+  income_mean_monthly: 4583.0
+  unemployment_rate: 0.091
+  # v2x_corr = 0.07 (low corruption)
+  corruption_level: 0.07

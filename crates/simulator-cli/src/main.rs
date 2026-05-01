@@ -404,11 +404,11 @@ fn calibrate(country: String, year: i32) -> Result<()> {
     match loader.load(&country, year) {
         Ok(profile) => {
             println!("{}", serde_json::to_string_pretty(&profile)?);
-            println!(
-                "\nDerived: unemployment_baseline={:.1}%  monthly_income_mean=${:.0}",
-                profile.baseline_unemployment() * 100.0,
-                profile.monthly_income_mean(),
-            );
+            println!();
+            println!("# Paste into your scenario YAML under `population:`:");
+            println!("  income_mean_monthly: {:.1}", profile.monthly_income_mean());
+            println!("  unemployment_rate: {:.4}", profile.baseline_unemployment());
+            println!("  corruption_level: {:.4}", profile.corruption);
         }
         Err(e) => {
             eprintln!("calibrate error: {e}");
