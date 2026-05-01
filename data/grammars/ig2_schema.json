@@ -380,6 +380,54 @@
               "format": "double"
             }
           }
+        },
+        {
+          "description": "One-time or recurring conditional transfer (stimulus / UBI slice). Citizens whose `basis` is strictly below `wealth_ceiling` receive `amount` from the Treasury. No taper — cliff at `wealth_ceiling`. Optionally conditional on `income_floor` ≤ income (e.g. working-poor supplement) when `income_floor` is Some.",
+          "type": "object",
+          "required": [
+            "amount",
+            "cadence",
+            "ceiling",
+            "eligibility_basis",
+            "kind"
+          ],
+          "properties": {
+            "amount": {
+              "description": "Transfer amount per period.",
+              "type": "number",
+              "format": "double"
+            },
+            "cadence": {
+              "$ref": "#/definitions/LowerCadence"
+            },
+            "ceiling": {
+              "description": "Citizens with basis below this receive the payment.",
+              "type": "number",
+              "format": "double"
+            },
+            "eligibility_basis": {
+              "description": "Which basis determines eligibility.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/AmountBasis"
+                }
+              ]
+            },
+            "floor": {
+              "description": "Optional lower bound on the same basis for eligibility.",
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "conditional_transfer"
+              ]
+            }
+          }
         }
       ]
     },

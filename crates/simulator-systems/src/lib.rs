@@ -8,10 +8,12 @@ use simulator_core::{
     components::{Income, Wealth},
     Phase, Sim, SimClock, Treasury,
 };
+use simulator_telemetry::register_telemetry_system;
 use simulator_types::Money;
 
 pub mod employment {}
 pub mod education {}
+pub mod macro_indicators;
 pub mod opinion;
 pub mod election {}
 pub mod judicial {}
@@ -20,6 +22,7 @@ pub mod media {}
 pub mod migration {}
 pub mod birth_death {}
 
+pub use macro_indicators::register_macro_indicators_system;
 pub use opinion::{build_influence_graph, register_opinion_system};
 
 /// Flat 20% income tax remitted on the first day of every month
@@ -48,4 +51,6 @@ pub fn register_phase1_systems(sim: &mut Sim) {
     sim.schedule_mut()
         .add_systems(taxation_system.in_set(Phase::Mutate));
     register_opinion_system(sim);
+    register_macro_indicators_system(sim);
+    register_telemetry_system(sim);
 }

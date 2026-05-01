@@ -97,6 +97,22 @@ pub enum Computation {
         threshold: f64,
         cadence: LowerCadence,
     },
+    /// One-time or recurring conditional transfer (stimulus / UBI slice).
+    /// Citizens whose `basis` is strictly below `wealth_ceiling` receive
+    /// `amount` from the Treasury. No taper — cliff at `wealth_ceiling`.
+    /// Optionally conditional on `income_floor` ≤ income (e.g. working-poor
+    /// supplement) when `income_floor` is Some.
+    ConditionalTransfer {
+        /// Which basis determines eligibility.
+        eligibility_basis: AmountBasis,
+        /// Citizens with basis below this receive the payment.
+        ceiling: f64,
+        /// Optional lower bound on the same basis for eligibility.
+        floor: Option<f64>,
+        /// Transfer amount per period.
+        amount: f64,
+        cadence: LowerCadence,
+    },
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]

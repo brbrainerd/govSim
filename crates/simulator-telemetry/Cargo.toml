@@ -7,5 +7,6 @@ rust-version.workspace = true
 description = "Tracing spans, perf counters, GPU telemetry."
 
 [dependencies]
+simulator-core     = { workspace = true }
 tracing            = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter", "fmt"] }

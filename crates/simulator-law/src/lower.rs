@@ -52,6 +52,9 @@ pub fn lower_statement(stmt: &IgStatement) -> Result<Lowered, LowerError> {
         Computation::RegistrationRequirement { cadence, .. } => {
             lower_registration(*cadence)
         }
+        Computation::ConditionalTransfer { eligibility_basis, ceiling, floor, amount, cadence } => {
+            lower_conditional_transfer(*eligibility_basis, *ceiling, *floor, *amount, *cadence)
+        }
     }
 }
 
@@ -244,6 +247,69 @@ fn lower_registration(cadence: LowerCadence) -> Result<Lowered, LowerError> {
     })
 }
 
+/// Conditional transfer (stimulus): pay `amount` to citizens whose basis is
+/// below `ceiling` (and, optionally, above `floor`).
+///
+/// DSL (no-taper, cliff eligibility):
+/// ```text
+/// def transfer_amount : money = 0.0
+///   exception (ceiling > citizen.basis) = amount          -- below ceiling
+///   exception (citizen.basis > floor)   = amount          -- above floor (overrides if both)
+/// ```
+/// For the two-sided case both guards must fire: last-wins means the floor
+/// guard (second) applies only when income > floor. To get the AND we emit:
+///   base = 0, exception₁ = below ceiling → amount,
+///   exception₂ = NOT above floor → 0  (i.e. guard: income <= floor → 0)
+///
+/// Simpler correct encoding: a single exception with a compound guard is not
+/// in the DSL yet. We model it conservatively: floor exception sets back to 0.
+fn lower_conditional_transfer(
+    basis: AmountBasis,
+    ceiling: f64,
+    floor: Option<f64>,
+    amount: f64,
+    cadence: LowerCadence,
+) -> Result<Lowered, LowerError> {
+    let field = match basis {
+        AmountBasis::AnnualIncome => "income",
+        AmountBasis::Wealth => "wealth",
+    };
+    let basis_expr = || Expr::Field { obj: "citizen".into(), field: field.into() };
+
+    // exception₁: ceiling > citizen.basis  → amount (eligible below ceiling)
+    let below_ceiling = gt(money(ceiling), basis_expr());
+    let mut exceptions = vec![(below_ceiling, money(amount))];
+
+    // exception₂: if floor is set, citizens with basis ≤ floor are ineligible
+    // (we model "income > floor" as the eligibility guard, and negate it by
+    // adding an override-to-zero exception for basis ≤ floor).
+    // Re-encoding: basis ≤ floor  ↔  NOT (basis > floor)  →  no clean DSL.
+    // Pragmatic: emit exception guard `floor > basis` (last-wins → 0.0).
+    if let Some(f) = floor {
+        let at_or_below_floor = gt(money(f), basis_expr());
+        exceptions.push((at_or_below_floor, money(0.0)));
+    }
+
+    let body = DefaultExpr { base: Expr::LitMoney(0.0), exceptions };
+    let scope = Scope {
+        name: "ConditionalTransfer".into(),
+        params: vec![ParamDecl { name: "citizen".into(), ty: Type::Money }],
+        items: vec![Item::Definition {
+            name: "transfer_amount".into(),
+            ty: Type::Money,
+            body,
+        }],
+    };
+    Ok(Lowered {
+        program: Program { scopes: vec![scope] },
+        effect: LawEffect::PerCitizenBenefit {
+            scope: "ConditionalTransfer",
+            amount_def: "transfer_amount",
+        },
+        cadence: cadence_to_runtime(cadence),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -258,6 +324,45 @@ mod tests {
             TaxBracket { floor: 50_000.0, ceil: Some(200_000.0), rate: 0.22 },
             TaxBracket { floor: 200_000.0, ceil: None, rate: 0.35 },
         ]
+    }
+
+    #[test]
+    fn conditional_transfer_below_ceiling_eligible() {
+        let stmt = IgStatement::Regulative(RegulativeStmt {
+            attribute: ActorRef { class: "individual".into(), qualifier: None },
+            attribute_property: None,
+            deontic: Some(Deontic::Must),
+            aim: "receive".into(),
+            direct_object: None,
+            direct_object_property: None,
+            indirect_object: None,
+            indirect_object_property: None,
+            activation_conditions: vec![],
+            execution_constraints: vec![],
+            or_else: None,
+            computation: Some(Computation::ConditionalTransfer {
+                eligibility_basis: AmountBasis::AnnualIncome,
+                ceiling: 30_000.0,
+                floor: None,
+                amount: 1_200.0,
+                cadence: LowerCadence::Yearly,
+            }),
+        });
+        let lowered = lower_statement(&stmt).unwrap();
+        typecheck_program(&lowered.program).unwrap();
+
+        let scope = &lowered.program.scopes[0];
+        let Item::Definition { body, .. } = &scope.items[0];
+
+        for (income, expected) in [(20_000.0_f64, 1_200.0), (35_000.0, 0.0)] {
+            let mut ctx = EvalCtx { bindings: HashMap::new(), field_bindings: HashMap::new() };
+            ctx.field_bindings.insert(
+                ("citizen".into(), "income".into()),
+                Value::Money(Money::from_num(income)),
+            );
+            let v = eval_default(body, &ctx).as_money().to_num::<f64>();
+            assert!((v - expected).abs() < 1.0, "income={income}: got {v}, want {expected}");
+        }
     }
 
     #[test]
