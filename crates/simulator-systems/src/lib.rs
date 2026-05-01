@@ -46,7 +46,7 @@ pub fn taxation_system(
     mut ledger: ResMut<GovernmentLedger>,
     mut q: Query<(&Income, &mut Wealth)>,
 ) {
-    if clock.tick % 30 != 0 || clock.tick == 0 { return; }
+    if !clock.tick.is_multiple_of(30) || clock.tick == 0 { return; }
     let rate = Money::from_num(0.20_f64);
     let mut collected = Money::from_num(0);
     for (income, mut wealth) in &mut q {

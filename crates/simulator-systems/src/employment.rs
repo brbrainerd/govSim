@@ -26,7 +26,7 @@ pub fn employment_system(
     rng_res: Res<SimRng>,
     mut q: Query<(&Citizen, &mut EmploymentStatus)>,
 ) {
-    if clock.tick % EMPLOYMENT_PERIOD != 0 || clock.tick == 0 { return; }
+    if !clock.tick.is_multiple_of(EMPLOYMENT_PERIOD) || clock.tick == 0 { return; }
 
     // Derive a per-tick RNG so results are deterministic regardless of ECS
     // archetype ordering.

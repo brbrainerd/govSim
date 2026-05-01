@@ -32,7 +32,7 @@ pub fn birth_death_system(
     mut commands: Commands,
     q: Query<(Entity, &Citizen, &Age)>,
 ) {
-    if clock.tick % BIRTH_DEATH_PERIOD != 0 || clock.tick == 0 { return; }
+    if !clock.tick.is_multiple_of(BIRTH_DEATH_PERIOD) || clock.tick == 0 { return; }
 
     let mut rng = rng_res.derive("birth_death", clock.tick);
     let mut deaths: Vec<Entity> = Vec::new();
@@ -55,14 +55,14 @@ pub fn birth_death_system(
     }
 
     // Spawn replacement citizens — newborns start at age 0 with modest income.
-    let mut next_id = max_id + 1;
-    for _ in 0..n_births {
+    for i in 0..n_births as u64 {
+        let citizen_id = max_id + 1 + i;
         let raw: f64 = (rng.random::<f64>() * 9.0 + 7.0).exp(); // log-normal, lower than adults
         let income = Money::from_num(raw.min(1.0e8));
         let wealth = Money::from_num(0.0); // newborns have no wealth
         let region = RegionId(rng.random_range(0..16));
         commands.spawn((
-            Citizen(CitizenId(next_id)),
+            Citizen(CitizenId(citizen_id)),
             Age(0),
             Sex::Female, // simplified; real split applied at scenario spawn
             Location(region),
@@ -76,7 +76,6 @@ pub fn birth_death_system(
             LegalStatuses::default(),
             AuditFlags::default(),
         ));
-        next_id += 1;
     }
 }
 

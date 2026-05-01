@@ -19,7 +19,7 @@
 
 use polars::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CountryProfile {
@@ -155,11 +155,11 @@ impl VdemLoader {
         Ok(CountryProfile {
             country_id: country_id.to_string(),
             year: actual_year,
-            polyarchy:    get_f64("v2x_polyarchy")?.max(0.0).min(1.0),
-            lib_dem:      get_f64("v2x_libdem")?.max(0.0).min(1.0),
-            egal_dem:     get_f64("v2x_egaldem")?.max(0.0).min(1.0),
-            corruption:   get_f64("v2x_corr")?.max(0.0).min(1.0),
-            rule_of_law:  get_f64("v2x_rule")?.max(0.0).min(1.0),
+            polyarchy:    get_f64("v2x_polyarchy")?.clamp(0.0, 1.0),
+            lib_dem:      get_f64("v2x_libdem")?.clamp(0.0, 1.0),
+            egal_dem:     get_f64("v2x_egaldem")?.clamp(0.0, 1.0),
+            corruption:   get_f64("v2x_corr")?.clamp(0.0, 1.0),
+            rule_of_law:  get_f64("v2x_rule")?.clamp(0.0, 1.0),
             gdp_per_capita: get_f64("e_gdppc")?.max(0.0),
             gdp_growth:   get_f64("e_migdpgro").unwrap_or(0.0),
         })

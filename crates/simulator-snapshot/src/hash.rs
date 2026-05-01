@@ -16,27 +16,18 @@ use simulator_types::CitizenId;
 /// A 32-byte deterministic hash of the world state.
 pub type StateHash = [u8; 32];
 
+type CitizenRow = (
+    CitizenId, Age, Sex, Location, Health, Income, Wealth,
+    EmploymentStatus, Productivity, IdeologyVector, LegalStatuses, AuditFlags, ApprovalRating,
+);
+
 /// Compute a deterministic hash of every citizen component + global resources.
 ///
 /// The result is stable across runs given the same seed and tick count,
 /// regardless of ECS archetype ordering or OS.
 pub fn state_hash(world: &mut World) -> StateHash {
     // Collect all citizens into a Vec so we can sort by id.
-    let mut citizens: Vec<(
-        CitizenId,
-        Age,
-        Sex,
-        Location,
-        Health,
-        Income,
-        Wealth,
-        EmploymentStatus,
-        Productivity,
-        IdeologyVector,
-        LegalStatuses,
-        AuditFlags,
-        ApprovalRating,
-    )> = world
+    let mut citizens: Vec<CitizenRow> = world
         .query::<(
             &Citizen,
             &Age,

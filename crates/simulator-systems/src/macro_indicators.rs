@@ -30,7 +30,7 @@ pub fn macro_indicators_system(
 ) {
     if clock.tick == 0 { return; }
 
-    let compute_gini = clock.tick % GINI_PERIOD == 0;
+    let compute_gini = clock.tick.is_multiple_of(GINI_PERIOD);
 
     let mut population: u64 = 0;
     let mut unemployed: u64 = 0;
@@ -69,7 +69,7 @@ pub fn macro_indicators_system(
         indicators.gini = if incomes.len() < 2 { 0.0 } else { gini_sorted(&mut incomes) };
     }
 
-    if clock.tick % 360 == 0 {
+    if clock.tick.is_multiple_of(360) {
         indicators.government_revenue     = ledger.revenue;
         indicators.government_expenditure = ledger.expenditure;
         ledger.revenue     = Money::from_num(0);
@@ -78,7 +78,7 @@ pub fn macro_indicators_system(
 }
 
 /// Exact Gini via sorted O(n log n) formula.
-fn gini_sorted(v: &mut Vec<f64>) -> f32 {
+fn gini_sorted(v: &mut [f64]) -> f32 {
     v.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
     let n = v.len() as f64;
     let total: f64 = v.iter().sum();

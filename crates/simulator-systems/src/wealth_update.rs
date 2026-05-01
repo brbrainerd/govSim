@@ -23,7 +23,7 @@ pub fn wealth_update_system(
     clock: Res<SimClock>,
     mut q: Query<(&Income, &EmploymentStatus, &mut Wealth)>,
 ) {
-    if clock.tick % WEALTH_UPDATE_PERIOD != 0 || clock.tick == 0 { return; }
+    if !clock.tick.is_multiple_of(WEALTH_UPDATE_PERIOD) || clock.tick == 0 { return; }
 
     for (income, emp, mut wealth) in q.iter_mut() {
         let monthly_income = match emp {

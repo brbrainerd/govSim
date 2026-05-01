@@ -29,7 +29,7 @@ pub fn approval_system(
     rng_res: Res<SimRng>,
     mut q: Query<(&EmploymentStatus, &IdeologyVector, &mut ApprovalRating)>,
 ) {
-    if clock.tick % APPROVAL_PERIOD != 0 || clock.tick == 0 { return; }
+    if !clock.tick.is_multiple_of(APPROVAL_PERIOD) || clock.tick == 0 { return; }
 
     let mut rng = rng_res.derive("approval", clock.tick);
 

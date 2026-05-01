@@ -39,7 +39,7 @@ pub fn election_system(
     mut indicators: ResMut<MacroIndicators>,
     q: Query<(&IdeologyVector, &ApprovalRating)>,
 ) {
-    if clock.tick % ELECTION_PERIOD != 0 || clock.tick == 0 { return; }
+    if !clock.tick.is_multiple_of(ELECTION_PERIOD) || clock.tick == 0 { return; }
 
     let mut vote_a: f64 = 0.0;
     let mut vote_b: f64 = 0.0;

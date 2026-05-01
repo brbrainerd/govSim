@@ -28,7 +28,7 @@ pub fn health_system(
     rng_res: Res<SimRng>,
     mut q: Query<(&Age, &EmploymentStatus, &mut Health)>,
 ) {
-    if clock.tick % HEALTH_PERIOD != 0 || clock.tick == 0 { return; }
+    if !clock.tick.is_multiple_of(HEALTH_PERIOD) || clock.tick == 0 { return; }
 
     let mut rng = rng_res.derive("health", clock.tick);
 

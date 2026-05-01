@@ -16,4 +16,5 @@ bevy_ecs            = { workspace = true }
 petgraph            = { workspace = true }
 rayon               = { workspace = true }
 rand                = { workspace = true }
+rand_chacha         = { workspace = true }
 tracing             = { workspace = true }

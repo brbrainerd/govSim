@@ -35,7 +35,7 @@ pub fn income_update_system(
     rng_res: Res<SimRng>,
     mut q: Query<(&EmploymentStatus, &Productivity, &mut Income)>,
 ) {
-    if clock.tick % INCOME_UPDATE_PERIOD != 0 || clock.tick == 0 { return; }
+    if !clock.tick.is_multiple_of(INCOME_UPDATE_PERIOD) || clock.tick == 0 { return; }
 
     let mut rng = rng_res.derive("income_update", clock.tick);
     let floor = Money::from_num(MINIMUM_WAGE_MONTHLY);

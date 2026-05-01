@@ -31,9 +31,9 @@ impl Cadence {
         if tick == 0 { return false; }
         match self {
             Cadence::EveryTick => true,
-            Cadence::Monthly => tick % 30 == 0,
-            Cadence::Quarterly => tick % 90 == 0,
-            Cadence::Yearly => tick % 360 == 0,
+            Cadence::Monthly => tick.is_multiple_of(30),
+            Cadence::Quarterly => tick.is_multiple_of(90),
+            Cadence::Yearly => tick.is_multiple_of(360),
             Cadence::EventDriven => false,
         }
     }

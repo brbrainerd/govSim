@@ -26,7 +26,9 @@
       "WebSearch",
       "Bash(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader)",
       "Bash(grep -n \"deny.toml\" .)",
-      "Bash(ls deny.toml)"
+      "Bash(ls deny.toml)",
+      "Bash(cargo clippy *)",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }

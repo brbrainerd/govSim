@@ -28,7 +28,7 @@ pub fn tick_telemetry_system(
     treasury: Res<Treasury>,
 ) {
     let period = emit_period();
-    if clock.tick % period != 0 || clock.tick == 0 { return; }
+    if !clock.tick.is_multiple_of(period) || clock.tick == 0 { return; }
 
     // Emit as structured tracing fields so downstream JSON formatters
     // (tracing-subscriber's json layer, or jq on the default fmt layer) can

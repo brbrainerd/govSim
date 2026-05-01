@@ -5,13 +5,18 @@
 //! scaled by a global `DAMPING` factor that keeps the system from collapsing
 //! to consensus. Negative-weight edges are contrarian (nudge away).
 //!
-//! Algorithm (Phase 1 — O(E) per firing):
+//! Algorithm (O(E) per firing, parallel over rows):
 //!   1. Snapshot current ideology for all citizens into a Vec (sorted by
 //!      CitizenId so indexing matches graph ordinals).
-//!   2. For each citizen i, compute weighted sum over neighbours j:
+//!   2. For each citizen i (rayon par_iter_mut), compute weighted sum over
+//!      neighbours j from the CSR slices:
 //!      delta[k] += w_ij * (ideology[j][k] - ideology[i][k])
 //!   3. Apply delta[k] * DAMPING; clamp to [-1, 1].
+//!
+//! Each row's delta is independent — no shared mutable state — so rayon
+//! parallelism is safe and preserves bit-exact determinism per row.
 
+use rayon::prelude::*;
 use simulator_core::{
     bevy_ecs::prelude::*,
     components::{Citizen, IdeologyVector},
@@ -29,7 +34,7 @@ pub fn opinion_propagation_system(
     graph: Option<Res<InfluenceGraph>>,
     mut q: Query<(&Citizen, &mut IdeologyVector)>,
 ) {
-    if clock.tick % OPINION_PERIOD != 0 || clock.tick == 0 { return; }
+    if !clock.tick.is_multiple_of(OPINION_PERIOD) || clock.tick == 0 { return; }
     let graph = match graph { Some(g) => g, None => return };
 
     let n = graph.n_citizens();
@@ -46,27 +51,38 @@ pub fn opinion_propagation_system(
         }
     }
 
-    // Compute per-citizen deltas from neighbour influence.
+    // Compute per-citizen deltas from neighbour influence — parallel over rows.
+    // Each deltas[i] is written by exactly one thread; snapshot/csr slices are
+    // read-only shared references (both are Sync). rayon::for_each is blocking
+    // so lifetimes stay valid for the duration of the system call.
+    let row_ptr = graph.csr.row_ptr.as_slice();
+    let col_ind = graph.csr.col_ind.as_slice();
+    let weights = graph.csr.weights.as_slice();
+    let snap    = snapshot.as_slice();
+
     let mut deltas = vec![[0.0f32; 5]; n];
-    for i in 0..n {
-        let iv_i = snapshot[i];
-        for (j, w) in graph.csr.row(i) {
-            let j = j as usize;
+    deltas.par_iter_mut().enumerate().for_each(|(i, delta)| {
+        let iv_i  = snap[i];
+        let start = row_ptr[i]     as usize;
+        let end   = row_ptr[i + 1] as usize;
+        for idx in start..end {
+            let j = col_ind[idx] as usize;
             if j >= n { continue; }
-            let iv_j = snapshot[j];
+            let iv_j = snap[j];
+            let w    = weights[idx];
             for k in 0..5 {
-                deltas[i][k] += w * (iv_j[k] - iv_i[k]);
+                delta[k] += w * (iv_j[k] - iv_i[k]);
             }
         }
-    }
+    });
 
     // Apply deltas.
     for (citizen, mut iv) in q.iter_mut() {
         let ord = citizen.0.0 as usize;
         if ord >= n { continue; }
         let d = deltas[ord];
-        for k in 0..5 {
-            iv.0[k] = (iv.0[k] + d[k] * DAMPING).clamp(-1.0, 1.0);
+        for (v, &di) in iv.0.iter_mut().zip(d.iter()) {
+            *v = (*v + di * DAMPING).clamp(-1.0, 1.0);
         }
     }
 }
@@ -79,7 +95,7 @@ pub fn register_opinion_system(sim: &mut Sim) {
 }
 
 /// Insert a random Erdős–Rényi influence graph for `n_citizens`.
-/// `p` is the edge probability; 0.002 gives ~200 neighbours for 100K citizens.
+/// `p` is the edge probability; 0.0001 gives ~1M edges for 100K citizens.
 pub fn build_influence_graph(sim: &mut Sim, n_citizens: usize, p: f32) {
     let mut rng = sim.world.resource::<simulator_core::SimRng>().derive("influence_graph", 0);
     let graph = InfluenceGraph::erdos_renyi(n_citizens, p, &mut rng);
@@ -89,4 +105,133 @@ pub fn build_influence_graph(sim: &mut Sim, n_citizens: usize, p: f32) {
         "influence graph built"
     );
     sim.world.insert_resource(graph);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use simulator_core::Sim;
+    use simulator_core::components::{
+        Age, ApprovalRating, AuditFlags, EmploymentStatus, Health,
+        IdeologyVector, Income, LegalStatuses, Location, Productivity, Sex, Wealth,
+    };
+    use simulator_types::{CitizenId, Money, RegionId, Score};
+
+    fn spawn_citizen(world: &mut World, id: u64, ideology: [f32; 5]) {
+        world.spawn((
+            Citizen(CitizenId(id)),
+            Age(30), Sex::Male, Location(RegionId(0)),
+            Health(Score::from_num(0.8_f32)),
+            Income(Money::from_num(3000_i32)),
+            Wealth(Money::from_num(5000_i32)),
+            EmploymentStatus::Employed,
+            Productivity(Score::from_num(0.5_f32)),
+            IdeologyVector(ideology),
+            ApprovalRating(Score::from_num(0.5_f32)),
+            LegalStatuses::default(),
+            AuditFlags::default(),
+        ));
+    }
+
+    /// Two citizens connected by a positive-weight edge: the one starting at
+    /// -0.8 should move toward the +0.8 citizen after several firings.
+    #[test]
+    fn opinion_nudges_toward_positive_neighbour() {
+        use simulator_net::{InfluenceGraph, csr::CsrMatrix};
+
+        let mut sim = Sim::new([5u8; 32]);
+        register_opinion_system(&mut sim);
+
+        // Citizen 0: ideology axis 0 = -0.8 (left)
+        // Citizen 1: ideology axis 0 = +0.8 (right)
+        spawn_citizen(&mut sim.world, 0, [-0.8, 0.0, 0.0, 0.0, 0.0]);
+        spawn_citizen(&mut sim.world, 1, [ 0.8, 0.0, 0.0, 0.0, 0.0]);
+
+        // Single directed edge 0 → 1 with positive weight 1.0.
+        // Citizen 0 is influenced by citizen 1.
+        let graph = InfluenceGraph {
+            csr: CsrMatrix {
+                row_ptr: vec![0, 1, 1], // row 0 has 1 edge, row 1 has 0
+                col_ind: vec![1],       // edge from 0 → 1
+                weights: vec![1.0],
+                n_rows: 2,
+                n_cols: 2,
+            },
+        };
+        sim.world.insert_resource(graph);
+
+        // Run for several OPINION_PERIOD cycles (7 × 15 = 105 ticks).
+        for _ in 0..105 { sim.step(); }
+
+        let mut q = sim.world.query::<(&Citizen, &IdeologyVector)>();
+        let ideologies: std::collections::HashMap<u64, f32> = q
+            .iter(&sim.world)
+            .map(|(c, iv)| (c.0.0, iv.0[0]))
+            .collect();
+
+        let iv0 = ideologies[&0];
+        assert!(
+            iv0 > -0.8,
+            "citizen 0 should have moved toward citizen 1 (right), got {iv0}"
+        );
+    }
+
+    /// Parallel computation produces the same result as a sequential reference.
+    #[test]
+    fn parallel_matches_sequential_reference() {
+        use rand::SeedableRng;
+        use rand_chacha::ChaCha20Rng;
+        let mut rng = ChaCha20Rng::from_seed([11u8; 32]);
+        let n = 200usize;
+        let graph = InfluenceGraph::erdos_renyi(n, 0.05, &mut rng);
+
+        let snapshot: Vec<[f32; 5]> = (0..n)
+            .map(|i| [i as f32 / n as f32; 5])
+            .collect();
+
+        // Sequential reference.
+        let mut seq_deltas = vec![[0.0f32; 5]; n];
+        for i in 0..n {
+            let iv_i = snapshot[i];
+            for (j, w) in graph.csr.row(i) {
+                let j = j as usize;
+                if j >= n { continue; }
+                let iv_j = snapshot[j];
+                for k in 0..5 {
+                    seq_deltas[i][k] += w * (iv_j[k] - iv_i[k]);
+                }
+            }
+        }
+
+        // Parallel path (same logic as the system).
+        let row_ptr = graph.csr.row_ptr.as_slice();
+        let col_ind = graph.csr.col_ind.as_slice();
+        let weights = graph.csr.weights.as_slice();
+        let snap    = snapshot.as_slice();
+
+        let mut par_deltas = vec![[0.0f32; 5]; n];
+        par_deltas.par_iter_mut().enumerate().for_each(|(i, delta)| {
+            let iv_i  = snap[i];
+            let start = row_ptr[i]     as usize;
+            let end   = row_ptr[i + 1] as usize;
+            for idx in start..end {
+                let j = col_ind[idx] as usize;
+                if j >= n { continue; }
+                let iv_j = snap[j];
+                let w    = weights[idx];
+                for k in 0..5 {
+                    delta[k] += w * (iv_j[k] - iv_i[k]);
+                }
+            }
+        });
+
+        for i in 0..n {
+            for k in 0..5 {
+                assert_eq!(
+                    seq_deltas[i][k], par_deltas[i][k],
+                    "delta mismatch at citizen {i} axis {k}"
+                );
+            }
+        }
+    }
 }

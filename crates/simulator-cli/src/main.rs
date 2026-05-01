@@ -348,10 +348,7 @@ fn replay(
     if hash_a == hash_b {
         println!("replay: OK");
     } else {
-        // Replay divergence is expected until the influence graph is snapshotted
-        // (graph RNG diverges from a different tick-0 derivation on reload).
-        // Report but don't fail — Phase 6 will fix this.
-        println!("replay: hashes differ (expected until graph is snapshotted)");
+        anyhow::bail!("replay: hashes differ — snapshot round-trip is broken");
     }
     Ok(())
 }

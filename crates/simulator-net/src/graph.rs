@@ -59,8 +59,7 @@ impl InfluenceGraph {
         let total = n as u64 * (n as u64 - 1);
         let mut pos: u64 = {
             let u: f64 = rng.random::<f64>().max(f64::MIN_POSITIVE);
-            let skip = (u.ln() / log1mp).floor() as u64;
-            skip
+            (u.ln() / log1mp).floor() as u64
         };
         while pos < total {
             let row = (pos / (n as u64 - 1)) as usize;

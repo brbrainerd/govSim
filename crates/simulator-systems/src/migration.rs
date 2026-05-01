@@ -33,7 +33,7 @@ pub fn migration_system(
     rng_res: Res<SimRng>,
     mut q: Query<(&Citizen, &EmploymentStatus, &mut Location)>,
 ) {
-    if clock.tick % MIGRATION_PERIOD != 0 || clock.tick == 0 { return; }
+    if !clock.tick.is_multiple_of(MIGRATION_PERIOD) || clock.tick == 0 { return; }
 
     // Pass 1: collect per-region employment counts.
     let mut region_employed: HashMap<u32, u64> = HashMap::new();
