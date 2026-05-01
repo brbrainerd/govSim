@@ -306,6 +306,100 @@ mod tests {
         assert!(macro_.pollution_stock >= 0.0, "pollution_stock should be non-negative");
     }
 
+    /// Full pipeline: repeal a benefit law → legitimacy_update_system drains the
+    /// accumulated debt into LegitimacyDebt.stock → approval_system reads it and
+    /// applies a negative shock. Verifies the cross-system chain works end-to-end
+    /// when all systems are co-registered.
+    #[test]
+    fn benefit_repeal_flows_through_legitimacy_to_approval() {
+        use simulator_core::{
+            components::{
+                Age, ApprovalRating, AuditFlags, Citizen, EmploymentStatus, Health,
+                IdeologyVector, Income, LegalStatuses, Location, Productivity, Sex, Wealth,
+            },
+            LegitimacyDebt,
+        };
+        use simulator_law::{
+            dsl::ast::{Program, Scope},
+            registry::{LawEffect, LawHandle, LawId, LawRegistry},
+            system::{register_law_dispatcher, Cadence},
+        };
+        use simulator_systems::register_phase1_systems;
+        use simulator_types::{CitizenId, Money, RegionId, Score};
+        use std::sync::Arc;
+
+        fn spawn_one(sim: &mut Sim) {
+            sim.world.spawn((
+                Citizen(CitizenId(0)),
+                Age(35), Sex::Male, Location(RegionId(0)),
+                Health(Score::from_num(0.8_f32)),
+                Income(Money::from_num(3000_i32)),
+                Wealth(Money::from_num(10000_i32)),
+                EmploymentStatus::Employed,
+                Productivity(Score::from_num(0.7_f32)),
+                IdeologyVector([0.0f32; 5]),
+                ApprovalRating(Score::from_num(0.5_f32)),
+                LegalStatuses::default(),
+                AuditFlags::default(),
+            ));
+        }
+
+        fn dummy_benefit_handle() -> LawHandle {
+            LawHandle {
+                id: LawId(1), version: 1,
+                program: Arc::new(Program {
+                    scopes: vec![Scope { name: "X".into(), params: vec![], items: vec![] }],
+                }),
+                cadence: Cadence::Yearly,
+                effective_from_tick: 0,
+                effective_until_tick: None,
+                effect: LawEffect::PerCitizenBenefit { scope: "X", amount_def: "amount" },
+            }
+        }
+
+        // sim_clean: benefit law enacted, never repealed.
+        let mut sim_clean = Sim::new([80u8; 32]);
+        register_phase1_systems(&mut sim_clean);
+        register_law_dispatcher(&mut sim_clean);
+        spawn_one(&mut sim_clean);
+        let reg_clean = sim_clean.world.resource::<LawRegistry>().clone();
+        reg_clean.enact(dummy_benefit_handle());
+
+        // sim_repeal: benefit law enacted, then repealed at tick 30.
+        let mut sim_repeal = Sim::new([80u8; 32]);
+        register_phase1_systems(&mut sim_repeal);
+        register_law_dispatcher(&mut sim_repeal);
+        spawn_one(&mut sim_repeal);
+        let reg_repeal = sim_repeal.world.resource::<LawRegistry>().clone();
+        let id = reg_repeal.enact(dummy_benefit_handle());
+
+        // Step to tick 30 (step 31), then repeal so the debt queues for next month.
+        for _ in 0..31 { sim_clean.step(); sim_repeal.step(); }
+        reg_repeal.repeal(id, 30);
+
+        // Step another month (ticks 31..=60):
+        //   - legitimacy_update_system drains repeal_debt → LegitimacyDebt.stock
+        //   - approval_system applies legitimacy_shock = -debt.stock * 0.10
+        for _ in 0..30 { sim_clean.step(); sim_repeal.step(); }
+
+        let debt_clean  = sim_clean.world.resource::<LegitimacyDebt>().stock;
+        let debt_repeal = sim_repeal.world.resource::<LegitimacyDebt>().stock;
+        assert!(
+            debt_repeal > debt_clean,
+            "repeal sim should have higher debt (repeal={debt_repeal:.4}, clean={debt_clean:.4})"
+        );
+        assert!(debt_repeal > 0.0, "repeal debt should be positive, got {debt_repeal:.4}");
+
+        let approval_clean: f32 = sim_clean.world
+            .query::<&ApprovalRating>().single(&sim_clean.world).unwrap().0.to_num();
+        let approval_repeal: f32 = sim_repeal.world
+            .query::<&ApprovalRating>().single(&sim_repeal.world).unwrap().0.to_num();
+        assert!(
+            approval_repeal < approval_clean,
+            "repeal sim approval ({approval_repeal:.4}) should be lower than clean ({approval_clean:.4})"
+        );
+    }
+
     #[test]
     fn scenario_yaml_files_load_and_validate() {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))

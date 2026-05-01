@@ -1226,6 +1226,89 @@ mod tests {
         );
     }
 
+    /// Verifies that `crisis_kind` is injected into EvalCtx as an integer and is
+    /// readable by DSL law expressions. A benefit conditioned on `crisis_kind > 0`
+    /// (any active crisis) should disburse during War and pay nothing in peacetime.
+    #[test]
+    fn dsl_reads_crisis_kind_from_evalctx() {
+        use crate::dsl::ast::{BinOp, DefaultExpr, Expr, Item, ParamDecl, Program, Scope, Type};
+        use crate::registry::{LawEffect, LawId};
+        use crate::system::Cadence;
+        use simulator_core::{CrisisKind, CrisisState};
+        use std::sync::Arc;
+
+        // `if crisis_kind > 0 then 600.0 else 0.0`
+        // crisis_kind is Value::Int; 0 = None, 1 = War, etc.
+        let body = DefaultExpr {
+            base: Expr::If {
+                cond: Box::new(Expr::BinOp {
+                    op: BinOp::Gt,
+                    lhs: Box::new(Expr::Ident("crisis_kind".into())),
+                    rhs: Box::new(Expr::LitInt(0)),
+                }),
+                then_: Box::new(Expr::LitMoney(600.0)),
+                else_: Box::new(Expr::LitMoney(0.0)),
+            },
+            exceptions: vec![],
+        };
+        let program = Arc::new(Program {
+            scopes: vec![Scope {
+                name: "CrisisBenefit".into(),
+                params: vec![ParamDecl { name: "citizen".into(), ty: Type::Money }],
+                items: vec![Item::Definition {
+                    name: "amount".into(),
+                    ty: Type::Money,
+                    body,
+                }],
+            }],
+        });
+        let handle = LawHandle {
+            id: LawId(0), version: 1,
+            program,
+            cadence: Cadence::Yearly,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: LawEffect::PerCitizenBenefit {
+                scope: "CrisisBenefit",
+                amount_def: "amount",
+            },
+        };
+
+        // --- Wartime: crisis_kind = 1 (War) → pay $600/citizen ---
+        let mut sim_war = Sim::new([62u8; 32]);
+        register_law_dispatcher(&mut sim_war);
+        for i in 0..3 { spawn_citizen(&mut sim_war.world, i, 100); }
+        {
+            let mut cs = sim_war.world.resource_mut::<CrisisState>();
+            cs.kind             = CrisisKind::War;
+            cs.remaining_ticks  = 720;
+            cs.cost_multiplier  = 0.5;
+        }
+        let r_war = sim_war.world.resource::<LawRegistry>().clone();
+        r_war.enact(handle.clone());
+        for _ in 0..=360 { sim_war.step(); }
+        let exp_war: f64 = sim_war.world.resource::<GovernmentLedger>().expenditure.to_num();
+        // 3 citizens × $600 = $1 800
+        assert!(
+            (exp_war - 1_800.0).abs() < 1.0,
+            "wartime: expected ~$1 800 disbursed, got ${exp_war:.2}"
+        );
+
+        // --- Peacetime: crisis_kind = 0 (None) → pay $0 ---
+        let mut sim_peace = Sim::new([63u8; 32]);
+        register_law_dispatcher(&mut sim_peace);
+        for i in 0..3 { spawn_citizen(&mut sim_peace.world, i, 100); }
+        // CrisisState defaults to kind=None (0) — no modification needed.
+        let r_peace = sim_peace.world.resource::<LawRegistry>().clone();
+        r_peace.enact(handle);
+        for _ in 0..=360 { sim_peace.step(); }
+        let exp_peace: f64 = sim_peace.world.resource::<GovernmentLedger>().expenditure.to_num();
+        assert!(
+            exp_peace.abs() < 1.0,
+            "peacetime: expected ~$0 disbursed, got ${exp_peace:.2}"
+        );
+    }
+
     /// Verifies that `crisis_link_system` propagates `CrisisState.cost_multiplier`
     /// into `LawRegistry` so that benefit-law repeals accumulate less legitimacy
     /// debt during an active crisis than in peacetime.
