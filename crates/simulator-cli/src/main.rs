@@ -80,6 +80,15 @@ enum Cmd {
         #[arg(long)]
         pretty: bool,
     },
+    /// Look up a CountryProfile from V-Dem v16.
+    Calibrate {
+        /// ISO 3-letter country code (e.g. AUS, USA, DEU).
+        #[arg(long)]
+        country: String,
+        /// Year to look up (uses most-recent available if absent).
+        #[arg(long, default_value_t = 2022)]
+        year: i32,
+    },
 }
 
 fn main() -> Result<()> {
@@ -93,6 +102,7 @@ fn main() -> Result<()> {
         Cmd::Determinism { scenario, ticks } => determinism(scenario, ticks),
         Cmd::LawCompile { file, schema } => law_compile(file, schema),
         Cmd::LlmExtract { text, pretty } => llm_extract(text, pretty),
+        Cmd::Calibrate { country, year } => calibrate(country, year),
     }
 }
 
@@ -384,6 +394,26 @@ fn llm_extract(text: String, pretty: bool) -> Result<()> {
         println!("{}", serde_json::to_string_pretty(&stmt)?);
     } else {
         println!("{raw}");
+    }
+    Ok(())
+}
+
+fn calibrate(country: String, year: i32) -> Result<()> {
+    use simulator_calibration::VdemLoader;
+    let loader = VdemLoader::new();
+    match loader.load(&country, year) {
+        Ok(profile) => {
+            println!("{}", serde_json::to_string_pretty(&profile)?);
+            println!(
+                "\nDerived: unemployment_baseline={:.1}%  monthly_income_mean=${:.0}",
+                profile.baseline_unemployment() * 100.0,
+                profile.monthly_income_mean(),
+            );
+        }
+        Err(e) => {
+            eprintln!("calibrate error: {e}");
+            std::process::exit(1);
+        }
     }
     Ok(())
 }

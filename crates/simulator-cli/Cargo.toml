@@ -19,6 +19,7 @@ simulator-systems     = { workspace = true }
 simulator-law         = { workspace = true }
 simulator-llm         = { workspace = true }
 simulator-net         = { workspace = true }
+simulator-calibration = { workspace = true }
 serde_json            = { workspace = true }
 simulator-telemetry   = { workspace = true }
 simulator-types       = { workspace = true }

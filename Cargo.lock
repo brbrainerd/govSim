@@ -4798,6 +4798,7 @@ dependencies = [
  "anyhow",
  "clap",
  "serde_json",
+ "simulator-calibration",
  "simulator-core",
  "simulator-law",
  "simulator-llm",
