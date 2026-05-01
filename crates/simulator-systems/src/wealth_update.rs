@@ -12,28 +12,40 @@
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    components::{EmploymentStatus, Income, Wealth},
+    components::{ConsumptionExpenditure, EmploymentStatus, Income, SavingsRate, Wealth},
     Phase, Sim, SimClock,
 };
 use simulator_types::Money;
 
 const WEALTH_UPDATE_PERIOD: u64 = 30;
 
+/// Effective monthly income before savings split.
+fn effective_income(income: Money, emp: &EmploymentStatus) -> Money {
+    match emp {
+        EmploymentStatus::Employed        => income,
+        EmploymentStatus::Unemployed      => Money::from_num(0),
+        EmploymentStatus::Student         => income * Money::from_num(0.20_f64),
+        EmploymentStatus::Retired         => income * Money::from_num(0.30_f64),
+        EmploymentStatus::OutOfLaborForce => Money::from_num(0),
+    }
+}
+
+#[allow(clippy::type_complexity)]
 pub fn wealth_update_system(
     clock: Res<SimClock>,
-    mut q: Query<(&Income, &EmploymentStatus, &mut Wealth)>,
+    mut q: Query<(&Income, &EmploymentStatus, Option<&SavingsRate>, &mut Wealth, Option<&mut ConsumptionExpenditure>)>,
 ) {
     if !clock.tick.is_multiple_of(WEALTH_UPDATE_PERIOD) || clock.tick == 0 { return; }
 
-    for (income, emp, mut wealth) in q.iter_mut() {
-        let monthly_income = match emp {
-            EmploymentStatus::Employed        => income.0,
-            EmploymentStatus::Unemployed      => Money::from_num(0),
-            EmploymentStatus::Student         => income.0 * Money::from_num(0.20_f64),
-            EmploymentStatus::Retired         => income.0 * Money::from_num(0.30_f64),
-            EmploymentStatus::OutOfLaborForce => Money::from_num(0),
-        };
-        wealth.0 += monthly_income;
+    for (income, emp, savings_opt, mut wealth, consumption_opt) in q.iter_mut() {
+        let monthly = effective_income(income.0, emp);
+        let rate = savings_opt.map_or(0.20_f64, |s| s.0 as f64).clamp(0.0, 1.0);
+        let saved = monthly * Money::from_num(rate);
+        let consumed = monthly * Money::from_num(1.0 - rate);
+        wealth.0 += saved;
+        if let Some(mut ce) = consumption_opt {
+            ce.0 = consumed;
+        }
     }
 }
 

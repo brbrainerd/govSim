@@ -10,7 +10,7 @@ use simulator_core::{MacroIndicators, PriceLevel, SimClock, Treasury};
 use simulator_core::components::{
     Age, ApprovalRating, AuditFlags, Citizen, ConsumptionExpenditure, EmploymentStatus,
     EvasionPropensity, Health, IdeologyVector, Income, LegalStatuses, Location,
-    Productivity, Sex, Wealth,
+    Productivity, SavingsRate, Sex, Wealth,
 };
 use simulator_types::CitizenId;
 
@@ -20,7 +20,7 @@ pub type StateHash = [u8; 32];
 type CitizenRow = (
     CitizenId, Age, Sex, Location, Health, Income, Wealth,
     EmploymentStatus, Productivity, IdeologyVector, LegalStatuses, AuditFlags, ApprovalRating,
-    EvasionPropensity, ConsumptionExpenditure,
+    EvasionPropensity, ConsumptionExpenditure, SavingsRate,
 );
 
 /// Compute a deterministic hash of every citizen component + global resources.
@@ -29,27 +29,16 @@ type CitizenRow = (
 /// regardless of ECS archetype ordering or OS.
 pub fn state_hash(world: &mut World) -> StateHash {
     // Collect all citizens into a Vec so we can sort by id.
+    // Nested tuples stay within Bevy's 15-element QueryData limit.
     let mut citizens: Vec<CitizenRow> = world
         .query::<(
-            &Citizen,
-            &Age,
-            &Sex,
-            &Location,
-            &Health,
-            &Income,
-            &Wealth,
-            &EmploymentStatus,
-            &Productivity,
-            &IdeologyVector,
-            &LegalStatuses,
-            &AuditFlags,
-            &ApprovalRating,
-            &EvasionPropensity,
-            &ConsumptionExpenditure,
+            (&Citizen, &Age, &Sex, &Location, &Health, &Income, &Wealth, &EmploymentStatus),
+            (&Productivity, &IdeologyVector, &LegalStatuses, &AuditFlags, &ApprovalRating,
+             &EvasionPropensity, &ConsumptionExpenditure, &SavingsRate),
         )>()
         .iter(world)
-        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af, ar, ep, ce)| {
-            (c.0, *a, *s, *l, *h, *i, *w, *e, *p, *iv, *ls, *af, *ar, *ep, *ce)
+        .map(|((c, a, s, l, h, i, w, e), (p, iv, ls, af, ar, ep, ce, sr))| {
+            (c.0, *a, *s, *l, *h, *i, *w, *e, *p, *iv, *ls, *af, *ar, *ep, *ce, *sr)
         })
         .collect();
 
@@ -57,7 +46,7 @@ pub fn state_hash(world: &mut World) -> StateHash {
 
     let mut hasher = Hasher::new();
 
-    for (id, age, sex, loc, health, income, wealth, emp, prod, ideology, legal, audit, approval, evasion, consumption) in
+    for (id, age, sex, loc, health, income, wealth, emp, prod, ideology, legal, audit, approval, evasion, consumption, savings) in
         &citizens
     {
         hasher.update(&id.0.to_le_bytes());
@@ -79,6 +68,7 @@ pub fn state_hash(world: &mut World) -> StateHash {
         hasher.update(&approval.0.to_bits().to_le_bytes());
         hasher.update(&evasion.0.to_bits().to_le_bytes());
         hasher.update(&consumption.0.to_bits().to_le_bytes());
+        hasher.update(&savings.0.to_bits().to_le_bytes());
     }
 
     // Mix in global resources.

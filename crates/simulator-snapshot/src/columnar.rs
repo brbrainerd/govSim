@@ -16,7 +16,7 @@ use simulator_core::{
     components::{
         Age, ApprovalRating, AuditFlags, Citizen, ConsumptionExpenditure, EmploymentStatus,
         EvasionPropensity, Health, IdeologyVector, Income, LegalStatuses, Location,
-        Productivity, Sex, Wealth,
+        Productivity, SavingsRate, Sex, Wealth,
     },
 };
 use simulator_net::graph::InfluenceGraph;
@@ -25,7 +25,7 @@ use simulator_types::{CitizenId, Money, RegionId, Score};
 
 use crate::SnapshotError;
 
-const SNAPSHOT_VERSION: u32 = 8;
+const SNAPSHOT_VERSION: u32 = 9;
 
 #[derive(Serialize, Deserialize)]
 struct SnapshotHeader {
@@ -55,6 +55,7 @@ struct CitizenRow {
     approval: u32,  // Score bits
     evasion_propensity: f32,
     consumption: i128,  // Money bits (monthly ConsumptionExpenditure)
+    savings_rate: f32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -91,15 +92,15 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
     let treasury = world.resource::<Treasury>().clone();
     let macro_ = world.resource::<MacroIndicators>().clone();
 
+    // Split into nested tuples to stay within Bevy's 15-element tuple limit.
     let mut rows: Vec<CitizenRow> = world
         .query::<(
-            &Citizen, &Age, &Sex, &Location, &Health,
-            &Income, &Wealth, &EmploymentStatus, &Productivity,
-            &IdeologyVector, &LegalStatuses, &AuditFlags, &ApprovalRating,
-            &EvasionPropensity, &ConsumptionExpenditure,
+            (&Citizen, &Age, &Sex, &Location, &Health, &Income, &Wealth, &EmploymentStatus),
+            (&Productivity, &IdeologyVector, &LegalStatuses, &AuditFlags, &ApprovalRating,
+             &EvasionPropensity, &ConsumptionExpenditure, &SavingsRate),
         )>()
         .iter(world)
-        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af, ar, ep, ce)| CitizenRow {
+        .map(|((c, a, s, l, h, i, w, e), (p, iv, ls, af, ar, ep, ce, sr))| CitizenRow {
             id:                 c.0.0,
             age:                a.0,
             sex:                *s as u8,
@@ -115,6 +116,7 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
             approval:           ar.0.to_bits(),
             evasion_propensity: ep.0,
             consumption:        ce.0.to_bits(),
+            savings_rate:       sr.0,
         })
         .collect();
 
@@ -240,10 +242,10 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<(u64, u64), Snaps
         world.insert_resource(graph);
     }
 
-    // Spawn citizens.
+    // Spawn citizens. Nested tuples stay within Bevy's 15-element Bundle limit.
     use simulator_core::components::*;
     for r in &rows {
-        world.spawn((
+        world.spawn(((
             Citizen(CitizenId(r.id)),
             Age(r.age),
             sex_from_u8(r.sex),
@@ -252,6 +254,7 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<(u64, u64), Snaps
             Income(Money::from_bits(r.income)),
             Wealth(Money::from_bits(r.wealth)),
             employment_from_u8(r.employment),
+        ), (
             Productivity(Score::from_bits(r.productivity)),
             IdeologyVector(r.ideology),
             ApprovalRating(Score::from_bits(r.approval)),
@@ -259,7 +262,8 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<(u64, u64), Snaps
             AuditFlags(AuditFlagBits::from_bits_truncate(r.audit_flags)),
             EvasionPropensity(r.evasion_propensity),
             ConsumptionExpenditure(Money::from_bits(r.consumption)),
-        ));
+            SavingsRate(r.savings_rate),
+        )));
     }
 
     Ok((header.n_citizens, header.initial_population))

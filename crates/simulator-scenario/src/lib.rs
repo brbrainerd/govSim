@@ -10,7 +10,7 @@ use simulator_core::{
     components::{
         Age, ApprovalRating, AuditFlagBits, AuditFlags, Citizen, ConsumptionExpenditure,
         EmploymentStatus, EvasionPropensity, Health, IdeologyVector, Income, LegalStatusFlags,
-        LegalStatuses, Location, Productivity, Sex, Wealth,
+        LegalStatuses, Location, Productivity, SavingsRate, Sex, Wealth,
     },
     Sim,
 };
@@ -160,24 +160,40 @@ impl Scenario {
                 LegalStatuses(LegalStatusFlags::REGISTERED_VOTER | LegalStatusFlags::CITIZEN)
             };
 
+            // Nested to stay within Bevy's 15-component Bundle limit.
             world.spawn((
-                Citizen(CitizenId(i)),
-                Age(age),
-                sex,
-                Location(region),
-                Health(Score::from_num(rng.random::<f32>().clamp(0.0, 0.999))),
-                Income(income),
-                Wealth(wealth),
-                employment,
-                Productivity(Score::from_num(rng.random::<f32>().clamp(0.0, 0.999))),
-                ideology,
-                ApprovalRating(Score::from_num(0.5_f32)),
-                legal,
-                audit,
-                evasion,
-                ConsumptionExpenditure(income * Money::from_num(4) / Money::from_num(5)),
+                (
+                    Citizen(CitizenId(i)),
+                    Age(age),
+                    sex,
+                    Location(region),
+                    Health(Score::from_num(rng.random::<f32>().clamp(0.0, 0.999))),
+                    Income(income),
+                    Wealth(wealth),
+                    employment,
+                ), (
+                    Productivity(Score::from_num(rng.random::<f32>().clamp(0.0, 0.999))),
+                    ideology,
+                    ApprovalRating(Score::from_num(0.5_f32)),
+                    legal,
+                    audit,
+                    evasion,
+                    SavingsRate(savings_rate_for_age(age)),
+                    ConsumptionExpenditure(income * Money::from_num(4) / Money::from_num(5)),
+                ),
             ));
         }
+    }
+}
+
+/// Age-graded savings rate: young workers save less; older workers save more.
+fn savings_rate_for_age(age: u8) -> f32 {
+    match age {
+        0..=22  => 0.05,  // students / early career
+        23..=39 => 0.15,  // early working life
+        40..=54 => 0.25,  // peak earnings + retirement planning
+        55..=64 => 0.30,  // pre-retirement accumulation
+        _       => 0.10,  // retired — drawing down, some precautionary saving
     }
 }
 

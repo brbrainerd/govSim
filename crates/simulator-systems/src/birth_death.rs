@@ -17,7 +17,7 @@ use simulator_core::{
     components::{
         Age, AuditFlags, Citizen, ConsumptionExpenditure, EmploymentStatus, EvasionPropensity,
         Health, IdeologyVector, Income, LegalStatusFlags, LegalStatuses, Location,
-        Productivity, Sex, Wealth,
+        Productivity, SavingsRate, Sex, Wealth,
     },
     Phase, Sim, SimClock, SimRng,
 };
@@ -64,22 +64,27 @@ pub fn birth_death_system(
         let income = Money::from_num(raw.min(1.0e8));
         let wealth = Money::from_num(0.0); // newborns have no wealth
         let region = RegionId(rng.random_range(0..16));
+        // Nested to stay within Bevy's 15-component Bundle limit.
         commands.spawn((
-            Citizen(CitizenId(citizen_id)),
-            Age(0),
-            Sex::Female, // simplified; real split applied at scenario spawn
-            Location(region),
-            Health(Score::from_num(0.9_f32)),
-            Income(income),
-            Wealth(wealth),
-            EmploymentStatus::Student,
-            Productivity(Score::from_num(0.5_f32)),
-            IdeologyVector([0.0f32; 5]),
-            simulator_core::components::ApprovalRating(Score::from_num(0.5_f32)),
-            LegalStatuses(LegalStatusFlags::MINOR | LegalStatusFlags::CITIZEN),
-            AuditFlags::default(),
-            EvasionPropensity(0.0), // newborns are honest
-            ConsumptionExpenditure(income * Money::from_num(4) / Money::from_num(5)),
+            (
+                Citizen(CitizenId(citizen_id)),
+                Age(0),
+                Sex::Female,
+                Location(region),
+                Health(Score::from_num(0.9_f32)),
+                Income(income),
+                Wealth(wealth),
+                EmploymentStatus::Student,
+            ), (
+                Productivity(Score::from_num(0.5_f32)),
+                IdeologyVector([0.0f32; 5]),
+                simulator_core::components::ApprovalRating(Score::from_num(0.5_f32)),
+                LegalStatuses(LegalStatusFlags::MINOR | LegalStatusFlags::CITIZEN),
+                AuditFlags::default(),
+                EvasionPropensity(0.0),
+                SavingsRate(0.05),
+                ConsumptionExpenditure(income * Money::from_num(4) / Money::from_num(5)),
+            ),
         ));
     }
 }

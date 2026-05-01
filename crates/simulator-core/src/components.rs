@@ -83,6 +83,16 @@ pub struct AuditFlags(pub AuditFlagBits);
 #[derive(Component, Copy, Clone, Debug, Default)]
 pub struct ConsumptionExpenditure(pub Money);
 
+/// Fraction of (post-employment-type) income saved each month [0, 1].
+/// The remainder (1 - savings_rate) is consumed.
+/// Age-dependent by default: younger workers save less; near-retirement save more.
+#[derive(Component, Copy, Clone, Debug)]
+pub struct SavingsRate(pub f32);
+
+impl Default for SavingsRate {
+    fn default() -> Self { Self(0.20) }
+}
+
 // --- Behavioral ---------------------------------------------------------
 
 /// Fraction of income a citizen attempts to hide from tax authorities [0, 1].
