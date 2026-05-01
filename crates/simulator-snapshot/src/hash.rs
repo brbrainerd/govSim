@@ -6,7 +6,7 @@
 
 use bevy_ecs::world::World;
 use blake3::Hasher;
-use simulator_core::{MacroIndicators, SimClock, Treasury};
+use simulator_core::{MacroIndicators, PriceLevel, SimClock, Treasury};
 use simulator_core::components::{
     Age, ApprovalRating, AuditFlags, Citizen, ConsumptionExpenditure, EmploymentStatus,
     EvasionPropensity, Health, IdeologyVector, Income, LegalStatuses, Location,
@@ -98,6 +98,9 @@ pub fn state_hash(world: &mut World) -> StateHash {
     hasher.update(&macro_.last_election_tick.to_le_bytes());
     hasher.update(&macro_.election_margin.to_bits().to_le_bytes());
     hasher.update(&macro_.consecutive_terms.to_le_bytes());
+
+    let price_level = world.resource::<PriceLevel>();
+    hasher.update(&price_level.level.to_le_bytes());
 
     *hasher.finalize().as_bytes()
 }

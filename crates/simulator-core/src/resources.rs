@@ -33,6 +33,19 @@ pub struct Treasury {
     pub balance: Money,
 }
 
+/// Tracks the aggregate price level (base = 1.0 at tick 0).
+/// Rises multiplicatively with inflation each month; used to deflate nominal
+/// quantities into real terms and to adjust ConsumptionExpenditure.
+#[derive(Resource, Debug, Clone)]
+pub struct PriceLevel {
+    /// Current price index (1.0 = base year).
+    pub level: f64,
+}
+
+impl Default for PriceLevel {
+    fn default() -> Self { Self { level: 1.0 } }
+}
+
 /// Accumulator reset at the start of each year and flushed to MacroIndicators
 /// at Phase::Commit. Written by taxation_system and law_dispatcher.
 #[derive(Resource, Default, Debug, Clone)]

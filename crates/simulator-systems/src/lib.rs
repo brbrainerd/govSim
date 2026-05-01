@@ -18,6 +18,7 @@ pub mod employment;
 pub mod education;
 pub mod health;
 pub mod income_update;
+pub mod inflation;
 pub mod macro_indicators;
 pub mod migration;
 pub mod opinion;
@@ -33,6 +34,7 @@ pub use election::{register_election_system, ElectionOutcome};
 pub use employment::register_employment_system;
 pub use health::register_health_system;
 pub use income_update::register_income_update_system;
+pub use inflation::register_inflation_system;
 pub use macro_indicators::register_macro_indicators_system;
 pub use migration::register_migration_system;
 pub use opinion::{build_influence_graph, register_opinion_system};
@@ -66,6 +68,7 @@ pub fn register_phase1_systems(sim: &mut Sim) {
     // Mutate phase (in order): income → wealth → tax → employment → health → approval → migration → birth/death
     register_income_update_system(sim);
     register_wealth_update_system(sim);
+    register_inflation_system(sim);
     sim.schedule_mut()
         .add_systems(taxation_system.in_set(Phase::Mutate));
     register_employment_system(sim);

@@ -12,7 +12,7 @@
 use bevy_ecs::world::World;
 use serde::{Deserialize, Serialize};
 use simulator_core::{
-    MacroIndicators, SimClock, SimRng, Treasury,
+    MacroIndicators, PriceLevel, SimClock, SimRng, Treasury,
     components::{
         Age, ApprovalRating, AuditFlags, Citizen, ConsumptionExpenditure, EmploymentStatus,
         EvasionPropensity, Health, IdeologyVector, Income, LegalStatuses, Location,
@@ -25,7 +25,7 @@ use simulator_types::{CitizenId, Money, RegionId, Score};
 
 use crate::SnapshotError;
 
-const SNAPSHOT_VERSION: u32 = 6;
+const SNAPSHOT_VERSION: u32 = 7;
 
 #[derive(Serialize, Deserialize)]
 struct SnapshotHeader {
@@ -72,6 +72,7 @@ struct ResourceBlock {
     last_election_tick: u64,
     election_margin: f32,
     consecutive_terms: u32,
+    price_level: f64,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -138,6 +139,8 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
         initial_population,
     };
 
+    let price_level = world.resource::<PriceLevel>().level;
+
     let resources = ResourceBlock {
         treasury:               treasury.balance.to_bits(),
         population:             macro_.population,
@@ -152,6 +155,7 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
         last_election_tick:     macro_.last_election_tick,
         election_margin:        macro_.election_margin,
         consecutive_terms:      macro_.consecutive_terms,
+        price_level,
     };
 
     // Encode with bincode then compress.
@@ -212,6 +216,10 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<(u64, u64), Snaps
         macro_.last_election_tick     = resources.last_election_tick;
         macro_.election_margin        = resources.election_margin;
         macro_.consecutive_terms      = resources.consecutive_terms;
+    }
+    {
+        let mut pl = world.resource_mut::<PriceLevel>();
+        pl.level = resources.price_level;
     }
 
     // Restore influence graph if present.
