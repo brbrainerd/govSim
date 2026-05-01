@@ -15,7 +15,7 @@ pub mod approval;
 pub mod birth_death;
 pub mod election;
 pub mod employment;
-pub mod education {}
+pub mod education;
 pub mod health;
 pub mod income_update;
 pub mod macro_indicators;
@@ -27,6 +27,7 @@ pub mod enforcement {}
 pub mod media {}
 
 pub use approval::register_approval_system;
+pub use education::register_age_advance_system;
 pub use birth_death::register_birth_death_system;
 pub use election::{register_election_system, ElectionOutcome};
 pub use employment::register_employment_system;
@@ -72,6 +73,7 @@ pub fn register_phase1_systems(sim: &mut Sim) {
     register_approval_system(sim);
     register_migration_system(sim);
     register_birth_death_system(sim);
+    register_age_advance_system(sim);
     // Cognitive phase
     register_opinion_system(sim);
     // Commit phase: macro aggregation + election

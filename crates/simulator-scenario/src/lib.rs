@@ -120,7 +120,13 @@ impl Scenario {
             let wealth = Money::from_num((raw_income * rng.random::<f64>() * 5.0).min(1.0e10));
 
             let r: f64 = rng.random::<f64>();
-            let employment = if r < emp_thresh {
+            // Age-consistent employment: minors are always Students; seniors
+            // are always Retired. Adults use the calibrated distribution.
+            let employment = if age < 18 {
+                EmploymentStatus::Student
+            } else if age >= 65 {
+                EmploymentStatus::Retired
+            } else if r < emp_thresh {
                 EmploymentStatus::Employed
             } else if r < unemp_thresh {
                 EmploymentStatus::Unemployed
