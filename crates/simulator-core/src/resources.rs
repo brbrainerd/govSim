@@ -10,7 +10,9 @@ pub struct MacroIndicators {
     pub population: u64,
     pub gdp: Money,
     pub gini: f32,
-    pub unemployment_rate: f32,
+    pub unemployment: f32,
+    pub inflation: f32,
+    pub approval: f32,
     pub government_revenue: Money,
     pub government_expenditure: Money,
 }
