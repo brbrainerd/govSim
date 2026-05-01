@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use simulator_core::{
     components::{
         Age, ApprovalRating, AuditFlags, Citizen, EmploymentStatus, Health, IdeologyVector,
-        Income, LegalStatuses, Location, Productivity, Sex, Wealth,
+        Income, LegalStatusFlags, LegalStatuses, Location, Productivity, Sex, Wealth,
     },
     Sim,
 };
@@ -145,6 +145,13 @@ impl Scenario {
                 AuditFlags::default()
             };
 
+            // Legal status: minors cannot vote; adults are registered citizens.
+            let legal = if age < 18 {
+                LegalStatuses(LegalStatusFlags::MINOR | LegalStatusFlags::CITIZEN)
+            } else {
+                LegalStatuses(LegalStatusFlags::REGISTERED_VOTER | LegalStatusFlags::CITIZEN)
+            };
+
             world.spawn((
                 Citizen(CitizenId(i)),
                 Age(age),
@@ -157,7 +164,7 @@ impl Scenario {
                 Productivity(Score::from_num(rng.random::<f32>().clamp(0.0, 0.999))),
                 ideology,
                 ApprovalRating(Score::from_num(0.5_f32)),
-                LegalStatuses::default(),
+                legal,
                 audit,
             ));
         }

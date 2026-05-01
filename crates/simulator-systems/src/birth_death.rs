@@ -16,7 +16,7 @@ use simulator_core::{
     bevy_ecs::prelude::*,
     components::{
         Age, AuditFlags, Citizen, EmploymentStatus, Health, IdeologyVector, Income,
-        LegalStatuses, Location, Productivity, Sex, Wealth,
+        LegalStatusFlags, LegalStatuses, Location, Productivity, Sex, Wealth,
     },
     Phase, Sim, SimClock, SimRng,
 };
@@ -75,7 +75,7 @@ pub fn birth_death_system(
             Productivity(Score::from_num(0.5_f32)),
             IdeologyVector([0.0f32; 5]),
             simulator_core::components::ApprovalRating(Score::from_num(0.5_f32)),
-            LegalStatuses::default(),
+            LegalStatuses(LegalStatusFlags::MINOR | LegalStatusFlags::CITIZEN),
             AuditFlags::default(),
         ));
     }

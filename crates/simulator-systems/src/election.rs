@@ -15,7 +15,7 @@
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    components::{ApprovalRating, IdeologyVector},
+    components::{ApprovalRating, IdeologyVector, LegalStatusFlags, LegalStatuses},
     MacroIndicators, Phase, Sim, SimClock,
 };
 
@@ -37,7 +37,7 @@ pub fn election_system(
     clock: Res<SimClock>,
     mut outcome: ResMut<ElectionOutcome>,
     mut indicators: ResMut<MacroIndicators>,
-    q: Query<(&IdeologyVector, &ApprovalRating)>,
+    q: Query<(&LegalStatuses, &IdeologyVector, &ApprovalRating)>,
 ) {
     if !clock.tick.is_multiple_of(ELECTION_PERIOD) || clock.tick == 0 { return; }
 
@@ -45,7 +45,10 @@ pub fn election_system(
     let mut vote_b: f64 = 0.0;
     let mut n: u64 = 0;
 
-    for (ideology, approval) in q.iter() {
+    for (legal, ideology, approval) in q.iter() {
+        // Only registered voters participate.
+        if !legal.0.contains(LegalStatusFlags::REGISTERED_VOTER) { continue; }
+
         let econ = ideology.0[0] as f64; // [-1, 1]: negative = left/progressive
         let satisfaction = (approval.0.to_num::<f64>() - 0.5) * 2.0; // [-1, 1]
 
@@ -68,6 +71,17 @@ pub fn election_system(
     }
 
     if n == 0 { return; }
+
+    // Incumbency fatigue: each term beyond 2 applies a drag on the incumbent's
+    // total equal to 5% of the registered electorate, making long rule less sticky.
+    if outcome.consecutive_terms >= 3 {
+        let drag = 0.05 * (outcome.consecutive_terms - 2) as f64 * n as f64;
+        if outcome.incumbent == 1 {
+            vote_a = (vote_a - drag).max(0.0);
+        } else if outcome.incumbent == 2 {
+            vote_b = (vote_b - drag).max(0.0);
+        }
+    }
 
     let total = vote_a + vote_b;
     let share_a = vote_a / total;
@@ -117,6 +131,7 @@ mod tests {
     use simulator_types::{CitizenId, Money, RegionId, Score};
 
     fn spawn(world: &mut World, id: u64, econ_ideology: f32, approval: f32) {
+        use simulator_core::components::LegalStatusFlags;
         world.spawn((
             Citizen(CitizenId(id)),
             Age(35), Sex::Male, Location(RegionId(0)),
@@ -127,7 +142,7 @@ mod tests {
             Productivity(Score::from_num(0.5_f32)),
             IdeologyVector([econ_ideology, 0.0, 0.0, 0.0, 0.0]),
             ApprovalRating(Score::from_num(approval)),
-            LegalStatuses(Default::default()),
+            LegalStatuses(LegalStatusFlags::REGISTERED_VOTER | LegalStatusFlags::CITIZEN),
             AuditFlags(Default::default()),
         ));
     }

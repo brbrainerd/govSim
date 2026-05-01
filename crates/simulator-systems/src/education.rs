@@ -11,7 +11,7 @@
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    components::{Age, EmploymentStatus},
+    components::{Age, EmploymentStatus, LegalStatusFlags, LegalStatuses},
     Phase, Sim, SimClock,
 };
 
@@ -25,19 +25,22 @@ const AGE_CAP: u8 = 99;
 
 pub fn age_advance_system(
     clock: Res<SimClock>,
-    mut q: Query<(&mut Age, &mut EmploymentStatus)>,
+    mut q: Query<(&mut Age, &mut EmploymentStatus, &mut LegalStatuses)>,
 ) {
     if !clock.tick.is_multiple_of(AGE_ADVANCE_PERIOD) || clock.tick == 0 { return; }
 
-    for (mut age, mut emp) in q.iter_mut() {
+    for (mut age, mut emp, mut legal) in q.iter_mut() {
         let old = age.0;
         age.0 = old.saturating_add(1).min(AGE_CAP);
 
-        // Cross working-age threshold → leave school and enter labour force.
-        if old < WORKING_AGE && age.0 >= WORKING_AGE
-            && matches!(*emp, EmploymentStatus::Student)
-        {
-            *emp = EmploymentStatus::Unemployed;
+        // Cross working-age threshold → enter adult civic and labour life.
+        if old < WORKING_AGE && age.0 >= WORKING_AGE {
+            legal.0.remove(LegalStatusFlags::MINOR);
+            legal.0.insert(LegalStatusFlags::REGISTERED_VOTER | LegalStatusFlags::CITIZEN);
+
+            if matches!(*emp, EmploymentStatus::Student) {
+                *emp = EmploymentStatus::Unemployed;
+            }
         }
 
         // Cross retirement threshold → leave labour market.

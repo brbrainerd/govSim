@@ -14,7 +14,7 @@
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    components::{Citizen, EmploymentStatus},
+    components::{Age, Citizen, EmploymentStatus},
     Phase, Sim, SimClock, SimRng,
 };
 use rand::Rng;
@@ -24,11 +24,11 @@ const EMPLOYMENT_PERIOD: u64 = 30;
 pub fn employment_system(
     clock: Res<SimClock>,
     rng_res: Res<SimRng>,
-    mut q: Query<(&Citizen, &mut EmploymentStatus)>,
+    mut q: Query<(&Citizen, &Age, &mut EmploymentStatus)>,
 ) {
     if !clock.tick.is_multiple_of(EMPLOYMENT_PERIOD) || clock.tick == 0 { return; }
 
-    for (citizen, mut status) in q.iter_mut() {
+    for (citizen, age, mut status) in q.iter_mut() {
         let mut rng = rng_res.derive_citizen("employment", clock.tick, citizen.0.0);
         let r: f32 = rng.random();
         *status = match *status {
@@ -39,7 +39,13 @@ pub fn employment_system(
                 if r < 0.050 { EmploymentStatus::Employed } else { EmploymentStatus::Unemployed }
             }
             EmploymentStatus::Student => {
-                if r < 0.010 { EmploymentStatus::Employed } else { EmploymentStatus::Student }
+                // Minors (under working age) cannot enter the labour market —
+                // age_advance_system handles the Student → Unemployed transition at 18.
+                if age.0 >= crate::education::WORKING_AGE && r < 0.010 {
+                    EmploymentStatus::Employed
+                } else {
+                    EmploymentStatus::Student
+                }
             }
             EmploymentStatus::OutOfLaborForce => {
                 if r < 0.001 { EmploymentStatus::Unemployed } else { EmploymentStatus::OutOfLaborForce }
