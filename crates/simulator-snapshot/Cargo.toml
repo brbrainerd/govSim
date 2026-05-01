@@ -9,6 +9,7 @@ description = "Deterministic replay: bincode columnar dumps + per-tick action lo
 [dependencies]
 simulator-core  = { workspace = true }
 simulator-types = { workspace = true }
+simulator-net   = { workspace = true }
 bevy_ecs        = { workspace = true }
 bincode         = { workspace = true }
 blake3          = { workspace = true }

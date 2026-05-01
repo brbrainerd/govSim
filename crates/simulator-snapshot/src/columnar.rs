@@ -2,27 +2,29 @@
 //! compressed bincode blob. Used by `ugs replay` and CI regression tests.
 //!
 //! Layout (bincode little-endian):
-//!   SnapshotHeader  — version, tick, citizen count, resource sizes
+//!   SnapshotHeader  — version, tick, seed, citizen count, initial_population
 //!   CitizenRow[]    — one row per citizen, sorted by CitizenId
 //!   ResourceBlock   — Treasury + MacroIndicators
+//!   GraphBlock      — InfluenceGraph CSR (row_ptr[], col_ind[], weights[])
 //!
 //! The blob is zstd-compressed at level 3 (fast, ~5:1 ratio on typical data).
-
 
 use bevy_ecs::world::World;
 use serde::{Deserialize, Serialize};
 use simulator_core::{
     MacroIndicators, SimClock, SimRng, Treasury,
     components::{
-        Age, AuditFlags, Citizen, EmploymentStatus, Health, IdeologyVector, Income,
-        LegalStatuses, Location, Productivity, Sex, Wealth,
+        Age, ApprovalRating, AuditFlags, Citizen, EmploymentStatus, Health,
+        IdeologyVector, Income, LegalStatuses, Location, Productivity, Sex, Wealth,
     },
 };
+use simulator_net::graph::InfluenceGraph;
+use simulator_net::csr::CsrMatrix;
 use simulator_types::{CitizenId, Money, RegionId, Score};
 
 use crate::SnapshotError;
 
-const SNAPSHOT_VERSION: u32 = 1;
+const SNAPSHOT_VERSION: u32 = 2;
 
 #[derive(Serialize, Deserialize)]
 struct SnapshotHeader {
@@ -30,6 +32,9 @@ struct SnapshotHeader {
     tick: u64,
     seed: [u8; 32],
     n_citizens: u64,
+    /// Original spawn population — used to rebuild influence graph on load
+    /// even if births/deaths have changed n_citizens since spawn.
+    initial_population: u64,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -46,6 +51,7 @@ struct CitizenRow {
     ideology: [f32; 5],
     legal_flags: u32,
     audit_flags: u32,
+    approval: u32,  // Score bits
 }
 
 #[derive(Serialize, Deserialize)]
@@ -59,6 +65,14 @@ struct ResourceBlock {
     approval: f32,
 }
 
+#[derive(Serialize, Deserialize)]
+struct GraphBlock {
+    n: u64,
+    row_ptr: Vec<u32>,
+    col_ind: Vec<u32>,
+    weights: Vec<f32>,
+}
+
 /// Serialize the world to a zstd-compressed bincode snapshot.
 pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
     let clock = world.resource::<SimClock>().clone();
@@ -70,10 +84,10 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
         .query::<(
             &Citizen, &Age, &Sex, &Location, &Health,
             &Income, &Wealth, &EmploymentStatus, &Productivity,
-            &IdeologyVector, &LegalStatuses, &AuditFlags,
+            &IdeologyVector, &LegalStatuses, &AuditFlags, &ApprovalRating,
         )>()
         .iter(world)
-        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af)| CitizenRow {
+        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af, ar)| CitizenRow {
             id:          c.0.0,
             age:         a.0,
             sex:         *s as u8,
@@ -86,16 +100,30 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
             ideology:    iv.0,
             legal_flags: ls.0.bits(),
             audit_flags: af.0.bits(),
+            approval:    ar.0.to_bits(),
         })
         .collect();
 
     rows.sort_by_key(|r| r.id);
+
+    // Read InfluenceGraph if present (may be absent in bench/empty worlds).
+    let graph_block = world.get_resource::<InfluenceGraph>().map(|g| GraphBlock {
+        n:       g.csr.n_rows as u64,
+        row_ptr: g.csr.row_ptr.clone(),
+        col_ind: g.csr.col_ind.clone(),
+        weights: g.csr.weights.clone(),
+    });
+
+    // initial_population: if graph is present, its row count is the spawn-time
+    // population (graph is built once at spawn and never resized).
+    let initial_population = graph_block.as_ref().map_or(rows.len() as u64, |g| g.n);
 
     let header = SnapshotHeader {
         version: SNAPSHOT_VERSION,
         tick: clock.tick,
         seed: rng.root_seed(),
         n_citizens: rows.len() as u64,
+        initial_population,
     };
 
     let resources = ResourceBlock {
@@ -113,6 +141,7 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
     encode_into(&header, &mut raw)?;
     encode_into(&rows, &mut raw)?;
     encode_into(&resources, &mut raw)?;
+    encode_into(&graph_block, &mut raw)?;
 
     let compressed = zstd::encode_all(raw.as_slice(), 3)
         .map_err(|e| SnapshotError::Io(e.to_string()))?;
@@ -121,9 +150,10 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
 
 /// Deserialize a compressed snapshot and restore world resources + citizens.
 ///
-/// **Warning**: this spawns entities into an already-initialized world.
-/// Caller should use a fresh `Sim` (or clear existing citizens first).
-pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<u64, SnapshotError> {
+/// Returns `(n_citizens, initial_population)`.
+/// Caller should insert `InfluenceGraph` from the snapshot directly (it is
+/// embedded) rather than calling `build_influence_graph` again.
+pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<(u64, u64), SnapshotError> {
     let raw = zstd::decode_all(blob)
         .map_err(|e| SnapshotError::Io(e.to_string()))?;
     let mut cursor = raw.as_slice();
@@ -138,6 +168,7 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<u64, SnapshotErro
 
     let rows: Vec<CitizenRow> = decode_from(&mut cursor)?;
     let resources: ResourceBlock = decode_from(&mut cursor)?;
+    let graph_block: Option<GraphBlock> = decode_from(&mut cursor)?;
 
     // Restore resources.
     {
@@ -159,6 +190,21 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<u64, SnapshotErro
         macro_.approval     = resources.approval;
     }
 
+    // Restore influence graph if present.
+    if let Some(g) = graph_block {
+        let n = g.n as usize;
+        let graph = InfluenceGraph {
+            csr: CsrMatrix {
+                row_ptr: g.row_ptr,
+                col_ind: g.col_ind,
+                weights: g.weights,
+                n_rows: n,
+                n_cols: n,
+            },
+        };
+        world.insert_resource(graph);
+    }
+
     // Spawn citizens.
     use simulator_core::components::*;
     for r in &rows {
@@ -173,13 +219,13 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<u64, SnapshotErro
             employment_from_u8(r.employment),
             Productivity(Score::from_bits(r.productivity)),
             IdeologyVector(r.ideology),
-            ApprovalRating(Score::from_num(0.5_f32)),
+            ApprovalRating(Score::from_bits(r.approval)),
             LegalStatuses(LegalStatusFlags::from_bits_truncate(r.legal_flags)),
             AuditFlags(AuditFlagBits::from_bits_truncate(r.audit_flags)),
         ));
     }
 
-    Ok(header.n_citizens)
+    Ok((header.n_citizens, header.initial_population))
 }
 
 // ---- helpers ---------------------------------------------------------------
@@ -241,7 +287,8 @@ mod tests {
 
         // Fresh sim — restore into it.
         let mut sim2 = Sim::new([0u8; 32]);
-        load_snapshot(&mut sim2.world, &blob).expect("load");
+        let (n, _init) = load_snapshot(&mut sim2.world, &blob).expect("load");
+        assert_eq!(n, 0);
         assert_eq!(sim2.world.resource::<SimClock>().tick, 5);
         assert_eq!(
             sim2.world.resource::<Treasury>().balance,

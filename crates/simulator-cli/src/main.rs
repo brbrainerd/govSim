@@ -317,11 +317,15 @@ fn replay(
         simulator_systems::register_phase1_systems(&mut sim);
         // No population spawn — loaded from snapshot.
         let blob = std::fs::read(&out)?;
-        let n = load_snapshot(&mut sim.world, &blob)?;
+        let (n, init_pop) = load_snapshot(&mut sim.world, &blob)?;
         tracing::info!(tick = snapshot_at, citizens = n, "snapshot loaded");
 
-        // Rebuild influence graph (not stored in snapshot yet).
-        simulator_systems::build_influence_graph(&mut sim, n as usize, 0.0001);
+        // InfluenceGraph is now embedded in the snapshot; only rebuild if absent
+        // (e.g. old-format snapshot or empty-world bench).
+        use simulator_net::graph::InfluenceGraph;
+        if sim.world.get_resource::<InfluenceGraph>().is_none() && init_pop > 0 {
+            simulator_systems::build_influence_graph(&mut sim, init_pop as usize, 0.0001);
+        }
 
         for _ in snapshot_at..total_ticks { sim.step(); }
         state_hash(&mut sim.world)

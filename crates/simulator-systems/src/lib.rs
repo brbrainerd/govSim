@@ -11,6 +11,7 @@ use simulator_core::{
 use simulator_telemetry::register_telemetry_system;
 use simulator_types::Money;
 
+pub mod approval;
 pub mod birth_death;
 pub mod employment;
 pub mod education {}
@@ -23,6 +24,7 @@ pub mod enforcement {}
 pub mod media {}
 pub mod migration {}
 
+pub use approval::register_approval_system;
 pub use birth_death::register_birth_death_system;
 pub use employment::register_employment_system;
 pub use macro_indicators::register_macro_indicators_system;
@@ -52,11 +54,12 @@ pub fn taxation_system(
 /// Caller must subsequently call `build_influence_graph` and insert the
 /// resource before ticking (scenario spawn determines n_citizens).
 pub fn register_phase1_systems(sim: &mut Sim) {
-    // Mutate phase: wealth accrual → taxation → employment transitions → births/deaths
+    // Mutate phase: wealth accrual → taxation → employment → approval → births/deaths
     register_wealth_update_system(sim);
     sim.schedule_mut()
         .add_systems(taxation_system.in_set(Phase::Mutate));
     register_employment_system(sim);
+    register_approval_system(sim);
     register_birth_death_system(sim);
     // Cognitive phase
     register_opinion_system(sim);

@@ -7,7 +7,7 @@
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    components::{Citizen, EmploymentStatus, Income, Wealth},
+    components::{ApprovalRating, Citizen, EmploymentStatus, Income, Wealth},
     MacroIndicators, Phase, Sim, SimClock,
 };
 use simulator_types::Money;
@@ -15,7 +15,7 @@ use simulator_types::Money;
 pub fn macro_indicators_system(
     clock: Res<SimClock>,
     mut indicators: ResMut<MacroIndicators>,
-    q: Query<(&Citizen, &Income, &Wealth, &EmploymentStatus)>,
+    q: Query<(&Citizen, &Income, &Wealth, &EmploymentStatus, &ApprovalRating)>,
 ) {
     // Recompute every tick but skip tick 0 (pre-spawn, world is empty).
     if clock.tick == 0 { return; }
@@ -23,10 +23,11 @@ pub fn macro_indicators_system(
     let mut population: u64 = 0;
     let mut gdp = Money::from_num(0);
     let mut unemployed: u64 = 0;
+    let mut approval_sum: f64 = 0.0;
     // Collect annualised incomes for Gini (sorted).
     let mut incomes: Vec<f64> = Vec::new();
 
-    for (_c, income, _wealth, emp) in q.iter() {
+    for (_c, income, _wealth, emp, approval) in q.iter() {
         population += 1;
         let annual = income.0 * Money::from_num(360);
         gdp += annual;
@@ -35,13 +36,10 @@ pub fn macro_indicators_system(
         if matches!(emp, EmploymentStatus::Unemployed) {
             unemployed += 1;
         }
+        approval_sum += approval.0.to_num::<f64>();
     }
 
-    let gini = if incomes.len() < 2 {
-        0.0
-    } else {
-        gini_sorted(&mut incomes)
-    };
+    let gini = if incomes.len() < 2 { 0.0 } else { gini_sorted(&mut incomes) };
 
     let unemployment = if population == 0 {
         0.0
@@ -49,12 +47,18 @@ pub fn macro_indicators_system(
         unemployed as f32 / population as f32
     };
 
+    let approval = if population == 0 {
+        0.0
+    } else {
+        (approval_sum / population as f64) as f32
+    };
+
     indicators.population = population;
     indicators.gdp = gdp;
     indicators.gini = gini;
     indicators.unemployment = unemployment;
-    // inflation and approval require additional model components — left at
-    // their previous values (0.0 default) until Phase 3/5 fill them in.
+    indicators.approval = approval;
+    // inflation requires price-level model — remains 0.0 until Phase 3.
 }
 
 /// Exact Gini via sorted O(n log n) formula.

@@ -8,7 +8,7 @@ use bevy_ecs::world::World;
 use blake3::Hasher;
 use simulator_core::{MacroIndicators, SimClock, Treasury};
 use simulator_core::components::{
-    Age, AuditFlags, Citizen, EmploymentStatus, Health, IdeologyVector, Income,
+    Age, ApprovalRating, AuditFlags, Citizen, EmploymentStatus, Health, IdeologyVector, Income,
     LegalStatuses, Location, Productivity, Sex, Wealth,
 };
 use simulator_types::CitizenId;
@@ -35,6 +35,7 @@ pub fn state_hash(world: &mut World) -> StateHash {
         IdeologyVector,
         LegalStatuses,
         AuditFlags,
+        ApprovalRating,
     )> = world
         .query::<(
             &Citizen,
@@ -49,10 +50,11 @@ pub fn state_hash(world: &mut World) -> StateHash {
             &IdeologyVector,
             &LegalStatuses,
             &AuditFlags,
+            &ApprovalRating,
         )>()
         .iter(world)
-        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af)| {
-            (c.0, *a, *s, *l, *h, *i, *w, *e, *p, *iv, *ls, *af)
+        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af, ar)| {
+            (c.0, *a, *s, *l, *h, *i, *w, *e, *p, *iv, *ls, *af, *ar)
         })
         .collect();
 
@@ -60,7 +62,7 @@ pub fn state_hash(world: &mut World) -> StateHash {
 
     let mut hasher = Hasher::new();
 
-    for (id, age, sex, loc, health, income, wealth, emp, prod, ideology, legal, audit) in
+    for (id, age, sex, loc, health, income, wealth, emp, prod, ideology, legal, audit, approval) in
         &citizens
     {
         hasher.update(&id.0.to_le_bytes());
@@ -79,6 +81,7 @@ pub fn state_hash(world: &mut World) -> StateHash {
         }
         hasher.update(&legal.0.bits().to_le_bytes());
         hasher.update(&audit.0.bits().to_le_bytes());
+        hasher.update(&approval.0.to_bits().to_le_bytes());
     }
 
     // Mix in global resources.
