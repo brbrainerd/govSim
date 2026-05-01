@@ -9,7 +9,7 @@
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    MacroIndicators, Phase, Sim, SimClock, Treasury,
+    MacroIndicators, Phase, PriceLevel, Sim, SimClock, Treasury,
 };
 
 /// Emit a telemetry line every N ticks (default 30 — once per sim-month).
@@ -26,6 +26,7 @@ pub fn tick_telemetry_system(
     clock: Res<SimClock>,
     indicators: Res<MacroIndicators>,
     treasury: Res<Treasury>,
+    price_level: Res<PriceLevel>,
 ) {
     let period = emit_period();
     if !clock.tick.is_multiple_of(period) || clock.tick == 0 { return; }
@@ -40,14 +41,18 @@ pub fn tick_telemetry_system(
         population         = indicators.population,
         gdp_cents          = indicators.gdp.to_num::<i64>(),
         gini               = indicators.gini,
+        wealth_gini        = indicators.wealth_gini,
         unemployment       = indicators.unemployment,
+        inflation          = indicators.inflation,
         approval           = indicators.approval,
+        price_level        = price_level.level,
         treasury_cents     = treasury.balance.to_num::<i64>(),
         revenue_cents      = indicators.government_revenue.to_num::<i64>(),
         expenditure_cents  = indicators.government_expenditure.to_num::<i64>(),
         incumbent_party    = indicators.incumbent_party,
         last_election_tick = indicators.last_election_tick,
         election_margin    = indicators.election_margin,
+        consecutive_terms  = indicators.consecutive_terms,
         "tick_telemetry"
     );
 }
