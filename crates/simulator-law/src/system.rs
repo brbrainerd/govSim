@@ -10,7 +10,7 @@ use simulator_core::{
     bevy_ecs::prelude::*,
     components::{
         AuditFlagBits, AuditFlags, Citizen, EvasionPropensity,
-        Income, LegalStatusFlags, LegalStatuses, Wealth,
+        Health, Income, LegalStatusFlags, LegalStatuses, Productivity, Wealth,
     },
     GovernmentLedger, MacroIndicators, Phase, Sim, SimClock, SimRng, Treasury,
 };
@@ -56,6 +56,8 @@ pub fn law_dispatcher_system(
     mut q: Query<(
         Option<&Citizen>,
         &Income,
+        Option<&Health>,
+        Option<&Productivity>,
         &mut Wealth,
         &mut LegalStatuses,
         Option<&AuditFlags>,
@@ -77,11 +79,15 @@ pub fn law_dispatcher_system(
                 let Some(body) = find_body(&h.program, scope, owed_def) else { continue; };
                 let mut ctx = base_ctx.clone();
                 let mut collected = Money::from_num(0);
-                for (_, income, mut wealth, _, _, _) in q.iter_mut() {
+                for (_, income, health_opt, prod_opt, mut wealth, _, _, _) in q.iter_mut() {
                     let annual = income.0 * Money::from_num(360);
-                    ctx.field_bindings.insert(
-                        ("citizen".into(), "income".into()), Value::Money(annual),
-                    );
+                    ctx.field_bindings.insert(("citizen".into(), "income".into()), Value::Money(annual));
+                    if let Some(h) = health_opt {
+                        ctx.field_bindings.insert(("citizen".into(), "health".into()), Value::Rate(h.0.to_num::<f64>()));
+                    }
+                    if let Some(p) = prod_opt {
+                        ctx.field_bindings.insert(("citizen".into(), "productivity".into()), Value::Rate(p.0.to_num::<f64>()));
+                    }
                     if let Value::Money(owed) = eval_default(body, &ctx) {
                         wealth.0 -= owed;
                         collected += owed;
@@ -94,11 +100,15 @@ pub fn law_dispatcher_system(
                 let Some(body) = find_body(&h.program, scope, amount_def) else { continue; };
                 let mut ctx = base_ctx.clone();
                 let mut disbursed = Money::from_num(0);
-                for (_, income, mut wealth, _, _, _) in q.iter_mut() {
+                for (_, income, health_opt, prod_opt, mut wealth, _, _, _) in q.iter_mut() {
                     let annual = income.0 * Money::from_num(360);
-                    ctx.field_bindings.insert(
-                        ("citizen".into(), "income".into()), Value::Money(annual),
-                    );
+                    ctx.field_bindings.insert(("citizen".into(), "income".into()), Value::Money(annual));
+                    if let Some(h) = health_opt {
+                        ctx.field_bindings.insert(("citizen".into(), "health".into()), Value::Rate(h.0.to_num::<f64>()));
+                    }
+                    if let Some(p) = prod_opt {
+                        ctx.field_bindings.insert(("citizen".into(), "productivity".into()), Value::Rate(p.0.to_num::<f64>()));
+                    }
                     if let Value::Money(paid) = eval_default(body, &ctx) {
                         wealth.0 += paid;
                         disbursed += paid;
@@ -108,7 +118,7 @@ pub fn law_dispatcher_system(
                 ledger.expenditure += disbursed;
             }
             LawEffect::RegistrationMarker { basis, threshold } => {
-                for (_, income, wealth, mut legal, _, _) in q.iter_mut() {
+                for (_, income, _, _, wealth, mut legal, _, _) in q.iter_mut() {
                     let value: f64 = match basis {
                         AmountBasis::AnnualIncome => income.0.to_num::<f64>() * 360.0,
                         AmountBasis::Wealth => wealth.0.to_num::<f64>(),
@@ -123,7 +133,7 @@ pub fn law_dispatcher_system(
             LawEffect::Audit { selection_prob, penalty_rate } => {
                 let label = format!("audit_{}", h.id.0);
                 let mut collected = Money::from_num(0);
-                for (citizen_opt, income, mut wealth, _, audit_opt, evasion_opt) in q.iter_mut() {
+                for (citizen_opt, income, _, _, mut wealth, _, audit_opt, evasion_opt) in q.iter_mut() {
                     let (Some(citizen), Some(audit), Some(evasion)) =
                         (citizen_opt, audit_opt, evasion_opt) else { continue; };
                     if !audit.0.contains(AuditFlagBits::FLAGGED_INCOME) { continue; }
