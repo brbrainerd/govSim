@@ -51,7 +51,10 @@ enum Cmd {
     /// Standalone NL→IG→DSL→Cranelift dry run (Phase 4).
     LawCompile {
         #[arg(long)]
-        file: PathBuf,
+        file: Option<PathBuf>,
+        /// Write the IG 2.0 JSON Schema to data/grammars/ig2_schema.json.
+        #[arg(long)]
+        schema: bool,
     },
 }
 
@@ -64,10 +67,7 @@ fn main() -> Result<()> {
             Ok(())
         }
         Cmd::Bench { ticks } => bench(ticks),
-        Cmd::LawCompile { file } => {
-            tracing::warn!(?file, "law compile: not yet implemented (Phase 4)");
-            Ok(())
-        }
+        Cmd::LawCompile { file, schema } => law_compile(file, schema),
     }
 }
 
@@ -166,6 +166,31 @@ fn run(
         treasury,
         sim.tick(),
     );
+    Ok(())
+}
+
+fn law_compile(file: Option<PathBuf>, schema: bool) -> Result<()> {
+    if schema {
+        let json = simulator_law::ig2_json_schema();
+        let out = std::path::Path::new("data/grammars/ig2_schema.json");
+        std::fs::create_dir_all(out.parent().unwrap())?;
+        std::fs::write(out, &json)?;
+        println!("wrote {}", out.display());
+        // Sanity-check: the existing fixture must round-trip against the schema.
+        let fixture = std::path::Path::new("scenarios/income_tax_2026.ig2.json");
+        if fixture.exists() {
+            let raw = std::fs::read_to_string(fixture)?;
+            let _: simulator_law::ig2::IgStatement = serde_json::from_str(&raw)
+                .map_err(|e| anyhow::anyhow!("fixture round-trip failed: {e}"))?;
+            println!("fixture round-trip ok");
+        }
+        return Ok(());
+    }
+    if let Some(f) = file {
+        tracing::warn!(?f, "law compile: not yet implemented (Phase 4)");
+    } else {
+        eprintln!("law-compile: pass --file or --schema");
+    }
     Ok(())
 }
 

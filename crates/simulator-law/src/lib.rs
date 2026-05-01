@@ -19,3 +19,10 @@ pub mod system;
 
 pub use registry::{LawHandle, LawId, LawRegistry};
 pub use system::{law_dispatcher_system, register_law_dispatcher, Cadence};
+
+/// Return the JSON Schema for `IgStatement` as a pretty-printed string.
+/// Useful for `xtask law schema` and for constraining XGrammar decoding.
+pub fn ig2_json_schema() -> String {
+    let schema = schemars::schema_for!(ig2::IgStatement);
+    serde_json::to_string_pretty(&schema).expect("schema serialization is infallible")
+}

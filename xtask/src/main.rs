@@ -34,7 +34,13 @@ enum Cmd {
     #[command(subcommand)]
     Llm(LlmCmd),
     /// Standalone NL→IG→DSL→Cranelift dry run
-    Law { file: String },
+    Law {
+        /// .ugscat or .ig2.json file to compile (dry run).
+        file: Option<String>,
+        /// Emit the IG 2.0 JSON Schema to data/grammars/ig2_schema.json.
+        #[arg(long)]
+        schema: bool,
+    },
     /// V-Dem dataset utilities
     #[command(subcommand)]
     Vdem(VdemCmd),
@@ -64,9 +70,17 @@ fn main() -> ExitCode {
             eprintln!("TODO: pull model {model}");
             Ok(())
         }
-        Cmd::Law { file } => {
-            eprintln!("TODO: compile law {file}");
-            Ok(())
+        Cmd::Law { file, schema } => {
+            if schema {
+                // Delegate to the CLI which links simulator-law.
+                run_cargo(&["run", "-p", "simulator-cli", "--", "law-compile", "--schema"])
+            } else if let Some(f) = file {
+                eprintln!("TODO: compile law {f}");
+                Ok(())
+            } else {
+                eprintln!("law: pass a file or --schema");
+                Ok(())
+            }
         }
         Cmd::Vdem(VdemCmd::Ingest) => stub("vdem ingest"),
     };

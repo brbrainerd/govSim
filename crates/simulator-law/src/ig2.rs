@@ -5,16 +5,17 @@
 //! The full IG2 includes nested scopes, mixed deontics, polyADICOs, etc.,
 //! which we'll add as the LLM extractor (Phase 3) starts producing them.
 
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum IgStatement {
     Regulative(RegulativeStmt),
     Constitutive(ConstitutiveStmt),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct RegulativeStmt {
     /// Attribute (A): the actor.
     pub attribute: ActorRef,
@@ -53,7 +54,7 @@ pub struct RegulativeStmt {
 /// these inside an XGrammar-constrained JSON envelope; for now hand-authors
 /// can write them directly. Adding a variant here means: (a) the parser
 /// accepts it, (b) the lowering pass must learn to compile it.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Computation {
     /// Piecewise-linear bracketed rate applied to a basis (e.g. annual
@@ -73,14 +74,14 @@ pub enum Computation {
     },
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
 pub struct TaxBracket {
     pub floor: f64,
     pub ceil: Option<f64>, // None = unbounded top bracket
     pub rate: f64,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AmountBasis {
     /// Citizen's daily Income × 360 → annualized.
@@ -89,11 +90,11 @@ pub enum AmountBasis {
     Wealth,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum LowerCadence { Monthly, Quarterly, Yearly }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ConstitutiveStmt {
     pub constituted_entity: String,
     #[serde(default)]
@@ -107,15 +108,15 @@ pub struct ConstitutiveStmt {
     pub or_else: Option<Box<IgStatement>>,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Deontic { Must, MustNot, May, Should }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Modal { Must, MustNot, May, Should }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ActorRef {
     /// Class name (e.g. "individual", "treasury", "legislator").
     pub class: String,
@@ -123,20 +124,20 @@ pub struct ActorRef {
     pub qualifier: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ObjectRef {
     pub class: String,
     #[serde(default)]
     pub qualifier: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Predicate {
     /// Free-text predicate body (e.g. "annual income exceeds 12000 USD").
     pub text: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Condition {
     /// Open-text state predicate, lowered to a DSL boolean expression.

@@ -12,6 +12,7 @@ simulator-types  = { workspace = true }
 bevy_ecs         = { workspace = true }
 serde            = { workspace = true }
 serde_json       = { workspace = true }
+schemars         = { workspace = true }
 thiserror        = { workspace = true }
 tracing          = { workspace = true }
 fixed            = { workspace = true }

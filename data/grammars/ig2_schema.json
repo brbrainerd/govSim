@@ -1,0 +1,833 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IgStatement",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "aim",
+        "attribute",
+        "kind"
+      ],
+      "properties": {
+        "activation_conditions": {
+          "description": "Activation conditions (Cac).",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Condition"
+          }
+        },
+        "aim": {
+          "description": "Aim (I): the verb.",
+          "type": "string"
+        },
+        "attribute": {
+          "description": "Attribute (A): the actor.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ActorRef"
+            }
+          ]
+        },
+        "attribute_property": {
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Predicate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "computation": {
+          "description": "Structured computation. Filled in by the LLM extractor (Phase 3) or by hand authors. The free-text properties above remain authoritative for human review; the lowering pass requires this structured form.",
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Computation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "deontic": {
+          "description": "Deontic (D).",
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Deontic"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "direct_object": {
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ObjectRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "direct_object_property": {
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Predicate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "execution_constraints": {
+          "description": "Execution constraints (Cex).",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Condition"
+          }
+        },
+        "indirect_object": {
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ObjectRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "indirect_object_property": {
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Predicate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "regulative"
+          ]
+        },
+        "or_else": {
+          "description": "Consequence (O): or-else clause.",
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/IgStatement"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "constituted_entity",
+        "constitutive_function",
+        "kind"
+      ],
+      "properties": {
+        "constituted_entity": {
+          "type": "string"
+        },
+        "constituting_properties": {
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Predicate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "constitutive_function": {
+          "type": "string"
+        },
+        "context": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Condition"
+          }
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "constitutive"
+          ]
+        },
+        "modal": {
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Modal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "or_else": {
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/IgStatement"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "ActorRef": {
+      "type": "object",
+      "required": [
+        "class"
+      ],
+      "properties": {
+        "class": {
+          "description": "Class name (e.g. \"individual\", \"treasury\", \"legislator\").",
+          "type": "string"
+        },
+        "qualifier": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "AmountBasis": {
+      "oneOf": [
+        {
+          "description": "Citizen's daily Income × 360 → annualized.",
+          "type": "string",
+          "enum": [
+            "annual_income"
+          ]
+        },
+        {
+          "description": "Citizen's Wealth (point-in-time).",
+          "type": "string",
+          "enum": [
+            "wealth"
+          ]
+        }
+      ]
+    },
+    "Computation": {
+      "description": "Structured computation payloads. The LLM extractor will emit one of these inside an XGrammar-constrained JSON envelope; for now hand-authors can write them directly. Adding a variant here means: (a) the parser accepts it, (b) the lowering pass must learn to compile it.",
+      "oneOf": [
+        {
+          "description": "Piecewise-linear bracketed rate applied to a basis (e.g. annual income). Brackets must be sorted by ascending `floor`.",
+          "type": "object",
+          "required": [
+            "basis",
+            "brackets",
+            "cadence",
+            "kind",
+            "threshold"
+          ],
+          "properties": {
+            "basis": {
+              "$ref": "#/definitions/AmountBasis"
+            },
+            "brackets": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TaxBracket"
+              }
+            },
+            "cadence": {
+              "$ref": "#/definitions/LowerCadence"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "bracketed_tax"
+              ]
+            },
+            "threshold": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        },
+        {
+          "description": "Single rate applied to the basis when above threshold.",
+          "type": "object",
+          "required": [
+            "basis",
+            "cadence",
+            "kind",
+            "rate",
+            "threshold"
+          ],
+          "properties": {
+            "basis": {
+              "$ref": "#/definitions/AmountBasis"
+            },
+            "cadence": {
+              "$ref": "#/definitions/LowerCadence"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "flat_rate"
+              ]
+            },
+            "rate": {
+              "type": "number",
+              "format": "double"
+            },
+            "threshold": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        }
+      ]
+    },
+    "Condition": {
+      "oneOf": [
+        {
+          "description": "Open-text state predicate, lowered to a DSL boolean expression.",
+          "type": "object",
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "state"
+              ]
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Procedural — a nested statement that must hold.",
+          "type": "object",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "aim",
+                "attribute",
+                "kind"
+              ],
+              "properties": {
+                "activation_conditions": {
+                  "description": "Activation conditions (Cac).",
+                  "default": [],
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Condition"
+                  }
+                },
+                "aim": {
+                  "description": "Aim (I): the verb.",
+                  "type": "string"
+                },
+                "attribute": {
+                  "description": "Attribute (A): the actor.",
+                  "allOf": [
+                    {
+                      "$ref": "#/definitions/ActorRef"
+                    }
+                  ]
+                },
+                "attribute_property": {
+                  "default": null,
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Predicate"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "computation": {
+                  "description": "Structured computation. Filled in by the LLM extractor (Phase 3) or by hand authors. The free-text properties above remain authoritative for human review; the lowering pass requires this structured form.",
+                  "default": null,
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Computation"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "deontic": {
+                  "description": "Deontic (D).",
+                  "default": null,
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Deontic"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "direct_object": {
+                  "default": null,
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/ObjectRef"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "direct_object_property": {
+                  "default": null,
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Predicate"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "execution_constraints": {
+                  "description": "Execution constraints (Cex).",
+                  "default": [],
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Condition"
+                  }
+                },
+                "indirect_object": {
+                  "default": null,
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/ObjectRef"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "indirect_object_property": {
+                  "default": null,
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Predicate"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "regulative"
+                  ]
+                },
+                "or_else": {
+                  "description": "Consequence (O): or-else clause.",
+                  "default": null,
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/IgStatement"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "constituted_entity",
+                "constitutive_function",
+                "kind"
+              ],
+              "properties": {
+                "constituted_entity": {
+                  "type": "string"
+                },
+                "constituting_properties": {
+                  "default": null,
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Predicate"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "constitutive_function": {
+                  "type": "string"
+                },
+                "context": {
+                  "default": [],
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Condition"
+                  }
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "constitutive"
+                  ]
+                },
+                "modal": {
+                  "default": null,
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Modal"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "or_else": {
+                  "default": null,
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/IgStatement"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "procedural"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Deontic": {
+      "type": "string",
+      "enum": [
+        "must",
+        "must_not",
+        "may",
+        "should"
+      ]
+    },
+    "IgStatement": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "aim",
+            "attribute",
+            "kind"
+          ],
+          "properties": {
+            "activation_conditions": {
+              "description": "Activation conditions (Cac).",
+              "default": [],
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Condition"
+              }
+            },
+            "aim": {
+              "description": "Aim (I): the verb.",
+              "type": "string"
+            },
+            "attribute": {
+              "description": "Attribute (A): the actor.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/ActorRef"
+                }
+              ]
+            },
+            "attribute_property": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Predicate"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "computation": {
+              "description": "Structured computation. Filled in by the LLM extractor (Phase 3) or by hand authors. The free-text properties above remain authoritative for human review; the lowering pass requires this structured form.",
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Computation"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "deontic": {
+              "description": "Deontic (D).",
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Deontic"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "direct_object": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ObjectRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "direct_object_property": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Predicate"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "execution_constraints": {
+              "description": "Execution constraints (Cex).",
+              "default": [],
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Condition"
+              }
+            },
+            "indirect_object": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ObjectRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "indirect_object_property": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Predicate"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "regulative"
+              ]
+            },
+            "or_else": {
+              "description": "Consequence (O): or-else clause.",
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/IgStatement"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "constituted_entity",
+            "constitutive_function",
+            "kind"
+          ],
+          "properties": {
+            "constituted_entity": {
+              "type": "string"
+            },
+            "constituting_properties": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Predicate"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "constitutive_function": {
+              "type": "string"
+            },
+            "context": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Condition"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "constitutive"
+              ]
+            },
+            "modal": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Modal"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "or_else": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/IgStatement"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "LowerCadence": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "quarterly",
+        "yearly"
+      ]
+    },
+    "Modal": {
+      "type": "string",
+      "enum": [
+        "must",
+        "must_not",
+        "may",
+        "should"
+      ]
+    },
+    "ObjectRef": {
+      "type": "object",
+      "required": [
+        "class"
+      ],
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "qualifier": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Predicate": {
+      "type": "object",
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "description": "Free-text predicate body (e.g. \"annual income exceeds 12000 USD\").",
+          "type": "string"
+        }
+      }
+    },
+    "TaxBracket": {
+      "type": "object",
+      "required": [
+        "floor",
+        "rate"
+      ],
+      "properties": {
+        "ceil": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "floor": {
+          "type": "number",
+          "format": "double"
+        },
+        "rate": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}
