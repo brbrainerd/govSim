@@ -1144,4 +1144,137 @@ mod tests {
             "treasury should be ~0 after spending all $5 000, got {bal:.2}"
         );
     }
+
+    /// Verifies that `pollution_stock` is injected into EvalCtx and is readable
+    /// by DSL law expressions. A benefit law conditioned on `pollution_stock > 2.0`
+    /// should disburse when pollution is high and pay nothing when pollution is low.
+    #[test]
+    fn dsl_reads_pollution_stock_from_evalctx() {
+        use crate::dsl::ast::{BinOp, DefaultExpr, Expr, Item, ParamDecl, Program, Scope, Type};
+        use crate::registry::{LawEffect, LawId};
+        use crate::system::Cadence;
+        use simulator_core::{MacroIndicators, PollutionStock};
+        use std::sync::Arc;
+
+        // Build: `def amount : money = if pollution_stock > 2.0 then 500.0 else 0.0`
+        // `pollution_stock` is injected as Value::Rate by make_dispatch_ctx.
+        let body = DefaultExpr {
+            base: Expr::If {
+                cond: Box::new(Expr::BinOp {
+                    op: BinOp::Gt,
+                    lhs: Box::new(Expr::Ident("pollution_stock".into())),
+                    rhs: Box::new(Expr::LitRate(2.0)),
+                }),
+                then_: Box::new(Expr::LitMoney(500.0)),
+                else_: Box::new(Expr::LitMoney(0.0)),
+            },
+            exceptions: vec![],
+        };
+        let program = Arc::new(Program {
+            scopes: vec![Scope {
+                name: "PollutionBenefit".into(),
+                params: vec![ParamDecl { name: "citizen".into(), ty: Type::Money }],
+                items: vec![Item::Definition {
+                    name: "amount".into(),
+                    ty: Type::Money,
+                    body,
+                }],
+            }],
+        });
+        let handle = LawHandle {
+            id: LawId(0), version: 1,
+            program,
+            cadence: Cadence::Yearly,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: LawEffect::PerCitizenBenefit {
+                scope: "PollutionBenefit",
+                amount_def: "amount",
+            },
+        };
+
+        // --- High-pollution sim: stock = 3.0 > 2.0 → should pay $500/citizen/year ---
+        let mut sim_dirty = Sim::new([57u8; 32]);
+        register_law_dispatcher(&mut sim_dirty);
+        for i in 0..4 { spawn_citizen(&mut sim_dirty.world, i, 100); }
+        sim_dirty.world.resource_mut::<PollutionStock>().stock = 3.0;
+        // Mirror into MacroIndicators so make_dispatch_ctx sees it.
+        sim_dirty.world.resource_mut::<MacroIndicators>().pollution_stock = 3.0;
+        let r1 = sim_dirty.world.resource::<LawRegistry>().clone();
+        r1.enact(handle.clone());
+        for _ in 0..=360 { sim_dirty.step(); }
+        let exp_dirty: f64 = sim_dirty.world.resource::<GovernmentLedger>().expenditure.to_num();
+        // 4 citizens × $500 = $2 000.
+        assert!(
+            (exp_dirty - 2_000.0).abs() < 1.0,
+            "high-pollution: expected ~$2 000 disbursed, got ${exp_dirty:.2}"
+        );
+
+        // --- Low-pollution sim: stock = 1.0 ≤ 2.0 → should pay $0 ---
+        let mut sim_clean = Sim::new([58u8; 32]);
+        register_law_dispatcher(&mut sim_clean);
+        for i in 0..4 { spawn_citizen(&mut sim_clean.world, i, 100); }
+        sim_clean.world.resource_mut::<PollutionStock>().stock = 1.0;
+        sim_clean.world.resource_mut::<MacroIndicators>().pollution_stock = 1.0;
+        let r2 = sim_clean.world.resource::<LawRegistry>().clone();
+        r2.enact(handle);
+        for _ in 0..=360 { sim_clean.step(); }
+        let exp_clean: f64 = sim_clean.world.resource::<GovernmentLedger>().expenditure.to_num();
+        assert!(
+            exp_clean.abs() < 1.0,
+            "low-pollution: expected ~$0 disbursed, got ${exp_clean:.2}"
+        );
+    }
+
+    /// Verifies that `crisis_link_system` propagates `CrisisState.cost_multiplier`
+    /// into `LawRegistry` so that benefit-law repeals accumulate less legitimacy
+    /// debt during an active crisis than in peacetime.
+    #[test]
+    fn crisis_link_reduces_repeal_debt_during_active_crisis() {
+        use simulator_core::{CrisisKind, CrisisState};
+
+        // Helper: enact a benefit law and return (registry clone, law id).
+        let setup = |sim: &mut Sim| {
+            let h = make_means_tested_benefit();
+            let registry = sim.world.resource::<LawRegistry>().clone();
+            let id = registry.enact(h);
+            (registry, id)
+        };
+
+        // --- Peacetime repeal (cost_multiplier = 1.0) ---
+        let mut sim_peace = Sim::new([59u8; 32]);
+        register_law_dispatcher(&mut sim_peace);
+        let (reg_peace, id_peace) = setup(&mut sim_peace);
+        sim_peace.step(); // crisis_link fires: multiplier = 1.0 (no crisis)
+        reg_peace.repeal(id_peace, 1);
+        let debt_peace = reg_peace.drain_repeal_debt();
+
+        // --- Crisis repeal (cost_multiplier = 0.5 — War cost multiplier) ---
+        let mut sim_war = Sim::new([59u8; 32]);
+        register_law_dispatcher(&mut sim_war);
+        // Inject active crisis with cost_multiplier = 0.5 before the first step.
+        {
+            let mut cs = sim_war.world.resource_mut::<CrisisState>();
+            cs.kind             = CrisisKind::War;
+            cs.remaining_ticks  = 360;
+            cs.cost_multiplier  = 0.50;
+        }
+        let (reg_war, id_war) = setup(&mut sim_war);
+        sim_war.step(); // crisis_link fires: multiplier = 0.5 propagated to registry
+        reg_war.repeal(id_war, 1);
+        let debt_war = reg_war.drain_repeal_debt();
+
+        assert!(
+            (debt_peace - 0.10).abs() < 0.001,
+            "peacetime repeal should incur 0.10 debt, got {debt_peace:.4}"
+        );
+        assert!(
+            (debt_war - 0.05).abs() < 0.001,
+            "crisis repeal should incur 0.05 debt (0.10 × 0.5), got {debt_war:.4}"
+        );
+        assert!(
+            debt_war < debt_peace,
+            "crisis should reduce repeal debt vs peacetime"
+        );
+    }
 }

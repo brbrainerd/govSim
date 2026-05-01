@@ -307,6 +307,28 @@ mod tests {
     }
 
     #[test]
+    fn scenario_yaml_files_load_and_validate() {
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../scenarios");
+
+        let pre = Scenario::load(&root.join("pre_rights_era.yaml"))
+            .expect("pre_rights_era.yaml should load");
+        assert_eq!(pre.name, "pre_rights_era");
+        assert_eq!(pre.initial_rights, Some(0), "pre-rights era starts with no rights");
+        assert!(pre.population.citizens > 0, "must have citizens");
+        assert!(pre.initial_pollution.unwrap_or(0.0) > 0.0, "pre-rights era has pollution");
+        assert!(pre.initial_legitimacy_debt.unwrap_or(0.0) > 0.0, "pre-rights era has debt");
+
+        let modern = Scenario::load(&root.join("modern_democracy.yaml"))
+            .expect("modern_democracy.yaml should load");
+        assert_eq!(modern.name, "modern_democracy");
+        // 0x1FF = 511 = all 9 rights
+        assert_eq!(modern.initial_rights, Some(511), "modern democracy grants all rights");
+        assert!(modern.population.citizens > 0);
+        assert!(modern.initial_legitimacy_debt.unwrap_or(1.0) < 0.1, "modern democracy has low debt");
+    }
+
+    #[test]
     fn snapshot_replay_round_trip_deterministic() {
         // Run to tick 60, snapshot, continue both runs to tick 90.
         // The continuous run and the restored run must produce identical state hashes.
