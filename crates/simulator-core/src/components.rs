@@ -77,3 +77,10 @@ bitflags! {
 
 #[derive(Component, Copy, Clone, Debug, Default)]
 pub struct AuditFlags(pub AuditFlagBits);
+
+// --- Behavioral ---------------------------------------------------------
+
+/// Fraction of income a citizen attempts to hide from tax authorities [0, 1].
+/// Drawn at spawn; zero for honest citizens. Persistent across ticks.
+#[derive(Component, Copy, Clone, Debug, Default)]
+pub struct EvasionPropensity(pub f32);

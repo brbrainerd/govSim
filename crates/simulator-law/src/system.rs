@@ -8,16 +8,20 @@ use std::collections::HashMap;
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    components::{Income, LegalStatusFlags, LegalStatuses, Wealth},
-    GovernmentLedger, Phase, Sim, SimClock, Treasury,
+    components::{
+        AuditFlagBits, AuditFlags, Citizen, EvasionPropensity,
+        Income, LegalStatusFlags, LegalStatuses, Wealth,
+    },
+    GovernmentLedger, Phase, Sim, SimClock, SimRng, Treasury,
 };
+use rand::Rng;
 use simulator_types::Money;
 
 use crate::ig2::AmountBasis;
 
 use crate::dsl::ast::Item;
 use crate::eval::{eval_default, EvalCtx, Value};
-use crate::registry::{LawEffect, LawHandle, LawRegistry};
+use crate::registry::{LawEffect, LawRegistry};
 
 #[derive(Copy, Clone, Debug)]
 pub enum Cadence {
@@ -41,130 +45,120 @@ impl Cadence {
     }
 }
 
+#[allow(clippy::type_complexity)]
 pub fn law_dispatcher_system(
     clock: Res<SimClock>,
+    rng_res: Res<SimRng>,
     registry: Res<LawRegistry>,
     mut treasury: ResMut<Treasury>,
     mut ledger: ResMut<GovernmentLedger>,
-    mut q: Query<(&Income, &mut Wealth, &mut LegalStatuses)>,
+    mut q: Query<(
+        Option<&Citizen>,
+        &Income,
+        &mut Wealth,
+        &mut LegalStatuses,
+        Option<&AuditFlags>,
+        Option<&EvasionPropensity>,
+    )>,
 ) {
     let active = registry.snapshot_active(clock.tick);
     if active.is_empty() { return; }
 
+    let tick = clock.tick;
     for h in &active {
-        if !h.cadence.fires_at(clock.tick) { continue; }
+        if !h.cadence.fires_at(tick) { continue; }
+
+        // Inline the iteration for each effect to avoid Bevy Query lifetime issues
+        // when passing &mut Query across function boundaries.
         match h.effect {
             LawEffect::PerCitizenIncomeTax { scope, owed_def } => {
-                let collected = run_income_tax_law(h, scope, owed_def, &mut treasury, &mut q);
+                let Some(body) = find_body(&h.program, scope, owed_def) else { continue; };
+                let mut ctx = make_clock_ctx(tick);
+                let mut collected = Money::from_num(0);
+                for (_, income, mut wealth, _, _, _) in q.iter_mut() {
+                    let annual = income.0 * Money::from_num(360);
+                    ctx.field_bindings.insert(
+                        ("citizen".into(), "income".into()), Value::Money(annual),
+                    );
+                    if let Value::Money(owed) = eval_default(body, &ctx) {
+                        wealth.0 -= owed;
+                        collected += owed;
+                    }
+                }
+                treasury.balance += collected;
                 ledger.revenue += collected;
             }
             LawEffect::PerCitizenBenefit { scope, amount_def } => {
-                let disbursed = run_benefit_law(h, scope, amount_def, &mut treasury, &mut q);
+                let Some(body) = find_body(&h.program, scope, amount_def) else { continue; };
+                let mut ctx = make_clock_ctx(tick);
+                let mut disbursed = Money::from_num(0);
+                for (_, income, mut wealth, _, _, _) in q.iter_mut() {
+                    let annual = income.0 * Money::from_num(360);
+                    ctx.field_bindings.insert(
+                        ("citizen".into(), "income".into()), Value::Money(annual),
+                    );
+                    if let Value::Money(paid) = eval_default(body, &ctx) {
+                        wealth.0 += paid;
+                        disbursed += paid;
+                    }
+                }
+                treasury.balance -= disbursed;
                 ledger.expenditure += disbursed;
             }
             LawEffect::RegistrationMarker { basis, threshold } => {
-                run_registration_law(basis, threshold, &mut q);
+                for (_, income, wealth, mut legal, _, _) in q.iter_mut() {
+                    let value: f64 = match basis {
+                        AmountBasis::AnnualIncome => income.0.to_num::<f64>() * 360.0,
+                        AmountBasis::Wealth => wealth.0.to_num::<f64>(),
+                    };
+                    if value < threshold {
+                        legal.0.insert(LegalStatusFlags::REGISTERED_VOTER);
+                    } else {
+                        legal.0.remove(LegalStatusFlags::REGISTERED_VOTER);
+                    }
+                }
+            }
+            LawEffect::Audit { selection_prob, penalty_rate } => {
+                let label = format!("audit_{}", h.id.0);
+                let mut collected = Money::from_num(0);
+                for (citizen_opt, income, mut wealth, _, audit_opt, evasion_opt) in q.iter_mut() {
+                    let (Some(citizen), Some(audit), Some(evasion)) =
+                        (citizen_opt, audit_opt, evasion_opt) else { continue; };
+                    if !audit.0.contains(AuditFlagBits::FLAGGED_INCOME) { continue; }
+                    if evasion.0 == 0.0 { continue; }
+                    let mut rng = rng_res.derive_citizen(&label, tick, citizen.0.0);
+                    if rng.random::<f64>() >= selection_prob { continue; }
+                    let annual = income.0 * Money::from_num(360);
+                    let penalty = annual * Money::from_num(evasion.0) * Money::from_num(penalty_rate);
+                    wealth.0 -= penalty;
+                    collected += penalty;
+                }
+                treasury.balance += collected;
+                ledger.revenue += collected;
             }
         }
     }
 }
 
-fn run_income_tax_law(
-    h: &LawHandle,
-    scope_name: &str,
-    owed_name: &str,
-    treasury: &mut Treasury,
-    q: &mut Query<(&Income, &mut Wealth, &mut LegalStatuses)>,
-) -> Money {
-    // Find scope + the named definition body once per dispatch.
-    let scope = match h.program.scopes.iter().find(|s| s.name == scope_name) {
-        Some(s) => s, None => return Money::from_num(0),
-    };
-    let body = scope.items.iter().find_map(|it| {
-        let Item::Definition { name, body, .. } = it;
-        (name == owed_name).then_some(body)
-    });
-    let body = match body { Some(b) => b, None => return Money::from_num(0) };
-
-    let mut ctx = EvalCtx {
-        bindings: HashMap::new(),
-        field_bindings: HashMap::new(),
-    };
-
-    let mut collected = Money::from_num(0);
-    for (income, mut wealth, _) in q.iter_mut() {
-        // Scale daily income to annual for the bracketed law (matches §6.6).
-        let annual = income.0 * Money::from_num(360);
-        ctx.field_bindings.insert(
-            ("citizen".into(), "income".into()),
-            Value::Money(annual),
-        );
-        let owed = match eval_default(body, &ctx) {
-            Value::Money(m) => m,
-            _ => continue,
-        };
-        wealth.0 -= owed;
-        collected += owed;
-    }
-    treasury.balance += collected;
-    collected
+fn make_clock_ctx(tick: u64) -> EvalCtx {
+    let mut bindings = HashMap::new();
+    bindings.insert("tick".into(),    Value::Int(tick as i64));
+    bindings.insert("year".into(),    Value::Int((tick / 360) as i64));
+    bindings.insert("quarter".into(), Value::Int(((tick / 90) % 4) as i64));
+    bindings.insert("month".into(),   Value::Int(((tick / 30) % 12) as i64));
+    EvalCtx { bindings, field_bindings: HashMap::new() }
 }
 
-fn run_benefit_law(
-    h: &LawHandle,
+fn find_body<'p>(
+    program: &'p crate::dsl::ast::Program,
     scope_name: &str,
-    amount_name: &str,
-    treasury: &mut Treasury,
-    q: &mut Query<(&Income, &mut Wealth, &mut LegalStatuses)>,
-) -> Money {
-    let scope = match h.program.scopes.iter().find(|s| s.name == scope_name) {
-        Some(s) => s, None => return Money::from_num(0),
-    };
-    let body = scope.items.iter().find_map(|it| {
+    def_name: &str,
+) -> Option<&'p crate::dsl::ast::DefaultExpr> {
+    let scope = program.scopes.iter().find(|s| s.name == scope_name)?;
+    scope.items.iter().find_map(|it| {
         let Item::Definition { name, body, .. } = it;
-        (name == amount_name).then_some(body)
-    });
-    let body = match body { Some(b) => b, None => return Money::from_num(0) };
-
-    let mut ctx = EvalCtx {
-        bindings: HashMap::new(),
-        field_bindings: HashMap::new(),
-    };
-
-    let mut disbursed = Money::from_num(0);
-    for (income, mut wealth, _) in q.iter_mut() {
-        let annual = income.0 * Money::from_num(360);
-        ctx.field_bindings.insert(
-            ("citizen".into(), "income".into()),
-            Value::Money(annual),
-        );
-        let paid = match eval_default(body, &ctx) {
-            Value::Money(m) => m,
-            _ => continue,
-        };
-        wealth.0 += paid;
-        disbursed += paid;
-    }
-    treasury.balance -= disbursed;
-    disbursed
-}
-
-fn run_registration_law(
-    basis: AmountBasis,
-    threshold: f64,
-    q: &mut Query<(&Income, &mut Wealth, &mut LegalStatuses)>,
-) {
-    for (income, wealth, mut legal) in q.iter_mut() {
-        let value: f64 = match basis {
-            AmountBasis::AnnualIncome => income.0.to_num::<f64>() * 360.0,
-            AmountBasis::Wealth => wealth.0.to_num::<f64>(),
-        };
-        if value < threshold {
-            legal.0.insert(LegalStatusFlags::REGISTERED_VOTER);
-        } else {
-            legal.0.remove(LegalStatusFlags::REGISTERED_VOTER);
-        }
-    }
+        (name == def_name).then_some(body)
+    })
 }
 
 pub fn register_law_dispatcher(sim: &mut Sim) {
@@ -181,17 +175,33 @@ mod tests {
     };
     use crate::ig2::IgStatement;
     use crate::lower::lower_statement;
-    use simulator_core::components::{Income, LegalStatuses, Wealth};
+    use simulator_core::components::{
+        AuditFlagBits, AuditFlags, Citizen, EvasionPropensity, Income, LegalStatuses, Wealth,
+    };
     use simulator_core::Sim;
-    use simulator_types::Money;
+    use simulator_types::{CitizenId, Money};
     use std::sync::Arc;
     use crate::registry::{LawHandle, LawId};
 
-    fn spawn_citizen(world: &mut bevy_ecs::world::World, monthly_income: i64) {
+    fn spawn_citizen(world: &mut bevy_ecs::world::World, id: u64, monthly_income: i64) {
         world.spawn((
+            Citizen(CitizenId(id)),
             Income(Money::from_num(monthly_income)),
             Wealth(Money::from_num(0i64)),
             LegalStatuses::default(),
+            AuditFlags::default(),
+            EvasionPropensity(0.0),
+        ));
+    }
+
+    fn spawn_corrupt_citizen(world: &mut bevy_ecs::world::World, id: u64, monthly_income: i64, evasion: f32) {
+        world.spawn((
+            Citizen(CitizenId(id)),
+            Income(Money::from_num(monthly_income)),
+            Wealth(Money::from_num(100_000i64)),
+            LegalStatuses::default(),
+            AuditFlags(AuditFlagBits::FLAGGED_INCOME),
+            EvasionPropensity(evasion),
         ));
     }
 
@@ -237,9 +247,9 @@ mod tests {
         register_law_dispatcher(&mut sim);
 
         // 5 poor citizens: $50/month → $18 000/year < $20 000 ceiling → eligible.
-        for _ in 0..5 { spawn_citizen(&mut sim.world, 50); }
+        for i in 0..5 { spawn_citizen(&mut sim.world, i, 50); }
         // 5 rich citizens: $1 000/month → $360 000/year > $20 000 ceiling → ineligible.
-        for _ in 0..5 { spawn_citizen(&mut sim.world, 1_000); }
+        for i in 5..10 { spawn_citizen(&mut sim.world, i, 1_000); }
 
         let registry = sim.world.resource::<LawRegistry>().clone();
         registry.enact(make_means_tested_benefit());
@@ -269,7 +279,7 @@ mod tests {
         register_law_dispatcher(&mut sim);
 
         // 10 citizens with $500/month → $180 000/year (above the tax threshold).
-        for _ in 0..10 { spawn_citizen(&mut sim.world, 500); }
+        for i in 0..10 { spawn_citizen(&mut sim.world, i, 500); }
 
         let stmt = IgStatement::Regulative(RegulativeStmt {
             attribute: ActorRef { class: "individual".into(), qualifier: None },
@@ -326,9 +336,9 @@ mod tests {
         register_law_dispatcher(&mut sim);
 
         // income $40/month → $14 400/year < $20 000 threshold → eligible
-        spawn_citizen(&mut sim.world, 40);
+        spawn_citizen(&mut sim.world, 0, 40);
         // income $200/month → $72 000/year > $20 000 threshold → ineligible
-        spawn_citizen(&mut sim.world, 200);
+        spawn_citizen(&mut sim.world, 1, 200);
 
         let stmt = crate::ig2::IgStatement::Regulative(crate::ig2::RegulativeStmt {
             attribute: crate::ig2::ActorRef { class: "individual".into(), qualifier: None },
@@ -382,5 +392,63 @@ mod tests {
             });
         assert_eq!(registered, 1);
         assert_eq!(unregistered, 1);
+    }
+
+    /// Audit law: 100% selection rate catches all flagged evaders; honest
+    /// citizens are unaffected; revenue accrues to Treasury.
+    #[test]
+    fn audit_law_penalizes_evaders_only() {
+        use crate::ig2::{Deontic, LowerCadence};
+
+        let mut sim = Sim::new([23u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        // 3 honest citizens — should be unaffected.
+        for i in 0..3 { spawn_citizen(&mut sim.world, i, 500); }
+        // 2 corrupt citizens: $1 000/month, hide 20% → evaded = $72 000/yr, penalty_rate=1.0 → penalty = $72 000
+        for i in 3..5 { spawn_corrupt_citizen(&mut sim.world, i, 1_000, 0.2); }
+
+        let stmt = IgStatement::Regulative(RegulativeStmt {
+            attribute: ActorRef { class: "individual".into(), qualifier: None },
+            attribute_property: None,
+            deontic: Some(Deontic::Must),
+            aim: "pay".into(),
+            direct_object: None, direct_object_property: None,
+            indirect_object: None, indirect_object_property: None,
+            activation_conditions: vec![], execution_constraints: vec![],
+            or_else: None,
+            computation: Some(crate::ig2::Computation::AuditEnforcement {
+                selection_prob: 1.0, // always selected for deterministic test
+                penalty_rate: 1.0,   // penalty = 100% of evaded income
+                cadence: LowerCadence::Yearly,
+            }),
+        });
+        let lowered = crate::lower::lower_statement(&stmt).expect("lowering");
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(LawHandle {
+            id: LawId(0), version: 1,
+            program: Arc::new(lowered.program),
+            cadence: lowered.cadence,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: lowered.effect,
+        });
+
+        for _ in 0..=360 { sim.step(); }
+
+        // 2 evaders × $1000/mo × 360 × 20% evasion × 100% penalty_rate = $144 000
+        let expected = 2.0 * 1000.0 * 360.0 * 0.2 * 1.0;
+        let treasury = sim.world.resource::<Treasury>();
+        let bal: f64 = treasury.balance.to_num();
+        assert!(
+            (bal - expected).abs() < 1.0,
+            "expected treasury ~${expected:.0}, got ${bal:.2}"
+        );
+        let ledger = sim.world.resource::<GovernmentLedger>();
+        let rev: f64 = ledger.revenue.to_num();
+        assert!(
+            (rev - expected).abs() < 1.0,
+            "expected revenue ~${expected:.0}, got ${rev:.2}"
+        );
     }
 }

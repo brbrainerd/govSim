@@ -55,6 +55,9 @@ pub fn lower_statement(stmt: &IgStatement) -> Result<Lowered, LowerError> {
         Computation::ConditionalTransfer { eligibility_basis, ceiling, floor, amount, cadence } => {
             lower_conditional_transfer(*eligibility_basis, *ceiling, *floor, *amount, *cadence)
         }
+        Computation::AuditEnforcement { selection_prob, penalty_rate, cadence } => {
+            lower_audit(*selection_prob, *penalty_rate, *cadence)
+        }
     }
 }
 
@@ -306,6 +309,22 @@ fn lower_conditional_transfer(
             scope: "ConditionalTransfer",
             amount_def: "transfer_amount",
         },
+        cadence: cadence_to_runtime(cadence),
+    })
+}
+
+/// Audit enforcement: the DSL scope is a no-op placeholder. The actual
+/// selection + penalty logic lives in the dispatcher via `LawEffect::Audit`.
+fn lower_audit(selection_prob: f64, penalty_rate: f64, cadence: LowerCadence) -> Result<Lowered, LowerError> {
+    let body = DefaultExpr { base: Expr::LitMoney(0.0), exceptions: vec![] };
+    let scope = Scope {
+        name: "AuditEnforcement".into(),
+        params: vec![ParamDecl { name: "citizen".into(), ty: Type::Money }],
+        items: vec![Item::Definition { name: "noop".into(), ty: Type::Money, body }],
+    };
+    Ok(Lowered {
+        program: Program { scopes: vec![scope] },
+        effect: LawEffect::Audit { selection_prob, penalty_rate },
         cadence: cadence_to_runtime(cadence),
     })
 }

@@ -52,6 +52,15 @@ pub enum LawEffect {
         basis: AmountBasis,
         threshold: f64,
     },
+    /// Tax-enforcement audit: selects citizens by probability, penalizes evaders.
+    /// Evaders are identified by `AuditFlagBits::FLAGGED_INCOME` combined with
+    /// non-zero `EvasionPropensity`. Penalty = annual_income × evasion × penalty_rate.
+    Audit {
+        /// Fraction of citizens audited per firing period.
+        selection_prob: f64,
+        /// Penalty coefficient on detected evaded income.
+        penalty_rate: f64,
+    },
 }
 
 #[derive(Resource, Default, Clone)]

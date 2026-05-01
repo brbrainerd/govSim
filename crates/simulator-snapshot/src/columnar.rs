@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use simulator_core::{
     MacroIndicators, SimClock, SimRng, Treasury,
     components::{
-        Age, ApprovalRating, AuditFlags, Citizen, EmploymentStatus, Health,
+        Age, ApprovalRating, AuditFlags, Citizen, EmploymentStatus, EvasionPropensity, Health,
         IdeologyVector, Income, LegalStatuses, Location, Productivity, Sex, Wealth,
     },
 };
@@ -24,7 +24,7 @@ use simulator_types::{CitizenId, Money, RegionId, Score};
 
 use crate::SnapshotError;
 
-const SNAPSHOT_VERSION: u32 = 4;
+const SNAPSHOT_VERSION: u32 = 5;
 
 #[derive(Serialize, Deserialize)]
 struct SnapshotHeader {
@@ -52,6 +52,7 @@ struct CitizenRow {
     legal_flags: u32,
     audit_flags: u32,
     approval: u32,  // Score bits
+    evasion_propensity: f32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -91,22 +92,24 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
             &Citizen, &Age, &Sex, &Location, &Health,
             &Income, &Wealth, &EmploymentStatus, &Productivity,
             &IdeologyVector, &LegalStatuses, &AuditFlags, &ApprovalRating,
+            &EvasionPropensity,
         )>()
         .iter(world)
-        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af, ar)| CitizenRow {
-            id:          c.0.0,
-            age:         a.0,
-            sex:         *s as u8,
-            region:      l.0.0,
-            health:      h.0.to_bits(),
-            income:      i.0.to_bits(),
-            wealth:      w.0.to_bits(),
-            employment:  employment_to_u8(e),
-            productivity: p.0.to_bits(),
-            ideology:    iv.0,
-            legal_flags: ls.0.bits(),
-            audit_flags: af.0.bits(),
-            approval:    ar.0.to_bits(),
+        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af, ar, ep)| CitizenRow {
+            id:                 c.0.0,
+            age:                a.0,
+            sex:                *s as u8,
+            region:             l.0.0,
+            health:             h.0.to_bits(),
+            income:             i.0.to_bits(),
+            wealth:             w.0.to_bits(),
+            employment:         employment_to_u8(e),
+            productivity:       p.0.to_bits(),
+            ideology:           iv.0,
+            legal_flags:        ls.0.bits(),
+            audit_flags:        af.0.bits(),
+            approval:           ar.0.to_bits(),
+            evasion_propensity: ep.0,
         })
         .collect();
 
@@ -240,6 +243,7 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<(u64, u64), Snaps
             ApprovalRating(Score::from_bits(r.approval)),
             LegalStatuses(LegalStatusFlags::from_bits_truncate(r.legal_flags)),
             AuditFlags(AuditFlagBits::from_bits_truncate(r.audit_flags)),
+            EvasionPropensity(r.evasion_propensity),
         ));
     }
 

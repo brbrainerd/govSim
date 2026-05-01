@@ -17,6 +17,7 @@ thiserror        = { workspace = true }
 tracing          = { workspace = true }
 fixed            = { workspace = true }
 parking_lot      = { workspace = true }
+rand             = { workspace = true }
 
 [features]
 # JIT and WASM backends are deferred behind features until the Phase-4

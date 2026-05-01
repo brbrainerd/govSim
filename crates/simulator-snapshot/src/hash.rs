@@ -8,8 +8,8 @@ use bevy_ecs::world::World;
 use blake3::Hasher;
 use simulator_core::{MacroIndicators, SimClock, Treasury};
 use simulator_core::components::{
-    Age, ApprovalRating, AuditFlags, Citizen, EmploymentStatus, Health, IdeologyVector, Income,
-    LegalStatuses, Location, Productivity, Sex, Wealth,
+    Age, ApprovalRating, AuditFlags, Citizen, EmploymentStatus, EvasionPropensity, Health,
+    IdeologyVector, Income, LegalStatuses, Location, Productivity, Sex, Wealth,
 };
 use simulator_types::CitizenId;
 
@@ -19,6 +19,7 @@ pub type StateHash = [u8; 32];
 type CitizenRow = (
     CitizenId, Age, Sex, Location, Health, Income, Wealth,
     EmploymentStatus, Productivity, IdeologyVector, LegalStatuses, AuditFlags, ApprovalRating,
+    EvasionPropensity,
 );
 
 /// Compute a deterministic hash of every citizen component + global resources.
@@ -42,10 +43,11 @@ pub fn state_hash(world: &mut World) -> StateHash {
             &LegalStatuses,
             &AuditFlags,
             &ApprovalRating,
+            &EvasionPropensity,
         )>()
         .iter(world)
-        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af, ar)| {
-            (c.0, *a, *s, *l, *h, *i, *w, *e, *p, *iv, *ls, *af, *ar)
+        .map(|(c, a, s, l, h, i, w, e, p, iv, ls, af, ar, ep)| {
+            (c.0, *a, *s, *l, *h, *i, *w, *e, *p, *iv, *ls, *af, *ar, *ep)
         })
         .collect();
 
@@ -53,7 +55,7 @@ pub fn state_hash(world: &mut World) -> StateHash {
 
     let mut hasher = Hasher::new();
 
-    for (id, age, sex, loc, health, income, wealth, emp, prod, ideology, legal, audit, approval) in
+    for (id, age, sex, loc, health, income, wealth, emp, prod, ideology, legal, audit, approval, evasion) in
         &citizens
     {
         hasher.update(&id.0.to_le_bytes());
@@ -73,6 +75,7 @@ pub fn state_hash(world: &mut World) -> StateHash {
         hasher.update(&legal.0.bits().to_le_bytes());
         hasher.update(&audit.0.bits().to_le_bytes());
         hasher.update(&approval.0.to_bits().to_le_bytes());
+        hasher.update(&evasion.0.to_bits().to_le_bytes());
     }
 
     // Mix in global resources.

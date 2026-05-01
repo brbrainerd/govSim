@@ -114,6 +114,16 @@ pub enum Computation {
         amount: f64,
         cadence: LowerCadence,
     },
+    /// Tax-enforcement audit: a fraction of citizens are audited each period.
+    /// Those flagged (AuditFlagBits::FLAGGED_INCOME) and selected pay a
+    /// penalty proportional to their evaded income.
+    AuditEnforcement {
+        /// Fraction of citizens selected for audit per firing period [0, 1].
+        selection_prob: f64,
+        /// Penalty as a fraction of annualized evaded income applied on detection.
+        penalty_rate: f64,
+        cadence: LowerCadence,
+    },
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]

@@ -8,8 +8,9 @@ use serde::{Deserialize, Serialize};
 
 use simulator_core::{
     components::{
-        Age, ApprovalRating, AuditFlags, Citizen, EmploymentStatus, Health, IdeologyVector,
-        Income, LegalStatusFlags, LegalStatuses, Location, Productivity, Sex, Wealth,
+        Age, ApprovalRating, AuditFlagBits, AuditFlags, Citizen, EmploymentStatus, EvasionPropensity,
+        Health, IdeologyVector, Income, LegalStatusFlags, LegalStatuses, Location, Productivity,
+        Sex, Wealth,
     },
     Sim,
 };
@@ -138,11 +139,18 @@ impl Scenario {
 
             let ideology = IdeologyVector(std::array::from_fn(|_| rng.random::<f32>() * 2.0 - 1.0));
 
-            // Corruption: flag a fraction of citizens for audit at spawn.
-            let audit = if corruption > 0.0 && rng.random::<f32>() < corruption {
-                AuditFlags(simulator_core::components::AuditFlagBits::FLAGGED_INCOME)
+            // Corruption: flag a fraction of citizens for audit at spawn;
+            // flagged citizens also carry a non-zero evasion propensity.
+            let flagged = corruption > 0.0 && rng.random::<f32>() < corruption;
+            let audit = if flagged {
+                AuditFlags(AuditFlagBits::FLAGGED_INCOME)
             } else {
                 AuditFlags::default()
+            };
+            let evasion = if flagged {
+                EvasionPropensity(rng.random::<f32>()) // uniform [0,1] of income hidden
+            } else {
+                EvasionPropensity(0.0)
             };
 
             // Legal status: minors cannot vote; adults are registered citizens.
@@ -166,6 +174,7 @@ impl Scenario {
                 ApprovalRating(Score::from_num(0.5_f32)),
                 legal,
                 audit,
+                evasion,
             ));
         }
     }
