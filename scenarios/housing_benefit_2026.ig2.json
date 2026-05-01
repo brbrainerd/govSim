@@ -1,0 +1,26 @@
+{
+  "kind": "regulative",
+  "attribute": { "class": "individual" },
+  "attribute_property": { "text": "annual income below 20000 USD" },
+  "deontic": "may",
+  "aim": "receive",
+  "direct_object": { "class": "housing_benefit" },
+  "direct_object_property": {
+    "text": "5000 USD per year, tapered to zero between 15000 and 20000 income"
+  },
+  "indirect_object": { "class": "treasury" },
+  "activation_conditions": [
+    { "kind": "state", "text": "annual income < 20000" }
+  ],
+  "execution_constraints": [
+    { "kind": "state", "text": "Treasury disburses annually" }
+  ],
+  "computation": {
+    "kind": "means_tested_benefit",
+    "basis": "annual_income",
+    "income_ceiling": 20000.0,
+    "taper_floor": 15000.0,
+    "amount": 5000.0,
+    "cadence": "yearly"
+  }
+}

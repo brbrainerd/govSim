@@ -308,6 +308,78 @@
               "format": "double"
             }
           }
+        },
+        {
+          "description": "Means-tested transfer payment. Citizens whose `basis` is below `income_ceiling` receive a flat `amount` each cadence period. The payment is reduced linearly from `amount` to zero between `taper_floor` and `income_ceiling` when `taper_floor` is Some.",
+          "type": "object",
+          "required": [
+            "amount",
+            "basis",
+            "cadence",
+            "income_ceiling",
+            "kind"
+          ],
+          "properties": {
+            "amount": {
+              "description": "Gross benefit amount per period.",
+              "type": "number",
+              "format": "double"
+            },
+            "basis": {
+              "$ref": "#/definitions/AmountBasis"
+            },
+            "cadence": {
+              "$ref": "#/definitions/LowerCadence"
+            },
+            "income_ceiling": {
+              "description": "Citizens above this income receive nothing.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "means_tested_benefit"
+              ]
+            },
+            "taper_floor": {
+              "description": "Full-benefit ceiling: if Some, benefit tapers between this and `income_ceiling`. If None, full `amount` is paid below ceiling.",
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            }
+          }
+        },
+        {
+          "description": "Non-monetary obligation: marks citizens who satisfy `condition_basis` below/above `threshold` as requiring registration (sets a flag). Lowering emits a no-op DSL scope; the effect is modeled through `LegalStatuses` directly in the dispatcher.",
+          "type": "object",
+          "required": [
+            "basis",
+            "cadence",
+            "kind",
+            "threshold"
+          ],
+          "properties": {
+            "basis": {
+              "$ref": "#/definitions/AmountBasis"
+            },
+            "cadence": {
+              "$ref": "#/definitions/LowerCadence"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "registration_requirement"
+              ]
+            },
+            "threshold": {
+              "description": "Threshold below which registration is required.",
+              "type": "number",
+              "format": "double"
+            }
+          }
         }
       ]
     },

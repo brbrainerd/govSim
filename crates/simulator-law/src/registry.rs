@@ -38,6 +38,16 @@ pub enum LawEffect {
         scope: &'static str,
         owed_def: &'static str,
     },
+    /// Per-citizen transfer payment: pay `amount_def` from Treasury to
+    /// each eligible citizen (added to `Wealth`).
+    PerCitizenBenefit {
+        scope: &'static str,
+        amount_def: &'static str,
+    },
+    /// Non-monetary registration marker: sets `LegalStatuses::REGISTERED_VOTER`
+    /// (or equivalent) for eligible citizens. No DSL evaluation needed;
+    /// the program scope is a no-op placeholder for audit purposes.
+    RegistrationMarker,
 }
 
 #[derive(Resource, Default, Clone)]

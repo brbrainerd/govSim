@@ -54,6 +54,13 @@ pub fn law_dispatcher_system(
             LawEffect::PerCitizenIncomeTax { scope, owed_def } => {
                 run_income_tax_law(h, scope, owed_def, &mut treasury, &mut q);
             }
+            LawEffect::PerCitizenBenefit { scope, amount_def } => {
+                run_benefit_law(h, scope, amount_def, &mut treasury, &mut q);
+            }
+            LawEffect::RegistrationMarker => {
+                // No DSL evaluation; flag-setting would use a separate query
+                // on LegalStatuses. Stubbed until Phase 5 adds the voter-reg system.
+            }
         }
     }
 }
@@ -100,6 +107,45 @@ fn run_income_tax_law(
         collected += owed;
     }
     treasury.balance += collected;
+}
+
+fn run_benefit_law(
+    h: &LawHandle,
+    scope_name: &str,
+    amount_name: &str,
+    treasury: &mut Treasury,
+    q: &mut Query<(&Income, &mut Wealth)>,
+) {
+    let scope = match h.program.scopes.iter().find(|s| s.name == scope_name) {
+        Some(s) => s, None => return,
+    };
+    let body = scope.items.iter().find_map(|it| {
+        let Item::Definition { name, body, .. } = it;
+        (name == amount_name).then_some(body)
+    });
+    let body = match body { Some(b) => b, None => return };
+
+    let mut ctx = EvalCtx {
+        bindings: HashMap::new(),
+        field_bindings: HashMap::new(),
+    };
+
+    let mut disbursed = Money::from_num(0);
+    for (income, mut wealth) in q.iter_mut() {
+        let annual = income.0 * Money::from_num(360);
+        ctx.field_bindings.insert(
+            ("citizen".into(), "income".into()),
+            Value::Money(annual),
+        );
+        let paid = match eval_default(body, &ctx) {
+            Value::Money(m) => m,
+            _ => continue,
+        };
+        wealth.0 += paid;
+        disbursed += paid;
+    }
+    // Benefits reduce the Treasury.
+    treasury.balance -= disbursed;
 }
 
 pub fn register_law_dispatcher(sim: &mut Sim) {

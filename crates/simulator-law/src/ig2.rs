@@ -72,6 +72,31 @@ pub enum Computation {
         rate: f64,
         cadence: LowerCadence,
     },
+    /// Means-tested transfer payment. Citizens whose `basis` is below
+    /// `income_ceiling` receive a flat `amount` each cadence period.
+    /// The payment is reduced linearly from `amount` to zero between
+    /// `taper_floor` and `income_ceiling` when `taper_floor` is Some.
+    MeansTestedBenefit {
+        basis: AmountBasis,
+        /// Citizens above this income receive nothing.
+        income_ceiling: f64,
+        /// Full-benefit ceiling: if Some, benefit tapers between this and
+        /// `income_ceiling`. If None, full `amount` is paid below ceiling.
+        taper_floor: Option<f64>,
+        /// Gross benefit amount per period.
+        amount: f64,
+        cadence: LowerCadence,
+    },
+    /// Non-monetary obligation: marks citizens who satisfy `condition_basis`
+    /// below/above `threshold` as requiring registration (sets a flag).
+    /// Lowering emits a no-op DSL scope; the effect is modeled through
+    /// `LegalStatuses` directly in the dispatcher.
+    RegistrationRequirement {
+        basis: AmountBasis,
+        /// Threshold below which registration is required.
+        threshold: f64,
+        cadence: LowerCadence,
+    },
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]

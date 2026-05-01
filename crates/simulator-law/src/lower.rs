@@ -21,6 +21,8 @@ pub enum LowerError {
     UnsortedBrackets,
     #[error("brackets must be non-empty")]
     EmptyBrackets,
+    #[error("means-tested benefit: income_ceiling must be > taper_floor")]
+    InvalidTaperRange,
 }
 
 /// Result of lowering: the synthesized program, the dispatcher effect, and
@@ -43,6 +45,12 @@ pub fn lower_statement(stmt: &IgStatement) -> Result<Lowered, LowerError> {
         }
         Computation::FlatRate { basis, threshold, rate, cadence } => {
             lower_flat_rate(*basis, *threshold, *rate, *cadence)
+        }
+        Computation::MeansTestedBenefit { basis, income_ceiling, taper_floor, amount, cadence } => {
+            lower_means_tested(*basis, *income_ceiling, *taper_floor, *amount, *cadence)
+        }
+        Computation::RegistrationRequirement { cadence, .. } => {
+            lower_registration(*cadence)
         }
     }
 }
@@ -161,6 +169,81 @@ fn lower_flat_rate(
     })
 }
 
+/// Means-tested benefit: `amount` paid in full when income < taper_floor;
+/// linearly tapered to zero between taper_floor and income_ceiling;
+/// nothing above income_ceiling.
+///
+/// DSL:
+/// ```text
+/// def benefit_amount : money = 0.0
+///   exception (citizen.income < income_ceiling) = amount
+///   exception (citizen.income >= taper_floor) =
+///     amount * (income_ceiling - citizen.income) / (income_ceiling - taper_floor)
+/// ```
+/// (last-wins, so the taper exception overrides the base when taper applies.)
+fn lower_means_tested(
+    basis: AmountBasis,
+    income_ceiling: f64,
+    taper_floor: Option<f64>,
+    amount: f64,
+    cadence: LowerCadence,
+) -> Result<Lowered, LowerError> {
+    let field = match basis { AmountBasis::AnnualIncome => "income", AmountBasis::Wealth => "wealth" };
+    let income = || Expr::Field { obj: "citizen".into(), field: field.into() };
+    // Guard: citizen.income < income_ceiling  ↔  NOT (income >= ceiling)
+    // We model with `income < ceiling` via `!( income >= ceiling )`.
+    // The DSL has Gt but not Lt; rewrite: income < ceiling ≡ ceiling > income.
+    let below_ceiling = gt(money(income_ceiling), income());
+
+    let mut exceptions = vec![(below_ceiling, money(amount))];
+
+    if let Some(tf) = taper_floor {
+        if tf >= income_ceiling { return Err(LowerError::InvalidTaperRange); }
+        // taper: amount * (ceiling - income) / (ceiling - taper_floor)
+        let range = income_ceiling - tf;
+        let taper_amount = mul(
+            money(amount),
+            // (ceiling - income) / range  →  mul(1/range, sub(ceiling, income))
+            mul(money(1.0 / range), sub(money(income_ceiling), income())),
+        );
+        // Guard: citizen.income >= taper_floor  ↔  NOT (taper_floor > income)
+        // Rewrite: income >= taper_floor  ↔  income > taper_floor - epsilon, or simpler:
+        // Use !(taper_floor > income): i.e. income >= tf means gt(income, tf-ε).
+        // Pragmatic approximation: guard as `income > tf` (one cent below tf gets full benefit).
+        let in_taper = gt(income(), money(tf));
+        exceptions.push((in_taper, taper_amount));
+    }
+
+    let body = DefaultExpr { base: Expr::LitMoney(0.0), exceptions };
+    let scope = Scope {
+        name: "MeansTestedBenefit".into(),
+        params: vec![ParamDecl { name: "citizen".into(), ty: Type::Money }],
+        items: vec![Item::Definition { name: "benefit_amount".into(), ty: Type::Money, body }],
+    };
+    Ok(Lowered {
+        program: Program { scopes: vec![scope] },
+        effect: LawEffect::PerCitizenBenefit { scope: "MeansTestedBenefit", amount_def: "benefit_amount" },
+        cadence: cadence_to_runtime(cadence),
+    })
+}
+
+/// Registration requirement: emits a no-op DSL scope (the actual effect —
+/// setting `LegalStatuses` flags — is handled directly by the dispatcher
+/// via `LawEffect::RegistrationMarker`).
+fn lower_registration(cadence: LowerCadence) -> Result<Lowered, LowerError> {
+    let body = DefaultExpr { base: Expr::LitMoney(0.0), exceptions: vec![] };
+    let scope = Scope {
+        name: "Registration".into(),
+        params: vec![ParamDecl { name: "citizen".into(), ty: Type::Money }],
+        items: vec![Item::Definition { name: "noop".into(), ty: Type::Money, body }],
+    };
+    Ok(Lowered {
+        program: Program { scopes: vec![scope] },
+        effect: LawEffect::RegistrationMarker,
+        cadence: cadence_to_runtime(cadence),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -175,6 +258,45 @@ mod tests {
             TaxBracket { floor: 50_000.0, ceil: Some(200_000.0), rate: 0.22 },
             TaxBracket { floor: 200_000.0, ceil: None, rate: 0.35 },
         ]
+    }
+
+    #[test]
+    fn means_tested_benefit_no_taper() {
+        let stmt = IgStatement::Regulative(RegulativeStmt {
+            attribute: ActorRef { class: "individual".into(), qualifier: None },
+            attribute_property: None,
+            deontic: Some(Deontic::Must),
+            aim: "receive".into(),
+            direct_object: None,
+            direct_object_property: None,
+            indirect_object: None,
+            indirect_object_property: None,
+            activation_conditions: vec![],
+            execution_constraints: vec![],
+            or_else: None,
+            computation: Some(Computation::MeansTestedBenefit {
+                basis: AmountBasis::AnnualIncome,
+                income_ceiling: 20_000.0,
+                taper_floor: None,
+                amount: 5_000.0,
+                cadence: LowerCadence::Yearly,
+            }),
+        });
+        let lowered = lower_statement(&stmt).unwrap();
+        typecheck_program(&lowered.program).unwrap();
+
+        let scope = &lowered.program.scopes[0];
+        let Item::Definition { body, .. } = &scope.items[0];
+
+        for (income, expected) in [(10_000.0_f64, 5_000.0), (25_000.0, 0.0)] {
+            let mut ctx = EvalCtx { bindings: HashMap::new(), field_bindings: HashMap::new() };
+            ctx.field_bindings.insert(
+                ("citizen".into(), "income".into()),
+                Value::Money(Money::from_num(income)),
+            );
+            let v = eval_default(body, &ctx).as_money().to_num::<f64>();
+            assert!((v - expected).abs() < 1.0, "income={income}: got {v}, want {expected}");
+        }
     }
 
     #[test]
