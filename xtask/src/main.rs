@@ -65,7 +65,12 @@ fn main() -> ExitCode {
         Cmd::Dev => stub("dev"),
         Cmd::Bench => run_cargo(&["bench", "--workspace"]),
         Cmd::Test => run_cargo(&["test", "--workspace"]),
-        Cmd::Determinism => stub("determinism"),
+        Cmd::Determinism => run_cargo(&[
+            "run", "-p", "simulator-cli", "--",
+            "determinism",
+            "--scenario", "scenarios/smoke_100k.yaml",
+            "--ticks", "100",
+        ]),
         Cmd::Llm(LlmCmd::Pull { model }) => {
             eprintln!("TODO: pull model {model}");
             Ok(())

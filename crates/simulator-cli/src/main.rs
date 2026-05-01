@@ -48,6 +48,13 @@ enum Cmd {
         #[arg(long, default_value_t = 10_000)]
         ticks: u64,
     },
+    /// Run a scenario twice with the same seed; assert state hashes match.
+    Determinism {
+        #[arg(long)]
+        scenario: PathBuf,
+        #[arg(long, default_value_t = 100)]
+        ticks: u64,
+    },
     /// Standalone NL→IG→DSL→Cranelift dry run (Phase 4).
     LawCompile {
         #[arg(long)]
@@ -67,6 +74,7 @@ fn main() -> Result<()> {
             Ok(())
         }
         Cmd::Bench { ticks } => bench(ticks),
+        Cmd::Determinism { scenario, ticks } => determinism(scenario, ticks),
         Cmd::LawCompile { file, schema } => law_compile(file, schema),
     }
 }
@@ -167,6 +175,35 @@ fn run(
         sim.tick(),
     );
     Ok(())
+}
+
+fn determinism(path: PathBuf, ticks: u64) -> Result<()> {
+    use simulator_snapshot::state_hash;
+
+    let run_once = |path: &PathBuf, ticks: u64| -> Result<[u8; 32]> {
+        let scenario = Scenario::load(path)?;
+        let mut sim = Sim::new(scenario.seed);
+        simulator_systems::register_phase1_systems(&mut sim);
+        scenario.spawn_population(&mut sim);
+        for _ in 0..ticks {
+            sim.step();
+        }
+        Ok(state_hash(&mut sim.world))
+    };
+
+    let h1 = run_once(&path, ticks)?;
+    let h2 = run_once(&path, ticks)?;
+
+    let hex = |b: &[u8; 32]| b.iter().map(|x| format!("{x:02x}")).collect::<String>();
+    println!("run1: {}", hex(&h1));
+    println!("run2: {}", hex(&h2));
+
+    if h1 == h2 {
+        println!("determinism: OK");
+        Ok(())
+    } else {
+        anyhow::bail!("determinism FAIL: hashes differ");
+    }
 }
 
 fn law_compile(file: Option<PathBuf>, schema: bool) -> Result<()> {
