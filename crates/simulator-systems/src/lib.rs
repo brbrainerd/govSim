@@ -15,6 +15,7 @@ pub mod approval;
 pub mod birth_death;
 pub mod employment;
 pub mod education {}
+pub mod income_update;
 pub mod macro_indicators;
 pub mod opinion;
 pub mod wealth_update;
@@ -27,6 +28,7 @@ pub mod migration {}
 pub use approval::register_approval_system;
 pub use birth_death::register_birth_death_system;
 pub use employment::register_employment_system;
+pub use income_update::register_income_update_system;
 pub use macro_indicators::register_macro_indicators_system;
 pub use opinion::{build_influence_graph, register_opinion_system};
 pub use wealth_update::register_wealth_update_system;
@@ -54,7 +56,8 @@ pub fn taxation_system(
 /// Caller must subsequently call `build_influence_graph` and insert the
 /// resource before ticking (scenario spawn determines n_citizens).
 pub fn register_phase1_systems(sim: &mut Sim) {
-    // Mutate phase: wealth accrual → taxation → employment → approval → births/deaths
+    // Mutate phase: income update → wealth accrual → taxation → employment → approval → births/deaths
+    register_income_update_system(sim);
     register_wealth_update_system(sim);
     sim.schedule_mut()
         .add_systems(taxation_system.in_set(Phase::Mutate));
