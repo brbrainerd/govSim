@@ -4928,6 +4928,8 @@ dependencies = [
  "serde_yaml",
  "simulator-calibration",
  "simulator-core",
+ "simulator-snapshot",
+ "simulator-systems",
  "simulator-types",
  "thiserror 2.0.18",
 ]

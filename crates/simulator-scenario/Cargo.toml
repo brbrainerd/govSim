@@ -16,3 +16,7 @@ thiserror             = { workspace = true }
 rand                  = { workspace = true }
 rand_chacha           = { workspace = true }
 fixed                 = { workspace = true }
+
+[dev-dependencies]
+simulator-systems     = { workspace = true }
+simulator-snapshot    = { workspace = true }

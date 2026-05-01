@@ -38,13 +38,14 @@ fn fake_batch(tick: u64) -> Result<RecordBatch, IpcError> {
     let batch = RecordBatch::try_new(
         schema,
         vec![
-            Arc::new(UInt64Array::from(vec![tick])),
-            Arc::new(UInt64Array::from(vec![0u64])),
-            Arc::new(Float64Array::from(vec![0.0f64])),
-            Arc::new(Float32Array::from(vec![0.0f32])),
-            Arc::new(Float32Array::from(vec![0.0f32])),
-            Arc::new(Float32Array::from(vec![0.0f32])),
-            Arc::new(Float32Array::from(vec![0.0f32])),
+            Arc::new(UInt64Array::from(vec![tick])),   // tick
+            Arc::new(UInt64Array::from(vec![0u64])),   // population
+            Arc::new(Float64Array::from(vec![0.0f64])), // gdp
+            Arc::new(Float32Array::from(vec![0.0f32])), // gini
+            Arc::new(Float32Array::from(vec![0.0f32])), // unemployment
+            Arc::new(Float32Array::from(vec![0.0f32])), // inflation
+            Arc::new(Float32Array::from(vec![0.0f32])), // approval
+            Arc::new(Float64Array::from(vec![0.0f64])), // pollution_stock
         ],
     )
     .map_err(|e| IpcError::Arrow(e.to_string()))?;
@@ -94,6 +95,7 @@ fn indicators_from_batch(batch: &RecordBatch) -> Result<MacroIndicators, IpcErro
         last_election_tick:     0,
         election_margin:        0.0,
         consecutive_terms:      0,
+        pollution_stock:        col_f64!("pollution_stock"),
     })
 }
 
@@ -123,6 +125,6 @@ mod tests {
     fn fake_batch_schema_matches() {
         let batch = fake_batch(1).unwrap();
         assert_eq!(batch.num_rows(), 1);
-        assert_eq!(batch.num_columns(), 7);
+        assert_eq!(batch.num_columns(), 8);
     }
 }

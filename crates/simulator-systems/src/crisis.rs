@@ -35,8 +35,8 @@
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    components::{ApprovalRating, Citizen, EmploymentStatus},
-    CrisisKind, CrisisState, Phase, Sim, SimClock, SimRng, Treasury,
+    components::{ApprovalRating, Citizen, EmploymentStatus, Productivity},
+    CrisisKind, CrisisState, MacroIndicators, Phase, Sim, SimClock, SimRng, Treasury,
 };
 use simulator_types::{Money, Score};
 use rand::Rng;
@@ -46,6 +46,28 @@ const CRISIS_PERIOD: u64 = 30; // monthly check
 const WAR_TREASURY_DRAIN: f64 = 0.10;
 /// Fraction of employed citizens laid off at Recession onset.
 const RECESSION_LAYOFF_RATE: f64 = 0.03;
+/// Fraction of citizens whose Productivity drops at Pandemic onset.
+const PANDEMIC_SICK_RATE: f64 = 0.20;
+/// Productivity penalty applied to sick citizens at Pandemic onset [0, 1].
+const PANDEMIC_PRODUCTIVITY_DRAG: f32 = 0.15;
+
+/// Compute a severity multiplier (≥ 1.0) for crisis duration based on the
+/// macroeconomic state at onset. High unemployment or empty Treasury makes
+/// crises harder to exit and thus last longer.
+///
+/// - unemployment > 0.15 → +50% duration per extra 5pp above threshold
+/// - treasury_balance ≤ 0 → +25% duration
+fn severity_multiplier(macro_: &MacroIndicators, treasury: &Treasury) -> f64 {
+    let mut m = 1.0_f64;
+    let u = macro_.unemployment as f64;
+    if u > 0.15 {
+        m += ((u - 0.15) / 0.05).floor().min(4.0) * 0.25;
+    }
+    if treasury.balance.to_num::<f64>() <= 0.0 {
+        m += 0.25;
+    }
+    m
+}
 
 fn crisis_prob_pct() -> u32 {
     std::env::var("UGS_CRISIS_PROB_PCT")
@@ -73,10 +95,12 @@ const CRISIS_TABLE: &[CrisisSpec] = &[
 pub fn crisis_system(
     clock: Res<SimClock>,
     rng_res: Res<SimRng>,
+    macro_: Res<MacroIndicators>,
     mut crisis: ResMut<CrisisState>,
     mut treasury: ResMut<Treasury>,
     mut approvals: Query<&mut ApprovalRating>,
     mut employment_q: Query<(&Citizen, &mut EmploymentStatus)>,
+    mut productivity_q: Query<(&Citizen, &mut Productivity)>,
 ) {
     if !clock.tick.is_multiple_of(CRISIS_PERIOD) || clock.tick == 0 { return; }
 
@@ -97,7 +121,10 @@ pub fn crisis_system(
     // Pick a random crisis type.
     let idx = rng.random_range(0..CRISIS_TABLE.len());
     let spec = &CRISIS_TABLE[idx];
-    let duration = rng.random_range(spec.min_ticks..=spec.max_ticks);
+    let base_duration = rng.random_range(spec.min_ticks..=spec.max_ticks);
+    // P4: scale duration by economic severity at onset.
+    let sev = severity_multiplier(&macro_, &treasury);
+    let duration = (base_duration as f64 * sev).round() as u64;
 
     crisis.kind             = spec.kind;
     crisis.remaining_ticks  = duration;
@@ -126,6 +153,16 @@ pub fn crisis_system(
                     && layoff_rng.random::<f64>() < RECESSION_LAYOFF_RATE
                 {
                     *status = EmploymentStatus::Unemployed;
+                }
+            }
+        }
+        CrisisKind::Pandemic => {
+            // Sickness wave: reduce Productivity of PANDEMIC_SICK_RATE of citizens.
+            let mut sick_rng = rng_res.derive("crisis_pandemic", clock.tick);
+            for (_citizen, mut prod) in productivity_q.iter_mut() {
+                if sick_rng.random::<f64>() < PANDEMIC_SICK_RATE {
+                    let new_p = (prod.0.to_num::<f32>() - PANDEMIC_PRODUCTIVITY_DRAG).clamp(0.0, 1.0);
+                    prod.0 = Score::from_num(new_p);
                 }
             }
         }

@@ -16,7 +16,7 @@
 use simulator_core::{
     bevy_ecs::prelude::*,
     components::{ApprovalRating, Citizen, EmploymentStatus, Income, Wealth},
-    GovernmentLedger, MacroIndicators, Phase, Sim, SimClock,
+    GovernmentLedger, MacroIndicators, Phase, PollutionStock, Sim, SimClock,
 };
 use simulator_types::Money;
 
@@ -26,6 +26,7 @@ pub fn macro_indicators_system(
     clock: Res<SimClock>,
     mut indicators: ResMut<MacroIndicators>,
     mut ledger: ResMut<GovernmentLedger>,
+    pollution: Res<PollutionStock>,
     q: Query<(&Citizen, &Income, &Wealth, &EmploymentStatus, &ApprovalRating)>,
 ) {
     if clock.tick == 0 { return; }
@@ -75,6 +76,7 @@ pub fn macro_indicators_system(
             }
             indicators.wealth_gini = gini_sorted(&mut wealths);
         }
+        indicators.pollution_stock = pollution.stock;
     }
 
     if clock.tick.is_multiple_of(360) {

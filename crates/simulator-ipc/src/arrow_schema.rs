@@ -1,13 +1,14 @@
 //! Canonical Arrow schema for `MacroIndicators` exchanged over Flight.
 //!
 //! Column layout (all non-nullable):
-//!   tick        : UInt64
-//!   population  : UInt64
-//!   gdp         : Float64   (I64F64 serialised as f64 for interop)
-//!   gini        : Float32
-//!   unemployment: Float32
-//!   inflation   : Float32
-//!   approval    : Float32
+//!   tick           : UInt64
+//!   population     : UInt64
+//!   gdp            : Float64   (I64F64 serialised as f64 for interop)
+//!   gini           : Float32
+//!   unemployment   : Float32
+//!   inflation      : Float32
+//!   approval       : Float32
+//!   pollution_stock: Float64   (PollutionStock mirrored monthly)
 //!
 //! Python sidecars read this schema with `pyarrow.ipc.read_schema(buf)`.
 
@@ -17,13 +18,14 @@ use std::sync::Arc;
 /// Return the canonical schema. Cached via `Arc` — cheap to clone.
 pub fn macro_indicators_schema() -> Arc<Schema> {
     Arc::new(Schema::new(vec![
-        Field::new("tick",         DataType::UInt64,  false),
-        Field::new("population",   DataType::UInt64,  false),
-        Field::new("gdp",          DataType::Float64, false),
-        Field::new("gini",         DataType::Float32, false),
-        Field::new("unemployment", DataType::Float32, false),
-        Field::new("inflation",    DataType::Float32, false),
-        Field::new("approval",     DataType::Float32, false),
+        Field::new("tick",            DataType::UInt64,  false),
+        Field::new("population",      DataType::UInt64,  false),
+        Field::new("gdp",             DataType::Float64, false),
+        Field::new("gini",            DataType::Float32, false),
+        Field::new("unemployment",    DataType::Float32, false),
+        Field::new("inflation",       DataType::Float32, false),
+        Field::new("approval",        DataType::Float32, false),
+        Field::new("pollution_stock", DataType::Float64, false),
     ]))
 }
 
@@ -48,7 +50,7 @@ mod tests {
     fn schema_has_expected_columns() {
         let s = macro_indicators_schema();
         let names: Vec<&str> = s.fields().iter().map(|f| f.name().as_str()).collect();
-        assert_eq!(names, ["tick","population","gdp","gini","unemployment","inflation","approval"]);
+        assert_eq!(names, ["tick","population","gdp","gini","unemployment","inflation","approval","pollution_stock"]);
     }
 
     #[test]

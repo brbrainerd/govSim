@@ -19,31 +19,36 @@ use simulator_core::{
         Health, IdeologyVector, Income, LegalStatusFlags, LegalStatuses, Location,
         MonthlyBenefitReceived, MonthlyTaxPaid, Productivity, SavingsRate, Sex, Wealth,
     },
-    Phase, Sim, SimClock, SimRng,
+    CrisisKind, CrisisState, Phase, Sim, SimClock, SimRng,
 };
 use simulator_types::{CitizenId, Money, RegionId, Score};
 use rand::Rng;
 
 const BIRTH_DEATH_PERIOD: u64 = 360;
 const DEATH_RATE: f32 = 0.008;
+/// Multiplier on annual death rate during an active Pandemic crisis.
+const PANDEMIC_DEATH_MULTIPLIER: f32 = 2.0;
 
 pub fn birth_death_system(
     clock: Res<SimClock>,
     rng_res: Res<SimRng>,
+    crisis: Res<CrisisState>,
     mut commands: Commands,
     q: Query<(Entity, &Citizen, &Age)>,
 ) {
     if !clock.tick.is_multiple_of(BIRTH_DEATH_PERIOD) || clock.tick == 0 { return; }
 
+    let pandemic_active = crisis.kind == CrisisKind::Pandemic && crisis.remaining_ticks > 0;
     let mut rng = rng_res.derive("birth_spawn", clock.tick);
     let mut deaths: Vec<Entity> = Vec::new();
     let mut max_id: u64 = 0;
 
     // Mark citizens for death (elderly bias: base rate + age factor).
-    // Per-citizen RNG ensures the death outcome is independent of iteration order.
+    // Pandemic doubles the effective death rate while active.
     for (entity, citizen, age) in q.iter() {
         max_id = max_id.max(citizen.0.0);
-        let rate = DEATH_RATE + (age.0 as f32 - 40.0).max(0.0) * 0.0002;
+        let mut rate = DEATH_RATE + (age.0 as f32 - 40.0).max(0.0) * 0.0002;
+        if pandemic_active { rate *= PANDEMIC_DEATH_MULTIPLIER; }
         let mut citizen_rng = rng_res.derive_citizen("death_check", clock.tick, citizen.0.0);
         if citizen_rng.random::<f32>() < rate {
             deaths.push(entity);

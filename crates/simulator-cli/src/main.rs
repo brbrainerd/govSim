@@ -182,6 +182,7 @@ fn run(
 
     let spawn_start = Instant::now();
     scenario.spawn_population(&mut sim);
+    scenario.configure_world(&mut sim);
     let spawn_elapsed = spawn_start.elapsed();
 
     if use_phase1 {
@@ -233,6 +234,7 @@ fn determinism(path: PathBuf, ticks: u64) -> Result<()> {
         let mut sim = Sim::new(scenario.seed);
         simulator_systems::register_phase1_systems(&mut sim);
         scenario.spawn_population(&mut sim);
+        scenario.configure_world(&mut sim);
         simulator_systems::build_influence_graph(
             &mut sim,
             scenario.population.citizens as usize,
@@ -266,6 +268,7 @@ fn determinism(path: PathBuf, ticks: u64) -> Result<()> {
             });
         }
         scenario.spawn_population(&mut sim);
+        scenario.configure_world(&mut sim);
         for _ in 0..ticks { sim.step(); }
         Ok(state_hash(&mut sim.world))
     };
@@ -304,6 +307,7 @@ fn replay(
         let mut sim = Sim::new(scenario.seed);
         simulator_systems::register_phase1_systems(&mut sim);
         scenario.spawn_population(&mut sim);
+        scenario.configure_world(&mut sim);
         simulator_systems::build_influence_graph(
             &mut sim,
             scenario.population.citizens as usize,

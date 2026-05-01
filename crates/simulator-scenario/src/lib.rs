@@ -245,6 +245,85 @@ fn savings_rate_for_age(age: u8) -> f32 {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use simulator_core::{CivicRights, LegitimacyDebt, PollutionStock, RightsLedger, SimClock};
+    use simulator_systems::register_phase1_systems;
+
+    fn minimal_scenario() -> Scenario {
+        Scenario {
+            name: "test".into(),
+            description: String::new(),
+            seed: [42u8; 32],
+            ticks: 90,
+            population: PopulationSpec {
+                citizens: 50,
+                corporations: 0,
+                regions: 4,
+                income_mean_monthly: Some(3_000.0),
+                unemployment_rate: Some(0.10),
+                corruption_level: None,
+            },
+            initial_rights: Some(CivicRights::UNIVERSAL_SUFFRAGE.bits()),
+            initial_pollution: Some(1.5),
+            initial_legitimacy_debt: Some(0.2),
+            crisis_prob_pct: Some(0), // suppress random crises for determinism
+        }
+    }
+
+    #[test]
+    fn end_to_end_scenario_runs_and_configure_world_applies() {
+        let scenario = minimal_scenario();
+        let mut sim = Sim::new(scenario.seed);
+        register_phase1_systems(&mut sim);
+
+        scenario.spawn_population(&mut sim);
+        scenario.configure_world(&mut sim);
+
+        // Verify configure_world applied before stepping.
+        {
+            let r = sim.world.resource::<RightsLedger>();
+            assert!(r.granted.contains(CivicRights::UNIVERSAL_SUFFRAGE),
+                "rights should be pre-granted");
+        }
+        assert!((sim.world.resource::<PollutionStock>().stock - 1.5).abs() < 1e-9,
+            "initial pollution not applied");
+        assert!((sim.world.resource::<LegitimacyDebt>().stock - 0.2).abs() < 1e-6,
+            "initial legitimacy debt not applied");
+
+        // Step for 3 months — should not panic and tick should advance.
+        for _ in 0..90 { sim.step(); }
+        assert_eq!(sim.world.resource::<SimClock>().tick, 90);
+
+        // Population should be non-zero and approval should be in range.
+        let macro_ = sim.world.resource::<simulator_core::MacroIndicators>();
+        assert!(macro_.population > 0, "population should be non-zero after run");
+        assert!(macro_.approval >= 0.0 && macro_.approval <= 1.0,
+            "approval out of range: {}", macro_.approval);
+        // Pollution mirrored monthly (fires at tick 30 and 60).
+        assert!(macro_.pollution_stock >= 0.0, "pollution_stock should be non-negative");
+    }
+
+    #[test]
+    fn scenario_determinism_same_seed() {
+        let scenario = minimal_scenario();
+
+        let hash_of = |scenario: &Scenario| -> [u8; 32] {
+            let mut sim = Sim::new(scenario.seed);
+            register_phase1_systems(&mut sim);
+            scenario.spawn_population(&mut sim);
+            scenario.configure_world(&mut sim);
+            for _ in 0..90 { sim.step(); }
+            simulator_snapshot::state_hash(&mut sim.world)
+        };
+
+        let h1 = hash_of(&scenario);
+        let h2 = hash_of(&scenario);
+        assert_eq!(h1, h2, "same seed should produce identical state hashes");
+    }
+}
+
 /// Rational approximation of the standard normal quantile (Beasley-Springer-Moro).
 /// Maps u ∈ (0,1) → z ∈ ℝ. Used for log-normal income generation.
 fn normal_quantile(u: f64) -> f64 {

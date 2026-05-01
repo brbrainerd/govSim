@@ -29,6 +29,9 @@ pub struct MacroIndicators {
     pub election_margin: f32,
     /// Consecutive terms the incumbent has held (resets on party flip).
     pub consecutive_terms: u32,
+    /// Current aggregate pollution stock (PU), mirrored from PollutionStock
+    /// each monthly commit so IPC / Arrow Flight clients see it in one record.
+    pub pollution_stock: f64,
 }
 
 /// Government balance sheet. Phase 1 just tracks revenue.
