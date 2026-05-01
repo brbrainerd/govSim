@@ -16,7 +16,7 @@
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    components::{ApprovalRating, EmploymentStatus, IdeologyVector},
+    components::{ApprovalRating, Citizen, EmploymentStatus, IdeologyVector},
     Phase, Sim, SimClock, SimRng,
 };
 use simulator_types::Score;
@@ -27,13 +27,11 @@ const APPROVAL_PERIOD: u64 = 30;
 pub fn approval_system(
     clock: Res<SimClock>,
     rng_res: Res<SimRng>,
-    mut q: Query<(&EmploymentStatus, &IdeologyVector, &mut ApprovalRating)>,
+    mut q: Query<(&Citizen, &EmploymentStatus, &IdeologyVector, &mut ApprovalRating)>,
 ) {
     if !clock.tick.is_multiple_of(APPROVAL_PERIOD) || clock.tick == 0 { return; }
 
-    let mut rng = rng_res.derive("approval", clock.tick);
-
-    for (emp, ideology, mut approval) in q.iter_mut() {
+    for (citizen, emp, ideology, mut approval) in q.iter_mut() {
         let a = approval.0.to_num::<f32>();
 
         let employment_shock = match emp {
@@ -49,6 +47,7 @@ pub fn approval_system(
         // ideology.0[0] is the economic axis in [-1, 1].
         let ideology_nudge = ideology.0[0] * 0.001;
 
+        let mut rng = rng_res.derive_citizen("approval", clock.tick, citizen.0.0);
         let noise: f32 = (rng.random::<f32>() - 0.5) * 0.002;
 
         let new_a = (a + employment_shock + reversion + ideology_nudge + noise)

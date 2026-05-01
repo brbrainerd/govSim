@@ -67,14 +67,14 @@ pub fn migration_system(
     let dest_total: f32 = destinations.iter().map(|(_, w)| w).sum();
     if dest_total <= 0.0 { return; }
 
-    let mut rng = rng_res.derive("migration", clock.tick);
-
     // Pass 2: relocate eligible citizens.
-    for (_c, _emp, mut loc) in q.iter_mut() {
+    for (c, _emp, mut loc) in q.iter_mut() {
         let r = loc.0.0;
         let region_u = *region_unemp.get(&r).unwrap_or(&0.0);
 
         if region_u <= high_threshold { continue; }
+
+        let mut rng = rng_res.derive_citizen("migration", clock.tick, c.0.0);
         if rng.random::<f32>() >= MIGRATE_PROB { continue; }
 
         // Weighted random destination (excluding current region if possible).

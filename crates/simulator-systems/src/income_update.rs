@@ -14,7 +14,7 @@
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    components::{EmploymentStatus, Income, Productivity},
+    components::{Citizen, EmploymentStatus, Income, Productivity},
     Phase, Sim, SimClock, SimRng,
 };
 use simulator_types::Money;
@@ -33,14 +33,13 @@ const SCARRING_RATE: f64 = 0.005;
 pub fn income_update_system(
     clock: Res<SimClock>,
     rng_res: Res<SimRng>,
-    mut q: Query<(&EmploymentStatus, &Productivity, &mut Income)>,
+    mut q: Query<(&Citizen, &EmploymentStatus, &Productivity, &mut Income)>,
 ) {
     if !clock.tick.is_multiple_of(INCOME_UPDATE_PERIOD) || clock.tick == 0 { return; }
 
-    let mut rng = rng_res.derive("income_update", clock.tick);
     let floor = Money::from_num(MINIMUM_WAGE_MONTHLY);
 
-    for (emp, productivity, mut income) in q.iter_mut() {
+    for (citizen, emp, productivity, mut income) in q.iter_mut() {
         let current = income.0.to_num::<f64>();
 
         // Productivity score in [0, 1]; higher productivity → larger upside.
@@ -49,6 +48,7 @@ pub fn income_update_system(
         let new_income = match emp {
             EmploymentStatus::Employed => {
                 // Random walk: ±PRODUCTIVITY_DRIFT, skewed positive by productivity.
+                let mut rng = rng_res.derive_citizen("income_update", clock.tick, citizen.0.0);
                 let bias = (prod_score - 0.5) * PRODUCTIVITY_DRIFT;
                 let noise: f64 = (rng.random::<f64>() - 0.5) * PRODUCTIVITY_DRIFT;
                 current * (1.0 + bias + noise)
@@ -59,6 +59,7 @@ pub fn income_update_system(
             }
             EmploymentStatus::Student => {
                 // Students' future income grows with productivity investment.
+                let mut rng = rng_res.derive_citizen("income_update", clock.tick, citizen.0.0);
                 let growth: f64 = rng.random::<f64>() * 0.005;
                 current * (1.0 + growth)
             }

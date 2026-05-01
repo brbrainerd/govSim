@@ -28,11 +28,8 @@ pub fn employment_system(
 ) {
     if !clock.tick.is_multiple_of(EMPLOYMENT_PERIOD) || clock.tick == 0 { return; }
 
-    // Derive a per-tick RNG so results are deterministic regardless of ECS
-    // archetype ordering.
-    let mut rng = rng_res.derive("employment", clock.tick);
-
-    for (_citizen, mut status) in q.iter_mut() {
+    for (citizen, mut status) in q.iter_mut() {
+        let mut rng = rng_res.derive_citizen("employment", clock.tick, citizen.0.0);
         let r: f32 = rng.random();
         *status = match *status {
             EmploymentStatus::Employed => {

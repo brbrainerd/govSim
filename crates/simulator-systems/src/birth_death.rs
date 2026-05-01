@@ -34,15 +34,17 @@ pub fn birth_death_system(
 ) {
     if !clock.tick.is_multiple_of(BIRTH_DEATH_PERIOD) || clock.tick == 0 { return; }
 
-    let mut rng = rng_res.derive("birth_death", clock.tick);
+    let mut rng = rng_res.derive("birth_spawn", clock.tick);
     let mut deaths: Vec<Entity> = Vec::new();
     let mut max_id: u64 = 0;
 
     // Mark citizens for death (elderly bias: base rate + age factor).
+    // Per-citizen RNG ensures the death outcome is independent of iteration order.
     for (entity, citizen, age) in q.iter() {
         max_id = max_id.max(citizen.0.0);
         let rate = DEATH_RATE + (age.0 as f32 - 40.0).max(0.0) * 0.0002;
-        if rng.random::<f32>() < rate {
+        let mut citizen_rng = rng_res.derive_citizen("death_check", clock.tick, citizen.0.0);
+        if citizen_rng.random::<f32>() < rate {
             deaths.push(entity);
         }
     }

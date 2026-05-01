@@ -15,7 +15,7 @@
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    components::{Age, EmploymentStatus, Health},
+    components::{Age, Citizen, EmploymentStatus, Health},
     Phase, Sim, SimClock, SimRng,
 };
 use simulator_types::Score;
@@ -26,13 +26,11 @@ const HEALTH_PERIOD: u64 = 360;
 pub fn health_system(
     clock: Res<SimClock>,
     rng_res: Res<SimRng>,
-    mut q: Query<(&Age, &EmploymentStatus, &mut Health)>,
+    mut q: Query<(&Citizen, &Age, &EmploymentStatus, &mut Health)>,
 ) {
     if !clock.tick.is_multiple_of(HEALTH_PERIOD) || clock.tick == 0 { return; }
 
-    let mut rng = rng_res.derive("health", clock.tick);
-
-    for (age, emp, mut health) in q.iter_mut() {
+    for (citizen, age, emp, mut health) in q.iter_mut() {
         let h = health.0.to_num::<f32>();
 
         let age_delta = match age.0 {
@@ -49,6 +47,7 @@ pub fn health_system(
             EmploymentStatus::OutOfLaborForce => -0.002_f32,
         };
 
+        let mut rng = rng_res.derive_citizen("health", clock.tick, citizen.0.0);
         let noise: f32 = (rng.random::<f32>() - 0.5) * 0.004;
 
         let new_h = (h + age_delta + emp_delta + noise).clamp(0.01, 0.999);

@@ -36,4 +36,25 @@ impl SimRng {
         }
         ChaCha20Rng::from_seed(seed)
     }
+
+    /// Derive a per-citizen RNG keyed by label, tick, and citizen id.
+    /// Outcomes are a pure function of (root_seed, label, tick, citizen_id),
+    /// independent of ECS entity iteration order — required for replay determinism
+    /// after birth/death changes the entity table layout.
+    pub fn derive_citizen(&self, label: &str, tick: u64, citizen_id: u64) -> ChaCha20Rng {
+        let mut seed = self.root_seed;
+        let mut h: u64 = 0xcbf29ce484222325;
+        for b in label.as_bytes() {
+            h ^= *b as u64;
+            h = h.wrapping_mul(0x100000001b3);
+        }
+        h ^= tick.wrapping_mul(0x9e3779b97f4a7c15);
+        h = h.wrapping_mul(0x100000001b3);
+        h ^= citizen_id.wrapping_mul(0x6c62272e07bb0142);
+        h = h.wrapping_mul(0x100000001b3);
+        for (i, byte) in h.to_le_bytes().iter().enumerate() {
+            seed[i] ^= byte;
+        }
+        ChaCha20Rng::from_seed(seed)
+    }
 }
