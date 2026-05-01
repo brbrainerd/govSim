@@ -5,13 +5,16 @@
 //!   2. Enforce age-threshold employment transitions:
 //!      - Reaching WORKING_AGE (18): Student → Unemployed (enters labour force).
 //!      - Reaching RETIREMENT_AGE (65): Employed/Unemployed/OOL → Retired.
+//!   3. Recompute SavingsRate from the age bracket function so savings evolve
+//!      over the life cycle (young save less; peak earners save more; retirees
+//!      draw down).
 //!
 //! Runs AFTER birth_death_system so death-rate uses the age from the start
 //! of the year; newborns spawned this tick age on the next yearly cycle.
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    components::{Age, EmploymentStatus, LegalStatusFlags, LegalStatuses},
+    components::{Age, EmploymentStatus, LegalStatusFlags, LegalStatuses, SavingsRate},
     Phase, Sim, SimClock,
 };
 
@@ -23,13 +26,25 @@ pub const RETIREMENT_AGE: u8 = 65;
 /// Hard cap — avoids u8 wrap-around from saturating_add.
 const AGE_CAP: u8 = 99;
 
+/// Age-graded savings rate mirroring the scenario spawn logic.
+pub fn savings_rate_for_age(age: u8) -> f32 {
+    match age {
+        0..=22  => 0.05,
+        23..=39 => 0.15,
+        40..=54 => 0.25,
+        55..=64 => 0.30,
+        _       => 0.10,
+    }
+}
+
+#[allow(clippy::type_complexity)]
 pub fn age_advance_system(
     clock: Res<SimClock>,
-    mut q: Query<(&mut Age, &mut EmploymentStatus, &mut LegalStatuses)>,
+    mut q: Query<(&mut Age, &mut EmploymentStatus, &mut LegalStatuses, Option<&mut SavingsRate>)>,
 ) {
     if !clock.tick.is_multiple_of(AGE_ADVANCE_PERIOD) || clock.tick == 0 { return; }
 
-    for (mut age, mut emp, mut legal) in q.iter_mut() {
+    for (mut age, mut emp, mut legal, savings_opt) in q.iter_mut() {
         let old = age.0;
         age.0 = old.saturating_add(1).min(AGE_CAP);
 
@@ -52,6 +67,11 @@ pub fn age_advance_system(
         {
             *emp = EmploymentStatus::Retired;
         }
+
+        // Recompute savings rate for the new age bracket.
+        if let Some(mut sr) = savings_opt {
+            sr.0 = savings_rate_for_age(age.0);
+        }
     }
 }
 
@@ -71,6 +91,7 @@ mod tests {
     use simulator_types::{CitizenId, Money, RegionId, Score};
 
     fn spawn(world: &mut World, id: u64, age: u8, emp: EmploymentStatus) {
+        use simulator_core::components::SavingsRate;
         world.spawn((
             Citizen(CitizenId(id)),
             Age(age), Sex::Male, Location(RegionId(0)),
@@ -83,6 +104,7 @@ mod tests {
             ApprovalRating(Score::from_num(0.5_f32)),
             LegalStatuses::default(),
             AuditFlags::default(),
+            SavingsRate(savings_rate_for_age(age)),
         ));
     }
 
@@ -156,5 +178,31 @@ mod tests {
 
         let (age, _) = get_state(&mut sim.world, 0);
         assert_eq!(age, AGE_CAP, "age should not exceed AGE_CAP");
+    }
+
+    #[test]
+    fn savings_rate_updates_across_bracket() {
+        use simulator_core::components::SavingsRate;
+        // Citizen at 39 (bracket: 0.15) → after one year age 40 (bracket: 0.25).
+        let mut sim = Sim::new([5u8; 32]);
+        register_age_advance_system(&mut sim);
+
+        spawn(&mut sim.world, 0, 39, EmploymentStatus::Employed);
+
+        for _ in 0..=360 { sim.step(); }
+
+        let (age, _) = get_state(&mut sim.world, 0);
+        assert_eq!(age, 40);
+
+        let sr: f32 = sim.world
+            .query::<(&Citizen, &SavingsRate)>()
+            .iter(&sim.world)
+            .find(|(c, _)| c.0.0 == 0)
+            .map(|(_, sr)| sr.0)
+            .unwrap();
+        assert!(
+            (sr - 0.25).abs() < 1e-6,
+            "savings rate should update to 0.25 bracket at age 40, got {sr}"
+        );
     }
 }
