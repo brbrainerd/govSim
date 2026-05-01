@@ -512,6 +512,86 @@ mod tests {
         );
     }
 
+    /// Law supersession: a 20% income tax runs for year 1; at tick 360 it is
+    /// replaced by a 10% tax. Year-2 revenue should be half of year-1 revenue.
+    #[test]
+    fn supersession_switches_rate_at_tick_boundary() {
+        use crate::ig2::{AmountBasis, Computation, Deontic, LowerCadence, TaxBracket};
+
+        let mut sim = Sim::new([70u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        // 4 citizens: $500/month → $180 000/year
+        for i in 0..4 { spawn_citizen(&mut sim.world, i, 500); }
+
+        let make_flat_tax = |rate: f64| {
+            let stmt = crate::ig2::IgStatement::Regulative(crate::ig2::RegulativeStmt {
+                attribute: crate::ig2::ActorRef { class: "individual".into(), qualifier: None },
+                attribute_property: None,
+                deontic: Some(Deontic::Must),
+                aim: "pay".into(),
+                direct_object: None, direct_object_property: None,
+                indirect_object: None, indirect_object_property: None,
+                activation_conditions: vec![], execution_constraints: vec![],
+                or_else: None,
+                computation: Some(Computation::BracketedTax {
+                    basis: AmountBasis::AnnualIncome,
+                    threshold: 0.0,
+                    brackets: vec![TaxBracket { floor: 0.0, ceil: None, rate }],
+                    cadence: LowerCadence::Yearly,
+                }),
+            });
+            crate::lower::lower_statement(&stmt).expect("lowering")
+        };
+
+        // Enact the 20% law starting at tick 0.
+        let lowered_20 = make_flat_tax(0.20);
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        let id_20 = registry.enact(LawHandle {
+            id: LawId(0), version: 1,
+            program: Arc::new(lowered_20.program),
+            cadence: lowered_20.cadence,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: lowered_20.effect,
+        });
+
+        // Run year 1 (ticks 0..=360).
+        for _ in 0..=360 { sim.step(); }
+
+        let rev_year1: f64 = {
+            let ledger = sim.world.resource::<GovernmentLedger>();
+            ledger.revenue.to_num()
+        };
+        // 4 citizens × $180 000 × 20% = $144 000 year 1
+        assert!(
+            (rev_year1 - 144_000.0).abs() < 1.0,
+            "year-1 revenue at 20%: expected ~$144 000, got ${rev_year1:.2}"
+        );
+
+        // Supersede with 10% tax, effective from tick 361.
+        let lowered_10 = make_flat_tax(0.10);
+        registry.supersede(id_20, LawHandle {
+            id: LawId(0), version: 2,
+            program: Arc::new(lowered_10.program),
+            cadence: lowered_10.cadence,
+            effective_from_tick: 361,
+            effective_until_tick: None,
+            effect: lowered_10.effect,
+        }, 361);
+
+        // Run year 2 (ticks 361..=720).
+        for _ in 361..=720 { sim.step(); }
+
+        let rev_total: f64 = sim.world.resource::<GovernmentLedger>().revenue.to_num();
+        let rev_year2 = rev_total - rev_year1;
+        // 4 citizens × $180 000 × 10% = $72 000 year 2
+        assert!(
+            (rev_year2 - 72_000.0).abs() < 1.0,
+            "year-2 revenue at 10%: expected ~$72 000, got ${rev_year2:.2}"
+        );
+    }
+
     /// UBI: a flat $500/year unconditional payment goes to every citizen.
     #[test]
     fn ubi_pays_all_citizens() {
