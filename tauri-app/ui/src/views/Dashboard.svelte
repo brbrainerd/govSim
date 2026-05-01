@@ -77,8 +77,11 @@
     { name: "Income Gini", data: rows.map(r => r.gini) },
     { name: "Wealth Gini", data: rows.map(r => r.wealth_gini) },
   ]);
-  const pollutionSeries    = $derived([{ name: "Pollution",   data: rows.map(r => r.pollution_stock) }]);
-  const treasurySeries     = $derived([{ name: "Treasury",    data: rows.map(r => r.treasury_balance) }]);
+  const pollutionSeries      = $derived([{ name: "Pollution",      data: rows.map(r => r.pollution_stock) }]);
+  const treasurySeries       = $derived([{ name: "Treasury",       data: rows.map(r => r.treasury_balance) }]);
+  const legitimacyDebtSeries = $derived([{ name: "Legitimacy Debt", data: rows.map(r => r.legitimacy_debt) }]);
+  const electionMarginSeries = $derived([{ name: "Election Margin", data: rows.map(r => r.election_margin) }]);
+  const priceLevelSeries     = $derived([{ name: "Price Level",     data: rows.map(r => r.price_level) }]);
 
   // Wellbeing series — citizen-level means from the ring-buffer
   const healthSeries       = $derived([{ name: "Mean Health", data: rows.map(r => r.mean_health) }]);
@@ -185,10 +188,9 @@
       <StatCard label="Wealth Gini"  value={cs.wealth_gini.toFixed(3)}                                     sparkData={sparkOf("wealth_gini")} onclick={() => navigate("citizens")} clickLabel="View citizen wealth distribution" />
       <StatCard label="Treasury"     value={formatMoney(cs.treasury_balance)} trend={trendOf("treasury_balance")} sparkData={sparkOf("treasury_balance")} color={cs.treasury_balance < 0 ? "danger" : "default"} />
     </div>
-    <div class="chart-row chart-row--3">
+    <div class="chart-row">
       <LineChart title="GDP" xLabels={xLabels} series={gdpSeries} yFormatter={formatMoney}  markLines={lawMarkLines} markBands={crisisBands} />
       <LineChart title="Unemployment" xLabels={xLabels} series={unemploymentSeries} yMin={0} yMax={1} yFormatter={pct}  markLines={lawMarkLines} markBands={crisisBands} />
-      <LineChart title="Inflation" xLabels={xLabels} series={inflationSeries} yFormatter={pct} markLines={lawMarkLines} markBands={crisisBands} yMarkLines={[{y: 0.02, label: "2% target", color: "var(--color-success, #22c55e)"}]} />
     </div>
   </section>
 
@@ -207,6 +209,19 @@
       <LineChart title="Approval" xLabels={xLabels} series={approvalSeries} yMin={0} yMax={1} yFormatter={pct} markLines={lawMarkLines} markBands={crisisBands} />
       <LineChart title="Inequality (Gini)" xLabels={xLabels} series={giniSeries} yMin={0} yMax={1} markLines={lawMarkLines} markBands={crisisBands} />
       <LineChart title="Approval vs GDP (norm.)" xLabels={xLabels} series={correlationSeries} yMin={0} yMax={1} markLines={lawMarkLines} markBands={crisisBands} />
+    </div>
+    <div class="chart-row">
+      <LineChart title="Legitimacy Debt" xLabels={xLabels} series={legitimacyDebtSeries}
+        yMin={0} yMax={1}
+        yMarkLines={[
+          {y: 0.5, label: "Collapse threshold", color: "var(--color-danger)"},
+          {y: 0.1, label: "Warning",             color: "var(--color-warning)"},
+        ]}
+        markLines={lawMarkLines} markBands={crisisBands} />
+      <LineChart title="Election Margin" xLabels={xLabels} series={electionMarginSeries}
+        yMin={-1} yMax={1} yFormatter={pct}
+        yMarkLines={[{y: 0, label: "Tied", color: "var(--color-text-muted)"}]}
+        markLines={lawMarkLines} markBands={crisisBands} />
     </div>
   </section>
 
@@ -241,6 +256,15 @@
       <LineChart title="Pollution Stock (PU)" xLabels={xLabels} series={pollutionSeries} yMin={0}  markLines={lawMarkLines} markBands={crisisBands} />
       <LineChart title="Revenue vs Expenditure" xLabels={xLabels} series={fiscalSeries} yFormatter={formatMoney} markLines={lawMarkLines} markBands={crisisBands} />
       <LineChart title="Treasury Balance" xLabels={xLabels} series={treasurySeries} yFormatter={formatMoney} markLines={lawMarkLines} markBands={crisisBands} yMarkLines={[{y: 0, label: "Zero", color: "var(--color-warning)"}]} />
+    </div>
+    <div class="chart-row">
+      <LineChart title="Price Level" xLabels={xLabels} series={priceLevelSeries}
+        yFormatter={(v) => v.toFixed(3)}
+        yMarkLines={[{y: 1.0, label: "Base (1.000)", color: "var(--color-text-muted)"}]}
+        markLines={lawMarkLines} markBands={crisisBands} />
+      <LineChart title="Inflation" xLabels={xLabels} series={inflationSeries} yFormatter={pct}
+        markLines={lawMarkLines} markBands={crisisBands}
+        yMarkLines={[{y: 0.02, label: "2% target", color: "var(--color-success)"}]} />
     </div>
   </section>
 </div>
