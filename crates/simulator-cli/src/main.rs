@@ -68,6 +68,11 @@ fn run(path: PathBuf, override_ticks: Option<u64>) -> Result<()> {
 
     let total = override_ticks.unwrap_or(scenario.ticks);
     let mut sim = Sim::new(scenario.seed);
+    simulator_systems::register_phase1_systems(&mut sim);
+
+    let spawn_start = Instant::now();
+    scenario.spawn_population(&mut sim);
+    let spawn_elapsed = spawn_start.elapsed();
 
     let start = Instant::now();
     for _ in 0..total {
@@ -76,12 +81,16 @@ fn run(path: PathBuf, override_ticks: Option<u64>) -> Result<()> {
     let elapsed = start.elapsed();
 
     let rate = total as f64 / elapsed.as_secs_f64();
+    let treasury = sim.world.resource::<simulator_core::Treasury>().balance;
     println!(
-        "scenario={} ticks={} elapsed={:.3}s rate={:.0} ticks/s final_tick={}",
+        "scenario={} citizens={} ticks={} spawn={:.3}s tick={:.3}s rate={:.0} ticks/s treasury={} final_tick={}",
         scenario.name,
+        scenario.population.citizens,
         total,
+        spawn_elapsed.as_secs_f64(),
         elapsed.as_secs_f64(),
         rate,
+        treasury,
         sim.tick(),
     );
     Ok(())

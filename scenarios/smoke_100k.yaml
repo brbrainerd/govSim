@@ -1,0 +1,9 @@
+name: smoke_100k
+description: |
+  Phase 1 smoke test: 100,000 citizens, monthly flat-rate taxation.
+seed: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,42]
+ticks: 365
+population:
+  citizens: 100000
+  corporations: 0
+  regions: 16

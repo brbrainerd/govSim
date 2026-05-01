@@ -18,3 +18,4 @@ tracing     = { workspace = true }
 serde       = { workspace = true }
 ahash       = { workspace = true }
 thiserror   = { workspace = true }
+bitflags    = { workspace = true }

@@ -1,8 +1,15 @@
-//! Built-in ECS Systems. Phase 1 fills these in.
+//! Built-in ECS Systems. Phase 1 implements `taxation` as a working example;
+//! the other modules are stubs until later phases.
+//!
+//! Downstream code wires these in via `register_phase1_systems(&mut sim)`.
 
-pub mod taxation {
-    //! Phase 1 — see blueprint §3.2.
-}
+use simulator_core::{
+    bevy_ecs::prelude::*,
+    components::{Income, Wealth},
+    Phase, Sim, SimClock, Treasury,
+};
+use simulator_types::Money;
+
 pub mod employment {}
 pub mod education {}
 pub mod opinion {}
@@ -12,3 +19,28 @@ pub mod enforcement {}
 pub mod media {}
 pub mod migration {}
 pub mod birth_death {}
+
+/// Flat 20% income tax remitted on the first day of every month
+/// (we cheat with a 30-day month for now). Demonstrates the
+/// Mutate-phase pattern: ECS query → mutate Wealth → write to Treasury.
+pub fn taxation_system(
+    clock: Res<SimClock>,
+    mut treasury: ResMut<Treasury>,
+    mut q: Query<(&Income, &mut Wealth)>,
+) {
+    if clock.tick % 30 != 0 || clock.tick == 0 { return; }
+    let rate = Money::from_num(0.20_f64);
+    let mut collected = Money::from_num(0);
+    for (income, mut wealth) in &mut q {
+        let owed = income.0 * rate;
+        wealth.0 -= owed;
+        collected += owed;
+    }
+    treasury.balance += collected;
+}
+
+/// Convenience: register every Phase-1 System on the schedule.
+pub fn register_phase1_systems(sim: &mut Sim) {
+    sim.schedule_mut()
+        .add_systems(taxation_system.in_set(Phase::Mutate));
+}

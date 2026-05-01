@@ -5165,6 +5165,7 @@ dependencies = [
  "simulator-core",
  "simulator-scenario",
  "simulator-snapshot",
+ "simulator-systems",
  "simulator-telemetry",
  "simulator-types",
  "tracing",
@@ -5177,6 +5178,7 @@ dependencies = [
  "ahash",
  "bevy_ecs",
  "bevy_tasks",
+ "bitflags 2.11.1",
  "parking_lot",
  "rand 0.9.4",
  "rand_chacha 0.9.0",
@@ -5275,6 +5277,9 @@ dependencies = [
 name = "simulator-scenario"
 version = "0.1.0"
 dependencies = [
+ "fixed",
+ "rand 0.9.4",
+ "rand_chacha 0.9.0",
  "serde",
  "serde_yaml",
  "simulator-calibration",

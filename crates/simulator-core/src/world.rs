@@ -1,12 +1,17 @@
 //! The top-level simulation aggregate: World + Schedule + clock.
-//!
-//! In Phase 0 the schedule is a single empty stage; Phase 1 wires in real
-//! Systems. The struct lives behind a `tokio::sync::RwLock` in the Tauri
-//! shell.
 
 use bevy_ecs::prelude::*;
+use bevy_ecs::schedule::ScheduleLabel;
 
-use crate::{rng::SimRng, tick::SimClock};
+use crate::{
+    phase::Phase,
+    resources::{MacroIndicators, Treasury},
+    rng::SimRng,
+    tick::SimClock,
+};
+
+#[derive(ScheduleLabel, Hash, Eq, PartialEq, Clone, Debug)]
+pub struct UgsTick;
 
 pub struct Sim {
     pub world: World,
@@ -18,20 +23,38 @@ impl Sim {
         let mut world = World::new();
         world.insert_resource(SimClock::default());
         world.insert_resource(SimRng::new(root_seed));
-        let schedule = Schedule::default();
+        world.insert_resource(MacroIndicators::default());
+        world.insert_resource(Treasury::default());
+
+        let mut schedule = Schedule::new(UgsTick);
+        schedule.configure_sets(
+            (
+                Phase::Sense,
+                Phase::MacroTensor,
+                Phase::Cognitive,
+                Phase::Validate,
+                Phase::Mutate,
+                Phase::Commit,
+                Phase::Telemetry,
+            )
+                .chain(),
+        );
+
         Self { world, schedule }
     }
 
-    /// Advance the simulation by one tick. Phase 0: bumps the clock only.
+    /// Direct schedule access. Downstream crates call
+    /// `sim.schedule.add_systems(my_system.in_set(Phase::Mutate))`.
+    pub fn schedule_mut(&mut self) -> &mut Schedule { &mut self.schedule }
+
+    /// Advance the simulation by one tick.
     pub fn step(&mut self) {
         self.schedule.run(&mut self.world);
         let mut clock = self.world.resource_mut::<SimClock>();
         clock.advance();
     }
 
-    pub fn tick(&self) -> u64 {
-        self.world.resource::<SimClock>().tick
-    }
+    pub fn tick(&self) -> u64 { self.world.resource::<SimClock>().tick }
 }
 
 #[cfg(test)]
@@ -41,9 +64,7 @@ mod tests {
     #[test]
     fn ticks_advance() {
         let mut sim = Sim::new([0u8; 32]);
-        for _ in 0..10 {
-            sim.step();
-        }
+        for _ in 0..10 { sim.step(); }
         assert_eq!(sim.tick(), 10);
     }
 }

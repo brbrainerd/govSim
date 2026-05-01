@@ -14,6 +14,7 @@ path = "src/main.rs"
 simulator-core        = { workspace = true }
 simulator-scenario    = { workspace = true }
 simulator-snapshot    = { workspace = true }
+simulator-systems     = { workspace = true }
 simulator-telemetry   = { workspace = true }
 simulator-types       = { workspace = true }
 clap                  = { workspace = true }
