@@ -49,8 +49,8 @@ pub fn lower_statement(stmt: &IgStatement) -> Result<Lowered, LowerError> {
         Computation::MeansTestedBenefit { basis, income_ceiling, taper_floor, amount, cadence } => {
             lower_means_tested(*basis, *income_ceiling, *taper_floor, *amount, *cadence)
         }
-        Computation::RegistrationRequirement { cadence, .. } => {
-            lower_registration(*cadence)
+        Computation::RegistrationRequirement { basis, threshold, cadence } => {
+            lower_registration(*basis, *threshold, *cadence)
         }
         Computation::ConditionalTransfer { eligibility_basis, ceiling, floor, amount, cadence } => {
             lower_conditional_transfer(*eligibility_basis, *ceiling, *floor, *amount, *cadence)
@@ -233,7 +233,7 @@ fn lower_means_tested(
 /// Registration requirement: emits a no-op DSL scope (the actual effect —
 /// setting `LegalStatuses` flags — is handled directly by the dispatcher
 /// via `LawEffect::RegistrationMarker`).
-fn lower_registration(cadence: LowerCadence) -> Result<Lowered, LowerError> {
+fn lower_registration(basis: AmountBasis, threshold: f64, cadence: LowerCadence) -> Result<Lowered, LowerError> {
     let body = DefaultExpr { base: Expr::LitMoney(0.0), exceptions: vec![] };
     let scope = Scope {
         name: "Registration".into(),
@@ -242,7 +242,7 @@ fn lower_registration(cadence: LowerCadence) -> Result<Lowered, LowerError> {
     };
     Ok(Lowered {
         program: Program { scopes: vec![scope] },
-        effect: LawEffect::RegistrationMarker,
+        effect: LawEffect::RegistrationMarker { basis, threshold },
         cadence: cadence_to_runtime(cadence),
     })
 }

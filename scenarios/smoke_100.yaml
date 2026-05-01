@@ -1,0 +1,10 @@
+name: smoke_100
+description: |
+  Small deterministic scenario for fast replay/snapshot CI tests.
+  100 citizens, 16 regions, one election cycle.
+seed: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7]
+ticks: 720
+population:
+  citizens: 100
+  corporations: 0
+  regions: 16

@@ -23,6 +23,8 @@ pub struct MacroIndicators {
     pub last_election_tick: u64,
     /// Margin of last election victory in [0, 1].
     pub election_margin: f32,
+    /// Consecutive terms the incumbent has held (resets on party flip).
+    pub consecutive_terms: u32,
 }
 
 /// Government balance sheet. Phase 1 just tracks revenue.

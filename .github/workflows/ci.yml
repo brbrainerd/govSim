@@ -37,8 +37,8 @@ jobs:
         run: cargo run -p simulator-cli -- law-compile --schema
       - name: ig2 fixture validation (Python)
         run: python3 data/grammars/ig2_types.py scenarios/income_tax_2026.ig2.json scenarios/housing_benefit_2026.ig2.json scenarios/stimulus_2026.ig2.json
-      - name: replay round-trip (hello.yaml)
-        run: cargo run -p simulator-cli -- replay --scenario scenarios/hello.yaml --ticks 50 --snapshot-at 25
+      - name: replay round-trip (smoke_100)
+        run: cargo run -p simulator-cli -- replay --scenario scenarios/smoke_100.yaml --ticks 720 --snapshot-at 360
       - name: xtask llm detect
         run: cargo run -p xtask -- llm detect
 

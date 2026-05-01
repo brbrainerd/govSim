@@ -11,6 +11,7 @@ use bevy_ecs::prelude::Resource;
 use parking_lot::RwLock;
 
 use crate::dsl::Program;
+use crate::ig2::AmountBasis;
 use crate::system::Cadence;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
@@ -44,10 +45,13 @@ pub enum LawEffect {
         scope: &'static str,
         amount_def: &'static str,
     },
-    /// Non-monetary registration marker: sets `LegalStatuses::REGISTERED_VOTER`
-    /// (or equivalent) for eligible citizens. No DSL evaluation needed;
-    /// the program scope is a no-op placeholder for audit purposes.
-    RegistrationMarker,
+    /// Non-monetary registration marker: sets or clears `LegalStatuses::REGISTERED_VOTER`
+    /// for every citizen based on whether their `basis` is below `threshold`.
+    /// The DSL scope is a no-op placeholder kept for audit / round-trip.
+    RegistrationMarker {
+        basis: AmountBasis,
+        threshold: f64,
+    },
 }
 
 #[derive(Resource, Default, Clone)]

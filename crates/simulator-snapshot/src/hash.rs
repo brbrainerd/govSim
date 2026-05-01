@@ -91,6 +91,7 @@ pub fn state_hash(world: &mut World) -> StateHash {
     hasher.update(&[macro_.incumbent_party]);
     hasher.update(&macro_.last_election_tick.to_le_bytes());
     hasher.update(&macro_.election_margin.to_bits().to_le_bytes());
+    hasher.update(&macro_.consecutive_terms.to_le_bytes());
 
     *hasher.finalize().as_bytes()
 }

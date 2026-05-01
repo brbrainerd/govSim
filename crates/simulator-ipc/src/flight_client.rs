@@ -92,6 +92,7 @@ fn indicators_from_batch(batch: &RecordBatch) -> Result<MacroIndicators, IpcErro
         incumbent_party:        0,
         last_election_tick:     0,
         election_margin:        0.0,
+        consecutive_terms:      0,
     })
 }
 

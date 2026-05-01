@@ -112,6 +112,7 @@ pub fn election_system(
     indicators.incumbent_party    = winner;
     indicators.last_election_tick = clock.tick;
     indicators.election_margin    = margin;
+    indicators.consecutive_terms  = consecutive;
 }
 
 pub fn register_election_system(sim: &mut Sim) {
