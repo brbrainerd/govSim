@@ -92,6 +92,7 @@ pub fn state_hash(world: &mut World) -> StateHash {
     hasher.update(&macro_.population.to_le_bytes());
     hasher.update(&macro_.gdp.to_bits().to_le_bytes());
     hasher.update(&macro_.gini.to_bits().to_le_bytes());
+    hasher.update(&macro_.wealth_gini.to_bits().to_le_bytes());
     hasher.update(&macro_.unemployment.to_bits().to_le_bytes());
     hasher.update(&macro_.approval.to_bits().to_le_bytes());
     hasher.update(&[macro_.incumbent_party]);

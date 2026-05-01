@@ -25,7 +25,7 @@ use simulator_types::{CitizenId, Money, RegionId, Score};
 
 use crate::SnapshotError;
 
-const SNAPSHOT_VERSION: u32 = 7;
+const SNAPSHOT_VERSION: u32 = 8;
 
 #[derive(Serialize, Deserialize)]
 struct SnapshotHeader {
@@ -63,6 +63,7 @@ struct ResourceBlock {
     population: u64,
     gdp: i128,
     gini: f32,
+    wealth_gini: f32,
     unemployment: f32,
     inflation: f32,
     approval: f32,
@@ -146,6 +147,7 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
         population:             macro_.population,
         gdp:                    macro_.gdp.to_bits(),
         gini:                   macro_.gini,
+        wealth_gini:            macro_.wealth_gini,
         unemployment:           macro_.unemployment,
         inflation:              macro_.inflation,
         approval:               macro_.approval,
@@ -207,6 +209,7 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<(u64, u64), Snaps
         macro_.population             = resources.population;
         macro_.gdp                    = Money::from_bits(resources.gdp);
         macro_.gini                   = resources.gini;
+        macro_.wealth_gini            = resources.wealth_gini;
         macro_.unemployment           = resources.unemployment;
         macro_.inflation              = resources.inflation;
         macro_.approval               = resources.approval;

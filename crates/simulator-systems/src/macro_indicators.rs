@@ -35,16 +35,13 @@ pub fn macro_indicators_system(
     let mut population: u64 = 0;
     let mut unemployed: u64 = 0;
     let mut approval_sum: f64 = 0.0;
-    // Only allocate for Gini on the monthly cadence.
-    let mut incomes: Vec<f64> = if compute_gini {
-        Vec::with_capacity(indicators.population as usize + 128)
-    } else {
-        Vec::new()
-    };
+    let cap = if compute_gini { indicators.population as usize + 128 } else { 0 };
+    let mut incomes: Vec<f64> = Vec::with_capacity(cap);
+    let mut wealths: Vec<f64> = Vec::with_capacity(cap);
 
     let mut gdp = Money::from_num(0);
 
-    for (_c, income, _wealth, emp, approval) in q.iter() {
+    for (_c, income, wealth, emp, approval) in q.iter() {
         population += 1;
         if matches!(emp, EmploymentStatus::Unemployed) { unemployed += 1; }
         approval_sum += approval.0.to_num::<f64>();
@@ -53,6 +50,8 @@ pub fn macro_indicators_system(
             let annual = income.0 * Money::from_num(360);
             gdp += annual;
             incomes.push(annual.to_num::<f64>().max(0.0));
+            // Wealth can be negative (debt); shift to ≥0 for Gini via min+offset.
+            wealths.push(wealth.0.to_num::<f64>());
         }
     }
 
@@ -67,6 +66,15 @@ pub fn macro_indicators_system(
     if compute_gini {
         indicators.gdp  = gdp;
         indicators.gini = if incomes.len() < 2 { 0.0 } else { gini_sorted(&mut incomes) };
+        // Wealth Gini: shift so minimum is 0 before computing.
+        if wealths.len() >= 2 {
+            let min_w = wealths.iter().cloned().fold(f64::INFINITY, f64::min);
+            if min_w < 0.0 {
+                let offset = -min_w;
+                for w in &mut wealths { *w += offset; }
+            }
+            indicators.wealth_gini = gini_sorted(&mut wealths);
+        }
     }
 
     if clock.tick.is_multiple_of(360) {

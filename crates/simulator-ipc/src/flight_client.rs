@@ -84,6 +84,7 @@ fn indicators_from_batch(batch: &RecordBatch) -> Result<MacroIndicators, IpcErro
         population:             col_u64!("population"),
         gdp:                    Money::from_num(col_f64!("gdp")),
         gini:                   col_f32!("gini"),
+        wealth_gini:            0.0,
         unemployment:           col_f32!("unemployment"),
         inflation:              col_f32!("inflation"),
         approval:               col_f32!("approval"),

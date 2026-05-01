@@ -9,7 +9,10 @@ use simulator_types::Money;
 pub struct MacroIndicators {
     pub population: u64,
     pub gdp: Money,
+    /// Income Gini coefficient [0, 1] — higher = more income inequality.
     pub gini: f32,
+    /// Wealth Gini coefficient [0, 1] — higher = more wealth concentration.
+    pub wealth_gini: f32,
     pub unemployment: f32,
     pub inflation: f32,
     pub approval: f32,
