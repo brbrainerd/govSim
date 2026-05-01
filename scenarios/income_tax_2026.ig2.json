@@ -1,0 +1,29 @@
+{
+  "kind": "regulative",
+  "attribute": { "class": "individual" },
+  "attribute_property": { "text": "annual income exceeds 12000 USD" },
+  "deontic": "must",
+  "aim": "pay",
+  "direct_object": { "class": "income_tax" },
+  "direct_object_property": {
+    "text": "10% of income above 12000 up to 50000, 22% above 50000 up to 200000, 35% above 200000"
+  },
+  "indirect_object": { "class": "treasury" },
+  "activation_conditions": [
+    { "kind": "state", "text": "annual income > 12000" }
+  ],
+  "execution_constraints": [
+    { "kind": "state", "text": "Treasury collects annually" }
+  ],
+  "computation": {
+    "kind": "bracketed_tax",
+    "basis": "annual_income",
+    "threshold": 12000.0,
+    "brackets": [
+      { "floor": 12000.0,  "ceil": 50000.0,  "rate": 0.10 },
+      { "floor": 50000.0,  "ceil": 200000.0, "rate": 0.22 },
+      { "floor": 200000.0, "ceil": null,     "rate": 0.35 }
+    ],
+    "cadence": "yearly"
+  }
+}

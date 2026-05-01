@@ -16,6 +16,7 @@ simulator-scenario    = { workspace = true }
 simulator-snapshot    = { workspace = true }
 simulator-systems     = { workspace = true }
 simulator-law         = { workspace = true }
+serde_json            = { workspace = true }
 simulator-telemetry   = { workspace = true }
 simulator-types       = { workspace = true }
 clap                  = { workspace = true }

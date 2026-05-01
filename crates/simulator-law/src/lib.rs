@@ -13,6 +13,7 @@
 pub mod ig2;
 pub mod dsl;
 pub mod eval;
+pub mod lower;
 pub mod registry;
 pub mod system;
 

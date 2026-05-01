@@ -13,7 +13,8 @@
       "Bash(git -c user.email=ugs@local -c user.name=UGS commit -q -m 'Phase 0: workspace scaffold + hello-world tick *)",
       "Bash(cargo build *)",
       "Bash(cargo run *)",
-      "Bash(git -c user.email=ugs@local -c user.name=UGS commit -q -m 'Phase 1: ECS components, scheduled phases, population spawn, taxation *)"
+      "Bash(git -c user.email=ugs@local -c user.name=UGS commit -q -m 'Phase 1: ECS components, scheduled phases, population spawn, taxation *)",
+      "Bash(git -c user.email=ugs@local -c user.name=UGS commit -q -m 'Phase 4 deepening: IG 2.0 → UGS-Catala lowering pass *)"
     ]
   }
 }

@@ -32,6 +32,11 @@ enum Cmd {
         /// hardcoded 20%-flat `taxation_system` is used instead.
         #[arg(long)]
         law: Option<PathBuf>,
+        /// Optional IG 2.0 JSON statement (with structured `computation`).
+        /// Lowered to UGS-Catala and enacted exactly as `--law` would be.
+        /// Mutually exclusive with `--law`.
+        #[arg(long, conflicts_with = "law")]
+        law_ig2: Option<PathBuf>,
     },
     /// Replay from a snapshot (Phase 1).
     Replay {
@@ -53,7 +58,7 @@ enum Cmd {
 fn main() -> Result<()> {
     simulator_telemetry::init();
     match Cli::parse().cmd {
-        Cmd::Run { scenario, ticks, law } => run(scenario, ticks, law),
+        Cmd::Run { scenario, ticks, law, law_ig2 } => run(scenario, ticks, law, law_ig2),
         Cmd::Replay { snapshot } => {
             tracing::warn!(?snapshot, "replay: not yet implemented (Phase 1)");
             Ok(())
@@ -66,9 +71,16 @@ fn main() -> Result<()> {
     }
 }
 
-fn run(path: PathBuf, override_ticks: Option<u64>, law_path: Option<PathBuf>) -> Result<()> {
+fn run(
+    path: PathBuf,
+    override_ticks: Option<u64>,
+    law_path: Option<PathBuf>,
+    law_ig2_path: Option<PathBuf>,
+) -> Result<()> {
     use simulator_law::{
         dsl::{parse_program, typecheck_program},
+        ig2::IgStatement,
+        lower::lower_statement,
         register_law_dispatcher, Cadence, LawHandle, LawId, LawRegistry,
     };
     use simulator_law::registry::LawEffect;
@@ -80,27 +92,53 @@ fn run(path: PathBuf, override_ticks: Option<u64>, law_path: Option<PathBuf>) ->
     let total = override_ticks.unwrap_or(scenario.ticks);
     let mut sim = Sim::new(scenario.seed);
 
-    if let Some(law_path) = law_path.as_ref() {
-        // Compile the .ugscat file and enact it via the registry.
-        let src = std::fs::read_to_string(law_path)?;
+    enum CompiledLaw {
+        Direct {
+            program: simulator_law::dsl::Program,
+            cadence: Cadence,
+            effect: LawEffect,
+        },
+    }
+
+    let compiled = if let Some(p) = law_path.as_ref() {
+        let src = std::fs::read_to_string(p)?;
         let program = parse_program(&src).map_err(|e| anyhow::anyhow!("parse: {e}"))?;
         typecheck_program(&program).map_err(|e| anyhow::anyhow!("typecheck: {e}"))?;
-        register_law_dispatcher(&mut sim);
-        let registry = sim.world.resource::<LawRegistry>().clone();
-        let handle = LawHandle {
-            id: LawId(0),
-            version: 1,
-            program: Arc::new(program),
+        Some(CompiledLaw::Direct {
+            program,
             cadence: Cadence::Yearly,
-            effective_from_tick: 0,
-            effective_until_tick: None,
             effect: LawEffect::PerCitizenIncomeTax {
                 scope: "IncomeTax",
                 owed_def: "tax_owed",
             },
-        };
-        let id = registry.enact(handle);
-        tracing::info!(?id, "enacted law from {}", law_path.display());
+        })
+    } else if let Some(p) = law_ig2_path.as_ref() {
+        let json = std::fs::read_to_string(p)?;
+        let stmt: IgStatement = serde_json::from_str(&json)?;
+        let lowered = lower_statement(&stmt).map_err(|e| anyhow::anyhow!("lower: {e}"))?;
+        typecheck_program(&lowered.program).map_err(|e| anyhow::anyhow!("typecheck: {e}"))?;
+        Some(CompiledLaw::Direct {
+            program: lowered.program,
+            cadence: lowered.cadence,
+            effect: lowered.effect,
+        })
+    } else {
+        None
+    };
+
+    if let Some(CompiledLaw::Direct { program, cadence, effect }) = compiled {
+        register_law_dispatcher(&mut sim);
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        let id = registry.enact(LawHandle {
+            id: LawId(0),
+            version: 1,
+            program: Arc::new(program),
+            cadence,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect,
+        });
+        tracing::info!(?id, "enacted law");
     } else {
         simulator_systems::register_phase1_systems(&mut sim);
     }

@@ -42,7 +42,56 @@ pub struct RegulativeStmt {
     /// Consequence (O): or-else clause.
     #[serde(default)]
     pub or_else: Option<Box<IgStatement>>,
+    /// Structured computation. Filled in by the LLM extractor (Phase 3) or
+    /// by hand authors. The free-text properties above remain authoritative
+    /// for human review; the lowering pass requires this structured form.
+    #[serde(default)]
+    pub computation: Option<Computation>,
 }
+
+/// Structured computation payloads. The LLM extractor will emit one of
+/// these inside an XGrammar-constrained JSON envelope; for now hand-authors
+/// can write them directly. Adding a variant here means: (a) the parser
+/// accepts it, (b) the lowering pass must learn to compile it.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum Computation {
+    /// Piecewise-linear bracketed rate applied to a basis (e.g. annual
+    /// income). Brackets must be sorted by ascending `floor`.
+    BracketedTax {
+        basis: AmountBasis,
+        threshold: f64,
+        brackets: Vec<TaxBracket>,
+        cadence: LowerCadence,
+    },
+    /// Single rate applied to the basis when above threshold.
+    FlatRate {
+        basis: AmountBasis,
+        threshold: f64,
+        rate: f64,
+        cadence: LowerCadence,
+    },
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct TaxBracket {
+    pub floor: f64,
+    pub ceil: Option<f64>, // None = unbounded top bracket
+    pub rate: f64,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AmountBasis {
+    /// Citizen's daily Income × 360 → annualized.
+    AnnualIncome,
+    /// Citizen's Wealth (point-in-time).
+    Wealth,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LowerCadence { Monthly, Quarterly, Yearly }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConstitutiveStmt {
