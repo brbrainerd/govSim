@@ -28,7 +28,8 @@
       "Bash(grep -n \"deny.toml\" .)",
       "Bash(ls deny.toml)",
       "Bash(cargo clippy *)",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(grep -E \"^\\(test |FAILED|error|ok$\\)\")"
     ]
   }
 }

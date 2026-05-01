@@ -31,7 +31,7 @@ use simulator_core::{
         ApprovalRating, Citizen, EmploymentStatus, IdeologyVector,
         MonthlyBenefitReceived, MonthlyTaxPaid,
     },
-    LegitimacyDebt, MacroIndicators, Phase, Sim, SimClock, SimRng,
+    LegitimacyDebt, MacroIndicators, Phase, RightsLedger, Sim, SimClock, SimRng,
 };
 use simulator_types::Score;
 use rand::Rng;
@@ -44,6 +44,7 @@ pub fn approval_system(
     rng_res: Res<SimRng>,
     macro_: Res<MacroIndicators>,
     debt: Res<LegitimacyDebt>,
+    rights: Res<RightsLedger>,
     mut q: Query<(
         &Citizen,
         &EmploymentStatus,
@@ -57,6 +58,18 @@ pub fn approval_system(
 
     // Legitimacy debt is felt by every citizen as a uniform negative shock.
     let legitimacy_shock = -debt.stock * 0.10;
+
+    // Rights-expansion honeymoon: linear decay over ~12 months from the last grant.
+    const HONEYMOON_TICKS: u64 = 360;
+    let honeymoon_shock: f32 = if rights.last_expansion_tick > 0
+        && clock.tick.saturating_sub(rights.last_expansion_tick) < HONEYMOON_TICKS
+    {
+        let elapsed = clock.tick.saturating_sub(rights.last_expansion_tick) as f32;
+        let remaining = 1.0 - (elapsed / HONEYMOON_TICKS as f32);
+        0.005 * remaining
+    } else {
+        0.0
+    };
 
     let gdp = macro_.gdp.to_num::<f64>().max(1.0);
     let macro_tax_rate   = (macro_.government_revenue.to_num::<f64>()     / gdp).clamp(0.0, 1.0) as f32;
@@ -100,7 +113,7 @@ pub fn approval_system(
         let mut rng = rng_res.derive_citizen("approval", clock.tick, citizen.0.0);
         let noise: f32 = (rng.random::<f32>() - 0.5) * 0.002;
 
-        let new_a = (a + employment_shock + tax_shock + spend_shock + legitimacy_shock + reversion + ideology_nudge + noise)
+        let new_a = (a + employment_shock + tax_shock + spend_shock + legitimacy_shock + honeymoon_shock + reversion + ideology_nudge + noise)
             .clamp(0.0, 1.0);
 
         approval.0 = Score::from_num(new_a);
@@ -220,6 +233,35 @@ mod tests {
         assert!(
             right_a < left_a,
             "right-leaning ({right_a}) should have lower approval than left-leaning ({left_a}) under high tax burden"
+        );
+    }
+
+    #[test]
+    fn rights_expansion_boosts_approval_during_honeymoon() {
+        use simulator_core::{CivicRights, RightsLedger};
+        let mut sim_quiet = Sim::new([77u8; 32]);
+        let mut sim_grant = Sim::new([77u8; 32]);
+        register_approval_system(&mut sim_quiet);
+        register_approval_system(&mut sim_grant);
+
+        // Grant a right at tick 1 in sim_grant (so honeymoon is active during firing).
+        sim_grant.world.resource_mut::<RightsLedger>()
+            .grant(CivicRights::UNIVERSAL_SUFFRAGE, 1);
+
+        spawn_citizen(&mut sim_quiet.world, 0, EmploymentStatus::Employed, 0.5);
+        spawn_citizen(&mut sim_grant.world, 0, EmploymentStatus::Employed, 0.5);
+
+        for _ in 0..31 { sim_quiet.step(); }
+        for _ in 0..31 { sim_grant.step(); }
+
+        let quiet_a: f32 = sim_quiet.world
+            .query::<&ApprovalRating>().single(&sim_quiet.world).unwrap().0.to_num();
+        let grant_a: f32 = sim_grant.world
+            .query::<&ApprovalRating>().single(&sim_grant.world).unwrap().0.to_num();
+
+        assert!(
+            grant_a > quiet_a,
+            "rights-expansion sim ({grant_a}) should approve more than quiet ({quiet_a})"
         );
     }
 

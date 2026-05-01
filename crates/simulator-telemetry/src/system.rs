@@ -9,7 +9,7 @@
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    MacroIndicators, Phase, PriceLevel, Sim, SimClock, Treasury,
+    LegitimacyDebt, MacroIndicators, Phase, PriceLevel, RightsLedger, Sim, SimClock, Treasury,
 };
 
 /// Emit a telemetry line every N ticks (default 30 — once per sim-month).
@@ -27,6 +27,8 @@ pub fn tick_telemetry_system(
     indicators: Res<MacroIndicators>,
     treasury: Res<Treasury>,
     price_level: Res<PriceLevel>,
+    debt: Res<LegitimacyDebt>,
+    rights: Res<RightsLedger>,
 ) {
     let period = emit_period();
     if !clock.tick.is_multiple_of(period) || clock.tick == 0 { return; }
@@ -53,6 +55,9 @@ pub fn tick_telemetry_system(
         last_election_tick = indicators.last_election_tick,
         election_margin    = indicators.election_margin,
         consecutive_terms  = indicators.consecutive_terms,
+        legitimacy_debt    = debt.stock,
+        rights_granted     = rights.granted.bits(),
+        rights_high_water  = rights.historical_max.bits(),
         "tick_telemetry"
     );
 }

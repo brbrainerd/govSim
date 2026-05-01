@@ -2,6 +2,7 @@
 //! UI / telemetry / cognition layers.
 
 use bevy_ecs::prelude::Resource;
+use bitflags::bitflags;
 use simulator_types::Money;
 
 /// Macro indicators recomputed each tick (or each commit phase).
@@ -72,4 +73,112 @@ pub struct LegitimacyDebt {
 
 impl Default for LegitimacyDebt {
     fn default() -> Self { Self { stock: 0.0, decay: 0.95 } }
+}
+
+bitflags! {
+    /// Categorical civic rights recognized by the polity. Each bit is a
+    /// distinct right that historically expanded one-way (suffrage, racial
+    /// equality, abolition, etc.). Modeled as bitflags so the ledger
+    /// composes over time and so DSL laws can probe specific rights cheaply.
+    #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+    pub struct CivicRights: u32 {
+        const UNIVERSAL_SUFFRAGE   = 1 << 0;
+        const RACIAL_EQUALITY      = 1 << 1;
+        const GENDER_EQUALITY      = 1 << 2;
+        const LGBTQ_PROTECTIONS    = 1 << 3;
+        const RELIGIOUS_FREEDOM    = 1 << 4;
+        const LABOR_RIGHTS         = 1 << 5;
+        const DUE_PROCESS          = 1 << 6;
+        const FREE_SPEECH          = 1 << 7;
+        const ABOLITION_OF_SLAVERY = 1 << 8;
+    }
+}
+
+/// Categorical-rights ledger. Tracks currently recognized civic rights and
+/// the historical high-water mark; revoking a right that was previously held
+/// adds to LegitimacyDebt (one-way ratchet — expansions are sticky, contractions
+/// expensive). Recent expansions trigger a temporary approval boost.
+#[derive(Resource, Debug, Clone, Default)]
+pub struct RightsLedger {
+    pub granted: CivicRights,
+    /// All rights ever granted in this run (never decreases).
+    pub historical_max: CivicRights,
+    /// Tick at which the most recent grant occurred (for honeymoon boost).
+    pub last_expansion_tick: u64,
+}
+
+impl RightsLedger {
+    /// Add a right. Returns true if it was newly granted.
+    pub fn grant(&mut self, right: CivicRights, tick: u64) -> bool {
+        let was_present = self.granted.contains(right);
+        self.granted.insert(right);
+        self.historical_max.insert(right);
+        if !was_present {
+            self.last_expansion_tick = tick;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Remove a right. Returns the legitimacy-debt magnitude to incur:
+    /// 0.5 per right that was previously held and is now being taken away;
+    /// 0.0 if the right was never granted.
+    pub fn revoke(&mut self, right: CivicRights) -> f32 {
+        let mut debt = 0.0_f32;
+        for r in [
+            CivicRights::UNIVERSAL_SUFFRAGE, CivicRights::RACIAL_EQUALITY,
+            CivicRights::GENDER_EQUALITY, CivicRights::LGBTQ_PROTECTIONS,
+            CivicRights::RELIGIOUS_FREEDOM, CivicRights::LABOR_RIGHTS,
+            CivicRights::DUE_PROCESS, CivicRights::FREE_SPEECH,
+            CivicRights::ABOLITION_OF_SLAVERY,
+        ] {
+            if right.contains(r)
+                && self.granted.contains(r)
+                && self.historical_max.contains(r)
+            {
+                self.granted.remove(r);
+                debt += 0.5;
+            }
+        }
+        debt
+    }
+
+    pub fn has(&self, right: CivicRights) -> bool {
+        self.granted.contains(right)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rights_ledger_grants_and_records_high_water() {
+        let mut l = RightsLedger::default();
+        assert!(l.grant(CivicRights::UNIVERSAL_SUFFRAGE, 100));
+        assert_eq!(l.last_expansion_tick, 100);
+        // Re-granting an already-held right returns false and does not move the tick.
+        assert!(!l.grant(CivicRights::UNIVERSAL_SUFFRAGE, 200));
+        assert_eq!(l.last_expansion_tick, 100);
+        assert!(l.has(CivicRights::UNIVERSAL_SUFFRAGE));
+    }
+
+    #[test]
+    fn rights_ledger_revoke_charges_only_for_held_rights() {
+        let mut l = RightsLedger::default();
+        l.grant(CivicRights::ABOLITION_OF_SLAVERY, 1);
+        l.grant(CivicRights::DUE_PROCESS, 2);
+        // Revoking both held rights → 1.0 total debt (0.5 each).
+        let debt = l.revoke(CivicRights::ABOLITION_OF_SLAVERY | CivicRights::DUE_PROCESS);
+        assert!((debt - 1.0).abs() < 1e-6, "expected 1.0, got {debt}");
+        // Revoking a never-held right → 0 debt.
+        let debt2 = l.revoke(CivicRights::FREE_SPEECH);
+        assert_eq!(debt2, 0.0);
+        // historical_max retains both.
+        assert!(l.historical_max.contains(CivicRights::ABOLITION_OF_SLAVERY));
+        assert!(l.historical_max.contains(CivicRights::DUE_PROCESS));
+        // currently granted does not.
+        assert!(!l.granted.contains(CivicRights::ABOLITION_OF_SLAVERY));
+    }
 }
