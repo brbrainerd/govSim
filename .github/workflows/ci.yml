@@ -35,6 +35,8 @@ jobs:
         run: cargo run -p simulator-cli -- determinism --scenario scenarios/smoke_100k.yaml --ticks 100
       - name: ig2 schema round-trip
         run: cargo run -p simulator-cli -- law-compile --schema
+      - name: ig2 fixture validation (Python)
+        run: python3 data/grammars/ig2_types.py scenarios/income_tax_2026.ig2.json scenarios/housing_benefit_2026.ig2.json scenarios/stimulus_2026.ig2.json
 
   deny:
     name: cargo-deny

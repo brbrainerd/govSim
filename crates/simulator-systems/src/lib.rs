@@ -11,7 +11,7 @@ use simulator_core::{
 use simulator_telemetry::register_telemetry_system;
 use simulator_types::Money;
 
-pub mod employment {}
+pub mod employment;
 pub mod education {}
 pub mod macro_indicators;
 pub mod opinion;
@@ -22,6 +22,7 @@ pub mod media {}
 pub mod migration {}
 pub mod birth_death {}
 
+pub use employment::register_employment_system;
 pub use macro_indicators::register_macro_indicators_system;
 pub use opinion::{build_influence_graph, register_opinion_system};
 
@@ -50,6 +51,7 @@ pub fn taxation_system(
 pub fn register_phase1_systems(sim: &mut Sim) {
     sim.schedule_mut()
         .add_systems(taxation_system.in_set(Phase::Mutate));
+    register_employment_system(sim);
     register_opinion_system(sim);
     register_macro_indicators_system(sim);
     register_telemetry_system(sim);

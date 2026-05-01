@@ -14,7 +14,12 @@
       "Bash(cargo build *)",
       "Bash(cargo run *)",
       "Bash(git -c user.email=ugs@local -c user.name=UGS commit -q -m 'Phase 1: ECS components, scheduled phases, population spawn, taxation *)",
-      "Bash(git -c user.email=ugs@local -c user.name=UGS commit -q -m 'Phase 4 deepening: IG 2.0 → UGS-Catala lowering pass *)"
+      "Bash(git -c user.email=ugs@local -c user.name=UGS commit -q -m 'Phase 4 deepening: IG 2.0 → UGS-Catala lowering pass *)",
+      "Bash(git commit -m ' *)",
+      "Bash(taskkill /F /IM ugs.exe)",
+      "PowerShell(Stop-Process -Name \"ugs\" -Force -ErrorAction SilentlyContinue)",
+      "PowerShell(\"done\")",
+      "Bash(python3 data/grammars/ig2_types.py scenarios/income_tax_2026.ig2.json scenarios/housing_benefit_2026.ig2.json scenarios/stimulus_2026.ig2.json)"
     ]
   }
 }

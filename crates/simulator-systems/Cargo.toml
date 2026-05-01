@@ -12,7 +12,8 @@ simulator-types     = { workspace = true }
 simulator-econ      = { workspace = true }
 simulator-net       = { workspace = true }
 simulator-telemetry = { workspace = true }
-bevy_ecs          = { workspace = true }
-petgraph          = { workspace = true }
-rayon             = { workspace = true }
-tracing           = { workspace = true }
+bevy_ecs            = { workspace = true }
+petgraph            = { workspace = true }
+rayon               = { workspace = true }
+rand                = { workspace = true }
+tracing             = { workspace = true }
