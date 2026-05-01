@@ -6,8 +6,8 @@ use bevy_ecs::schedule::ScheduleLabel;
 use crate::{
     phase::Phase,
     resources::{
-        CrisisState, GovernmentLedger, LegitimacyDebt, MacroIndicators, PriceLevel,
-        RightsLedger, Treasury,
+        CrisisState, GovernmentLedger, LegitimacyDebt, MacroIndicators, PollutionStock,
+        PriceLevel, RightsLedger, Treasury,
     },
     rng::SimRng,
     tick::SimClock,
@@ -33,6 +33,7 @@ impl Sim {
         world.insert_resource(LegitimacyDebt::default());
         world.insert_resource(RightsLedger::default());
         world.insert_resource(CrisisState::default());
+        world.insert_resource(PollutionStock::default());
 
         let mut schedule = Schedule::new(UgsTick);
         schedule.configure_sets(

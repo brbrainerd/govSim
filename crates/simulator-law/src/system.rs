@@ -13,7 +13,7 @@ use simulator_core::{
         Health, Income, LegalStatusFlags, LegalStatuses, MonthlyBenefitReceived,
         MonthlyTaxPaid, Productivity, Wealth,
     },
-    GovernmentLedger, MacroIndicators, Phase, Sim, SimClock, SimRng, Treasury,
+    GovernmentLedger, MacroIndicators, Phase, PollutionStock, Sim, SimClock, SimRng, Treasury,
 };
 use rand::Rng;
 use simulator_types::Money;
@@ -46,7 +46,7 @@ impl Cadence {
     }
 }
 
-#[allow(clippy::type_complexity)]
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn law_dispatcher_system(
     clock: Res<SimClock>,
     rng_res: Res<SimRng>,
@@ -54,6 +54,7 @@ pub fn law_dispatcher_system(
     registry: Res<LawRegistry>,
     mut treasury: ResMut<Treasury>,
     mut ledger: ResMut<GovernmentLedger>,
+    mut pollution: ResMut<PollutionStock>,
     mut q: Query<(
         Option<&Citizen>,
         &Income,
@@ -171,6 +172,21 @@ pub fn law_dispatcher_system(
                 }
                 treasury.balance += collected;
                 ledger.revenue += collected;
+            }
+            LawEffect::Abatement { pollution_reduction_pu, cost_per_pu } => {
+                // Debit Treasury proportionally to what can be afforded.
+                let full_cost_cents = pollution_reduction_pu * cost_per_pu;
+                let affordable_fraction = if full_cost_cents <= 0.0 {
+                    1.0
+                } else {
+                    let balance: f64 = treasury.balance.to_num();
+                    (balance / full_cost_cents).clamp(0.0, 1.0)
+                };
+                let actual_pu   = pollution_reduction_pu * affordable_fraction;
+                let actual_cost = Money::from_num(full_cost_cents * affordable_fraction);
+                pollution.stock = (pollution.stock - actual_pu).max(0.0);
+                treasury.balance -= actual_cost;
+                ledger.expenditure += actual_cost;
             }
         }
     }

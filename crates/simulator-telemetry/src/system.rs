@@ -9,7 +9,7 @@
 
 use simulator_core::{
     bevy_ecs::prelude::*,
-    CrisisState, LegitimacyDebt, MacroIndicators, Phase, PriceLevel,
+    CrisisState, LegitimacyDebt, MacroIndicators, Phase, PollutionStock, PriceLevel,
     RightsLedger, Sim, SimClock, Treasury,
 };
 
@@ -23,6 +23,7 @@ fn emit_period() -> u64 {
         .unwrap_or(DEFAULT_PERIOD)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn tick_telemetry_system(
     clock: Res<SimClock>,
     indicators: Res<MacroIndicators>,
@@ -31,6 +32,7 @@ pub fn tick_telemetry_system(
     debt: Res<LegitimacyDebt>,
     rights: Res<RightsLedger>,
     crisis: Res<CrisisState>,
+    pollution: Res<PollutionStock>,
 ) {
     let period = emit_period();
     if !clock.tick.is_multiple_of(period) || clock.tick == 0 { return; }
@@ -62,6 +64,7 @@ pub fn tick_telemetry_system(
         rights_high_water  = rights.historical_max.bits(),
         crisis_kind        = ?crisis.kind,
         crisis_remaining   = crisis.remaining_ticks,
+        pollution_stock    = pollution.stock,
         "tick_telemetry"
     );
 }

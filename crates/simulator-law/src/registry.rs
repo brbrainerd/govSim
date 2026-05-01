@@ -61,6 +61,16 @@ pub enum LawEffect {
         /// Penalty coefficient on detected evaded income.
         penalty_rate: f64,
     },
+    /// Environmental abatement spending: removes `pollution_reduction_pu` pollution
+    /// units per monthly firing at a cost of `cost_per_pu` cents debited from
+    /// Treasury. If Treasury cannot cover the full amount, partial abatement
+    /// proportional to available funds is applied.
+    Abatement {
+        /// Pollution units removed per firing (unconstrained by Treasury).
+        pollution_reduction_pu: f64,
+        /// Treasury cost in cents per pollution unit removed.
+        cost_per_pu: f64,
+    },
 }
 
 #[derive(Resource, Default, Clone)]

@@ -75,6 +75,29 @@ impl Default for LegitimacyDebt {
     fn default() -> Self { Self { stock: 0.0, decay: 0.95 } }
 }
 
+/// Aggregate pollution stock. Rises with economic activity, falls with
+/// natural decay and abatement spending. Feeds back into citizen health
+/// and productivity through `pollution_feedback_system` (Phase 30).
+///
+/// Units are arbitrary "pollution units" (PU); the feedback coefficients
+/// are calibrated so that `stock ≈ 1.0` at a baseline industrialised
+/// economy and `stock > 3.0` triggers meaningful health drag.
+#[derive(Resource, Debug, Clone)]
+pub struct PollutionStock {
+    /// Current accumulated pollution level (PU). Non-negative.
+    pub stock: f64,
+    /// Natural decay fraction per tick (1.0 = instant clear, ~0.9997 ≈ 1%/month).
+    pub decay: f64,
+    /// PU added per unit of aggregate consumption expenditure (monthly).
+    pub emission_rate: f64,
+}
+
+impl Default for PollutionStock {
+    fn default() -> Self {
+        Self { stock: 0.0, decay: 0.999_7, emission_rate: 0.000_001 }
+    }
+}
+
 /// Kind of exogenous crisis currently gripping the polity.
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub enum CrisisKind {

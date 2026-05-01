@@ -23,6 +23,7 @@ pub mod inflation;
 pub mod macro_indicators;
 pub mod migration;
 pub mod opinion;
+pub mod pollution;
 pub mod wealth_update;
 pub mod judicial {}
 pub mod enforcement {}
@@ -40,6 +41,7 @@ pub use inflation::register_inflation_system;
 pub use macro_indicators::register_macro_indicators_system;
 pub use migration::register_migration_system;
 pub use opinion::{build_influence_graph, register_opinion_system};
+pub use pollution::{apply_abatement, register_pollution_system};
 pub use wealth_update::register_wealth_update_system;
 
 /// Flat 20% income tax remitted on the first day of every month
@@ -76,6 +78,7 @@ pub fn register_phase1_systems(sim: &mut Sim) {
     register_employment_system(sim);
     register_health_system(sim);
     register_crisis_system(sim);
+    register_pollution_system(sim);
     register_approval_system(sim);
     register_migration_system(sim);
     register_birth_death_system(sim);
