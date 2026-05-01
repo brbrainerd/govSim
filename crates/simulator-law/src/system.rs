@@ -83,6 +83,7 @@ pub fn law_dispatcher_system(
                 for (_, income, health_opt, prod_opt, consumption_opt, mut wealth, _, _, _) in q.iter_mut() {
                     let annual = income.0 * Money::from_num(360);
                     ctx.field_bindings.insert(("citizen".into(), "income".into()), Value::Money(annual));
+                    ctx.field_bindings.insert(("citizen".into(), "wealth".into()), Value::Money(wealth.0));
                     if let Some(c) = consumption_opt {
                         ctx.field_bindings.insert(("citizen".into(), "consumption".into()), Value::Money(c.0));
                     }
@@ -107,6 +108,7 @@ pub fn law_dispatcher_system(
                 for (_, income, health_opt, prod_opt, consumption_opt, mut wealth, _, _, _) in q.iter_mut() {
                     let annual = income.0 * Money::from_num(360);
                     ctx.field_bindings.insert(("citizen".into(), "income".into()), Value::Money(annual));
+                    ctx.field_bindings.insert(("citizen".into(), "wealth".into()), Value::Money(wealth.0));
                     if let Some(c) = consumption_opt {
                         ctx.field_bindings.insert(("citizen".into(), "consumption".into()), Value::Money(c.0));
                     }
@@ -557,6 +559,82 @@ mod tests {
         assert!(
             (bal - expected).abs() < 1.0,
             "expected ~${expected:.0} in treasury from VAT, got ${bal:.2}"
+        );
+    }
+
+    /// Wealth tax: 1% annual tax on wealth above $50 000 exemption.
+    /// Citizens below exemption pay nothing; citizens above pay 1% of excess.
+    #[test]
+    fn wealth_tax_exempts_small_holders() {
+        use crate::ig2::{Computation, LowerCadence};
+
+        let mut sim = Sim::new([50u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        // Citizen 0: $30 000 wealth → below exemption → pays $0
+        let income0 = Money::from_num(100i64);
+        sim.world.spawn((
+            Citizen(CitizenId(0)),
+            Income(income0),
+            Wealth(Money::from_num(30_000i64)),
+            ConsumptionExpenditure(income0 * Money::from_num(4) / Money::from_num(5)),
+            LegalStatuses::default(),
+            AuditFlags::default(),
+            EvasionPropensity(0.0),
+        ));
+        // Citizen 1: $150 000 wealth → taxable portion = $100 000 → tax = $1 000
+        let income1 = Money::from_num(500i64);
+        sim.world.spawn((
+            Citizen(CitizenId(1)),
+            Income(income1),
+            Wealth(Money::from_num(150_000i64)),
+            ConsumptionExpenditure(income1 * Money::from_num(4) / Money::from_num(5)),
+            LegalStatuses::default(),
+            AuditFlags::default(),
+            EvasionPropensity(0.0),
+        ));
+
+        let stmt = crate::ig2::IgStatement::Regulative(crate::ig2::RegulativeStmt {
+            attribute: crate::ig2::ActorRef { class: "individual".into(), qualifier: None },
+            attribute_property: None,
+            deontic: None,
+            aim: "pay".into(),
+            direct_object: None, direct_object_property: None,
+            indirect_object: None, indirect_object_property: None,
+            activation_conditions: vec![], execution_constraints: vec![],
+            or_else: None,
+            computation: Some(Computation::WealthTax {
+                exemption: 50_000.0,
+                rate: 0.01,
+                cadence: LowerCadence::Yearly,
+            }),
+        });
+        let lowered = crate::lower::lower_statement(&stmt).expect("lowering");
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(LawHandle {
+            id: LawId(0), version: 1,
+            program: Arc::new(lowered.program),
+            cadence: lowered.cadence,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: lowered.effect,
+        });
+
+        for _ in 0..=360 { sim.step(); }
+
+        // Citizen 0 wealth should be ~$30 000 (no deduction)
+        // Citizen 1 wealth should be ~$150 000 − $1 000 = $149 000
+        let treasury = sim.world.resource::<Treasury>();
+        let bal: f64 = treasury.balance.to_num();
+        assert!(
+            (bal - 1_000.0).abs() < 1.0,
+            "expected ~$1 000 collected from wealth tax, got ${bal:.2}"
+        );
+        let ledger = sim.world.resource::<GovernmentLedger>();
+        let rev: f64 = ledger.revenue.to_num();
+        assert!(
+            (rev - 1_000.0).abs() < 1.0,
+            "expected ~$1 000 in revenue ledger, got ${rev:.2}"
         );
     }
 

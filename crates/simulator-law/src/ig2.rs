@@ -131,6 +131,15 @@ pub enum Computation {
         rate: f64,
         cadence: LowerCadence,
     },
+    /// Annual wealth tax: flat rate applied to citizens' current `Wealth`.
+    /// Wealth above `exemption` is taxed; no exemption when `exemption = 0`.
+    WealthTax {
+        /// Minimum wealth exempt from taxation (e.g. 100_000.0 = first $100k free).
+        exemption: f64,
+        /// Rate applied to wealth above `exemption` [0, 1].
+        rate: f64,
+        cadence: LowerCadence,
+    },
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]

@@ -61,6 +61,9 @@ pub fn lower_statement(stmt: &IgStatement) -> Result<Lowered, LowerError> {
         Computation::ConsumptionTax { rate, cadence } => {
             lower_consumption_tax(*rate, *cadence)
         }
+        Computation::WealthTax { exemption, rate, cadence } => {
+            lower_wealth_tax(*exemption, *rate, *cadence)
+        }
     }
 }
 
@@ -334,6 +337,30 @@ fn lower_consumption_tax(rate: f64, cadence: LowerCadence) -> Result<Lowered, Lo
     Ok(Lowered {
         program: Program { scopes: vec![scope] },
         effect: LawEffect::PerCitizenIncomeTax { scope: "ConsumptionTax", owed_def: "vat_owed" },
+        cadence: cadence_to_runtime(cadence),
+    })
+}
+
+/// Wealth tax: `tax_owed = rate * max(citizen.wealth - exemption, 0)`.
+/// Uses `PerCitizenIncomeTax` effect (deduct from Wealth, credit Treasury).
+/// DSL: base=0.0; exception (citizen.wealth > exemption) = rate*(wealth-exemption).
+fn lower_wealth_tax(exemption: f64, rate: f64, cadence: LowerCadence) -> Result<Lowered, LowerError> {
+    let wealth = || Expr::Field { obj: "citizen".into(), field: "wealth".into() };
+    let body = DefaultExpr {
+        base: Expr::LitMoney(0.0),
+        exceptions: vec![(
+            gt(wealth(), money(exemption)),
+            mul(money(rate), sub(wealth(), money(exemption))),
+        )],
+    };
+    let scope = Scope {
+        name: "WealthTax".into(),
+        params: vec![ParamDecl { name: "citizen".into(), ty: Type::Money }],
+        items: vec![Item::Definition { name: "tax_owed".into(), ty: Type::Money, body }],
+    };
+    Ok(Lowered {
+        program: Program { scopes: vec![scope] },
+        effect: LawEffect::PerCitizenIncomeTax { scope: "WealthTax", owed_def: "tax_owed" },
         cadence: cadence_to_runtime(cadence),
     })
 }
