@@ -75,6 +75,44 @@ impl Default for LegitimacyDebt {
     fn default() -> Self { Self { stock: 0.0, decay: 0.95 } }
 }
 
+/// Kind of exogenous crisis currently gripping the polity.
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
+pub enum CrisisKind {
+    #[default]
+    None,
+    /// Armed conflict — rally-round-the-flag then sustained drag.
+    War,
+    /// Disease outbreak — welfare spending pressure, workforce shock.
+    Pandemic,
+    /// Economic contraction — unemployment spike, revenue collapse.
+    Recession,
+    /// Environmental or geological disaster — short sharp shock.
+    NaturalDisaster,
+}
+
+/// Exogenous crisis state. While `kind != None` the polity is inside a
+/// *policy window*: the legitimacy-debt cost of emergency legislation drops
+/// and a per-citizen approval shock was applied at onset.
+///
+/// Cleared automatically when `remaining_ticks` reaches 0.
+#[derive(Resource, Debug, Clone)]
+pub struct CrisisState {
+    pub kind: CrisisKind,
+    /// Ticks until the crisis resolves. 0 ↔ no active crisis.
+    pub remaining_ticks: u64,
+    /// Approval shock broadcast at onset (negative = immediate hit).
+    pub onset_shock: f32,
+    /// Multiplier on legitimacy-debt incurred by law changes while active.
+    /// < 1.0 means emergency measures face reduced political resistance.
+    pub cost_multiplier: f32,
+}
+
+impl Default for CrisisState {
+    fn default() -> Self {
+        Self { kind: CrisisKind::None, remaining_ticks: 0, onset_shock: 0.0, cost_multiplier: 1.0 }
+    }
+}
+
 bitflags! {
     /// Categorical civic rights recognized by the polity. Each bit is a
     /// distinct right that historically expanded one-way (suffrage, racial

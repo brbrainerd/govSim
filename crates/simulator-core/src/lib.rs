@@ -10,8 +10,8 @@ pub mod world;
 
 pub use phase::Phase;
 pub use resources::{
-    CivicRights, GovernmentLedger, LegitimacyDebt, MacroIndicators, PriceLevel,
-    RightsLedger, Treasury,
+    CivicRights, CrisisKind, CrisisState, GovernmentLedger, LegitimacyDebt,
+    MacroIndicators, PriceLevel, RightsLedger, Treasury,
 };
 pub use rng::SimRng;
 pub use tick::SimClock;

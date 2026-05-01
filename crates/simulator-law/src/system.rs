@@ -215,6 +215,7 @@ pub fn register_law_dispatcher(sim: &mut Sim) {
     sim.schedule_mut()
         .add_systems(law_dispatcher_system.in_set(Phase::Mutate));
     crate::legitimacy::register_legitimacy_system(sim);
+    crate::crisis_link::register_crisis_link_system(sim);
 }
 
 #[cfg(test)]

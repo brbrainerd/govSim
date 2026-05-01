@@ -75,6 +75,17 @@ struct RegistryInner {
     /// Pending legitimacy-debt events from repeals: drained by the
     /// legitimacy_update_system each monthly tick.
     repeal_debt: f32,
+    /// Multiplier applied to all new repeal-debt charges this tick.
+    /// Set each tick by crisis_link_system from CrisisState.cost_multiplier.
+    /// < 1.0 during active crises (emergency measures face less resistance).
+    crisis_cost_multiplier: f32,
+}
+
+impl RegistryInner {
+    fn scaled_debt(&self, base: f32) -> f32 {
+        let m = if self.crisis_cost_multiplier > 0.0 { self.crisis_cost_multiplier } else { 1.0 };
+        base * m
+    }
 }
 
 impl LawRegistry {
@@ -99,7 +110,7 @@ impl LawRegistry {
         if let Some(prev) = g.by_id.get_mut(&old) {
             prev.effective_until_tick = Some(effective_from_tick);
             if matches!(prev.effect, LawEffect::PerCitizenBenefit { .. }) {
-                g.repeal_debt += 0.05;
+                g.repeal_debt += g.scaled_debt(0.05);
             }
         }
         let mut new = new;
@@ -119,9 +130,14 @@ impl LawRegistry {
         if let Some(prev) = g.by_id.get_mut(&id) {
             prev.effective_until_tick = Some(tick);
             if matches!(prev.effect, LawEffect::PerCitizenBenefit { .. }) {
-                g.repeal_debt += 0.10;
+                g.repeal_debt += g.scaled_debt(0.10);
             }
         }
+    }
+
+    /// Update the crisis cost multiplier (called each tick by crisis_link_system).
+    pub fn set_crisis_cost_multiplier(&self, multiplier: f32) {
+        self.inner.write().crisis_cost_multiplier = multiplier;
     }
 
     /// Drain accumulated legitimacy-debt magnitude (called by the update system).

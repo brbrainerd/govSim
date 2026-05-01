@@ -11,6 +11,7 @@
 //! - `llm`  → NL → IG 2.0 extractor via local llama.cpp (depends on Phase 3)
 
 pub mod ig2;
+pub mod crisis_link;
 pub mod dsl;
 pub mod eval;
 pub mod legitimacy;
@@ -18,6 +19,7 @@ pub mod lower;
 pub mod registry;
 pub mod system;
 
+pub use crisis_link::register_crisis_link_system;
 pub use legitimacy::{legitimacy_update_system, register_legitimacy_system};
 pub use registry::{LawHandle, LawId, LawRegistry};
 pub use system::{law_dispatcher_system, register_law_dispatcher, Cadence};

@@ -13,6 +13,7 @@ use simulator_types::Money;
 
 pub mod approval;
 pub mod birth_death;
+pub mod crisis;
 pub mod election;
 pub mod employment;
 pub mod education;
@@ -28,6 +29,7 @@ pub mod enforcement {}
 pub mod media {}
 
 pub use approval::register_approval_system;
+pub use crisis::register_crisis_system;
 pub use education::register_age_advance_system;
 pub use birth_death::register_birth_death_system;
 pub use election::{register_election_system, ElectionOutcome};
@@ -73,6 +75,7 @@ pub fn register_phase1_systems(sim: &mut Sim) {
         .add_systems(taxation_system.in_set(Phase::Mutate));
     register_employment_system(sim);
     register_health_system(sim);
+    register_crisis_system(sim);
     register_approval_system(sim);
     register_migration_system(sim);
     register_birth_death_system(sim);
