@@ -16,6 +16,8 @@ impl SimRng {
         Self { root_seed }
     }
 
+    pub fn root_seed(&self) -> [u8; 32] { self.root_seed }
+
     /// Derive a child RNG keyed by a label and an integer salt.
     /// The derivation is deterministic and machine-independent.
     pub fn derive(&self, label: &str, salt: u64) -> ChaCha20Rng {

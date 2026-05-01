@@ -19,7 +19,10 @@
       "Bash(taskkill /F /IM ugs.exe)",
       "PowerShell(Stop-Process -Name \"ugs\" -Force -ErrorAction SilentlyContinue)",
       "PowerShell(\"done\")",
-      "Bash(python3 data/grammars/ig2_types.py scenarios/income_tax_2026.ig2.json scenarios/housing_benefit_2026.ig2.json scenarios/stimulus_2026.ig2.json)"
+      "Bash(python3 data/grammars/ig2_types.py scenarios/income_tax_2026.ig2.json scenarios/housing_benefit_2026.ig2.json scenarios/stimulus_2026.ig2.json)",
+      "Bash(cargo metadata *)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(p['name'], p['version'], [f['name'] for f in p.get\\('features',{}\\).items\\(\\)]\\) for p in d['packages'] if p['name']=='bincode']\")",
+      "Bash(cargo fix *)"
     ]
   }
 }
