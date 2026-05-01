@@ -31,7 +31,7 @@ pub struct Scenario {
 fn default_seed() -> [u8; 32] { [0u8; 32] }
 fn default_ticks() -> u64 { 100 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PopulationSpec {
     #[serde(default)]
     pub citizens: u64,
@@ -40,6 +40,30 @@ pub struct PopulationSpec {
     /// Number of regions; citizens are sprinkled uniformly.
     #[serde(default = "default_regions")]
     pub regions: u32,
+    /// Mean monthly income override (e.g. from `ugs calibrate`). If None,
+    /// uses a log-normal distribution with mean ~$3,000.
+    #[serde(default)]
+    pub income_mean_monthly: Option<f64>,
+    /// Fraction starting unemployed [0, 1]. Overrides the default ~10% split.
+    #[serde(default)]
+    pub unemployment_rate: Option<f32>,
+    /// Corruption level [0, 1]: sets AuditFlagBits::FLAGGED_INCOME for that
+    /// fraction of citizens at spawn time.
+    #[serde(default)]
+    pub corruption_level: Option<f32>,
+}
+
+impl Default for PopulationSpec {
+    fn default() -> Self {
+        Self {
+            citizens: 0,
+            corporations: 0,
+            regions: default_regions(),
+            income_mean_monthly: None,
+            unemployment_rate: None,
+            corruption_level: None,
+        }
+    }
 }
 
 fn default_regions() -> u32 { 16 }
@@ -59,10 +83,27 @@ impl Scenario {
     }
 
     /// Spawn the scenario's population into the Sim. Deterministic given
-    /// the scenario seed.
+    /// the scenario seed. Respects optional calibration overrides in
+    /// `population.income_mean_monthly`, `.unemployment_rate`, `.corruption_level`.
     pub fn spawn_population(&self, sim: &mut Sim) {
         let mut rng = ChaCha20Rng::from_seed(self.seed);
         let world = &mut sim.world;
+
+        // Pre-compute calibration-adjusted parameters.
+        let income_mean = self.population.income_mean_monthly.unwrap_or(3_000.0);
+        // Log-normal: E[X] = exp(μ + σ²/2). For σ=1.5, choose μ = ln(mean) - σ²/2.
+        let sigma: f64 = 1.5;
+        let mu: f64 = income_mean.max(200.0).ln() - sigma * sigma / 2.0;
+
+        // Employment distribution: [employed, unemployed, student, retired] cumulative thresholds
+        let unemp = self.population.unemployment_rate.unwrap_or(0.10) as f64;
+        let emp_thresh = (1.0 - unemp - 0.10 - 0.10).max(0.0); // employed share
+        let unemp_thresh = emp_thresh + unemp;
+        let student_thresh = unemp_thresh + 0.10;
+        // retired = remainder
+
+        let corruption = self.population.corruption_level.unwrap_or(0.0);
+
         for i in 0..self.population.citizens {
             let age = rng.random_range(0u8..=95);
             let sex = match rng.random_range(0u8..3) {
@@ -71,17 +112,32 @@ impl Scenario {
                 _ => Sex::Other,
             };
             let region = RegionId(rng.random_range(0..self.population.regions.max(1)));
-            // log-normal-ish income with a wide spread.
-            let raw_income: f64 = (rng.random::<f64>() * 11.0 + 7.0).exp();
-            let income = Money::from_num(raw_income.min(1.0e9));
+
+            // Log-normal income centred on calibrated mean.
+            let z: f64 = rng.random::<f64>();
+            let raw_income: f64 = (mu + sigma * normal_quantile(z)).exp();
+            let income = Money::from_num(raw_income.clamp(200.0, 1.0e9));
             let wealth = Money::from_num((raw_income * rng.random::<f64>() * 5.0).min(1.0e10));
-            let employment = match rng.random_range(0u8..10) {
-                0..=6 => EmploymentStatus::Employed,
-                7 => EmploymentStatus::Unemployed,
-                8 => EmploymentStatus::Student,
-                _ => EmploymentStatus::Retired,
+
+            let r: f64 = rng.random::<f64>();
+            let employment = if r < emp_thresh {
+                EmploymentStatus::Employed
+            } else if r < unemp_thresh {
+                EmploymentStatus::Unemployed
+            } else if r < student_thresh {
+                EmploymentStatus::Student
+            } else {
+                EmploymentStatus::Retired
             };
+
             let ideology = IdeologyVector(std::array::from_fn(|_| rng.random::<f32>() * 2.0 - 1.0));
+
+            // Corruption: flag a fraction of citizens for audit at spawn.
+            let audit = if corruption > 0.0 && rng.random::<f32>() < corruption {
+                AuditFlags(simulator_core::components::AuditFlagBits::FLAGGED_INCOME)
+            } else {
+                AuditFlags::default()
+            };
 
             world.spawn((
                 Citizen(CitizenId(i)),
@@ -96,8 +152,23 @@ impl Scenario {
                 ideology,
                 ApprovalRating(Score::from_num(0.5_f32)),
                 LegalStatuses::default(),
-                AuditFlags::default(),
+                audit,
             ));
         }
     }
+}
+
+/// Rational approximation of the standard normal quantile (Beasley-Springer-Moro).
+/// Maps u ∈ (0,1) → z ∈ ℝ. Used for log-normal income generation.
+fn normal_quantile(u: f64) -> f64 {
+    // Clamp to avoid infinity at edges.
+    let u = u.clamp(1e-9, 1.0 - 1e-9);
+    // Rational approximation coefficients (Abramowitz & Stegun 26.2.17).
+    let t = (-2.0 * u.min(1.0 - u).ln()).sqrt();
+    let c = [2.515517, 0.802853, 0.010328];
+    let d = [1.432788, 0.189269, 0.001308];
+    let num = c[0] + c[1] * t + c[2] * t * t;
+    let den = 1.0 + d[0] * t + d[1] * t * t + d[2] * t * t * t;
+    let z = t - num / den;
+    if u < 0.5 { -z } else { z }
 }

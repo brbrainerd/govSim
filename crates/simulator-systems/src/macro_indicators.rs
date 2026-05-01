@@ -8,13 +8,14 @@
 use simulator_core::{
     bevy_ecs::prelude::*,
     components::{ApprovalRating, Citizen, EmploymentStatus, Income, Wealth},
-    MacroIndicators, Phase, Sim, SimClock,
+    GovernmentLedger, MacroIndicators, Phase, Sim, SimClock,
 };
 use simulator_types::Money;
 
 pub fn macro_indicators_system(
     clock: Res<SimClock>,
     mut indicators: ResMut<MacroIndicators>,
+    mut ledger: ResMut<GovernmentLedger>,
     q: Query<(&Citizen, &Income, &Wealth, &EmploymentStatus, &ApprovalRating)>,
 ) {
     // Recompute every tick but skip tick 0 (pre-spawn, world is empty).
@@ -59,6 +60,14 @@ pub fn macro_indicators_system(
     indicators.unemployment = unemployment;
     indicators.approval = approval;
     // inflation requires price-level model — remains 0.0 until Phase 3.
+
+    // Flush ledger to MacroIndicators once per year; reset for next year.
+    if clock.tick % 360 == 0 {
+        indicators.government_revenue     = ledger.revenue;
+        indicators.government_expenditure = ledger.expenditure;
+        ledger.revenue      = Money::from_num(0);
+        ledger.expenditure  = Money::from_num(0);
+    }
 }
 
 /// Exact Gini via sorted O(n log n) formula.

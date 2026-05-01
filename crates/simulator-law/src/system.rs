@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use simulator_core::{
     bevy_ecs::prelude::*,
     components::{Income, Wealth},
-    Phase, Sim, SimClock, Treasury,
+    GovernmentLedger, Phase, Sim, SimClock, Treasury,
 };
 use simulator_types::Money;
 
@@ -43,6 +43,7 @@ pub fn law_dispatcher_system(
     clock: Res<SimClock>,
     registry: Res<LawRegistry>,
     mut treasury: ResMut<Treasury>,
+    mut ledger: ResMut<GovernmentLedger>,
     mut q: Query<(&Income, &mut Wealth)>,
 ) {
     let active = registry.snapshot_active(clock.tick);
@@ -52,10 +53,12 @@ pub fn law_dispatcher_system(
         if !h.cadence.fires_at(clock.tick) { continue; }
         match h.effect {
             LawEffect::PerCitizenIncomeTax { scope, owed_def } => {
-                run_income_tax_law(h, scope, owed_def, &mut treasury, &mut q);
+                let collected = run_income_tax_law(h, scope, owed_def, &mut treasury, &mut q);
+                ledger.revenue += collected;
             }
             LawEffect::PerCitizenBenefit { scope, amount_def } => {
-                run_benefit_law(h, scope, amount_def, &mut treasury, &mut q);
+                let disbursed = run_benefit_law(h, scope, amount_def, &mut treasury, &mut q);
+                ledger.expenditure += disbursed;
             }
             LawEffect::RegistrationMarker => {
                 // No DSL evaluation; flag-setting would use a separate query
@@ -71,16 +74,16 @@ fn run_income_tax_law(
     owed_name: &str,
     treasury: &mut Treasury,
     q: &mut Query<(&Income, &mut Wealth)>,
-) {
+) -> Money {
     // Find scope + the named definition body once per dispatch.
     let scope = match h.program.scopes.iter().find(|s| s.name == scope_name) {
-        Some(s) => s, None => return,
+        Some(s) => s, None => return Money::from_num(0),
     };
     let body = scope.items.iter().find_map(|it| {
         let Item::Definition { name, body, .. } = it;
         (name == owed_name).then_some(body)
     });
-    let body = match body { Some(b) => b, None => return };
+    let body = match body { Some(b) => b, None => return Money::from_num(0) };
 
     let mut ctx = EvalCtx {
         bindings: HashMap::new(),
@@ -89,10 +92,6 @@ fn run_income_tax_law(
 
     let mut collected = Money::from_num(0);
     for (income, mut wealth) in q.iter_mut() {
-        ctx.field_bindings.insert(
-            ("citizen".into(), "income".into()),
-            Value::Money(income.0),
-        );
         // Scale daily income to annual for the bracketed law (matches §6.6).
         let annual = income.0 * Money::from_num(360);
         ctx.field_bindings.insert(
@@ -107,6 +106,7 @@ fn run_income_tax_law(
         collected += owed;
     }
     treasury.balance += collected;
+    collected
 }
 
 fn run_benefit_law(
@@ -115,15 +115,15 @@ fn run_benefit_law(
     amount_name: &str,
     treasury: &mut Treasury,
     q: &mut Query<(&Income, &mut Wealth)>,
-) {
+) -> Money {
     let scope = match h.program.scopes.iter().find(|s| s.name == scope_name) {
-        Some(s) => s, None => return,
+        Some(s) => s, None => return Money::from_num(0),
     };
     let body = scope.items.iter().find_map(|it| {
         let Item::Definition { name, body, .. } = it;
         (name == amount_name).then_some(body)
     });
-    let body = match body { Some(b) => b, None => return };
+    let body = match body { Some(b) => b, None => return Money::from_num(0) };
 
     let mut ctx = EvalCtx {
         bindings: HashMap::new(),
@@ -144,8 +144,8 @@ fn run_benefit_law(
         wealth.0 += paid;
         disbursed += paid;
     }
-    // Benefits reduce the Treasury.
     treasury.balance -= disbursed;
+    disbursed
 }
 
 pub fn register_law_dispatcher(sim: &mut Sim) {

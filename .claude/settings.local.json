@@ -24,7 +24,9 @@
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(p['name'], p['version'], [f['name'] for f in p.get\\('features',{}\\).items\\(\\)]\\) for p in d['packages'] if p['name']=='bincode']\")",
       "Bash(cargo fix *)",
       "WebSearch",
-      "Bash(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader)"
+      "Bash(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader)",
+      "Bash(grep -n \"deny.toml\" .)",
+      "Bash(ls deny.toml)"
     ]
   }
 }

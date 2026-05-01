@@ -6,20 +6,20 @@
 use simulator_core::{
     bevy_ecs::prelude::*,
     components::{Income, Wealth},
-    Phase, Sim, SimClock, Treasury,
+    GovernmentLedger, Phase, Sim, SimClock, Treasury,
 };
 use simulator_telemetry::register_telemetry_system;
 use simulator_types::Money;
 
 pub mod approval;
 pub mod birth_death;
+pub mod election;
 pub mod employment;
 pub mod education {}
 pub mod income_update;
 pub mod macro_indicators;
 pub mod opinion;
 pub mod wealth_update;
-pub mod election {}
 pub mod judicial {}
 pub mod enforcement {}
 pub mod media {}
@@ -27,6 +27,7 @@ pub mod migration {}
 
 pub use approval::register_approval_system;
 pub use birth_death::register_birth_death_system;
+pub use election::{register_election_system, ElectionOutcome};
 pub use employment::register_employment_system;
 pub use income_update::register_income_update_system;
 pub use macro_indicators::register_macro_indicators_system;
@@ -39,6 +40,7 @@ pub use wealth_update::register_wealth_update_system;
 pub fn taxation_system(
     clock: Res<SimClock>,
     mut treasury: ResMut<Treasury>,
+    mut ledger: ResMut<GovernmentLedger>,
     mut q: Query<(&Income, &mut Wealth)>,
 ) {
     if clock.tick % 30 != 0 || clock.tick == 0 { return; }
@@ -50,6 +52,7 @@ pub fn taxation_system(
         collected += owed;
     }
     treasury.balance += collected;
+    ledger.revenue += collected;
 }
 
 /// Convenience: register every Phase-1 System on the schedule.
@@ -66,8 +69,9 @@ pub fn register_phase1_systems(sim: &mut Sim) {
     register_birth_death_system(sim);
     // Cognitive phase
     register_opinion_system(sim);
-    // Commit phase: macro aggregation
+    // Commit phase: macro aggregation + election
     register_macro_indicators_system(sim);
+    register_election_system(sim);
     // Telemetry
     register_telemetry_system(sim);
 }
