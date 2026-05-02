@@ -175,4 +175,99 @@ mod tests {
         // Net: ≥ 0.5 + 0.003 - 0.002 = 0.501
         assert!(h >= 0.499, "young employed health should be ≥ 0.499, got {h}");
     }
+
+    /// System guard: tick=0 is skipped, so health must be unchanged after 1 step.
+    #[test]
+    fn system_does_not_fire_at_tick_zero() {
+        let mut sim = Sim::new([20u8; 32]);
+        register_health_system(&mut sim);
+
+        spawn(&mut sim.world, 0, 70, EmploymentStatus::Retired, 0.8);
+        sim.step(); // processes tick=0; guard skips
+
+        let h: f32 = sim.world
+            .query::<&Health>()
+            .single(&sim.world)
+            .unwrap()
+            .0.to_num();
+        assert!(
+            (h - 0.8).abs() < 1e-5,
+            "health must not change at tick=0, got {h}"
+        );
+    }
+
+    /// Middle-aged (41-59) employed citizen loses health each year
+    /// (age_delta=-0.005, emp_delta=+0.002, wealth_delta=0 at ≈3-month buffer).
+    #[test]
+    fn middle_aged_health_declines() {
+        // Income $3000, wealth $10_000 → 3.33 months buffer → bracket [3,12) → wealth_delta=0
+        // Net/yr: -0.005 + 0.002 + 0.000 = -0.003 (dominates noise ±0.002)
+        let mut sim = Sim::new([21u8; 32]);
+        register_health_system(&mut sim);
+
+        spawn(&mut sim.world, 0, 50, EmploymentStatus::Employed, 0.7);
+
+        // Run 5 health years (5 × 360 = 1800 steps).
+        for _ in 0..=1800 { sim.step(); }
+
+        let h: f32 = sim.world
+            .query::<&Health>()
+            .single(&sim.world)
+            .unwrap()
+            .0.to_num();
+        assert!(h < 0.7, "middle-aged health should decline below 0.7 over 5 years, got {h}");
+    }
+
+    /// Health is clamped at 0.01 (floor) and never goes negative.
+    #[test]
+    fn health_floor_is_enforced() {
+        // Age 80 retired with near-zero wealth: yearly delta ≈ -0.030.
+        // Starting at 0.05 → reaches floor within 2 health years.
+        let mut sim = Sim::new([22u8; 32]);
+        register_health_system(&mut sim);
+
+        // Very low wealth ($50) → < 1 month buffer → -0.010/yr wealth penalty
+        spawn_with_wealth(&mut sim.world, 0, 80, EmploymentStatus::Retired, 0.05, 50);
+
+        for _ in 0..=1440 { sim.step(); } // 4 health years
+
+        let h: f32 = sim.world
+            .query::<&Health>()
+            .single(&sim.world)
+            .unwrap()
+            .0.to_num();
+        assert!(
+            h >= 0.01,
+            "health must never drop below the 0.01 floor, got {h}"
+        );
+        assert!(
+            h <= 0.05,
+            "health should have declined substantially from 0.05, got {h}"
+        );
+    }
+
+    /// Unemployed citizen loses more health than employed citizen with same demographics.
+    #[test]
+    fn unemployed_health_worse_than_employed() {
+        // Employed delta: +0.002; Unemployed delta: -0.003; difference 0.005/yr.
+        // Over 5 years: gap ≈ 0.025 — well above noise ±0.002/yr.
+        let mut sim_emp  = Sim::new([23u8; 32]);
+        let mut sim_unemp = Sim::new([23u8; 32]); // same seed → same noise
+        register_health_system(&mut sim_emp);
+        register_health_system(&mut sim_unemp);
+
+        spawn(&mut sim_emp.world,   0, 35, EmploymentStatus::Employed,   0.6);
+        spawn(&mut sim_unemp.world, 0, 35, EmploymentStatus::Unemployed, 0.6);
+
+        for _ in 0..=1800 { sim_emp.step(); }
+        for _ in 0..=1800 { sim_unemp.step(); }
+
+        let h_emp: f32 = sim_emp.world.query::<&Health>().single(&sim_emp.world).unwrap().0.to_num();
+        let h_un:  f32 = sim_unemp.world.query::<&Health>().single(&sim_unemp.world).unwrap().0.to_num();
+
+        assert!(
+            h_emp > h_un,
+            "employed ({h_emp:.4}) should have higher health than unemployed ({h_un:.4})"
+        );
+    }
 }

@@ -180,6 +180,93 @@ mod tests {
         assert_eq!(age, AGE_CAP, "age should not exceed AGE_CAP");
     }
 
+    /// System guard: tick=0 is skipped, so nothing should change after 1 step.
+    #[test]
+    fn system_does_not_fire_at_tick_zero() {
+        let mut sim = Sim::new([10u8; 32]);
+        register_age_advance_system(&mut sim);
+
+        spawn(&mut sim.world, 0, 17, EmploymentStatus::Student);
+        sim.step(); // processes tick=0; guard skips
+
+        let (age, emp) = get_state(&mut sim.world, 0);
+        assert_eq!(age, 17, "age must not change at tick=0");
+        assert!(matches!(emp, EmploymentStatus::Student), "status must not change at tick=0");
+    }
+
+    /// OutOfLaborForce citizen transitions to Retired at age 65.
+    #[test]
+    fn out_of_labor_force_retires_at_65() {
+        let mut sim = Sim::new([11u8; 32]);
+        register_age_advance_system(&mut sim);
+
+        spawn(&mut sim.world, 0, 64, EmploymentStatus::OutOfLaborForce);
+
+        for _ in 0..=360 { sim.step(); }
+
+        let (age, emp) = get_state(&mut sim.world, 0);
+        assert_eq!(age, 65, "should be 65 after one year");
+        assert!(
+            matches!(emp, EmploymentStatus::Retired),
+            "OutOfLaborForce citizen should retire at 65, got {emp:?}"
+        );
+    }
+
+    /// `savings_rate_for_age` covers all five age brackets correctly.
+    #[test]
+    fn savings_rate_for_age_function_all_brackets() {
+        assert!((savings_rate_for_age(0)  - 0.05).abs() < 1e-6, "age 0 bracket");
+        assert!((savings_rate_for_age(22) - 0.05).abs() < 1e-6, "age 22 bracket");
+        assert!((savings_rate_for_age(23) - 0.15).abs() < 1e-6, "age 23 bracket");
+        assert!((savings_rate_for_age(39) - 0.15).abs() < 1e-6, "age 39 bracket");
+        assert!((savings_rate_for_age(40) - 0.25).abs() < 1e-6, "age 40 bracket");
+        assert!((savings_rate_for_age(54) - 0.25).abs() < 1e-6, "age 54 bracket");
+        assert!((savings_rate_for_age(55) - 0.30).abs() < 1e-6, "age 55 bracket");
+        assert!((savings_rate_for_age(64) - 0.30).abs() < 1e-6, "age 64 bracket");
+        assert!((savings_rate_for_age(65) - 0.10).abs() < 1e-6, "age 65+ bracket");
+        assert!((savings_rate_for_age(99) - 0.10).abs() < 1e-6, "age 99 bracket");
+    }
+
+    /// Reaching working age removes MINOR flag and adds VOTER+CITIZEN flags.
+    #[test]
+    fn working_age_updates_legal_statuses() {
+        use simulator_core::components::{LegalStatusFlags, LegalStatuses};
+
+        let mut sim = Sim::new([12u8; 32]);
+        register_age_advance_system(&mut sim);
+
+        // Spawn with MINOR flag set (17-year-old student).
+        {
+            use simulator_core::components::SavingsRate;
+            sim.world.spawn((
+                simulator_core::components::Citizen(simulator_types::CitizenId(0)),
+                Age(17), simulator_core::components::Sex::Female,
+                simulator_core::components::Location(simulator_types::RegionId(0)),
+                simulator_core::components::Health(simulator_types::Score::from_num(0.9_f32)),
+                simulator_core::components::Income(simulator_types::Money::from_num(0_i32)),
+                simulator_core::components::Wealth(simulator_types::Money::from_num(0_i32)),
+                EmploymentStatus::Student,
+                simulator_core::components::Productivity(simulator_types::Score::from_num(0.5_f32)),
+                simulator_core::components::IdeologyVector([0.0f32; 5]),
+                simulator_core::components::ApprovalRating(simulator_types::Score::from_num(0.5_f32)),
+                LegalStatuses(LegalStatusFlags::MINOR | LegalStatusFlags::CITIZEN),
+                simulator_core::components::AuditFlags::default(),
+                SavingsRate(0.05),
+            ));
+        }
+
+        for _ in 0..=360 { sim.step(); }
+
+        let legal = sim.world
+            .query::<&LegalStatuses>()
+            .single(&sim.world)
+            .unwrap()
+            .0;
+
+        assert!(!legal.contains(LegalStatusFlags::MINOR), "MINOR flag should be removed at 18");
+        assert!(legal.contains(LegalStatusFlags::REGISTERED_VOTER), "VOTER flag should be set at 18");
+    }
+
     #[test]
     fn savings_rate_updates_across_bracket() {
         use simulator_core::components::SavingsRate;
