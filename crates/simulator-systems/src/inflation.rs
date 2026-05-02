@@ -100,4 +100,60 @@ mod tests {
         assert!((inf - 0.02).abs() < 0.01,
             "inflation indicator should be ~2%, got {inf:.4}");
     }
+
+    #[test]
+    fn high_deficit_raises_inflation_above_base() {
+        // deficit_ratio = 0.20 (20% of GDP) → annual_rate = 0.02 + 0.20 × 2.0 = 0.42.
+        let mut sim = Sim::new([81u8; 32]);
+        register_inflation_system(&mut sim);
+
+        {
+            let mut m = sim.world.resource_mut::<MacroIndicators>();
+            m.gdp               = Money::from_num(1_000_000_i64);
+            m.government_expenditure = Money::from_num(300_000_i64);
+            m.government_revenue     = Money::from_num(100_000_i64);
+            // deficit = 200_000, ratio = 0.20
+        }
+
+        // One citizen to keep the expenditure query non-empty.
+        sim.world.spawn(ConsumptionExpenditure(Money::from_num(400i64)));
+
+        // Trigger the monthly system (31 steps).
+        for _ in 0..31 { sim.step(); }
+
+        let inf = sim.world.resource::<MacroIndicators>().inflation;
+        assert!(
+            inf > 0.02,
+            "high-deficit inflation should exceed 2% baseline, got {inf:.4}"
+        );
+        assert!(
+            (inf - 0.42).abs() < 0.01,
+            "expected ~42% annual inflation (deficit 20% GDP), got {inf:.4}"
+        );
+    }
+
+    #[test]
+    fn inflation_rate_capped_at_max() {
+        // Extreme deficit: expenditure = 10 × GDP → deficit_ratio > 4.5
+        // annual_rate = 0.02 + 4.5 × 2.0 = 9.02 — but capped at MAX_INFLATION (0.50).
+        let mut sim = Sim::new([82u8; 32]);
+        register_inflation_system(&mut sim);
+
+        {
+            let mut m = sim.world.resource_mut::<MacroIndicators>();
+            m.gdp               = Money::from_num(100_000_i64);
+            m.government_expenditure = Money::from_num(1_000_000_i64);
+            m.government_revenue     = Money::from_num(0_i64);
+        }
+
+        sim.world.spawn(ConsumptionExpenditure(Money::from_num(400i64)));
+
+        for _ in 0..31 { sim.step(); }
+
+        let inf = sim.world.resource::<MacroIndicators>().inflation;
+        assert!(
+            (inf - MAX_INFLATION as f32).abs() < 0.001,
+            "inflation should be capped at {MAX_INFLATION:.2}, got {inf:.4}"
+        );
+    }
 }

@@ -283,4 +283,91 @@ mod tests {
         assert_eq!(cs.kind, CrisisKind::None, "crisis should have expired");
         assert_eq!(cs.remaining_ticks, 0);
     }
+
+    // ── severity_multiplier pure unit tests ──────────────────────────────────
+
+    fn make_macro(unemployment: f32) -> MacroIndicators {
+        MacroIndicators { unemployment, ..Default::default() }
+    }
+
+    fn make_treasury(balance: f64) -> Treasury {
+        Treasury { balance: Money::from_num(balance) }
+    }
+
+    #[test]
+    fn severity_normal_conditions_is_one() {
+        // Low unemployment (10%) and positive treasury → no modifiers → 1.0.
+        let m = make_macro(0.10);
+        let t = make_treasury(100_000.0);
+        assert!((severity_multiplier(&m, &t) - 1.0).abs() < 1e-9,
+            "expected 1.0, got {}", severity_multiplier(&m, &t));
+    }
+
+    #[test]
+    fn severity_empty_treasury_adds_quarter() {
+        // Treasury ≤ 0 → +0.25.
+        let m = make_macro(0.10);
+        let t = make_treasury(0.0);
+        assert!((severity_multiplier(&m, &t) - 1.25).abs() < 1e-9,
+            "expected 1.25, got {}", severity_multiplier(&m, &t));
+    }
+
+    #[test]
+    fn severity_high_unemployment_adds_half_point_per_5pp_over_threshold() {
+        // unemployment = 0.25 → 10pp above 0.15, floor(0.10/0.05) = 2 steps
+        // Contribution: 2 × 0.25 = 0.50 → multiplier = 1.50.
+        let m = make_macro(0.25);
+        let t = make_treasury(100_000.0);
+        assert!((severity_multiplier(&m, &t) - 1.50).abs() < 1e-9,
+            "expected 1.50, got {}", severity_multiplier(&m, &t));
+    }
+
+    #[test]
+    fn severity_capped_at_four_unemployment_steps_plus_treasury() {
+        // unemployment = 0.45 → 30pp above threshold; floor(0.30/0.05)=6, capped at 4.
+        // Contribution: 4 × 0.25 = 1.0; treasury empty → +0.25 → total = 2.25.
+        let m = make_macro(0.45);
+        let t = make_treasury(-1.0);
+        assert!((severity_multiplier(&m, &t) - 2.25).abs() < 1e-9,
+            "expected 2.25, got {}", severity_multiplier(&m, &t));
+    }
+
+    // ── pandemic expiry recovery boost ───────────────────────────────────────
+
+    #[test]
+    fn pandemic_expiry_boosts_citizen_productivity() {
+        // A Pandemic with 30 remaining ticks expires on the next monthly firing.
+        // All citizens should receive a +PANDEMIC_RECOVERY_BOOST (0.08) to productivity.
+        let mut sim = Sim::new([15u8; 32]);
+        register_crisis_system(&mut sim);
+
+        // Initial productivity = 0.7 → expected after expiry ≈ 0.78.
+        spawn_citizen(&mut sim.world, 0);
+        spawn_citizen(&mut sim.world, 1);
+
+        {
+            let mut cs = sim.world.resource_mut::<CrisisState>();
+            cs.kind = CrisisKind::Pandemic;
+            cs.remaining_ticks = 30;
+            cs.onset_shock = -0.05;
+            cs.cost_multiplier = 0.4;
+        }
+
+        // 31 steps: system fires at tick=30, ticks down 30→0, pandemic expires.
+        for _ in 0..31 { sim.step(); }
+
+        // Crisis cleared.
+        assert_eq!(sim.world.resource::<CrisisState>().kind, CrisisKind::None,
+            "pandemic should have expired");
+
+        // Every citizen's productivity should be ≥ 0.7 + 0.08 = 0.78.
+        let expected = 0.7 + PANDEMIC_RECOVERY_BOOST;
+        for (_, prod) in sim.world.query::<(&Citizen, &Productivity)>().iter(&sim.world) {
+            let p: f32 = prod.0.to_num();
+            assert!(
+                (p - expected).abs() < 0.001,
+                "expected productivity ≈ {expected:.3}, got {p:.4}"
+            );
+        }
+    }
 }
