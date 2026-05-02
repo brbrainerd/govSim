@@ -570,6 +570,33 @@ mod tests {
         let unemp = aus.population.unemployment_rate.unwrap_or(0.0);
         assert!(unemp > 0.08 && unemp < 0.12,
             "australia_2022 unemployment should be ~9.1%, got {unemp}");
+
+        // Phase L historical scenarios — parse and basic structural validation.
+        let athens = Scenario::load(&root.join("athens_507bce.yaml"))
+            .expect("athens_507bce.yaml should parse");
+        assert_eq!(athens.name, "athens_507bce");
+        let p = athens.polity.as_ref().expect("athens should have a polity");
+        assert!(p.franchise_fraction < 0.20,
+            "Athenian franchise should be < 20 %, got {}", p.franchise_fraction);
+        assert!(!athens.judiciary.as_ref().map_or(false, |j| j.review_power),
+            "Athens had no constitutional judicial review");
+
+        let weimar = Scenario::load(&root.join("weimar_1919.yaml"))
+            .expect("weimar_1919.yaml should parse");
+        assert_eq!(weimar.name, "weimar_1919");
+        assert!(weimar.initial_legitimacy_debt.unwrap_or(0.0) > 2.0,
+            "Weimar had very high legitimacy debt (Versailles)");
+        assert!(weimar.polity.as_ref().map_or(false, |p| p.franchise_fraction >= 1.0),
+            "Weimar had universal suffrage (franchise_fraction = 1.0)");
+
+        let new_deal = Scenario::load(&root.join("new_deal_1933.yaml"))
+            .expect("new_deal_1933.yaml should parse");
+        assert_eq!(new_deal.name, "new_deal_1933");
+        assert!(new_deal.judiciary.as_ref().map_or(false, |j| j.review_power),
+            "New Deal USA had active Supreme Court review");
+        let unemp_nd = new_deal.population.unemployment_rate.unwrap_or(0.0);
+        assert!(unemp_nd > 0.20,
+            "New Deal era unemployment should be > 20 %, got {unemp_nd}");
     }
 
     #[test]

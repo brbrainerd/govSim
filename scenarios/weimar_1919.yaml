@@ -1,0 +1,67 @@
+name: weimar_1919
+description: >
+  Weimar Republic at founding (1919 calibration). Germany's first democratic
+  experiment: universal suffrage (including women, granted 1918), proportional
+  representation, and a nominally independent judiciary — but severe legitimacy
+  deficits from WWI defeat, hyperinflation risk, and violent paramilitaries.
+
+  Used to test that proportional representation + high legitimacy debt produces
+  coalition fragmentation dynamics and that the judiciary independence (0.40)
+  does not prevent constitutional crises. Key assertions:
+    - High franchise fraction (1.0) but low effective state capacity
+    - StateFragility system should degrade capacity quickly under sustained low
+      approval (Weimar had approval below 0.30 for most of its existence)
+    - Judiciary cannot block emergency decrees (review_power: false)
+
+seed: [1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9]
+ticks: 720    # 2 simulated years
+
+population:
+  citizens: 500
+  corporations: 0
+  regions: 6          # Prussia / Bavaria / Saxony / Rhineland / Silesia / other
+  income_mean_monthly: 1200.0   # nominal — real wages suppressed by inflation
+  unemployment_rate: 0.25       # post-war dislocation + early inflation
+  corruption_level: 0.20        # moderate — weakened institutions
+
+# Rights at founding: universal suffrage + gender equality + due process +
+# free speech + religious freedom + labor rights.
+# Bits: suffrage(1) + gender(4) + due_process(64) + free_speech(128) +
+#       religious(32) + labor(16) = 1+4+16+32+64+128 = 245 = 0xF5
+initial_rights: 245
+
+# Industrial Ruhr / Silesian mining — significant pre-existing pollution.
+initial_pollution: 2.8
+
+# High legitimacy debt from Versailles (Dolchstoßlegende, war guilt).
+initial_legitimacy_debt: 3.5
+
+# Elevated crisis probability — Weimar had constant street violence, putsches.
+crisis_prob_pct: 4
+
+polity:
+  name: "Weimar Republic"
+  regime:
+    kind: ParliamentaryRepublic
+  founding_year: 1919
+  chamber_count: 2      # Reichstag + Reichsrat
+  franchise_fraction: 1.0
+  fused_executive: false
+  executive_term_limit: ~     # Reichspräsident 7-year term, re-eligible; null = no hard limit
+  electoral_system:
+    system: ProportionalRepresentation
+    threshold: 0.0    # no threshold in 1919 — contributed to fragmentation
+
+state_capacity:
+  tax_collection_efficiency: 0.55   # taxation severely hampered by inflation/evasion
+  enforcement_reach: 0.50           # Reichswehr/police loyalty contested
+  enforcement_noise: 0.35           # high uncertainty — rival armed groups
+  corruption_drift: 0.010           # capacity erodes ~1 %/month under low approval
+  legal_predictability: 0.45        # law exists but political violence undermines it
+  bureaucratic_effectiveness: 0.60  # Prussian bureaucracy retained some competence
+
+judiciary:
+  independence: 0.40     # historically: conservative judiciary, nominally independent
+  review_power: false    # Staatsgerichtshof had no strong judicial review power
+  precedent_weight: 0.35
+  international_deference: 0.05

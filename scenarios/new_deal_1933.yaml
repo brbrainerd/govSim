@@ -1,0 +1,67 @@
+name: new_deal_1933
+description: >
+  United States at the start of the New Deal (March 1933, FDR inauguration).
+  Models a presidential republic under acute economic crisis: 25 % unemployment,
+  bank runs, Dust Bowl emerging. The New Deal period is historically notable for
+  rapid legislative output — 15 major bills in the first 100 days — and for
+  Supreme Court pushback (judicial review active).
+
+  Used to test:
+    - PerCitizenBenefit law effects under high unemployment populations
+    - Judiciary.review_power: true → is_active_check() gates constitutional review
+    - StateCapacityModify law effects (FDIC, SEC, TVA improve state capacity)
+    - Abatement law effects (CCC conservation corps remove pollution)
+
+seed: [1,9,3,3,1,9,3,3,1,9,3,3,1,9,3,3,1,9,3,3,1,9,3,3,1,9,3,3,1,9,3,3]
+ticks: 1080   # 3 simulated years (covers first-term New Deal)
+
+population:
+  citizens: 500
+  corporations: 0
+  regions: 8          # NE / SE / Midwest / Plains / Mountain / Pacific / South / Texas
+  income_mean_monthly: 1800.0   # real wages depressed ~50 % from 1929 peak
+  unemployment_rate: 0.25       # historical peak ~25 %
+  corruption_level: 0.12        # Tammany Hall type machine politics
+
+# Rights at scenario start: US had suffrage (but de facto disenfranchisement of
+# Black voters in South; modelled as reduced franchise_fraction), due process,
+# free speech, religious freedom. Labor rights being actively contested (NLRA
+# not yet passed). No gender equality (19th amendment 1920 — included here).
+# Bits: suffrage(1) + gender(4) + due_process(64) + free_speech(128) +
+#       religious(32) = 1+4+32+64+128 = 229 = 0xE5
+initial_rights: 229
+
+# Severe Dust Bowl conditions + industrial pollution (Pittsburgh, Detroit).
+initial_pollution: 3.2
+
+# Significant legitimacy debt from Hoover administration failures.
+initial_legitimacy_debt: 1.8
+
+# Moderate crisis probability — Depression was ongoing but no military crises yet.
+crisis_prob_pct: 2
+
+polity:
+  name: "United States (New Deal)"
+  regime:
+    kind: PresidentialRepublic
+  founding_year: 1789
+  chamber_count: 2          # House + Senate
+  franchise_fraction: 0.60  # ~60 % of eligible adults could vote (de facto)
+  fused_executive: true     # strong executive — FDR ruled largely by decree + Congress
+  executive_term_limit: ~   # 22nd amendment not yet passed; null = no hard limit
+  electoral_system:
+    system: FirstPastThePost
+
+state_capacity:
+  tax_collection_efficiency: 0.65   # IRS functional but Depression-era evasion high
+  enforcement_reach: 0.60           # FBI growing; Prohibition enforcement legacy
+  enforcement_noise: 0.15           # relatively low — established institutions
+  corruption_drift: 0.003           # slow drift — reform period
+  legal_predictability: 0.70        # common-law courts, stable property rights
+  bureaucratic_effectiveness: 0.55  # New Deal agencies being built from scratch
+
+judiciary:
+  independence: 0.85     # Nine Old Men — highly independent, initially obstructive
+  review_power: true     # Supreme Court struck down NIRA (Schechter Poultry, 1935)
+  precedent_weight: 0.75
+  international_deference: 0.00

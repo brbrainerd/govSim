@@ -1,0 +1,65 @@
+name: athens_507bce
+description: >
+  Athenian direct democracy under Cleisthenes' reforms (507 BCE calibration).
+  Models a citizen-assembly (ekklesia) polity with highly restricted franchise
+  — only adult male Athenian citizens could vote, roughly 10–15 % of the
+  ~300 000 total population. Slavery was widespread (~30–35 % of inhabitants).
+
+  Designed as a historical accuracy fixture. Key expected divergences from a
+  modern_democracy baseline:
+    - Franchise fraction ~0.12 (adult free male citizens only)
+    - No judicial review; archon-dominated judiciary with low independence
+    - State capacity is moderate — voluntary compliance in a small city-state
+    - No labor rights, no gender equality, no LGBTQ protections
+    - Due process exists (Athenian law courts, dikasteria) but is narrowly scoped
+
+seed: [5,0,7,0,5,0,7,0,5,0,7,0,5,0,7,0,5,0,7,0,5,0,7,0,5,0,7,0,5,0,7,0]
+ticks: 360    # 1 simulated year
+
+population:
+  citizens: 400
+  corporations: 0
+  regions: 4        # Attica divided into city / coast / inland / island demes
+  income_mean_monthly: 600.0    # drachma-equivalent subsistence-to-artisan range
+  unemployment_rate: 0.15       # high seasonal agricultural unemployment
+  corruption_level: 0.15        # modest — strong social norms in small polity
+
+# Rights at scenario start.
+# DUE_PROCESS (bit 6 = 64) + RELIGIOUS_FREEDOM (bit 5 = 32) = 96 = 0x60
+# No universal suffrage, no gender/racial equality, no labor rights.
+initial_rights: 96
+
+# Moderate pre-existing pollution from pottery kilns and silver mines (Laurion).
+initial_pollution: 1.2
+
+# No legitimacy debt — Cleisthenes' reforms were broadly welcomed.
+initial_legitimacy_debt: 0.1
+
+# Low crisis probability — stable demo period.
+crisis_prob_pct: 1
+
+polity:
+  name: "Athens (Kleisthenic)"
+  regime:
+    kind: DirectDemocracy
+  founding_year: -507
+  chamber_count: 1          # ekklesia (assembly) only
+  franchise_fraction: 0.12  # ~adult male citizens as share of total pop
+  fused_executive: false    # boule (council) separate from assembly
+  executive_term_limit: 1   # strategoi elected annually, re-eligible
+  electoral_system:
+    system: Appointment      # sortition (kleroterion) modelled as Appointment — no competitive election
+
+state_capacity:
+  tax_collection_efficiency: 0.55  # liturgy system — voluntary wealthy donors
+  enforcement_reach: 0.45          # limited beyond city walls
+  enforcement_noise: 0.20          # moderate uncertainty in deme justice
+  corruption_drift: 0.005          # slow drift — strong civic culture
+  legal_predictability: 0.50       # dikasteria are consistent but populist
+  bureaucratic_effectiveness: 0.55 # small polity, high citizen engagement
+
+judiciary:
+  independence: 0.40        # dikasteria citizen-juries, not independent judges
+  review_power: false       # no abstract constitutional review
+  precedent_weight: 0.20    # written laws (Draco/Solon) give some precedent
+  international_deference: 0.00
