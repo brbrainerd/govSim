@@ -43,6 +43,8 @@ struct RunResult {
     approval:   f32,
     treasury_finite: bool,
     capacity_in_range: bool,
+    /// Final tax_collection_efficiency (None if no StateCapacity resource).
+    final_tax_efficiency: Option<f32>,
 }
 
 fn run_scenario_ticks(path: &Path, ticks: u64) -> RunResult {
@@ -66,7 +68,7 @@ fn run_scenario_ticks(path: &Path, ticks: u64) -> RunResult {
     let treasury  = sim.world.resource::<Treasury>().balance.to_num::<f64>();
     let treasury_finite = treasury.is_finite();
 
-    let capacity_in_range = sim.world
+    let (capacity_in_range, final_tax_efficiency) = sim.world
         .get_resource::<StateCapacity>()
         .map(|sc| {
             let fields = [
@@ -76,11 +78,12 @@ fn run_scenario_ticks(path: &Path, ticks: u64) -> RunResult {
                 sc.bureaucratic_effectiveness as f64,
                 sc.enforcement_noise as f64,
             ];
-            fields.iter().all(|&f| (0.0..=1.0).contains(&f))
+            (fields.iter().all(|&f| (0.0..=1.0).contains(&f)),
+             Some(sc.tax_collection_efficiency))
         })
-        .unwrap_or(true); // absent resource is vacuously in-range
+        .unwrap_or((true, None)); // absent resource is vacuously in-range
 
-    RunResult { approval, treasury_finite, capacity_in_range }
+    RunResult { approval, treasury_finite, capacity_in_range, final_tax_efficiency }
 }
 
 // ---------------------------------------------------------------------------
@@ -133,4 +136,45 @@ fn pre_rights_era_720_ticks_no_nan() {
     // but must remain in [0.0, 1.0].
     assert!((0.0..=1.0).contains(&r.approval),
         "pre_rights_era: approval={:.4} out of [0,1]", r.approval);
+}
+
+// ---------------------------------------------------------------------------
+// failed_state — state capacity degrades under sustained low approval
+// ---------------------------------------------------------------------------
+
+#[test]
+#[ignore]
+fn failed_state_720_ticks_capacity_degrades() {
+    let r = run_scenario_ticks(&scenario_path("failed_state"), 720);
+    assert!(r.treasury_finite,
+        "failed_state: treasury overflowed or went NaN");
+    assert!(r.capacity_in_range,
+        "failed_state: StateCapacity field out of [0,1]");
+    // Approval is allowed to be very low — failed state design intent.
+    assert!((0.0..=1.0).contains(&r.approval),
+        "failed_state: approval={:.4} out of [0,1]", r.approval);
+    // Verify state capacity has actually degraded (the fragility system works).
+    // Initial tax_collection_efficiency = 0.18 with corruption_drift=0.025.
+    // After 2 years of <30% approval we expect it to have eroded further.
+    let final_cap = r.final_tax_efficiency;
+    assert!(final_cap.unwrap_or(1.0) < 0.18,
+        "failed_state: state capacity should degrade below initial 0.18, got {:.4}", final_cap.unwrap_or(1.0));
+}
+
+// ---------------------------------------------------------------------------
+// weimar_1919 — proportional representation + high legitimacy debt produces
+//               low approval but not complete financial collapse
+// ---------------------------------------------------------------------------
+
+#[test]
+#[ignore]
+fn weimar_1919_720_ticks_no_nan() {
+    let r = run_scenario_ticks(&scenario_path("weimar_1919"), 720);
+    assert!(r.treasury_finite,
+        "weimar_1919: treasury overflowed or went NaN");
+    assert!(r.capacity_in_range,
+        "weimar_1919: StateCapacity field out of [0,1]");
+    // Weimar had very low approval and constant crises, but approval stays in [0,1].
+    assert!((0.0..=1.0).contains(&r.approval),
+        "weimar_1919: approval={:.4} out of [0,1]", r.approval);
 }
