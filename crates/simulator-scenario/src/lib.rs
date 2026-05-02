@@ -421,6 +421,22 @@ mod tests {
         assert_eq!(modern.initial_rights, Some(511), "modern democracy grants all rights");
         assert!(modern.population.citizens > 0);
         assert!(modern.initial_legitimacy_debt.unwrap_or(1.0) < 0.1, "modern democracy has low debt");
+
+        let aus = Scenario::load(&root.join("australia_2022.yaml"))
+            .expect("australia_2022.yaml should load");
+        assert_eq!(aus.name, "australia_2022");
+        // No initial_rights field → None → no rights pre-granted (player must legislate them).
+        assert_eq!(aus.initial_rights, None, "australia_2022 has no pre-granted rights");
+        assert!(aus.population.citizens > 0, "must have citizens");
+        // V-Dem calibrated income ~$4583/month.
+        assert!(
+            aus.population.income_mean_monthly.unwrap_or(0.0) > 4000.0,
+            "australia_2022 income should be ~$4583/month"
+        );
+        // 9.1% unemployment from V-Dem calibration.
+        let unemp = aus.population.unemployment_rate.unwrap_or(0.0);
+        assert!(unemp > 0.08 && unemp < 0.12,
+            "australia_2022 unemployment should be ~9.1%, got {unemp}");
     }
 
     #[test]
