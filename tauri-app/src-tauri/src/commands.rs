@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use simulator_core::{CrisisState, LegitimacyDebt, MacroIndicators, PollutionStock,
-                     PriceLevel, RightsLedger, SimClock, Treasury};
+use simulator_core::{CrisisState, Judiciary, LegitimacyDebt, MacroIndicators, Polity,
+                     PollutionStock, PriceLevel, RightsLedger, SimClock, StateCapacity, Treasury};
 use simulator_core::components::{ApprovalRating, EmploymentStatus, Health, Income, Location, Productivity, Wealth};
 use simulator_counterfactual::{
     estimate::CausalEstimate,
@@ -20,6 +20,62 @@ use simulator_systems::{register_phase1_systems, ELECTION_PERIOD};
 use simulator_telemetry::register_telemetry_system;
 
 use crate::state::{AppState, IpcError, IpcResult, crisis_kind_u8};
+
+// ---- Institutional resource helpers ----------------------------------------
+
+fn regime_kind_str(p: Option<&Polity>) -> String {
+    use simulator_core::RegimeKind;
+    match p.map(|p| &p.regime) {
+        None | Some(RegimeKind::PresidentialRepublic)         => "PresidentialRepublic".into(),
+        Some(RegimeKind::AbsoluteMonarchy)                    => "AbsoluteMonarchy".into(),
+        Some(RegimeKind::ConstitutionalMonarchy { .. })       => "ConstitutionalMonarchy".into(),
+        Some(RegimeKind::ParliamentaryRepublic)               => "ParliamentaryRepublic".into(),
+        Some(RegimeKind::SinglePartyState { .. })             => "SinglePartyState".into(),
+        Some(RegimeKind::MilitaryJunta)                       => "MilitaryJunta".into(),
+        Some(RegimeKind::Theocracy { .. })                    => "Theocracy".into(),
+        Some(RegimeKind::DirectDemocracy)                     => "DirectDemocracy".into(),
+        Some(RegimeKind::TribalCouncil)                       => "TribalCouncil".into(),
+        Some(RegimeKind::Oligarchy)                           => "Oligarchy".into(),
+        Some(RegimeKind::Custom { label })                    => label.clone(),
+    }
+}
+
+fn electoral_system_str(p: Option<&Polity>) -> String {
+    use simulator_core::ElectoralSystem;
+    match p.map(|p| &p.electoral_system) {
+        None | Some(ElectoralSystem::FirstPastThePost)                       => "FirstPastThePost".into(),
+        Some(ElectoralSystem::ProportionalRepresentation { threshold })      => format!("PR(≥{:.0}%)", threshold * 100.0),
+        Some(ElectoralSystem::RankedChoice)                                  => "RankedChoice".into(),
+        Some(ElectoralSystem::Appointment)                                   => "Appointment".into(),
+        Some(ElectoralSystem::Hereditary)                                    => "Hereditary".into(),
+        Some(ElectoralSystem::None)                                          => "None".into(),
+    }
+}
+
+/// Build the institutional portion of `CurrentStateDto` from optional resources.
+fn institutional_fields(w: &simulator_core::bevy_ecs::world::World) -> (String, String, f32, String, bool, Option<u32>, f32, bool, f32, f32, f32, f32, f32) {
+    let polity   = w.get_resource::<Polity>();
+    let judiciary = w.get_resource::<Judiciary>();
+    let capacity  = w.get_resource::<StateCapacity>();
+    let default_cap = StateCapacity::default();
+    let cap = capacity.unwrap_or(&default_cap);
+
+    (
+        regime_kind_str(polity),
+        polity.map(|p| p.name.clone()).unwrap_or_else(|| "—".into()),
+        polity.map(|p| p.franchise_fraction).unwrap_or(1.0),
+        electoral_system_str(polity),
+        polity.map(|p| p.fused_executive).unwrap_or(true),
+        polity.and_then(|p| p.executive_term_limit),
+        judiciary.map(|j| j.independence).unwrap_or(0.0),
+        judiciary.map(|j| j.review_power).unwrap_or(false),
+        cap.composite_score(),
+        cap.tax_collection_efficiency,
+        cap.enforcement_reach,
+        cap.legal_predictability,
+        cap.bureaucratic_effectiveness,
+    )
+}
 
 // ---- Scenario / sim lifecycle ----------------------------------------------
 
@@ -98,6 +154,8 @@ pub struct CurrentStateDto {
     pub pollution_stock:        f64,
     pub legitimacy_debt:        f32,
     pub rights_granted_bits:    u32,
+    pub rights_granted_count:   u32,
+    pub rights_breadth:         f32,
     pub crisis_kind:            u8,
     pub crisis_remaining_ticks: u64,
     pub incumbent_party:        u8,
@@ -106,6 +164,38 @@ pub struct CurrentStateDto {
     pub last_election_tick:     u64,
     /// Fixed election cycle length in ticks (currently always 360 = 1 simulated year).
     pub election_cycle:         u64,
+
+    // ── Polity (absent = default PresidentialRepublic, FPTP, universal suffrage) ──
+    /// Short label for the regime type (e.g. "PresidentialRepublic", "MilitaryJunta").
+    pub regime_kind:            String,
+    /// Display name of the polity (e.g. "United States").
+    pub polity_name:            String,
+    /// Fraction of adult population eligible to vote [0, 1]. 1.0 = universal suffrage.
+    pub franchise_fraction:     f32,
+    /// Short label for the electoral system (e.g. "FirstPastThePost", "PR").
+    pub electoral_system:       String,
+    /// Whether the head of state and government are fused (presidential vs parliamentary).
+    pub fused_executive:        bool,
+    /// Maximum consecutive terms for the executive, or null if unlimited.
+    pub executive_term_limit:   Option<u32>,
+
+    // ── Judiciary ──────────────────────────────────────────────────────────────
+    /// How independent the judiciary is from executive pressure [0, 1].
+    pub judicial_independence:  f32,
+    /// Whether courts can strike down legislation.
+    pub judicial_review_power:  bool,
+
+    // ── StateCapacity ─────────────────────────────────────────────────────────
+    /// Unweighted composite score of state effectiveness [0, 1].
+    pub state_capacity_score:   f32,
+    /// Fraction of owed tax actually collected [0, 1].
+    pub tax_collection_efficiency: f32,
+    /// Fraction of citizens subject to effective law enforcement [0, 1].
+    pub enforcement_reach:      f32,
+    /// Consistency of judicial/administrative rulings [0, 1].
+    pub legal_predictability:   f32,
+    /// Government service delivery multiplier [0, 1].
+    pub bureaucratic_effectiveness: f32,
 }
 
 #[tauri::command]
@@ -125,6 +215,11 @@ pub async fn get_current_state(
     let rights    = w.resource::<RightsLedger>();
     let crisis    = w.resource::<CrisisState>();
 
+    let (regime_kind, polity_name, franchise_fraction, electoral_system, fused_executive,
+         executive_term_limit, judicial_independence, judicial_review_power, state_capacity_score,
+         tax_collection_efficiency, enforcement_reach, legal_predictability,
+         bureaucratic_effectiveness) = institutional_fields(w);
+
     Ok(CurrentStateDto {
         tick:                   clock.tick,
         approval:               ind.approval,
@@ -141,6 +236,8 @@ pub async fn get_current_state(
         pollution_stock:        pollution.stock,
         legitimacy_debt:        debt.stock,
         rights_granted_bits:    rights.granted.bits(),
+        rights_granted_count:   ind.rights_granted_count,
+        rights_breadth:         ind.rights_breadth,
         crisis_kind:            crisis_kind_u8(crisis.kind),
         crisis_remaining_ticks: crisis.remaining_ticks,
         incumbent_party:        ind.incumbent_party,
@@ -148,6 +245,10 @@ pub async fn get_current_state(
         consecutive_terms:      ind.consecutive_terms,
         last_election_tick:     ind.last_election_tick,
         election_cycle:         ELECTION_PERIOD,
+        regime_kind, polity_name, franchise_fraction, electoral_system, fused_executive,
+        executive_term_limit, judicial_independence, judicial_review_power, state_capacity_score,
+        tax_collection_efficiency, enforcement_reach, legal_predictability,
+        bureaucratic_effectiveness,
     })
 }
 
@@ -171,6 +272,9 @@ fn effect_kind_str(e: &LawEffect) -> String {
         LawEffect::RegistrationMarker  { .. } => "registration".into(),
         LawEffect::Audit               { .. } => "audit".into(),
         LawEffect::Abatement           { .. } => "abatement".into(),
+        LawEffect::RightGrant          { .. } => "right_grant".into(),
+        LawEffect::RightRevoke         { .. } => "right_revoke".into(),
+        LawEffect::StateCapacityModify { .. } => "state_capacity".into(),
     }
 }
 
@@ -181,6 +285,9 @@ fn effect_label_str(e: &LawEffect) -> String {
         LawEffect::RegistrationMarker  { .. } => "Registration".into(),
         LawEffect::Audit               { .. } => "Audit".into(),
         LawEffect::Abatement           { .. } => "Abatement".into(),
+        LawEffect::RightGrant  { right_id } => format!("Grant: {right_id}"),
+        LawEffect::RightRevoke { right_id } => format!("Revoke: {right_id}"),
+        LawEffect::StateCapacityModify { field, .. } => format!("Capacity: {field}"),
     }
 }
 
@@ -201,7 +308,12 @@ fn effect_magnitude(e: &LawEffect, src: Option<&str>) -> Option<String> {
         LawEffect::Abatement { pollution_reduction_pu, cost_per_pu } => {
             Some(format!("{:.2} PU · ${:.0}/PU", pollution_reduction_pu, cost_per_pu))
         }
-        _ => None,
+        LawEffect::RightGrant  { right_id } => Some(format!("Grant {right_id}")),
+        LawEffect::RightRevoke { right_id } => Some(format!("Revoke {right_id}")),
+        LawEffect::StateCapacityModify { field, delta } => {
+            Some(format!("{field} {delta:+.3}"))
+        }
+        LawEffect::RegistrationMarker { .. } | LawEffect::Audit { .. } => None,
     }
 }
 
@@ -348,6 +460,7 @@ pub async fn repeal_law(
 // ---- Civic rights -----------------------------------------------------------
 
 /// Grant a civic right by its bitflag value.
+/// Syncs both `RightsLedger` (legacy bits) and `RightsCatalog` (when present).
 /// Returns the new `rights_granted_bits` after the grant.
 #[tauri::command]
 pub async fn grant_civic_right(
@@ -359,10 +472,21 @@ pub async fn grant_civic_right(
     let tick = bundle.sim.tick();
     let right = simulator_core::CivicRights::from_bits_truncate(bit);
     bundle.sim.world.resource_mut::<simulator_core::RightsLedger>().grant(right, tick);
+
+    // Mirror into RightsCatalog when present: look up the catalog ID via LEGACY_BIT_TO_ID.
+    if bundle.sim.world.get_resource::<simulator_core::RightsCatalog>().is_some() {
+        use simulator_core::{RightId, RightsCatalog, LEGACY_BIT_TO_ID};
+        if let Some(&(id_str, _)) = LEGACY_BIT_TO_ID.iter().find(|(_, mask)| *mask == bit) {
+            let rid = RightId::new(id_str);
+            bundle.sim.world.resource_mut::<RightsCatalog>().grant(&rid, tick);
+        }
+    }
+
     Ok(bundle.sim.world.resource::<simulator_core::RightsLedger>().granted.bits())
 }
 
 /// Revoke a civic right by its bitflag value.
+/// Syncs both `RightsLedger` (legacy bits) and `RightsCatalog` (when present).
 /// Returns (new `rights_granted_bits`, legitimacy_debt_incurred).
 #[tauri::command]
 pub async fn revoke_civic_right(
@@ -372,7 +496,21 @@ pub async fn revoke_civic_right(
     let mut guard = state.sim.lock().await;
     let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
     let right = simulator_core::CivicRights::from_bits_truncate(bit);
-    let debt_delta = bundle.sim.world.resource_mut::<simulator_core::RightsLedger>().revoke(right);
+    let debt_from_ledger = bundle.sim.world.resource_mut::<simulator_core::RightsLedger>().revoke(right);
+
+    // Mirror into RightsCatalog when present; use catalog's revocation_debt if available.
+    let debt_delta = if bundle.sim.world.get_resource::<simulator_core::RightsCatalog>().is_some() {
+        use simulator_core::{RightId, RightsCatalog, LEGACY_BIT_TO_ID};
+        if let Some(&(id_str, _)) = LEGACY_BIT_TO_ID.iter().find(|(_, mask)| *mask == bit) {
+            let rid = RightId::new(id_str);
+            bundle.sim.world.resource_mut::<RightsCatalog>().revoke(&rid)
+        } else {
+            debt_from_ledger
+        }
+    } else {
+        debt_from_ledger
+    };
+
     // Apply the debt to the global legitimacy-debt stock.
     bundle.sim.world.resource_mut::<simulator_core::LegitimacyDebt>().stock =
         (bundle.sim.world.resource::<simulator_core::LegitimacyDebt>().stock + debt_delta).min(1.0);
@@ -818,6 +956,11 @@ pub async fn step_and_get_state(
     let debt      = w.resource::<LegitimacyDebt>();
     let rights    = w.resource::<RightsLedger>();
     let crisis    = w.resource::<CrisisState>();
+    let _ = clock; // silence unused-variable warning (tick already captured above)
+    let (regime_kind, polity_name, franchise_fraction, electoral_system, fused_executive,
+         executive_term_limit, judicial_independence, judicial_review_power, state_capacity_score,
+         tax_collection_efficiency, enforcement_reach, legal_predictability,
+         bureaucratic_effectiveness) = institutional_fields(w);
     let cs = CurrentStateDto {
         tick,
         approval:               ind.approval,
@@ -834,6 +977,8 @@ pub async fn step_and_get_state(
         pollution_stock:        pollution.stock,
         legitimacy_debt:        debt.stock,
         rights_granted_bits:    rights.granted.bits(),
+        rights_granted_count:   ind.rights_granted_count,
+        rights_breadth:         ind.rights_breadth,
         crisis_kind:            crisis_kind_u8(crisis.kind),
         crisis_remaining_ticks: crisis.remaining_ticks,
         incumbent_party:        ind.incumbent_party,
@@ -841,8 +986,11 @@ pub async fn step_and_get_state(
         consecutive_terms:      ind.consecutive_terms,
         last_election_tick:     ind.last_election_tick,
         election_cycle:         ELECTION_PERIOD,
+        regime_kind, polity_name, franchise_fraction, electoral_system, fused_executive,
+        executive_term_limit, judicial_independence, judicial_review_power, state_capacity_score,
+        tax_collection_efficiency, enforcement_reach, legal_predictability,
+        bureaucratic_effectiveness,
     };
-    let _ = clock; // silence unused-variable warning (tick already captured above)
 
     // Last `metrics_window` metric rows
     let store = w.resource::<MetricStore>();

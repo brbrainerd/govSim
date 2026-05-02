@@ -145,9 +145,10 @@ describe("exportMetricsCsv", () => {
       unemployment: 0.05, inflation: 0.02, approval: 0.65, gov_revenue: 1e5,
       gov_expenditure: 9e4, incumbent_party: 1, election_margin: 0.12,
       consecutive_terms: 2, pollution_stock: 0.5, legitimacy_debt: 0.05,
-      rights_granted_bits: 3, treasury_balance: 2e6, price_level: 1.02,
+      rights_granted_bits: 3, rights_granted_count: 2, rights_breadth: 0.22,
+      treasury_balance: 2e6, price_level: 1.02,
       crisis_kind: 0, crisis_remaining_ticks: 0, mean_health: 0.7,
-      mean_productivity: 0.6, mean_income: 3000,
+      mean_productivity: 0.6, mean_income: 3000, state_capacity_score: 1.0,
     };
     sim.metricsRows = [row];
     let capturedBlob: Blob | null = null;
@@ -170,9 +171,10 @@ describe("exportMetricsCsv", () => {
       unemployment: 0.08, inflation: 0.03, approval: 0.55, gov_revenue: 8e4,
       gov_expenditure: 7e4, incumbent_party: 2, election_margin: 0.07,
       consecutive_terms: 1, pollution_stock: 1.2, legitimacy_debt: 0.15,
-      rights_granted_bits: 255, treasury_balance: -5e5, price_level: 1.05,
+      rights_granted_bits: 255, rights_granted_count: 8, rights_breadth: 0.89,
+      treasury_balance: -5e5, price_level: 1.05,
       crisis_kind: 1, crisis_remaining_ticks: 10, mean_health: 0.6,
-      mean_productivity: 0.55, mean_income: 2500,
+      mean_productivity: 0.55, mean_income: 2500, state_capacity_score: 0.85,
     };
     sim.metricsRows = [row];
     let capturedBlob: Blob | null = null;
@@ -198,9 +200,11 @@ describe("exportMetricsCsv", () => {
       unemployment: 0.05, inflation: 0.02, approval,
       gov_revenue: 1e5, gov_expenditure: 9e4, incumbent_party: 1,
       election_margin: 0.1, consecutive_terms: 1, pollution_stock: 0.4,
-      legitimacy_debt: 0.02, rights_granted_bits: 0, treasury_balance: 1e6,
+      legitimacy_debt: 0.02, rights_granted_bits: 0, rights_granted_count: 0, rights_breadth: 0,
+      treasury_balance: 1e6,
       price_level: 1.01, crisis_kind: 0, crisis_remaining_ticks: 0,
       mean_health: 0.75, mean_productivity: 0.6, mean_income: 2800,
+      state_capacity_score: 1.0,
     });
 
     const rows = [makeRow(1, 0.60), makeRow(2, 0.61), makeRow(3, 0.62)];

@@ -5293,6 +5293,7 @@ dependencies = [
  "rayon",
  "simulator-core",
  "simulator-econ",
+ "simulator-law",
  "simulator-net",
  "simulator-telemetry",
  "simulator-types",

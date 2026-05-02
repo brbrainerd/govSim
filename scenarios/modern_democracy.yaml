@@ -25,3 +25,30 @@ initial_pollution: 0.5
 initial_legitimacy_debt: 0.05
 
 crisis_prob_pct: 2   # realistic monthly crisis probability
+
+polity:
+  name: "Modern Democracy"
+  regime:
+    kind: ParliamentaryRepublic
+  founding_year: 1950
+  chamber_count: 2
+  franchise_fraction: 1.0   # universal suffrage
+  fused_executive: false    # separate head of government (PM)
+  executive_term_limit: ~   # no fixed limit — parliamentary confidence vote
+  electoral_system:
+    system: ProportionalRepresentation
+    threshold: 0.05           # 5% exclusion threshold (EU-style)
+
+state_capacity:
+  tax_collection_efficiency: 0.92   # OECD average
+  enforcement_reach: 0.90
+  enforcement_noise: 0.05           # low — rule of law
+  corruption_drift: 0.0             # stable — no drift in baseline
+  legal_predictability: 0.90
+  bureaucratic_effectiveness: 0.88
+
+judiciary:
+  independence: 0.88
+  review_power: true
+  precedent_weight: 0.80
+  international_deference: 0.50

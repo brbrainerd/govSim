@@ -424,7 +424,10 @@ input[type="number"] { width: 100%; }
 }
 .badge-income_tax  { background: rgba(99,102,241,.20);  color: #818cf8; }
 .badge-benefit     { background: rgba(34,197,94,.20);   color: #4ade80; }
-.badge-abatement   { background: rgba(56,189,248,.20);  color: #38bdf8; }
+.badge-abatement      { background: rgba(56,189,248,.20);  color: #38bdf8; }
+.badge-right_grant    { background: rgba(16,185,129,.20);  color: #34d399; }
+.badge-right_revoke   { background: rgba(244,63,94,.20);   color: #fb7185; }
+.badge-state_capacity { background: rgba(168,85,247,.20);  color: #c084fc; }
 
 .afford-badge {
   padding: 8px 12px;

@@ -17,3 +17,40 @@ population:
   unemployment_rate: 0.091
   # v2x_corr = 0.07 (low corruption)
   corruption_level: 0.07
+
+# V-Dem v16 AUS 2022 — all rights granted (v2x_libdem=0.86, WGI rule-of-law ~1.7σ).
+# 0x1FF = all 9 CivicRights bits.
+initial_rights: 511
+
+initial_pollution: 0.8          # moderate — high per-capita emissions offset by regulation
+initial_legitimacy_debt: 0.02   # stable democracy, low institutional stress
+
+crisis_prob_pct: 2
+
+polity:
+  name: "Australia"
+  regime:
+    kind: ParliamentaryRepublic
+  founding_year: 1901
+  chamber_count: 2              # House of Representatives + Senate
+  franchise_fraction: 1.0       # compulsory universal suffrage since 1924
+  fused_executive: false        # Westminster model — PM separate from GG
+  executive_term_limit: ~       # no fixed limit — parliamentary confidence vote
+  electoral_system:
+    system: RankedChoice         # instant-runoff preferential voting
+
+# V-Dem WGI calibration 2022:
+#   GovEff ~1.5σ, RuleOfLaw ~1.7σ, CtrlCorruption ~1.7σ
+state_capacity:
+  tax_collection_efficiency: 0.94
+  enforcement_reach: 0.92
+  enforcement_noise: 0.04
+  corruption_drift: 0.0
+  legal_predictability: 0.93
+  bureaucratic_effectiveness: 0.91
+
+judiciary:
+  independence: 0.90            # High Court strong independence
+  review_power: true            # constitutional judicial review
+  precedent_weight: 0.85        # common-law stare decisis
+  international_deference: 0.55 # party to ICC, WTO, ECHR-aligned treaties

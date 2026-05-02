@@ -25,9 +25,10 @@ function makeRow(overrides: Partial<TickRow> = {}): TickRow {
     gov_revenue: 1000, gov_expenditure: 900,
     incumbent_party: 1, election_margin: 0.1, consecutive_terms: 1,
     pollution_stock: 0, legitimacy_debt: 0, rights_granted_bits: 0,
+    rights_granted_count: 0, rights_breadth: 0,
     treasury_balance: 1e5, price_level: 1, crisis_kind: 0,
     crisis_remaining_ticks: 0, mean_health: 0.7,
-    mean_productivity: 0.5, mean_income: 3000,
+    mean_productivity: 0.5, mean_income: 3000, state_capacity_score: 1.0,
     ...overrides,
   };
 }

@@ -12,8 +12,8 @@
 use bevy_ecs::world::World;
 use serde::{Deserialize, Serialize};
 use simulator_core::{
-    CrisisKind, CrisisState, LegitimacyDebt, MacroIndicators, PollutionStock, PriceLevel,
-    RightsLedger, SimClock, SimRng, Treasury,
+    CrisisKind, CrisisState, Judiciary, LegitimacyDebt, MacroIndicators, Polity, PollutionStock,
+    PriceLevel, RightsCatalog, RightsLedger, SimClock, SimRng, StateCapacity, Treasury,
     components::{
         Age, ApprovalRating, AuditFlags, Citizen, ConsumptionExpenditure, EmploymentStatus,
         EvasionPropensity, Health, IdeologyVector, Income, LegalStatuses, Location,
@@ -26,7 +26,7 @@ use simulator_types::{CitizenId, Money, RegionId, Score};
 
 use crate::SnapshotError;
 
-const SNAPSHOT_VERSION: u32 = 10;
+const SNAPSHOT_VERSION: u32 = 12;
 
 #[derive(Serialize, Deserialize)]
 struct SnapshotHeader {
@@ -77,6 +77,8 @@ struct ResourceBlock {
     consecutive_terms: u32,
     price_level: f64,
     // v10 additions
+    rights_granted_count: u32,
+    rights_breadth: f32,
     legitimacy_debt_stock: f32,
     legitimacy_debt_decay: f32,
     rights_granted: u32,
@@ -96,6 +98,124 @@ struct GraphBlock {
     row_ptr: Vec<u32>,
     col_ind: Vec<u32>,
     weights: Vec<f32>,
+}
+
+/// Serialized form of `Polity`. Uses primitive types only to stay compatible
+/// with bincode (no internally-tagged enums). `RegimeKind` and `ElectoralSystem`
+/// are flattened into discriminants + optional string/float payloads.
+#[derive(Serialize, Deserialize)]
+struct PolityBlock {
+    name: String,
+    /// RegimeKind discriminant (0=AbsoluteMonarchy, 1=ConstitutionalMonarchy,
+    /// 2=ParliamentaryRepublic, 3=PresidentialRepublic, 4=SinglePartyState,
+    /// 5=MilitaryJunta, 6=Theocracy, 7=DirectDemocracy, 8=TribalCouncil,
+    /// 9=Oligarchy, 10=Custom).
+    regime_kind: u8,
+    /// Payload string: ConstitutionalMonarchy→charter_year as string,
+    /// SinglePartyState→ruling_party, Theocracy→dominant_faith, Custom→label.
+    regime_payload: String,
+    founding_year: i32,
+    chamber_count: u8,
+    franchise_fraction: f32,
+    fused_executive: bool,
+    executive_term_limit: Option<u32>,
+    /// ElectoralSystem discriminant (0=FirstPastThePost, 1=PR, 2=RankedChoice,
+    /// 3=Appointment, 4=Hereditary, 5=None).
+    electoral_system_kind: u8,
+    /// PR threshold when electoral_system_kind == 1.
+    electoral_system_threshold: f32,
+}
+
+impl PolityBlock {
+    fn from_polity(p: &Polity) -> Self {
+        use simulator_core::{ElectoralSystem, RegimeKind};
+        let (regime_kind, regime_payload) = match &p.regime {
+            RegimeKind::AbsoluteMonarchy                   => (0, String::new()),
+            RegimeKind::ConstitutionalMonarchy { charter_year } => (1, charter_year.to_string()),
+            RegimeKind::ParliamentaryRepublic              => (2, String::new()),
+            RegimeKind::PresidentialRepublic               => (3, String::new()),
+            RegimeKind::SinglePartyState { ruling_party }  => (4, ruling_party.clone()),
+            RegimeKind::MilitaryJunta                      => (5, String::new()),
+            RegimeKind::Theocracy { dominant_faith }       => (6, dominant_faith.clone()),
+            RegimeKind::DirectDemocracy                    => (7, String::new()),
+            RegimeKind::TribalCouncil                      => (8, String::new()),
+            RegimeKind::Oligarchy                          => (9, String::new()),
+            RegimeKind::Custom { label }                   => (10, label.clone()),
+        };
+        let (electoral_system_kind, electoral_system_threshold) = match p.electoral_system {
+            ElectoralSystem::FirstPastThePost                           => (0, 0.0),
+            ElectoralSystem::ProportionalRepresentation { threshold }   => (1, threshold),
+            ElectoralSystem::RankedChoice                               => (2, 0.0),
+            ElectoralSystem::Appointment                                => (3, 0.0),
+            ElectoralSystem::Hereditary                                 => (4, 0.0),
+            ElectoralSystem::None                                       => (5, 0.0),
+        };
+        Self {
+            name: p.name.clone(),
+            regime_kind,
+            regime_payload,
+            founding_year: p.founding_year,
+            chamber_count: p.chamber_count,
+            franchise_fraction: p.franchise_fraction,
+            fused_executive: p.fused_executive,
+            executive_term_limit: p.executive_term_limit,
+            electoral_system_kind,
+            electoral_system_threshold,
+        }
+    }
+
+    fn into_polity(self) -> Polity {
+        use simulator_core::{ElectoralSystem, RegimeKind};
+        let regime = match self.regime_kind {
+            1  => RegimeKind::ConstitutionalMonarchy {
+                charter_year: self.regime_payload.parse().unwrap_or(0),
+            },
+            2  => RegimeKind::ParliamentaryRepublic,
+            3  => RegimeKind::PresidentialRepublic,
+            4  => RegimeKind::SinglePartyState { ruling_party: self.regime_payload.clone() },
+            5  => RegimeKind::MilitaryJunta,
+            6  => RegimeKind::Theocracy { dominant_faith: self.regime_payload.clone() },
+            7  => RegimeKind::DirectDemocracy,
+            8  => RegimeKind::TribalCouncil,
+            9  => RegimeKind::Oligarchy,
+            10 => RegimeKind::Custom { label: self.regime_payload.clone() },
+            _  => RegimeKind::AbsoluteMonarchy,
+        };
+        let electoral_system = match self.electoral_system_kind {
+            1 => ElectoralSystem::ProportionalRepresentation { threshold: self.electoral_system_threshold },
+            2 => ElectoralSystem::RankedChoice,
+            3 => ElectoralSystem::Appointment,
+            4 => ElectoralSystem::Hereditary,
+            5 => ElectoralSystem::None,
+            _ => ElectoralSystem::FirstPastThePost,
+        };
+        Polity {
+            name: self.name,
+            regime,
+            founding_year: self.founding_year,
+            chamber_count: self.chamber_count,
+            franchise_fraction: self.franchise_fraction,
+            fused_executive: self.fused_executive,
+            executive_term_limit: self.executive_term_limit,
+            electoral_system,
+        }
+    }
+}
+
+/// Serialized form of `RightsCatalog`. Stored as `Option<CatalogBlock>` so
+/// snapshots without a catalog (legacy or empty worlds) decode cleanly.
+/// Definitions are stored as the full `RightDefinition` structs (already
+/// `Serialize + Deserialize`) to preserve custom rights and any mutations.
+#[derive(Serialize, Deserialize)]
+struct CatalogBlock {
+    /// Vec of definition structs (replaces `defined` HashMap on restore).
+    definitions: Vec<simulator_core::rights_catalog::RightDefinition>,
+    /// IDs of rights currently in force.
+    granted: Vec<String>,
+    /// IDs of rights ever granted in this run.
+    historical_max: Vec<String>,
+    /// Tick of last catalog expansion.
+    last_expansion_tick: u64,
 }
 
 fn crisis_kind_to_u8(k: CrisisKind) -> u8 {
@@ -180,6 +300,7 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
     let rights       = world.resource::<RightsLedger>().clone();
     let crisis       = world.resource::<CrisisState>().clone();
     let pollution    = world.resource::<PollutionStock>().clone();
+    let catalog_opt  = world.get_resource::<RightsCatalog>().cloned();
 
     let resources = ResourceBlock {
         treasury:               treasury.balance.to_bits(),
@@ -197,6 +318,8 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
         election_margin:        macro_.election_margin,
         consecutive_terms:      macro_.consecutive_terms,
         price_level,
+        rights_granted_count:        macro_.rights_granted_count,
+        rights_breadth:              macro_.rights_breadth,
         legitimacy_debt_stock:       debt.stock,
         legitimacy_debt_decay:       debt.decay,
         rights_granted:              rights.granted.bits(),
@@ -210,12 +333,29 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
         pollution_emission_rate:     pollution.emission_rate,
     };
 
+    // Build optional catalog block.
+    let catalog_block: Option<CatalogBlock> = catalog_opt.map(|cat| CatalogBlock {
+        definitions:          cat.defined.values().cloned().collect(),
+        granted:              cat.granted.iter().map(|id| id.0.clone()).collect(),
+        historical_max:       cat.historical_max.iter().map(|id| id.0.clone()).collect(),
+        last_expansion_tick:  cat.last_expansion_tick,
+    });
+
+    // Optional institutional resources (v12+).
+    let polity_block:   Option<PolityBlock>   = world.get_resource::<Polity>().map(|p| PolityBlock::from_polity(p));
+    let judiciary_block: Option<Judiciary>    = world.get_resource::<Judiciary>().cloned();
+    let capacity_block: Option<StateCapacity> = world.get_resource::<StateCapacity>().cloned();
+
     // Encode with bincode then compress.
     let mut raw: Vec<u8> = Vec::new();
     encode_into(&header, &mut raw)?;
     encode_into(&rows, &mut raw)?;
     encode_into(&resources, &mut raw)?;
     encode_into(&graph_block, &mut raw)?;
+    encode_into(&catalog_block, &mut raw)?;
+    encode_into(&polity_block, &mut raw)?;
+    encode_into(&judiciary_block, &mut raw)?;
+    encode_into(&capacity_block, &mut raw)?;
 
     let compressed = zstd::encode_all(raw.as_slice(), 3)
         .map_err(|e| SnapshotError::Io(e.to_string()))?;
@@ -243,6 +383,10 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<(u64, u64), Snaps
     let rows: Vec<CitizenRow> = decode_from(&mut cursor)?;
     let resources: ResourceBlock = decode_from(&mut cursor)?;
     let graph_block: Option<GraphBlock> = decode_from(&mut cursor)?;
+    let catalog_block: Option<CatalogBlock> = decode_from(&mut cursor)?;
+    let polity_block:   Option<PolityBlock>   = decode_from(&mut cursor)?;
+    let judiciary_block: Option<Judiciary>    = decode_from(&mut cursor)?;
+    let capacity_block: Option<StateCapacity> = decode_from(&mut cursor)?;
 
     // Restore resources.
     {
@@ -269,6 +413,8 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<(u64, u64), Snaps
         macro_.last_election_tick     = resources.last_election_tick;
         macro_.election_margin        = resources.election_margin;
         macro_.consecutive_terms      = resources.consecutive_terms;
+        macro_.rights_granted_count   = resources.rights_granted_count;
+        macro_.rights_breadth         = resources.rights_breadth;
     }
     {
         let mut pl = world.resource_mut::<PriceLevel>();
@@ -297,6 +443,32 @@ pub fn load_snapshot(world: &mut World, blob: &[u8]) -> Result<(u64, u64), Snaps
         pollution.stock         = resources.pollution_stock;
         pollution.decay         = resources.pollution_decay;
         pollution.emission_rate = resources.pollution_emission_rate;
+    }
+
+    // Restore RightsCatalog if present in the snapshot.
+    if let Some(cb) = catalog_block {
+        use simulator_core::rights_catalog::RightId;
+        let mut cat = RightsCatalog::default();
+        for def in cb.definitions { cat.defined.insert(def.id.clone(), def); }
+        cat.granted        = cb.granted.into_iter().map(RightId::new).collect();
+        cat.historical_max = cb.historical_max.into_iter().map(RightId::new).collect();
+        cat.last_expansion_tick = cb.last_expansion_tick;
+        world.insert_resource(cat);
+    }
+
+    // Restore optional institutional resources (v12+).
+    // Absent means the snapshot predates v12 or the scenario didn't set them.
+    match polity_block {
+        Some(pb) => { world.insert_resource(pb.into_polity()); }
+        None     => { world.remove_resource::<Polity>(); }
+    }
+    match judiciary_block {
+        Some(j) => { world.insert_resource(j); }
+        None    => { world.remove_resource::<Judiciary>(); }
+    }
+    match capacity_block {
+        Some(c) => { world.insert_resource(c); }
+        None    => { world.remove_resource::<StateCapacity>(); }
     }
 
     // Restore influence graph if present.
@@ -470,16 +642,150 @@ mod tests {
 
         // Decompress, flip first 4 bytes (version u32 in little-endian), re-compress.
         let mut raw = zstd::decode_all(blob.as_slice()).unwrap();
-        // version 10 = 0x0A 0x00 0x00 0x00 → change to 99 = 0x63 0x00 0x00 0x00
+        // version 11 = 0x0B 0x00 0x00 0x00 → change to 99 = 0x63 0x00 0x00 0x00
         raw[0] = 99;
         let tampered = zstd::encode_all(raw.as_slice(), 3).unwrap();
 
         let mut sim2 = Sim::new([0u8; 32]);
         let result = load_snapshot(&mut sim2.world, &tampered);
         assert!(
-            matches!(result, Err(SnapshotError::VersionMismatch { found: 99, expected: 10 })),
+            matches!(result, Err(SnapshotError::VersionMismatch { found: 99, expected: 12 })),
             "expected VersionMismatch error, got {result:?}"
         );
+    }
+
+    #[test]
+    fn save_load_round_trip_rights_catalog() {
+        use simulator_core::{catalog_from_bits, rights_catalog::RightId, RightsCatalog};
+
+        let mut sim = Sim::new([8u8; 32]);
+
+        // Seed catalog with 3 granted rights (bits 0, 2, 7 = suffrage, gender_equality, free_speech).
+        let mut cat = catalog_from_bits(0b1000_0101); // bits 0, 2, 7
+        // Revoke one to test historical_max preservation.
+        cat.revoke(&RightId::new("gender_equality")); // now granted=2, historical=3
+        cat.last_expansion_tick = 77;
+        sim.world.insert_resource(cat);
+
+        let blob = save_snapshot(&mut sim.world).expect("save");
+
+        let mut sim2 = Sim::new([0u8; 32]);
+        load_snapshot(&mut sim2.world, &blob).expect("load");
+
+        let cat2 = sim2.world.get_resource::<RightsCatalog>()
+            .expect("RightsCatalog should be present after load");
+
+        assert!(cat2.has(&RightId::new("universal_suffrage")), "universal_suffrage should be granted");
+        assert!(cat2.has(&RightId::new("free_speech")), "free_speech should be granted");
+        assert!(!cat2.has(&RightId::new("gender_equality")), "gender_equality was revoked");
+        assert!(cat2.historical_max.contains(&RightId::new("gender_equality")),
+            "historical_max should retain revoked right");
+        assert_eq!(cat2.granted_count(), 2, "2 rights in force after revocation");
+        assert_eq!(cat2.historical_count(), 3, "3 rights in historical_max");
+        assert_eq!(cat2.last_expansion_tick, 77);
+        // Definitions should be restored (29 from default catalog).
+        assert_eq!(cat2.defined.len(), 29, "definitions should be fully restored");
+    }
+
+    /// Round-trip: Polity, Judiciary, StateCapacity are preserved across save/load.
+    #[test]
+    fn save_load_round_trip_institutional_resources() {
+        use simulator_core::{
+            ElectoralSystem, Judiciary, Polity, RegimeKind, StateCapacity,
+        };
+
+        let mut sim = Sim::new([10u8; 32]);
+
+        sim.world.insert_resource(Polity {
+            name: "Test Republic".to_string(),
+            regime: RegimeKind::ParliamentaryRepublic,
+            founding_year: 1945,
+            chamber_count: 1,
+            franchise_fraction: 0.85,
+            fused_executive: false,
+            executive_term_limit: Some(3),
+            electoral_system: ElectoralSystem::ProportionalRepresentation { threshold: 0.05 },
+        });
+        sim.world.insert_resource(Judiciary {
+            independence: 0.75,
+            review_power: true,
+            precedent_weight: 0.60,
+            international_deference: 0.40,
+        });
+        sim.world.insert_resource(StateCapacity {
+            tax_collection_efficiency: 0.82,
+            enforcement_reach: 0.78,
+            enforcement_noise: 0.10,
+            corruption_drift: 0.02,
+            legal_predictability: 0.80,
+            bureaucratic_effectiveness: 0.75,
+        });
+
+        let blob = save_snapshot(&mut sim.world).expect("save");
+
+        let mut sim2 = Sim::new([0u8; 32]);
+        load_snapshot(&mut sim2.world, &blob).expect("load");
+
+        let p = sim2.world.resource::<Polity>();
+        assert_eq!(p.name, "Test Republic");
+        assert!(matches!(p.regime, RegimeKind::ParliamentaryRepublic));
+        assert_eq!(p.chamber_count, 1);
+        assert!((p.franchise_fraction - 0.85).abs() < 1e-6);
+        assert_eq!(p.executive_term_limit, Some(3));
+        assert!(!p.fused_executive);
+
+        let j = sim2.world.resource::<Judiciary>();
+        assert!((j.independence - 0.75).abs() < 1e-6);
+        assert!(j.review_power);
+        assert!((j.precedent_weight - 0.60).abs() < 1e-6);
+
+        let sc = sim2.world.resource::<StateCapacity>();
+        assert!((sc.tax_collection_efficiency - 0.82).abs() < 1e-6);
+        assert!((sc.enforcement_reach - 0.78).abs() < 1e-6);
+        assert!((sc.corruption_drift - 0.02).abs() < 1e-6);
+    }
+
+    /// When Polity/Judiciary/StateCapacity are absent, load removes them from target world.
+    #[test]
+    fn save_load_without_institutional_resources_removes_them_from_target() {
+        use simulator_core::{Judiciary, Polity, StateCapacity};
+
+        // Source sim has no institutional resources.
+        let mut sim_src = Sim::new([11u8; 32]);
+        assert!(sim_src.world.get_resource::<Polity>().is_none());
+        let blob = save_snapshot(&mut sim_src.world).expect("save");
+
+        // Target sim has existing Polity/Judiciary/StateCapacity that should be removed.
+        let mut sim2 = Sim::new([0u8; 32]);
+        sim2.world.insert_resource(Polity::default());
+        sim2.world.insert_resource(Judiciary::default());
+        sim2.world.insert_resource(StateCapacity::default());
+
+        load_snapshot(&mut sim2.world, &blob).expect("load");
+
+        assert!(sim2.world.get_resource::<Polity>().is_none(),
+            "Polity should be removed when absent from snapshot");
+        assert!(sim2.world.get_resource::<Judiciary>().is_none(),
+            "Judiciary should be removed when absent from snapshot");
+        assert!(sim2.world.get_resource::<StateCapacity>().is_none(),
+            "StateCapacity should be removed when absent from snapshot");
+    }
+
+    #[test]
+    fn save_load_without_catalog_does_not_insert_resource() {
+        // A snapshot saved without RightsCatalog should not inject a catalog on load.
+        let mut sim = Sim::new([9u8; 32]);
+        // No catalog inserted — only default world resources.
+        assert!(sim.world.get_resource::<simulator_core::RightsCatalog>().is_none(),
+            "catalog should not exist before save");
+
+        let blob = save_snapshot(&mut sim.world).expect("save");
+
+        let mut sim2 = Sim::new([0u8; 32]);
+        load_snapshot(&mut sim2.world, &blob).expect("load");
+
+        assert!(sim2.world.get_resource::<simulator_core::RightsCatalog>().is_none(),
+            "catalog should not be injected when absent from snapshot");
     }
 
     #[test]

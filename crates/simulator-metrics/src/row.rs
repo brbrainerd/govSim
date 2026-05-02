@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use simulator_core::{
     CrisisKind, CrisisState, LegitimacyDebt, MacroIndicators, PollutionStock, PriceLevel,
-    RightsLedger, SimClock, Treasury,
+    RightsLedger, SimClock, StateCapacity, Treasury,
     components::{Health, Income, Productivity},
 };
 
@@ -29,6 +29,10 @@ pub struct TickRow {
     pub legitimacy_debt: f32,
     /// Bitfield of currently granted civic rights (CivicRights::bits()).
     pub rights_granted_bits: u32,
+    /// Count of rights currently granted (from MacroIndicators, updated monthly).
+    pub rights_granted_count: u32,
+    /// Fraction of defined rights granted [0, 1] (from MacroIndicators, updated monthly).
+    pub rights_breadth: f32,
     pub treasury_balance: f64,
     pub price_level: f64,
     /// 0=None, 1=War, 2=Pandemic, 3=Recession, 4=NaturalDisaster.
@@ -40,6 +44,9 @@ pub struct TickRow {
     pub mean_productivity: f32,
     /// Mean income in whole currency units.
     pub mean_income: f64,
+    /// Composite state-capacity score [0, 1] (unweighted mean of 5 capacity fields).
+    /// 1.0 when no StateCapacity resource is present (perfect / default capacity).
+    pub state_capacity_score: f32,
 }
 
 impl TickRow {
@@ -53,10 +60,13 @@ impl TickRow {
         rights: &RightsLedger,
         crisis: &CrisisState,
         pollution: &PollutionStock,
+        capacity: Option<&StateCapacity>,
         mean_health: f32,
         mean_productivity: f32,
         mean_income: f64,
     ) -> Self {
+        let default_cap = StateCapacity::default();
+        let cap = capacity.unwrap_or(&default_cap);
         Self {
             tick: clock.tick,
             population: indicators.population,
@@ -73,7 +83,9 @@ impl TickRow {
             consecutive_terms: indicators.consecutive_terms,
             pollution_stock: pollution.stock,
             legitimacy_debt: debt.stock,
-            rights_granted_bits: rights.granted.bits(),
+            rights_granted_bits:  rights.granted.bits(),
+            rights_granted_count: indicators.rights_granted_count,
+            rights_breadth:       indicators.rights_breadth,
             treasury_balance: treasury.balance.to_num::<f64>(),
             price_level: price.level,
             crisis_kind: crisis_kind_u8(crisis.kind),
@@ -81,6 +93,7 @@ impl TickRow {
             mean_health,
             mean_productivity,
             mean_income,
+            state_capacity_score: cap.composite_score(),
         }
     }
 }

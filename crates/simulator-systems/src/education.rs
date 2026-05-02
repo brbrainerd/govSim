@@ -15,7 +15,7 @@
 use simulator_core::{
     bevy_ecs::prelude::*,
     components::{Age, EmploymentStatus, LegalStatusFlags, LegalStatuses, SavingsRate},
-    Phase, Sim, SimClock,
+    Phase, Polity, Sim, SimClock, SimRng,
 };
 
 const AGE_ADVANCE_PERIOD: u64 = 360;
@@ -40,9 +40,25 @@ pub fn savings_rate_for_age(age: u8) -> f32 {
 #[allow(clippy::type_complexity)]
 pub fn age_advance_system(
     clock: Res<SimClock>,
+    mut rng: ResMut<SimRng>,
+    polity: Option<Res<Polity>>,
     mut q: Query<(&mut Age, &mut EmploymentStatus, &mut LegalStatuses, Option<&mut SavingsRate>)>,
 ) {
     if !clock.tick.is_multiple_of(AGE_ADVANCE_PERIOD) || clock.tick == 0 { return; }
+
+    // Franchise fraction: fraction of new adults who receive voting rights.
+    // Defaults to 1.0 (universal suffrage) when no Polity resource is present.
+    let franchise = polity
+        .as_ref()
+        .map(|p| p.franchise_fraction.clamp(0.0, 1.0))
+        .unwrap_or(1.0);
+
+    // Derive a per-tick child RNG for franchise decisions only when needed.
+    let mut child_rng = if franchise < 1.0 {
+        Some(rng.derive("franchise_enfranchisement", clock.tick))
+    } else {
+        None
+    };
 
     for (mut age, mut emp, mut legal, savings_opt) in q.iter_mut() {
         let old = age.0;
@@ -50,8 +66,19 @@ pub fn age_advance_system(
 
         // Cross working-age threshold → enter adult civic and labour life.
         if old < WORKING_AGE && age.0 >= WORKING_AGE {
+            use rand::Rng as _;
             legal.0.remove(LegalStatusFlags::MINOR);
-            legal.0.insert(LegalStatusFlags::REGISTERED_VOTER | LegalStatusFlags::CITIZEN);
+            // Only enfranchise according to the polity's franchise_fraction.
+            // At franchise=1.0 this is always granted (avoids RNG call).
+            let gets_vote = match child_rng.as_mut() {
+                None       => true,
+                Some(crng) => crng.random::<f32>() < franchise,
+            };
+            if gets_vote {
+                legal.0.insert(LegalStatusFlags::REGISTERED_VOTER | LegalStatusFlags::CITIZEN);
+            } else {
+                legal.0.insert(LegalStatusFlags::CITIZEN);
+            }
 
             if matches!(*emp, EmploymentStatus::Student) {
                 *emp = EmploymentStatus::Unemployed;

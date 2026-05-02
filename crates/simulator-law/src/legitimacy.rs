@@ -1,10 +1,15 @@
-//! `legitimacy_update_system` — Phase::Mutate, monthly.
+//! `legitimacy_update_system` — Phase::Validate, monthly.
 //!
 //! Drains accumulated repeal-debt from the LawRegistry into the global
 //! `LegitimacyDebt` resource and applies the configured monthly decay.
 //! Together with the approval system's reading of LegitimacyDebt, this
 //! implements the policy-ratchet dynamic: removing entrenched programs
 //! has a lasting political cost that fades over months, not instantly.
+//!
+//! Running in Phase::Validate (before Phase::Mutate) ensures that
+//! `approval_system` always reads the freshly-drained debt value rather
+//! than a stale zero, avoiding a non-deterministic ordering ambiguity
+//! when both systems were in Phase::Mutate.
 
 use simulator_core::{
     bevy_ecs::prelude::*,
@@ -28,7 +33,7 @@ pub fn legitimacy_update_system(
 
 pub fn register_legitimacy_system(sim: &mut Sim) {
     sim.schedule_mut()
-        .add_systems(legitimacy_update_system.in_set(Phase::Mutate));
+        .add_systems(legitimacy_update_system.in_set(Phase::Validate));
 }
 
 #[cfg(test)]

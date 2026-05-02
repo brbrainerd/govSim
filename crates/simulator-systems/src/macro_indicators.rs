@@ -16,7 +16,8 @@
 use simulator_core::{
     bevy_ecs::prelude::*,
     components::{ApprovalRating, Citizen, EmploymentStatus, Income, Wealth},
-    GovernmentLedger, MacroIndicators, Phase, PollutionStock, Sim, SimClock,
+    CivicRights, GovernmentLedger, MacroIndicators, Phase, PollutionStock,
+    RightsCatalog, RightsLedger, Sim, SimClock,
 };
 use simulator_types::Money;
 
@@ -27,6 +28,8 @@ pub fn macro_indicators_system(
     mut indicators: ResMut<MacroIndicators>,
     mut ledger: ResMut<GovernmentLedger>,
     pollution: Res<PollutionStock>,
+    rights_catalog: Option<Res<RightsCatalog>>,
+    rights_ledger: Option<Res<RightsLedger>>,
     q: Query<(&Citizen, &Income, &Wealth, &EmploymentStatus, &ApprovalRating)>,
 ) {
     if clock.tick == 0 { return; }
@@ -77,6 +80,20 @@ pub fn macro_indicators_system(
             indicators.wealth_gini = gini_sorted(&mut wealths);
         }
         indicators.pollution_stock = pollution.stock;
+
+        // Rights breadth — prefer RightsCatalog (rich), fall back to RightsLedger bits.
+        if let Some(ref cat) = rights_catalog {
+            let granted = cat.granted.len() as u32;
+            let defined = cat.defined.len() as u32;
+            indicators.rights_granted_count = granted;
+            indicators.rights_breadth = if defined == 0 { 0.0 } else { granted as f32 / defined as f32 };
+        } else if let Some(ref ledger) = rights_ledger {
+            let granted = ledger.granted.bits().count_ones();
+            let total   = CivicRights::all().bits().count_ones();
+            indicators.rights_granted_count = granted;
+            indicators.rights_breadth = if total == 0 { 0.0 } else { granted as f32 / total as f32 };
+        }
+        // else: leave as default (0 / 0.0) when neither resource is present.
     }
 
     if clock.tick.is_multiple_of(360) {
@@ -238,5 +255,51 @@ mod tests {
             (gdp - 3_600_000.0).abs() < 10.0,
             "GDP should be 3_600_000, got {gdp:.2}"
         );
+    }
+
+    #[test]
+    fn rights_breadth_from_catalog_reflected_monthly() {
+        use simulator_core::{catalog_from_bits, RightId, RightsCatalog};
+        let mut sim = Sim::new([55u8; 32]);
+        register_macro_indicators_system(&mut sim);
+
+        spawn_citizen(&mut sim.world, 0, EmploymentStatus::Employed, 1_000.0, 0.5);
+
+        // Insert a catalog with 4 defined rights, 2 granted (bits 0+1 = 3).
+        // catalog_from_bits seeds `defined` from default_catalog; we need
+        // a catalog where granted.len()==2 and defined.len()==some known value.
+        // Simplest: use catalog_from_bits(0b11) for granted set then check ratio.
+        let cat = catalog_from_bits(0b11); // grants first two rights by bit mask
+        let defined_count = cat.defined.len() as u32;
+        let granted_count = cat.granted.len() as u32;
+        sim.world.insert_resource(cat);
+
+        for _ in 0..31 { sim.step(); }
+
+        let m = sim.world.resource::<MacroIndicators>();
+        assert_eq!(m.rights_granted_count, granted_count,
+            "rights_granted_count should match catalog.granted.len()");
+        let expected_breadth = granted_count as f32 / defined_count as f32;
+        assert!(
+            (m.rights_breadth - expected_breadth).abs() < 1e-4,
+            "rights_breadth should be {expected_breadth:.4}, got {:.4}", m.rights_breadth
+        );
+    }
+
+    #[test]
+    fn rights_breadth_zero_when_no_catalog() {
+        let mut sim = Sim::new([56u8; 32]);
+        register_macro_indicators_system(&mut sim);
+
+        spawn_citizen(&mut sim.world, 0, EmploymentStatus::Employed, 1_000.0, 0.5);
+        // No RightsCatalog or RightsLedger inserted.
+
+        for _ in 0..31 { sim.step(); }
+
+        let m = sim.world.resource::<MacroIndicators>();
+        assert_eq!(m.rights_granted_count, 0,
+            "rights_granted_count should be 0 with no rights resources");
+        assert_eq!(m.rights_breadth, 0.0,
+            "rights_breadth should be 0.0 with no rights resources");
     }
 }

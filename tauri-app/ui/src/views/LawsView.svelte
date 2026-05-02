@@ -11,7 +11,7 @@
   import type { LawInfo }  from "$lib/ipc";
 
   // ── Filter / sort ───────────────────────────────────────────────────────────
-  type EffectFilter = "all" | "income_tax" | "benefit" | "abatement" | "registration" | "audit";
+  type EffectFilter = "all" | "income_tax" | "benefit" | "abatement" | "registration" | "audit" | "right_grant" | "right_revoke" | "state_capacity";
   type SortKey      = "id" | "enacted_tick" | "effect_kind";
   type SortDir      = "asc" | "desc";
 
@@ -107,12 +107,15 @@
   const totalActive      = $derived(sim.laws.filter(l => !l.repealed).length);
 
   const FILTER_OPTIONS: Array<{ value: EffectFilter; label: string }> = [
-    { value: "all",          label: "All"            },
-    { value: "income_tax",   label: "Income Tax"     },
-    { value: "benefit",      label: "Citizen Benefit"},
-    { value: "abatement",    label: "Abatement"      },
-    { value: "registration", label: "Registration"   },
-    { value: "audit",        label: "Audit"          },
+    { value: "all",           label: "All"            },
+    { value: "income_tax",    label: "Income Tax"     },
+    { value: "benefit",       label: "Citizen Benefit"},
+    { value: "abatement",     label: "Abatement"      },
+    { value: "registration",  label: "Registration"   },
+    { value: "audit",         label: "Audit"          },
+    { value: "right_grant",   label: "Right Grant"    },
+    { value: "right_revoke",  label: "Right Revoke"   },
+    { value: "state_capacity",label: "State Capacity" },
   ];
 
 </script>
@@ -388,8 +391,11 @@ h1 { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); displ
 .badge-income_tax   { background: rgba(99,102,241,.20);  color: #818cf8; }
 .badge-benefit      { background: rgba(34,197,94,.20);   color: #4ade80; }
 .badge-abatement    { background: rgba(56,189,248,.20);  color: #38bdf8; }
-.badge-registration { background: rgba(245,158,11,.20);  color: #fbbf24; }
-.badge-audit        { background: rgba(239,68,68,.20);   color: #f87171; }
+.badge-registration  { background: rgba(245,158,11,.20);  color: #fbbf24; }
+.badge-audit         { background: rgba(239,68,68,.20);   color: #f87171; }
+.badge-right_grant   { background: rgba(16,185,129,.20);  color: #34d399; }
+.badge-right_revoke  { background: rgba(244,63,94,.20);   color: #fb7185; }
+.badge-state_capacity{ background: rgba(168,85,247,.20);  color: #c084fc; }
 
 .magnitude {
   display: inline-block;

@@ -23,6 +23,10 @@ export interface TickRow {
   pollution_stock: number;
   legitimacy_debt: number;
   rights_granted_bits: number;
+  /** Count of rights currently granted (from RightsCatalog when present, updated monthly). */
+  rights_granted_count: number;
+  /** Fraction of defined rights granted [0, 1] (updated monthly). */
+  rights_breadth: number;
   treasury_balance: number;
   price_level: number;
   crisis_kind: number;
@@ -30,6 +34,7 @@ export interface TickRow {
   mean_health: number;
   mean_productivity: number;
   mean_income: number;
+  state_capacity_score: number;
 }
 
 export interface CurrentState {
@@ -48,6 +53,10 @@ export interface CurrentState {
   pollution_stock: number;
   legitimacy_debt: number;
   rights_granted_bits: number;
+  /** Count of rights currently granted (catalog-aware, updated monthly). */
+  rights_granted_count: number;
+  /** Fraction of defined rights granted [0, 1] (updated monthly). */
+  rights_breadth: number;
   crisis_kind: number;
   crisis_remaining_ticks: number;
   incumbent_party: number;
@@ -56,11 +65,43 @@ export interface CurrentState {
   last_election_tick: number;
   /** Fixed election cycle length in ticks (always 360 = 1 simulated year). */
   election_cycle: number;
+
+  // ── Polity ──────────────────────────────────────────────────────────────────
+  /** Regime type label, e.g. "PresidentialRepublic", "MilitaryJunta". */
+  regime_kind: string;
+  /** Display name of the polity, e.g. "United States". */
+  polity_name: string;
+  /** Fraction of adult population eligible to vote [0, 1]. */
+  franchise_fraction: number;
+  /** Electoral system label, e.g. "FirstPastThePost", "PR(≥5%)". */
+  electoral_system: string;
+  /** Whether head of state and government are fused (presidential model). */
+  fused_executive: boolean;
+  /** Maximum consecutive executive terms, or null if unlimited. */
+  executive_term_limit: number | null;
+
+  // ── Judiciary ───────────────────────────────────────────────────────────────
+  /** How independent the judiciary is from executive pressure [0, 1]. */
+  judicial_independence: number;
+  /** Whether courts can strike down legislation. */
+  judicial_review_power: boolean;
+
+  // ── StateCapacity ────────────────────────────────────────────────────────────
+  /** Unweighted composite score of state effectiveness [0, 1]. */
+  state_capacity_score: number;
+  /** Fraction of owed tax actually collected [0, 1]. */
+  tax_collection_efficiency: number;
+  /** Fraction of citizens subject to effective enforcement [0, 1]. */
+  enforcement_reach: number;
+  /** Consistency of rulings [0, 1]. */
+  legal_predictability: number;
+  /** Service delivery multiplier [0, 1]. */
+  bureaucratic_effectiveness: number;
 }
 
 export interface LawInfo {
   id: number;
-  effect_kind: "income_tax" | "benefit" | "registration" | "audit" | "abatement" | string;
+  effect_kind: "income_tax" | "benefit" | "registration" | "audit" | "abatement" | "right_grant" | "right_revoke" | "state_capacity" | string;
   /** Human-readable name (e.g. "Income Tax", "Abatement"). */
   label: string;
   /** Key parameter string, e.g. "25.0%", "$500/mo", "0.50 PU · $10000/PU". Null for unsupported types. */

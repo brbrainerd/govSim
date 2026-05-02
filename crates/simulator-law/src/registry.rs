@@ -188,6 +188,17 @@ impl LawRegistry {
         d
     }
 
+    /// Add debt directly to the repeal-debt accumulator without going through
+    /// the normal repeal path. Used by `RightRevoke` law effects so that
+    /// revocation debt flows through the same `legitimacy_update_system` drain
+    /// as regular repeals, avoiding a `ResMut<LegitimacyDebt>` dependency
+    /// in `law_dispatcher_system`.
+    pub fn add_debt(&self, amount: f32) {
+        if amount > 0.0 {
+            self.inner.write().repeal_debt += amount;
+        }
+    }
+
     pub fn snapshot_active(&self, tick: u64) -> Vec<LawHandle> {
         let g = self.inner.read();
         g.by_id

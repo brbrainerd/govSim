@@ -192,10 +192,19 @@ impl Scenario {
             };
 
             // Legal status: minors cannot vote; adults are registered citizens.
+            // When the scenario specifies a Polity with franchise_fraction < 1.0,
+            // only that fraction of adult citizens receive voting rights at spawn.
+            // The remaining adults are CITIZEN-only (e.g. enslaved persons, women
+            // without suffrage, non-property-owners in ancient/restrictive polities).
+            let franchise = self.polity.as_ref()
+                .map(|p| p.franchise_fraction.clamp(0.0, 1.0))
+                .unwrap_or(1.0);
             let legal = if age < 18 {
                 LegalStatuses(LegalStatusFlags::MINOR | LegalStatusFlags::CITIZEN)
-            } else {
+            } else if franchise >= 1.0 || rng.random::<f32>() < franchise {
                 LegalStatuses(LegalStatusFlags::REGISTERED_VOTER | LegalStatusFlags::CITIZEN)
+            } else {
+                LegalStatuses(LegalStatusFlags::CITIZEN)
             };
 
             // Nested to stay within Bevy's 15-component Bundle limit.
@@ -558,8 +567,8 @@ mod tests {
         let aus = Scenario::load(&root.join("australia_2022.yaml"))
             .expect("australia_2022.yaml should load");
         assert_eq!(aus.name, "australia_2022");
-        // No initial_rights field → None → no rights pre-granted (player must legislate them).
-        assert_eq!(aus.initial_rights, None, "australia_2022 has no pre-granted rights");
+        // All 9 rights pre-granted (0x1FF = 511) — calibrated from V-Dem v16 AUS 2022.
+        assert_eq!(aus.initial_rights, Some(511), "australia_2022 should have all rights granted");
         assert!(aus.population.citizens > 0, "must have citizens");
         // V-Dem calibrated income ~$4583/month.
         assert!(
@@ -657,7 +666,7 @@ mod tests {
     ///    comparable income (validates tax_collection_efficiency wiring end-to-end).
     #[test]
     fn failed_state_scenario_loads_and_produces_expected_macros() {
-        use simulator_core::{ElectoralSystem, GovernmentLedger, Judiciary, Polity, RegimeKind, StateCapacity, Treasury};
+        use simulator_core::{GovernmentLedger, Judiciary, Polity, RegimeKind, StateCapacity, Treasury};
         use simulator_systems::election::ElectionOutcome;
         use std::path::Path;
 
@@ -728,6 +737,134 @@ mod tests {
         assert!(revenue < expected_max,
             "failed-state revenue should be << full-capacity; got ${revenue:.0}, max ${expected_max:.0}");
         let _ = treasury; // kept for potential future assertion
+    }
+
+    /// Franchise fraction is applied at spawn: Athens (franchise=0.12) should
+    /// produce ~12% of adults as REGISTERED_VOTER, while a universal-suffrage
+    /// scenario should produce ~100% of adults as REGISTERED_VOTER.
+    ///
+    /// Test uses a statistical bound: with 400 citizens and franchise=0.12, the
+    /// expected registered adult count is approximately `400 * adult_share * 0.12`.
+    /// Adult share ≈ 0.55 (ages 18-64 in a uniform 0-95 distribution).
+    /// Expected voters ≈ 400 * 0.55 * 0.12 ≈ 26. We allow a [5, 60] window
+    /// (±2σ, Binomial noise with n≈220, p=0.12 → σ≈5).
+    #[test]
+    fn franchise_fraction_limits_voter_registration_at_spawn() {
+        use simulator_core::components::{LegalStatusFlags, LegalStatuses};
+        use std::path::Path;
+
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent().unwrap().parent().unwrap()
+            .join("scenarios");
+
+        // ── Athens: franchise_fraction = 0.12 ────────────────────────────────
+        let athens = Scenario::load(&root.join("athens_507bce.yaml"))
+            .expect("athens_507bce.yaml should parse");
+        assert!((athens.polity.as_ref().unwrap().franchise_fraction - 0.12).abs() < 1e-3,
+            "test precondition: Athens franchise should be 0.12");
+
+        let mut sim_athens = Sim::new(athens.seed);
+        register_phase1_systems(&mut sim_athens);
+        athens.spawn_population(&mut sim_athens);
+        // configure_world inserts Polity — must happen before counting so
+        // we verify the right polity was actually applied during spawn.
+        // (spawn_population reads self.polity directly, not from world.)
+
+        let mut adults = 0u32;
+        let mut voters = 0u32;
+        sim_athens.world
+            .query::<(&simulator_core::components::Age, &LegalStatuses)>()
+            .iter(&sim_athens.world)
+            .for_each(|(age, ls)| {
+                if age.0 >= 18 && age.0 < 65 {
+                    adults += 1;
+                    if ls.0.contains(LegalStatusFlags::REGISTERED_VOTER) {
+                        voters += 1;
+                    }
+                }
+            });
+
+        assert!(adults > 50, "should have meaningful adult population, got {adults}");
+        // With p=0.12 and ~200 trials, expected ≈ 24, σ ≈ 4.6.
+        // Generous bounds [3, 60] to avoid flakiness while still catching p≈1.0.
+        assert!(
+            voters >= 3 && voters <= 60,
+            "Athens voters {voters} / {adults} adults is outside expected range [3, 60] for franchise=0.12"
+        );
+        let actual_rate = voters as f32 / adults as f32;
+        // The actual rate should be much closer to 0.12 than to 1.0.
+        assert!(actual_rate < 0.40,
+            "Athens voter rate {actual_rate:.2} should be well below 0.40 (franchise=0.12)");
+
+        // ── Weimar: franchise_fraction = 1.0 → all adults vote ───────────────
+        let weimar = Scenario::load(&root.join("weimar_1919.yaml"))
+            .expect("weimar_1919.yaml should parse");
+        assert!((weimar.polity.as_ref().unwrap().franchise_fraction - 1.0).abs() < 1e-3,
+            "test precondition: Weimar franchise should be 1.0");
+
+        let mut sim_weimar = Sim::new(weimar.seed);
+        register_phase1_systems(&mut sim_weimar);
+        weimar.spawn_population(&mut sim_weimar);
+
+        let mut w_adults = 0u32;
+        let mut w_voters = 0u32;
+        sim_weimar.world
+            .query::<(&simulator_core::components::Age, &LegalStatuses)>()
+            .iter(&sim_weimar.world)
+            .for_each(|(age, ls)| {
+                if age.0 >= 18 && age.0 < 65 {
+                    w_adults += 1;
+                    if ls.0.contains(LegalStatusFlags::REGISTERED_VOTER) {
+                        w_voters += 1;
+                    }
+                }
+            });
+
+        assert!(w_adults > 50, "Weimar should have meaningful adult population, got {w_adults}");
+        assert_eq!(w_voters, w_adults,
+            "Weimar (franchise=1.0): every working-age adult should be a registered voter; \
+             got {w_voters} / {w_adults}");
+    }
+
+    /// Franchise fraction also applies to newly-enfranchised adults (turning 18).
+    /// Run one yearly tick of an Athens-like simulation and verify that newly
+    /// registered adults still respect franchise_fraction.
+    #[test]
+    fn franchise_fraction_applies_to_newly_enfranchised_adults() {
+        use simulator_core::{ElectoralSystem, Polity, RegimeKind};
+        use simulator_core::components::{LegalStatusFlags, LegalStatuses};
+
+        // Build a small sim with franchise_fraction = 0.0 (no one should ever vote).
+        let mut scenario = minimal_scenario();
+        scenario.polity = Some(Polity {
+            name: "No-Franchise".to_string(),
+            regime: RegimeKind::AbsoluteMonarchy,
+            founding_year: 1000,
+            chamber_count: 1,
+            franchise_fraction: 0.0,
+            fused_executive: true,
+            executive_term_limit: None,
+            electoral_system: ElectoralSystem::Hereditary,
+        });
+
+        let mut sim = Sim::new(scenario.seed);
+        register_phase1_systems(&mut sim);
+        scenario.spawn_population(&mut sim);
+        scenario.configure_world(&mut sim);
+
+        // Run one year so the age-advance system fires once.
+        for _ in 0..=360 { sim.step(); }
+
+        // Count registered voters among all citizens.
+        let voter_count: u32 = sim.world
+            .query::<&LegalStatuses>()
+            .iter(&sim.world)
+            .filter(|ls| ls.0.contains(LegalStatusFlags::REGISTERED_VOTER))
+            .count() as u32;
+
+        assert_eq!(voter_count, 0,
+            "franchise_fraction=0.0: no citizen should be a registered voter after one year, \
+             got {voter_count}");
     }
 }
 

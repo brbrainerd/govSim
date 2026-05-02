@@ -2,7 +2,7 @@
 //! sidecar (AgentTorch / PsychSim). In Phase 2 this returns deterministic
 //! fake data; Phase 3 wires the real gRPC call.
 
-use arrow::array::{Float32Array, Float64Array, UInt64Array};
+use arrow::array::{Float32Array, Float64Array, UInt32Array, UInt64Array};
 use arrow::record_batch::RecordBatch;
 use simulator_core::MacroIndicators;
 use simulator_types::Money;
@@ -46,6 +46,9 @@ fn fake_batch(tick: u64) -> Result<RecordBatch, IpcError> {
             Arc::new(Float32Array::from(vec![0.0f32])), // inflation
             Arc::new(Float32Array::from(vec![0.0f32])), // approval
             Arc::new(Float64Array::from(vec![0.0f64])), // pollution_stock
+            Arc::new(UInt32Array::from(vec![0u32])),    // rights_granted_count
+            Arc::new(Float32Array::from(vec![0.0f32])), // rights_breadth
+            Arc::new(Float32Array::from(vec![1.0f32])), // state_capacity_score
         ],
     )
     .map_err(|e| IpcError::Arrow(e.to_string()))?;
@@ -67,6 +70,15 @@ fn indicators_from_batch(batch: &RecordBatch) -> Result<MacroIndicators, IpcErro
             batch
                 .column_by_name($name)
                 .and_then(|c| c.as_any().downcast_ref::<UInt64Array>())
+                .map(|a| a.value(0))
+                .ok_or_else(|| IpcError::MissingColumn($name))?
+        };
+    }
+    macro_rules! col_u32 {
+        ($name:expr) => {
+            batch
+                .column_by_name($name)
+                .and_then(|c| c.as_any().downcast_ref::<UInt32Array>())
                 .map(|a| a.value(0))
                 .ok_or_else(|| IpcError::MissingColumn($name))?
         };
@@ -96,6 +108,8 @@ fn indicators_from_batch(batch: &RecordBatch) -> Result<MacroIndicators, IpcErro
         election_margin:        0.0,
         consecutive_terms:      0,
         pollution_stock:        col_f64!("pollution_stock"),
+        rights_granted_count:   col_u32!("rights_granted_count"),
+        rights_breadth:         col_f32!("rights_breadth"),
     })
 }
 
@@ -125,6 +139,6 @@ mod tests {
     fn fake_batch_schema_matches() {
         let batch = fake_batch(1).unwrap();
         assert_eq!(batch.num_rows(), 1);
-        assert_eq!(batch.num_columns(), 8);
+        assert_eq!(batch.num_columns(), 11); // tick, population, gdp, gini, unemployment, inflation, approval, pollution_stock, rights_granted_count, rights_breadth, state_capacity_score
     }
 }

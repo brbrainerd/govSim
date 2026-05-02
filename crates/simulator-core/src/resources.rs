@@ -32,6 +32,14 @@ pub struct MacroIndicators {
     /// Current aggregate pollution stock (PU), mirrored from PollutionStock
     /// each monthly commit so IPC / Arrow Flight clients see it in one record.
     pub pollution_stock: f64,
+    /// Number of civil rights currently granted (from RightsCatalog, or
+    /// popcount of RightsLedger.granted when catalog is absent). Updated
+    /// each monthly commit. 0 when neither resource is present.
+    pub rights_granted_count: u32,
+    /// Fraction of defined rights that are currently granted [0.0, 1.0].
+    /// 0.0 when no rights are defined. Uses RightsCatalog when available,
+    /// falls back to CivicRights bit-popcount / total-bits otherwise.
+    pub rights_breadth: f32,
 }
 
 /// Government balance sheet. Phase 1 just tracks revenue.

@@ -26,7 +26,7 @@ pub mod opinion;
 pub mod pollution;
 pub mod state_fragility;
 pub mod wealth_update;
-pub mod judicial {}
+pub mod judicial;
 pub mod enforcement {}
 pub mod media {}
 
@@ -34,6 +34,7 @@ pub use approval::register_approval_system;
 pub use crisis::register_crisis_system;
 pub use education::register_age_advance_system;
 pub use birth_death::register_birth_death_system;
+pub use judicial::register_judicial_review_system;
 pub use state_fragility::register_state_fragility_system;
 pub use election::{register_election_system, ElectionOutcome, ELECTION_PERIOD};
 pub use employment::register_employment_system;
@@ -104,6 +105,7 @@ pub fn register_phase1_systems(sim: &mut Sim) {
     register_macro_indicators_system(sim);
     register_election_system(sim);
     register_state_fragility_system(sim);
+    register_judicial_review_system(sim);
     // Telemetry
     register_telemetry_system(sim);
 }

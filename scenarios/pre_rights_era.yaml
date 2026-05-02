@@ -26,3 +26,29 @@ initial_legitimacy_debt: 0.4
 
 # Suppress random crises for a clean baseline run; set to 2 for realistic play.
 crisis_prob_pct: 0
+
+polity:
+  name: "Pre-Rights State"
+  regime:
+    kind: Oligarchy
+  founding_year: 1820
+  chamber_count: 1             # unelected upper house only
+  franchise_fraction: 0.10     # property-owning male franchise only
+  fused_executive: true        # autocratic executive
+  executive_term_limit: ~      # no limit
+  electoral_system:
+    system: FirstPastThePost    # restricted-franchise FPTP
+
+state_capacity:
+  tax_collection_efficiency: 0.65   # tax farming, partial collection
+  enforcement_reach: 0.60           # limited hinterland reach
+  enforcement_noise: 0.25           # inconsistent enforcement
+  corruption_drift: 0.008           # slow drift — non-zero institutional stress
+  legal_predictability: 0.50
+  bureaucratic_effectiveness: 0.60
+
+judiciary:
+  independence: 0.30           # judiciary appointed by and answerable to executive
+  review_power: false          # no constitutional review — parliamentary sovereignty
+  precedent_weight: 0.40       # some common-law tradition
+  international_deference: 0.00

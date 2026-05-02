@@ -203,7 +203,7 @@
       <StatCard label="Election Margin"  value={pct(cs.election_margin)} sub={`${cs.consecutive_terms} terms`} sparkData={sparkOf("election_margin")} onclick={() => navigate("elections")} />
       <StatCard label="Legitimacy Debt"  value={cs.legitimacy_debt.toFixed(3)} sparkData={sparkOf("legitimacy_debt")} color={cs.legitimacy_debt > 0.5 ? "danger" : cs.legitimacy_debt > 0.1 ? "warn" : "default"} onclick={() => navigate("elections")} />
       <StatCard label="Crisis"           value={crisisLabel} color={cs.crisis_kind > 0 ? "danger" : "default"} sub={cs.crisis_remaining_ticks > 0 ? `${cs.crisis_remaining_ticks} ticks left` : undefined} />
-      <StatCard label="Rights"           value={`${cs.rights_granted_bits.toString(2).split("").filter(b => b === "1").length} / 9`} sub="civic rights" onclick={() => navigate("elections")} />
+      <StatCard label="Rights"           value={`${cs.rights_granted_count}`} sub={cs.rights_breadth > 0 ? `of ${Math.round(cs.rights_granted_count / cs.rights_breadth)} rights` : "civic rights"} onclick={() => navigate("elections")} />
     </div>
     <div class="chart-row chart-row--3">
       <LineChart title="Approval" xLabels={xLabels} series={approvalSeries} yMin={0} yMax={1} yFormatter={pct} markLines={lawMarkLines} markBands={crisisBands} />
@@ -222,6 +222,27 @@
         yMin={0} yMax={1} yFormatter={pct}
         yMarkLines={[{y: 0.05, label: "< 5% (razor-thin)", color: "var(--color-danger)"}]}
         markLines={lawMarkLines} markBands={crisisBands} />
+    </div>
+  </section>
+
+  <!-- ── Governance row ── -->
+  <section class="section">
+    <h2 class="section-title">Governance</h2>
+    <div class="governance-info">
+      <div class="gov-chip"><span class="gov-label">Regime</span><span class="gov-value">{cs.regime_kind.replace(/([A-Z])/g, ' $1').trim()}</span></div>
+      <div class="gov-chip"><span class="gov-label">Polity</span><span class="gov-value">{cs.polity_name}</span></div>
+      <div class="gov-chip"><span class="gov-label">Electoral System</span><span class="gov-value">{cs.electoral_system}</span></div>
+      <div class="gov-chip"><span class="gov-label">Franchise</span><span class="gov-value">{(cs.franchise_fraction * 100).toFixed(0)}%</span></div>
+      {#if cs.executive_term_limit !== null}<div class="gov-chip"><span class="gov-label">Term Limit</span><span class="gov-value">{cs.executive_term_limit} terms</span></div>{/if}
+      <div class="gov-chip"><span class="gov-label">Judicial Review</span><span class="gov-value" class:gov-yes={cs.judicial_review_power} class:gov-no={!cs.judicial_review_power}>{cs.judicial_review_power ? "Yes" : "No"}</span></div>
+      <div class="gov-chip"><span class="gov-label">Judicial Independence</span><span class="gov-value">{(cs.judicial_independence * 100).toFixed(0)}%</span></div>
+    </div>
+    <div class="stat-grid">
+      <StatCard label="State Capacity"       value={pct(cs.state_capacity_score)}         color={cs.state_capacity_score < 0.4 ? "danger" : cs.state_capacity_score > 0.75 ? "good" : "warn"} sparkData={sparkOf("state_capacity_score")} />
+      <StatCard label="Tax Collection"       value={pct(cs.tax_collection_efficiency)}     color={cs.tax_collection_efficiency < 0.5 ? "danger" : "default"} />
+      <StatCard label="Enforcement Reach"    value={pct(cs.enforcement_reach)}             color={cs.enforcement_reach < 0.5 ? "danger" : "default"} />
+      <StatCard label="Legal Predictability" value={pct(cs.legal_predictability)}          color={cs.legal_predictability < 0.4 ? "danger" : "default"} />
+      <StatCard label="Bureaucratic Eff."    value={pct(cs.bureaucratic_effectiveness)}    color={cs.bureaucratic_effectiveness < 0.4 ? "danger" : "default"} />
     </div>
   </section>
 
@@ -383,4 +404,32 @@
 @media (max-width: 900px) {
   .chart-row--3 { grid-template-columns: 1fr 1fr; }
 }
+
+/* ── Governance info chips ── */
+.governance-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.gov-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface-2, rgba(255,255,255,.04));
+  border: 1px solid var(--color-border, rgba(255,255,255,.08));
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.gov-label {
+  color: var(--color-text-muted, #888);
+  font-weight: 500;
+}
+.gov-value {
+  color: var(--color-text, #e5e5e5);
+  font-weight: 700;
+}
+.gov-yes { color: #34d399; }
+.gov-no  { color: #fb7185; }
 </style>

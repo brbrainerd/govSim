@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::*;
 use simulator_core::{
     CrisisState, LegitimacyDebt, MacroIndicators, Phase, PollutionStock, PriceLevel,
-    RightsLedger, Sim, SimClock, Treasury,
+    RightsLedger, Sim, SimClock, StateCapacity, Treasury,
     components::{Health, Income, Productivity},
 };
 
@@ -22,6 +22,7 @@ pub fn collect_metrics_system(
     rights:      Res<RightsLedger>,
     crisis:      Res<CrisisState>,
     pollution:   Res<PollutionStock>,
+    capacity:    Option<Res<StateCapacity>>,
     mut store:   ResMut<MetricStore>,
     health_q:    Query<&Health>,
     prod_q:      Query<&Productivity>,
@@ -36,6 +37,7 @@ pub fn collect_metrics_system(
     let row = TickRow::from_resources(
         &clock, &indicators, &treasury, &price,
         &debt, &rights, &crisis, &pollution,
+        capacity.as_deref(),
         mean_health, mean_productivity, mean_income,
     );
     store.push(row);

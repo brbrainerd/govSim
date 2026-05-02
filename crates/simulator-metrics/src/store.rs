@@ -152,6 +152,8 @@ fn rows_to_df(rows: &[&TickRow]) -> anyhow::Result<DataFrame> {
         col_f64!(pollution_stock),
         col_f32!(legitimacy_debt),
         col_u32!(rights_granted_bits),
+        col_u32!(rights_granted_count),
+        col_f32!(rights_breadth),
         col_f64!(treasury_balance),
         col_f64!(price_level),
         col_u8!(crisis_kind),
@@ -159,6 +161,7 @@ fn rows_to_df(rows: &[&TickRow]) -> anyhow::Result<DataFrame> {
         col_f32!(mean_health),
         col_f32!(mean_productivity),
         col_f64!(mean_income),
+        col_f32!(state_capacity_score),
     ])
     .context("building DataFrame")
 }
@@ -221,6 +224,8 @@ fn df_to_rows(df: &DataFrame) -> anyhow::Result<Vec<TickRow>> {
     let pollution_stock       = get_f64!("pollution_stock");
     let legitimacy_debt       = get_f32!("legitimacy_debt");
     let rights_granted_bits   = get_u32!("rights_granted_bits");
+    let rights_granted_count  = get_u32!("rights_granted_count");
+    let rights_breadth        = get_f32!("rights_breadth");
     let treasury_balance      = get_f64!("treasury_balance");
     let price_level           = get_f64!("price_level");
     let crisis_kind           = get_u8!("crisis_kind");
@@ -228,6 +233,7 @@ fn df_to_rows(df: &DataFrame) -> anyhow::Result<Vec<TickRow>> {
     let mean_health           = get_f32!("mean_health");
     let mean_productivity     = get_f32!("mean_productivity");
     let mean_income           = get_f64!("mean_income");
+    let state_capacity_score  = get_f32!("state_capacity_score");
 
     let len = df.height();
     let mut rows = Vec::with_capacity(len);
@@ -249,6 +255,8 @@ fn df_to_rows(df: &DataFrame) -> anyhow::Result<Vec<TickRow>> {
             pollution_stock:        pollution_stock.get(i).unwrap_or(0.0),
             legitimacy_debt:        legitimacy_debt.get(i).unwrap_or(0.0),
             rights_granted_bits:    rights_granted_bits.get(i).unwrap_or(0),
+            rights_granted_count:   rights_granted_count.get(i).unwrap_or(0),
+            rights_breadth:         rights_breadth.get(i).unwrap_or(0.0),
             treasury_balance:       treasury_balance.get(i).unwrap_or(0.0),
             price_level:            price_level.get(i).unwrap_or(1.0),
             crisis_kind:            crisis_kind.get(i).unwrap_or(0),
@@ -256,6 +264,7 @@ fn df_to_rows(df: &DataFrame) -> anyhow::Result<Vec<TickRow>> {
             mean_health:            mean_health.get(i).unwrap_or(0.0),
             mean_productivity:      mean_productivity.get(i).unwrap_or(0.0),
             mean_income:            mean_income.get(i).unwrap_or(0.0),
+            state_capacity_score:   state_capacity_score.get(i).unwrap_or(1.0),
         });
     }
     Ok(rows)

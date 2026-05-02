@@ -57,7 +57,7 @@ pub fn law_dispatcher_system(
     mut treasury: ResMut<Treasury>,
     mut ledger: ResMut<GovernmentLedger>,
     mut pollution: ResMut<PollutionStock>,
-    mut debt: ResMut<LegitimacyDebt>,
+    debt: Res<LegitimacyDebt>,
     mut rights: ResMut<RightsLedger>,
     crisis: Res<CrisisState>,
     mut capacity: Option<ResMut<StateCapacity>>,
@@ -274,15 +274,21 @@ pub fn law_dispatcher_system(
                 let revocation_cost = if let Some(ref mut cat) = rights_catalog {
                     cat.revoke(&rid)
                 } else {
-                    // No catalog: apply a fixed 0.5 debt for any legacy right revocation.
-                    0.5_f32
+                    // No catalog: check legacy ledger — only incur debt if the right
+                    // was actually held (otherwise revocation is a no-op, no debt).
+                    let was_held = LEGACY_BIT_TO_ID.iter().any(|(id, bit)| {
+                        *id == right_id
+                            && rights.granted.contains(CivicRights::from_bits_truncate(*bit))
+                    });
+                    if was_held { 0.5_f32 } else { 0.0_f32 }
                 };
-                // Accumulate revocation debt immediately into LegitimacyDebt.
-                // This propagates into approval_system and election_system on the
-                // next monthly/annual tick.
-                if revocation_cost > 0.0 {
-                    debt.stock += revocation_cost;
-                }
+                // Route revocation debt through the registry's repeal_debt
+                // accumulator rather than directly mutating LegitimacyDebt.
+                // This avoids a ResMut<LegitimacyDebt> dependency that would
+                // conflict with approval_system's Res<LegitimacyDebt> in the
+                // same Phase::Mutate. The debt drains via legitimacy_update_system
+                // on the next monthly tick — same path as normal repeals.
+                registry.add_debt(revocation_cost);
                 // Mirror revocation into legacy RightsLedger.
                 for (id, bit) in LEGACY_BIT_TO_ID {
                     if *id == right_id {
@@ -1769,7 +1775,9 @@ mod tests {
 
         let registry = sim.world.resource::<LawRegistry>().clone();
         registry.enact(handle);
-        for _ in 0..31 { sim.step(); } // tick-30 monthly firing
+        // Law fires at tick=30 (Mutate) adding debt to registry.repeal_debt.
+        // legitimacy_update_system (now Phase::Validate) drains it at tick=60.
+        for _ in 0..61 { sim.step(); }
 
         let final_debt = sim.world.resource::<LegitimacyDebt>().stock;
         assert!(

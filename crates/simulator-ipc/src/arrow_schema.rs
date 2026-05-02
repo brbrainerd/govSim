@@ -1,14 +1,16 @@
 //! Canonical Arrow schema for `MacroIndicators` exchanged over Flight.
 //!
 //! Column layout (all non-nullable):
-//!   tick           : UInt64
-//!   population     : UInt64
-//!   gdp            : Float64   (I64F64 serialised as f64 for interop)
-//!   gini           : Float32
-//!   unemployment   : Float32
-//!   inflation      : Float32
-//!   approval       : Float32
-//!   pollution_stock: Float64   (PollutionStock mirrored monthly)
+//!   tick                : UInt64
+//!   population          : UInt64
+//!   gdp                 : Float64   (I64F64 serialised as f64 for interop)
+//!   gini                : Float32
+//!   unemployment        : Float32
+//!   inflation           : Float32
+//!   approval            : Float32
+//!   pollution_stock     : Float64   (PollutionStock mirrored monthly)
+//!   rights_granted_count: UInt32    (catalog count, or CivicRights popcount)
+//!   rights_breadth      : Float32   (granted / defined ∈ [0, 1])
 //!
 //! Python sidecars read this schema with `pyarrow.ipc.read_schema(buf)`.
 
@@ -25,7 +27,10 @@ pub fn macro_indicators_schema() -> Arc<Schema> {
         Field::new("unemployment",    DataType::Float32, false),
         Field::new("inflation",       DataType::Float32, false),
         Field::new("approval",        DataType::Float32, false),
-        Field::new("pollution_stock", DataType::Float64, false),
+        Field::new("pollution_stock",      DataType::Float64, false),
+        Field::new("rights_granted_count",  DataType::UInt32,  false),
+        Field::new("rights_breadth",        DataType::Float32, false),
+        Field::new("state_capacity_score",  DataType::Float32, false),
     ]))
 }
 
@@ -50,7 +55,11 @@ mod tests {
     fn schema_has_expected_columns() {
         let s = macro_indicators_schema();
         let names: Vec<&str> = s.fields().iter().map(|f| f.name().as_str()).collect();
-        assert_eq!(names, ["tick","population","gdp","gini","unemployment","inflation","approval","pollution_stock"]);
+        assert_eq!(names, [
+            "tick","population","gdp","gini","unemployment","inflation",
+            "approval","pollution_stock","rights_granted_count","rights_breadth",
+            "state_capacity_score",
+        ]);
     }
 
     #[test]
