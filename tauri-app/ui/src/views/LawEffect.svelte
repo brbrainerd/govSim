@@ -105,12 +105,74 @@
     { name: "Unemployment", data: windowRows.map(r => r.unemployment) },
   ]);
 
-  // Vertical mark-line at the enacted tick
-  const enactMark = $derived(
-    lawEffect
-      ? [{ x: tickToDate(ui.effectEnactedTick), label: "Enacted", color: "var(--color-warning)" }]
-      : []
-  );
+  // ── Chart annotations ─────────────────────────────────────────────────────
+  // Focal law's enactment tick (highlighted) + every other law enacted within
+  // the window (greyed) so the player can see confounding policy changes.
+  const enactMark = $derived.by(() => {
+    if (!lawEffect) return [];
+    const fromTick = lawEffect.pre.from_tick;
+    const toTick   = lawEffect.post.to_tick;
+
+    const focal = {
+      x: tickToDate(ui.effectEnactedTick),
+      label: `#${ui.effectLawId} enacted`,
+      color: "var(--color-warning)",
+    };
+    const others = sim.laws
+      .filter(l => l.id !== ui.effectLawId
+                && l.enacted_tick >= fromTick
+                && l.enacted_tick <= toTick)
+      .map(l => ({
+        x: tickToDate(l.enacted_tick),
+        label: `#${l.id} ${l.label}`,
+        color: "var(--color-text-muted)",
+      }));
+    return [focal, ...others];
+  });
+
+  /** Human-readable name for each CrisisKind value. */
+  const CRISIS_NAMES: Record<number, string> = {
+    1: "War", 2: "Pandemic", 3: "Recession", 4: "Natural Disaster",
+  };
+  const CRISIS_COLORS: Record<number, string> = {
+    1: "var(--color-danger)",
+    2: "var(--color-warning)",
+    3: "var(--color-info, #38bdf8)",
+    4: "var(--color-warning)",
+  };
+
+  // Crisis bands: collapse consecutive ticks with the same non-zero crisis_kind
+  // into a single shaded x-band. We label bands at their start.
+  const crisisBands = $derived.by(() => {
+    if (windowRows.length === 0) return [];
+    const bands: { from: string; to: string; label?: string; color?: string }[] = [];
+    let runStart: number | null = null;
+    let runKind: number | null = null;
+    for (let i = 0; i < windowRows.length; i++) {
+      const k = windowRows[i].crisis_kind;
+      if (k > 0 && runKind === null) {
+        runStart = i; runKind = k;
+      } else if (runKind !== null && k !== runKind) {
+        bands.push({
+          from: tickToDate(windowRows[runStart!].tick),
+          to:   tickToDate(windowRows[i - 1].tick),
+          label: CRISIS_NAMES[runKind] ?? "Crisis",
+          color: CRISIS_COLORS[runKind] ?? "var(--color-danger)",
+        });
+        runStart = k > 0 ? i : null;
+        runKind  = k > 0 ? k : null;
+      }
+    }
+    if (runKind !== null) {
+      bands.push({
+        from: tickToDate(windowRows[runStart!].tick),
+        to:   tickToDate(windowRows[windowRows.length - 1].tick),
+        label: CRISIS_NAMES[runKind] ?? "Crisis",
+        color: CRISIS_COLORS[runKind] ?? "var(--color-danger)",
+      });
+    }
+    return bands;
+  });
 
   /** Law from the active-laws list, for the title tag. May be null if already repealed. */
   const currentLaw = $derived(
@@ -177,6 +239,22 @@
   {:else if activeTab === "detail"}
   <div role="tabpanel" id="panel-detail" aria-labelledby="tab-detail">
 
+    <!-- Confounder banner: warn when other laws or crises overlap the window. -->
+    {#if enactMark.length > 1 || crisisBands.length > 0}
+    <div class="confounder-banner">
+      ⚠ <strong>Confounders in window:</strong>
+      {#if enactMark.length > 1}
+      {enactMark.length - 1} other law{enactMark.length - 1 > 1 ? "s" : ""} enacted
+      {/if}
+      {#if enactMark.length > 1 && crisisBands.length > 0} · {/if}
+      {#if crisisBands.length > 0}
+      {crisisBands.length} crisis period{crisisBands.length > 1 ? "s" : ""}
+      ({crisisBands.map(b => b.label).join(", ")})
+      {/if}
+      <span class="confounder-hint">Naive Δ may overstate this law's contribution. Run Counterfactual DiD for an isolated estimate.</span>
+    </div>
+    {/if}
+
     <!-- Mini sparklines — sliced from the global metric ring-buffer -->
     {#if windowRows.length > 0}
     <div class="spark-grid">
@@ -190,6 +268,7 @@
           yFormatter={pct}
           height="80px"
           markLines={enactMark}
+          markBands={crisisBands}
         />
       </div>
       <div class="spark-panel">
@@ -199,6 +278,7 @@
           xLabels={sparkLabels}
           height="80px"
           markLines={enactMark}
+          markBands={crisisBands}
         />
       </div>
       <div class="spark-panel">
@@ -211,6 +291,7 @@
           yFormatter={pct}
           height="80px"
           markLines={enactMark}
+          markBands={crisisBands}
         />
       </div>
     </div>
@@ -533,6 +614,20 @@ h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap:
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* Confounder banner */
+.confounder-banner {
+  background: rgba(245,158,11,.10);
+  border: 1px solid rgba(245,158,11,.35);
+  color: var(--color-text-primary);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.confounder-banner strong { color: var(--warn, #f59e0b); }
+.confounder-hint { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
 
 /* Window detail sparklines */
 .spark-grid {
