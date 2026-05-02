@@ -16,9 +16,9 @@
 //!   health_drag     = stock * HEALTH_COEFF       (subtracted monthly)
 //!   productivity_drag = stock * PRODUCTIVITY_COEFF (subtracted monthly)
 //!
-//! Coefficients are calibrated so that a baseline economy (stock ≈ 1.0) sees
-//! negligible effects; a heavily polluted one (stock > 3.0) shows ~2pp/month
-//! health decline.
+//! Coefficients are calibrated (2026-05) so that a baseline economy (stock
+//! ≈ 200 PU for a modern 25 000-citizen polity at equilibrium) sees ~2%/year
+//! health decline; a heavily polluted one (stock > 1 000 PU) ~10%/year.
 //!
 //! ## Abatement
 //! External code (e.g. the law dispatcher) can reduce `emission_rate` or
@@ -35,9 +35,13 @@ use simulator_types::Score;
 const POLLUTION_PERIOD: u64 = 30;
 
 /// Per-stock-unit monthly drag on citizen health [0, 1] scale.
-const HEALTH_COEFF: f32 = 0.003;
+///
+/// Recalibrated 2026-05 alongside emission_rate and decay defaults. At the
+/// new equilibrium (~200 PU for a modern democracy), drag = 200 × 8e-6 =
+/// 0.0016/month ≈ 2%/year — meaningful but not acutely fatal.
+const HEALTH_COEFF: f32 = 0.000_008;
 /// Per-stock-unit monthly drag on citizen productivity [0, 1] scale.
-const PRODUCTIVITY_COEFF: f32 = 0.002;
+const PRODUCTIVITY_COEFF: f32 = 0.000_004;
 
 pub fn pollution_system(
     clock: Res<SimClock>,
@@ -171,8 +175,7 @@ mod tests {
         for _ in 0..361 { sim.step(); }
 
         let stock = sim.world.resource::<PollutionStock>().stock;
-        // After 12 monthly ticks with decay=0.9997: 1.0 * 0.9997^12 ≈ 0.9964
-        // Still > 0 but significantly decayed.
+        // After 12 monthly ticks with default decay=0.95: 1.0 × 0.95^12 ≈ 0.540.
         assert!(stock < 1.0, "stock should decay without emissions, got {stock}");
         assert!(stock > 0.0, "stock should not instantly vanish, got {stock}");
     }

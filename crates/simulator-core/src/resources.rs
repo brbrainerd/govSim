@@ -90,22 +90,39 @@ impl Default for LegitimacyDebt {
 /// natural decay and abatement spending. Feeds back into citizen health
 /// and productivity through `pollution_feedback_system` (Phase 30).
 ///
-/// Units are arbitrary "pollution units" (PU); the feedback coefficients
-/// are calibrated so that `stock ≈ 1.0` at a baseline industrialised
-/// economy and `stock > 3.0` triggers meaningful health drag.
+/// ## Calibration (recalibrated 2026-05)
+///
+/// Target: modern-democracy equilibrium ≈ 200 PU (moderate industrial
+/// pollution, enough to create player pressure without instant health death).
+/// With 25 000 citizens × $4 583 income × 80% consumption = ~$91.6M/month:
+///
+///   equilibrium = (91.6M × emission_rate) / (1 − decay)
+///               = (91.6M × 1e-7) / 0.05
+///               ≈ 183 PU
+///
+/// Health drag at 200 PU: 200 × 8e-6 ≈ 0.0016/month → ~2%/year decline.
+/// Pollution-approval shock at 200 PU: −0.008 × 199/249 ≈ −0.0064/month
+/// (stays well below the +0.012/month positive-forces ceiling).
+///
+/// Pre-rights-era (lower consumption, ~3 PU/month emitted) equilibrates
+/// near 60 PU — appropriate for an unregulated industrial regime with
+/// small health drag.
 #[derive(Resource, Debug, Clone)]
 pub struct PollutionStock {
     /// Current accumulated pollution level (PU). Non-negative.
     pub stock: f64,
-    /// Natural decay fraction per tick (1.0 = instant clear, ~0.9997 ≈ 1%/month).
+    /// Natural monthly cleanup fraction; `1 − decay` fraction removed per tick.
+    /// Default 0.95 ≈ 5%/month (environmental self-cleaning + baseline regulation).
     pub decay: f64,
-    /// PU added per unit of aggregate consumption expenditure (monthly).
+    /// PU emitted per dollar of aggregate monthly consumption expenditure.
+    /// Default 1e-7 (one PU per $10M consumption). Previously 1e-6, which
+    /// produced an unreachable ~300 000 PU equilibrium for modern polities.
     pub emission_rate: f64,
 }
 
 impl Default for PollutionStock {
     fn default() -> Self {
-        Self { stock: 0.0, decay: 0.999_7, emission_rate: 0.000_001 }
+        Self { stock: 0.0, decay: 0.95, emission_rate: 0.000_000_1 }
     }
 }
 
