@@ -176,6 +176,105 @@ mod tests {
         );
     }
 
+    /// No graph resource → system is a no-op; ideologies should not change.
+    #[test]
+    fn no_graph_resource_is_noop() {
+        let mut sim = Sim::new([6u8; 32]);
+        register_opinion_system(&mut sim);
+        // Do NOT insert InfluenceGraph — the system returns early.
+
+        spawn_citizen(&mut sim.world, 0, [-0.5, 0.0, 0.0, 0.0, 0.0]);
+
+        for _ in 0..70 { sim.step(); }
+
+        let iv: f32 = sim.world
+            .query::<&IdeologyVector>()
+            .single(&sim.world)
+            .unwrap()
+            .0[0];
+        assert!(
+            (iv - (-0.5)).abs() < 1e-5,
+            "ideology should not change without a graph, got {iv}"
+        );
+    }
+
+    /// Negative-weight edge (contrarian): citizen 0 is influenced away from citizen 1.
+    #[test]
+    fn contrarian_edge_nudges_ideology_away() {
+        use simulator_net::{InfluenceGraph, csr::CsrMatrix};
+
+        let mut sim = Sim::new([7u8; 32]);
+        register_opinion_system(&mut sim);
+
+        // Citizen 0: ideology +0.5; citizen 1: ideology +0.9.
+        // A negative-weight edge (0 ← 1, w = -1.0) means citizen 0 is
+        // nudged AWAY from citizen 1, i.e. toward more negative values.
+        spawn_citizen(&mut sim.world, 0, [0.5, 0.0, 0.0, 0.0, 0.0]);
+        spawn_citizen(&mut sim.world, 1, [0.9, 0.0, 0.0, 0.0, 0.0]);
+
+        let graph = InfluenceGraph {
+            csr: CsrMatrix {
+                row_ptr: vec![0, 1, 1],
+                col_ind: vec![1],
+                weights:  vec![-1.0], // negative = contrarian
+                n_rows: 2,
+                n_cols: 2,
+            },
+        };
+        sim.world.insert_resource(graph);
+
+        // Run several OPINION_PERIOD cycles.
+        for _ in 0..105 { sim.step(); }
+
+        let mut q = sim.world.query::<(&Citizen, &IdeologyVector)>();
+        let iv0: f32 = q.iter(&sim.world)
+            .find(|(c, _)| c.0.0 == 0)
+            .unwrap()
+            .1 .0[0];
+
+        assert!(
+            iv0 < 0.5,
+            "contrarian edge should push citizen 0 below its initial +0.5, got {iv0}"
+        );
+    }
+
+    /// Ideology values are clamped to [-1, 1] even under extreme influence.
+    #[test]
+    fn ideology_clamped_to_unit_interval() {
+        use simulator_net::{InfluenceGraph, csr::CsrMatrix};
+
+        let mut sim = Sim::new([8u8; 32]);
+        register_opinion_system(&mut sim);
+
+        // Citizen 0 at 0.99; citizen 1 at 1.0 with very high weight.
+        // After many firings citizen 0 should converge to 1.0 but never exceed it.
+        spawn_citizen(&mut sim.world, 0, [0.99, 0.0, 0.0, 0.0, 0.0]);
+        spawn_citizen(&mut sim.world, 1, [1.0,  0.0, 0.0, 0.0, 0.0]);
+
+        let graph = InfluenceGraph {
+            csr: CsrMatrix {
+                row_ptr: vec![0, 1, 1],
+                col_ind: vec![1],
+                weights:  vec![100.0], // extreme pull
+                n_rows: 2,
+                n_cols: 2,
+            },
+        };
+        sim.world.insert_resource(graph);
+
+        for _ in 0..700 { sim.step(); }
+
+        let mut q = sim.world.query::<(&Citizen, &IdeologyVector)>();
+        for (_, iv) in q.iter(&sim.world) {
+            for &v in &iv.0 {
+                assert!(
+                    v >= -1.0 && v <= 1.0,
+                    "ideology must be clamped to [-1, 1], got {v}"
+                );
+            }
+        }
+    }
+
     /// Parallel computation produces the same result as a sequential reference.
     #[test]
     fn parallel_matches_sequential_reference() {
