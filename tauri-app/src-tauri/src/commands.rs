@@ -1102,6 +1102,22 @@ mod effect_magnitude_tests {
         assert_eq!(with_src.as_deref(), Some("1.00 PU · $5000/PU"));
     }
 
+    // ── Edge cases: zero values ────────────────────────────────────────────────
+
+    #[test]
+    fn income_tax_zero_rate_formats_as_zero_pct() {
+        let e = LawEffect::PerCitizenIncomeTax { scope: "taxpayer", owed_def: "owed" };
+        let src = "scope taxpayer { define owed = income * 0.000000 }";
+        assert_eq!(effect_magnitude(&e, Some(src)).as_deref(), Some("0.0%"));
+    }
+
+    #[test]
+    fn benefit_zero_amount_formats_as_zero_dollars() {
+        let e = LawEffect::PerCitizenBenefit { scope: "citizen", amount_def: "amount" };
+        let src = "scope citizen { define amount = 0.000000 }";
+        assert_eq!(effect_magnitude(&e, Some(src)).as_deref(), Some("$0/mo"));
+    }
+
     // ── Other variants return None ────────────────────────────────────────────
 
     #[test]

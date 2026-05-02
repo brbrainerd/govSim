@@ -4,14 +4,16 @@
   import LineChart                                           from "../components/LineChart.svelte";
 
   // Derived approval trend series from the metric ring-buffer.
+  // Uses raw [0,1] fractions — yFormatter={pct} handles display, matching
+  // all other approval/margin charts in the app.
   const approvalSeries = $derived([{
     name: "Approval",
-    data: sim.metricsRows.map(r => r.approval * 100),
+    data: sim.metricsRows.map(r => r.approval),
   }]);
 
   const electionMarginSeries = $derived([{
     name: "Election margin",
-    data: sim.metricsRows.map(r => r.election_margin * 100),
+    data: sim.metricsRows.map(r => r.election_margin),
   }]);
 
   const approvalLabels = $derived(sim.metricsRows.map(r => tickToDate(r.tick)));
@@ -211,7 +213,8 @@
         series={approvalSeries}
         xLabels={approvalLabels}
         yMin={0}
-        yMax={100}
+        yMax={1}
+        yFormatter={pct}
         height="160px"
         markLines={lawMarkLines}
       />
@@ -226,7 +229,8 @@
         series={electionMarginSeries}
         xLabels={approvalLabels}
         yMin={0}
-        yMax={100}
+        yMax={1}
+        yFormatter={pct}
         height="120px"
       />
     </div>

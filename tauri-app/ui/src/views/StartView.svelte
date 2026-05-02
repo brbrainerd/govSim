@@ -12,14 +12,21 @@
       title:       "Modern Democracy",
       description: "Universal suffrage, stable institutions, low legitimacy debt. Baseline reference.",
       icon:        "🏛",
-      tags:        ["universal suffrage", "2 years", "low crisis"],
+      tags:        ["5k citizens", "2 years", "low crisis"],
     },
     {
       name:        "pre_rights_era",
       title:       "Pre-Rights Era",
       description: "Historical start: no civic rights, elevated pollution, authoritarian governance.",
       icon:        "⚙",
-      tags:        ["no rights", "3 years", "no crises"],
+      tags:        ["2k citizens", "3 years", "no crisis"],
+    },
+    {
+      name:        "australia_2022",
+      title:       "Australia 2022",
+      description: "V-Dem / World Bank calibrated: ~$55 K/yr income, 9.1% unemployment, low corruption. No rights pre-granted — expand them through legislation.",
+      icon:        "🌏",
+      tags:        ["25k citizens", "V-Dem calibrated", "no rights"],
     },
   ];
 
