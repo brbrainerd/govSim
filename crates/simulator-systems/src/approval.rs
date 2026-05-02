@@ -41,8 +41,21 @@ const APPROVAL_PERIOD: u64 = 30;
 
 /// Pollution PU above this baseline creates an approval drag.
 const POLLUTION_BASELINE: f64 = 1.0;
-/// Per-PU-above-baseline monthly approval drag (uniform across citizens).
-const POLLUTION_APPROVAL_COEFF: f32 = 0.002;
+/// Maximum monthly approval drag from pollution (saturated). The shock
+/// approaches but never exceeds this value as pollution → ∞.
+///
+/// **Calibration constraint**: this value MUST stay strictly below the sum of
+/// the formula's max positive monthly forces — reversion at a=0 (`0.5*0.02 =
+/// 0.010`) plus employment_shock for an employed citizen (`0.002`) ≈ 0.012.
+/// If MAX_DRAG ≥ that ceiling, the dynamics admit no positive-approval
+/// equilibrium under sustained heavy pollution, and approval collapses to
+/// zero in the long run (the original bug). 0.008 leaves modest headroom.
+const POLLUTION_APPROVAL_MAX_DRAG: f32 = 0.008;
+/// PU-above-baseline at which the drag reaches half of MAX_DRAG.
+/// Smaller values → faster saturation. 50 PU half-saturation matches the
+/// scale of pollution stocks observed in baseline scenario play (typical
+/// equilibrium 50–300 PU for industrialised polities without abatement).
+const POLLUTION_HALF_SATURATION: f32 = 50.0;
 
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::type_complexity)]
@@ -68,10 +81,15 @@ pub fn approval_system(
     // Legitimacy debt is felt by every citizen as a uniform negative shock.
     let legitimacy_shock = -debt.stock * 0.10;
 
-    // Pollution above the natural baseline drags approval uniformly.
-    // High pollution signals government failure to manage externalities.
+    // Pollution above the natural baseline drags approval uniformly, with
+    // a saturating Michaelis-Menten-style shape: shock = -MAX * x / (x + K),
+    // where x is excess pollution PU. This bounds the drag to MAX_DRAG even
+    // at runaway pollution stocks, preventing pollution from single-handedly
+    // pinning approval at zero (a calibration regression that emerged when
+    // pollution emission rates and the linear coefficient drifted out of sync).
     let pollution_shock: f32 = if pollution.stock > POLLUTION_BASELINE {
-        -((pollution.stock - POLLUTION_BASELINE) as f32) * POLLUTION_APPROVAL_COEFF
+        let excess = (pollution.stock - POLLUTION_BASELINE) as f32;
+        -POLLUTION_APPROVAL_MAX_DRAG * excess / (excess + POLLUTION_HALF_SATURATION)
     } else {
         0.0
     };
@@ -356,6 +374,28 @@ mod tests {
             dirty_a < clean_a,
             "high-pollution sim ({dirty_a}) should have lower approval than clean ({clean_a})"
         );
+    }
+
+    /// Regression: at runaway pollution (200 PU, ~6× the half-saturation point),
+    /// approval must NOT collapse to zero. This pins the calibration fix that
+    /// replaced the linear pollution_shock with a Michaelis-Menten saturating
+    /// curve. Empirically, the original linear formula drove approval to 0 by
+    /// ~tick 240 in baseline scenarios because pollution stocks reach 100+ PU.
+    #[test]
+    fn extreme_pollution_does_not_collapse_approval() {
+        use simulator_core::PollutionStock;
+        let mut sim = Sim::new([99u8; 32]);
+        register_approval_system(&mut sim);
+        sim.world.resource_mut::<PollutionStock>().stock = 200.0; // ~6× half-saturation
+        spawn_citizen(&mut sim.world, 0, EmploymentStatus::Employed, 0.5);
+
+        // Run a full simulated year of monthly approval updates.
+        for _ in 0..(12 * 30 + 1) { sim.step(); }
+
+        let a: f32 = sim.world.query::<&ApprovalRating>()
+            .single(&sim.world).unwrap().0.to_num();
+        assert!(a > 0.10,
+            "extreme pollution must not pin approval to zero, got {a}");
     }
 
     #[test]
