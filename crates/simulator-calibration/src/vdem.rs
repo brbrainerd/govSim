@@ -169,3 +169,74 @@ impl VdemLoader {
 impl Default for VdemLoader {
     fn default() -> Self { Self::new() }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn profile(egal_dem: f64, gdp_per_capita: f64) -> CountryProfile {
+        CountryProfile {
+            country_id: "TST".into(),
+            year: 2022,
+            polyarchy: 0.5,
+            lib_dem: 0.5,
+            egal_dem,
+            corruption: 0.3,
+            rule_of_law: 0.5,
+            gdp_per_capita,
+            gdp_growth: 2.0,
+        }
+    }
+
+    // ── baseline_unemployment ─────────────────────────────────────────────────
+
+    #[test]
+    fn baseline_unemployment_clamps_to_minimum_at_high_egal_dem() {
+        // egal_dem=1.0: 0.20 - 1.0*0.15 = 0.05, above floor 0.03 → 0.05
+        let u = profile(1.0, 40_000.0).baseline_unemployment();
+        assert!((u - 0.05_f32).abs() < 1e-4, "expected 0.05, got {u}");
+    }
+
+    #[test]
+    fn baseline_unemployment_floor_at_low_egal_dem() {
+        // egal_dem=0.0: 0.20 - 0*0.15 = 0.20, within [0.03, 0.30] → 0.20
+        let u = profile(0.0, 40_000.0).baseline_unemployment();
+        assert!((u - 0.20_f32).abs() < 1e-4, "expected 0.20, got {u}");
+    }
+
+    #[test]
+    fn baseline_unemployment_clamps_to_ceiling() {
+        // egal_dem=-1.0 (hypothetical out-of-range): 0.20 - (-1)*0.15 = 0.35 → clamped to 0.30
+        let u = profile(-1.0, 40_000.0).baseline_unemployment();
+        assert!((u - 0.30_f32).abs() < 1e-4, "expected 0.30 (ceiling), got {u}");
+    }
+
+    #[test]
+    fn baseline_unemployment_result_always_in_valid_range() {
+        for &egal in &[0.0, 0.25, 0.5, 0.75, 1.0] {
+            let u = profile(egal, 30_000.0).baseline_unemployment();
+            assert!(u >= 0.03 && u <= 0.30, "egal_dem={egal}: u={u} out of [0.03, 0.30]");
+        }
+    }
+
+    // ── monthly_income_mean ───────────────────────────────────────────────────
+
+    #[test]
+    fn monthly_income_mean_divides_annual_gdp_by_12() {
+        let m = profile(0.5, 12_000.0).monthly_income_mean();
+        assert!((m - 1_000.0).abs() < 0.01, "expected 1000, got {m}");
+    }
+
+    #[test]
+    fn monthly_income_mean_floors_at_200_for_very_low_gdp() {
+        // gdp_per_capita = 600 → monthly = 50, clamped to 200
+        let m = profile(0.5, 600.0).monthly_income_mean();
+        assert!((m - 200.0).abs() < 0.01, "expected 200 (floor), got {m}");
+    }
+
+    #[test]
+    fn monthly_income_mean_passes_through_high_gdp_correctly() {
+        let m = profile(0.5, 60_000.0).monthly_income_mean();
+        assert!((m - 5_000.0).abs() < 0.01, "expected 5000, got {m}");
+    }
+}
