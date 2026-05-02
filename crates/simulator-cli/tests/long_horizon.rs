@@ -178,3 +178,41 @@ fn weimar_1919_720_ticks_no_nan() {
     assert!((0.0..=1.0).contains(&r.approval),
         "weimar_1919: approval={:.4} out of [0,1]", r.approval);
 }
+
+// ---------------------------------------------------------------------------
+// new_deal_1933 — high unemployment + active judicial review + legitimacy debt
+//                recover but don't collapse; treasury stays finite
+// ---------------------------------------------------------------------------
+
+#[test]
+#[ignore]
+fn new_deal_1933_1080_ticks_no_nan() {
+    let r = run_scenario_ticks(&scenario_path("new_deal_1933"), 1080);
+    assert!(r.treasury_finite,
+        "new_deal_1933: treasury overflowed or went NaN");
+    assert!(r.capacity_in_range,
+        "new_deal_1933: StateCapacity field out of [0,1]");
+    // Legitimacy debt=1.8 is high but not extreme; with FPTP elections and
+    // review_power=true the system should eventually find equilibrium.
+    assert!((0.0..=1.0).contains(&r.approval),
+        "new_deal_1933: approval={:.4} out of [0,1]", r.approval);
+}
+
+// ---------------------------------------------------------------------------
+// athens_507bce — restricted franchise (0.12) + no labor rights; approval
+//                can be low but no NaN; 360-tick run is the scenario intent
+// ---------------------------------------------------------------------------
+
+#[test]
+#[ignore]
+fn athens_507bce_360_ticks_no_nan() {
+    let r = run_scenario_ticks(&scenario_path("athens_507bce"), 360);
+    assert!(r.treasury_finite,
+        "athens_507bce: treasury overflowed or went NaN");
+    assert!(r.capacity_in_range,
+        "athens_507bce: StateCapacity field out of [0,1]");
+    // Restricted franchise → many unenfranchised citizens; approval measured
+    // only over the full population so it may be low. Must remain in [0,1].
+    assert!((0.0..=1.0).contains(&r.approval),
+        "athens_507bce: approval={:.4} out of [0,1]", r.approval);
+}
