@@ -20,6 +20,9 @@ vi.mock("@tauri-apps/api/core", () => ({
 
 import {
   CIVIC_RIGHTS, decodeCivicRights,
+  loadScenario, stepSim, getTick, getMetricsRows, getCurrentState, listLaws,
+  getLawDslSource, enactFlatTax, enactUbi, enactAbatement, repealLaw,
+  getLawEffect, exportMetricsParquet, ping, stepAndGetState,
   grantCivicRight, revokeCivicRight,
   saveSimSnapshot, getCounterfactualDiff, runMonteCarlo,
   getCitizenDistribution, getCitizenScatter,
@@ -349,5 +352,224 @@ describe("getRegionStats", () => {
   it("resolves to the RegionStatsDto array returned by invoke", async () => {
     const result = await getRegionStats();
     expect(result).toEqual(fakeStats);
+  });
+});
+
+// ── Remaining simple invoke wrappers ─────────────────────────────────────────
+
+describe("loadScenario", () => {
+  beforeEach(() => { mockedInvoke.mockResolvedValue("modern_democracy"); });
+
+  it("calls invoke with 'load_scenario' and { name }", async () => {
+    await loadScenario("modern_democracy");
+    expect(mockedInvoke).toHaveBeenCalledWith("load_scenario", { name: "modern_democracy" });
+  });
+
+  it("resolves to the scenario name returned by invoke", async () => {
+    const result = await loadScenario("modern_democracy");
+    expect(result).toBe("modern_democracy");
+  });
+});
+
+describe("stepSim", () => {
+  beforeEach(() => { mockedInvoke.mockResolvedValue(42); });
+
+  it("calls invoke with 'step_sim' and { ticks }", async () => {
+    await stepSim(30);
+    expect(mockedInvoke).toHaveBeenCalledWith("step_sim", { ticks: 30 });
+  });
+
+  it("uses default ticks=1 when not supplied", async () => {
+    await stepSim();
+    expect(mockedInvoke).toHaveBeenCalledWith("step_sim", { ticks: 1 });
+  });
+});
+
+describe("getTick", () => {
+  it("calls invoke with 'get_tick' and no args", async () => {
+    mockedInvoke.mockResolvedValue(100);
+    await getTick();
+    expect(mockedInvoke).toHaveBeenCalledWith("get_tick");
+  });
+});
+
+describe("getMetricsRows", () => {
+  beforeEach(() => { mockedInvoke.mockResolvedValue([]); });
+
+  it("calls invoke with 'get_metrics_rows' and { n }", async () => {
+    await getMetricsRows(360);
+    expect(mockedInvoke).toHaveBeenCalledWith("get_metrics_rows", { n: 360 });
+  });
+
+  it("uses default n=360 when not supplied", async () => {
+    await getMetricsRows();
+    expect(mockedInvoke).toHaveBeenCalledWith("get_metrics_rows", { n: 360 });
+  });
+});
+
+describe("getCurrentState", () => {
+  it("calls invoke with 'get_current_state' and no args", async () => {
+    mockedInvoke.mockResolvedValue({});
+    await getCurrentState();
+    expect(mockedInvoke).toHaveBeenCalledWith("get_current_state");
+  });
+});
+
+describe("listLaws", () => {
+  it("calls invoke with 'list_laws' and no args", async () => {
+    mockedInvoke.mockResolvedValue([]);
+    await listLaws();
+    expect(mockedInvoke).toHaveBeenCalledWith("list_laws");
+  });
+});
+
+describe("getLawDslSource", () => {
+  it("calls invoke with 'get_law_dsl_source' and { lawId } (snake → camelCase)", async () => {
+    mockedInvoke.mockResolvedValue("scope taxpayer {}");
+    await getLawDslSource(7);
+    expect(mockedInvoke).toHaveBeenCalledWith("get_law_dsl_source", { lawId: 7 });
+  });
+
+  it("resolves to null when invoke returns null", async () => {
+    mockedInvoke.mockResolvedValue(null);
+    const result = await getLawDslSource(99);
+    expect(result).toBeNull();
+  });
+});
+
+describe("enactFlatTax", () => {
+  beforeEach(() => { mockedInvoke.mockResolvedValue(1); });
+
+  it("calls invoke with 'enact_flat_tax' and { params: { rate } }", async () => {
+    await enactFlatTax(0.25);
+    expect(mockedInvoke).toHaveBeenCalledWith("enact_flat_tax", { params: { rate: 0.25 } });
+  });
+
+  it("resolves to the law ID returned by invoke", async () => {
+    mockedInvoke.mockResolvedValue(3);
+    expect(await enactFlatTax(0.1)).toBe(3);
+  });
+});
+
+describe("enactUbi", () => {
+  beforeEach(() => { mockedInvoke.mockResolvedValue(2); });
+
+  it("calls invoke with 'enact_ubi' and { params: { monthly_amount } }", async () => {
+    await enactUbi(500);
+    expect(mockedInvoke).toHaveBeenCalledWith("enact_ubi", { params: { monthly_amount: 500 } });
+  });
+
+  it("resolves to the law ID returned by invoke", async () => {
+    mockedInvoke.mockResolvedValue(5);
+    expect(await enactUbi(200)).toBe(5);
+  });
+});
+
+describe("enactAbatement", () => {
+  beforeEach(() => { mockedInvoke.mockResolvedValue(4); });
+
+  it("calls invoke with 'enact_abatement' and { params: { pollution_reduction_pu, cost_per_pu } }", async () => {
+    await enactAbatement(0.5, 10_000);
+    expect(mockedInvoke).toHaveBeenCalledWith("enact_abatement", {
+      params: { pollution_reduction_pu: 0.5, cost_per_pu: 10_000 },
+    });
+  });
+
+  it("resolves to the law ID returned by invoke", async () => {
+    mockedInvoke.mockResolvedValue(6);
+    expect(await enactAbatement(1.0, 5_000)).toBe(6);
+  });
+});
+
+describe("repealLaw", () => {
+  it("calls invoke with 'repeal_law' and { lawId } (snake → camelCase)", async () => {
+    mockedInvoke.mockResolvedValue(undefined);
+    await repealLaw(3);
+    expect(mockedInvoke).toHaveBeenCalledWith("repeal_law", { lawId: 3 });
+  });
+});
+
+describe("getLawEffect", () => {
+  const fakeEffect = {
+    pre: { from_tick: 0, to_tick: 30, n_rows: 30, mean_approval: 0.6,
+           mean_unemployment: 0.1, mean_gdp: 5e6, mean_pollution: 0.5,
+           mean_legitimacy: 0.05, mean_treasury: 1e6,
+           min_approval: 0.55, max_approval: 0.65, min_gdp: 4.9e6, max_gdp: 5.1e6 },
+    post: { from_tick: 30, to_tick: 60, n_rows: 30, mean_approval: 0.62,
+            mean_unemployment: 0.09, mean_gdp: 5.1e6, mean_pollution: 0.45,
+            mean_legitimacy: 0.04, mean_treasury: 1.1e6,
+            min_approval: 0.57, max_approval: 0.67, min_gdp: 5.0e6, max_gdp: 5.2e6 },
+    delta_approval: 0.02, delta_unemployment: -0.01, delta_gdp: 1e5,
+    delta_pollution: -0.05, delta_legitimacy: -0.01, delta_treasury: 1e5,
+  };
+
+  beforeEach(() => { mockedInvoke.mockResolvedValue(fakeEffect); });
+
+  it("calls invoke with 'get_law_effect' and renamed camelCase args", async () => {
+    await getLawEffect(30, 30);
+    expect(mockedInvoke).toHaveBeenCalledWith("get_law_effect", {
+      enactedTick: 30, windowTicks: 30,
+    });
+  });
+
+  it("uses default windowTicks=30 when not supplied", async () => {
+    await getLawEffect(60);
+    expect(mockedInvoke).toHaveBeenCalledWith("get_law_effect", {
+      enactedTick: 60, windowTicks: 30,
+    });
+  });
+
+  it("resolves to the LawEffectDto returned by invoke", async () => {
+    const result = await getLawEffect(30);
+    expect(result).toEqual(fakeEffect);
+  });
+});
+
+describe("exportMetricsParquet", () => {
+  it("calls invoke with 'export_metrics_parquet' and { path }", async () => {
+    mockedInvoke.mockResolvedValue(undefined);
+    await exportMetricsParquet("/tmp/metrics.parquet");
+    expect(mockedInvoke).toHaveBeenCalledWith("export_metrics_parquet", {
+      path: "/tmp/metrics.parquet",
+    });
+  });
+});
+
+describe("ping", () => {
+  it("calls invoke with 'ping' and no args", async () => {
+    mockedInvoke.mockResolvedValue("pong");
+    const result = await ping();
+    expect(mockedInvoke).toHaveBeenCalledWith("ping");
+    expect(result).toBe("pong");
+  });
+});
+
+describe("stepAndGetState", () => {
+  const fakeResult = {
+    tick: 30,
+    state: { tick: 30, approval: 0.6 } as any,
+    metrics: [],
+    laws: [],
+  };
+
+  beforeEach(() => { mockedInvoke.mockResolvedValue(fakeResult); });
+
+  it("calls invoke with 'step_and_get_state' and { ticks, metricsWindow }", async () => {
+    await stepAndGetState(1, 360);
+    expect(mockedInvoke).toHaveBeenCalledWith("step_and_get_state", {
+      ticks: 1, metricsWindow: 360,
+    });
+  });
+
+  it("uses defaults ticks=1, metricsWindow=360 when not supplied", async () => {
+    await stepAndGetState();
+    expect(mockedInvoke).toHaveBeenCalledWith("step_and_get_state", {
+      ticks: 1, metricsWindow: 360,
+    });
+  });
+
+  it("resolves to the StepResultDto returned by invoke", async () => {
+    const result = await stepAndGetState();
+    expect(result).toEqual(fakeResult);
   });
 });
