@@ -232,6 +232,7 @@
         yMax={1}
         yFormatter={pct}
         height="120px"
+        yMarkLines={[{y: 0.05, label: "< 5% (razor-thin)", color: "var(--color-danger)"}]}
       />
     </div>
   </section>

@@ -94,7 +94,7 @@
   const sparkLabels  = $derived(windowRows.map(r => tickToDate(r.tick)));
 
   const approvalSpark = $derived([
-    { name: "Approval %", data: windowRows.map(r => r.approval * 100) },
+    { name: "Approval", data: windowRows.map(r => r.approval) },
   ]);
 
   const gdpSpark = $derived([
@@ -102,7 +102,7 @@
   ]);
 
   const unemploySpark = $derived([
-    { name: "Unemployment %", data: windowRows.map(r => r.unemployment * 100) },
+    { name: "Unemployment", data: windowRows.map(r => r.unemployment) },
   ]);
 
   // Vertical mark-line at the enacted tick
@@ -181,12 +181,13 @@
     {#if windowRows.length > 0}
     <div class="spark-grid">
       <div class="spark-panel">
-        <span class="spark-label">Approval %</span>
+        <span class="spark-label">Approval</span>
         <LineChart
           series={approvalSpark}
           xLabels={sparkLabels}
           yMin={0}
-          yMax={100}
+          yMax={1}
+          yFormatter={pct}
           height="80px"
           markLines={enactMark}
         />
@@ -201,12 +202,13 @@
         />
       </div>
       <div class="spark-panel">
-        <span class="spark-label">Unemployment %</span>
+        <span class="spark-label">Unemployment</span>
         <LineChart
           series={unemploySpark}
           xLabels={sparkLabels}
           yMin={0}
-          yMax={100}
+          yMax={1}
+          yFormatter={pct}
           height="80px"
           markLines={enactMark}
         />
