@@ -1,6 +1,7 @@
 <script lang="ts">
   import { sim, ui, navigate, pct, formatMoney, tickToDate } from "$lib/store.svelte";
   import { getRegionStats, type RegionStatsDto } from "$lib/ipc";
+  import { normalizeInRange, makeHeatBarStyle } from "$lib/region-utils";
   import { toast } from "$lib/toasts.svelte";
 
   type SortKey = keyof RegionStatsDto;
@@ -75,8 +76,7 @@
     const r = colRange[key];
     if (!r) return 0.5;
     const [lo, hi] = r;
-    if (hi === lo) return 0.5;
-    return (v - lo) / (hi - lo);
+    return normalizeInRange(v, lo, hi);
   }
 
   /**
@@ -85,10 +85,7 @@
    * Separated from cell background so text is always readable.
    */
   function heatBarStyle(key: SortKey, v: number, higherIsBetter: boolean): string {
-    const quality = higherIsBetter ? norm(key, v) : 1 - norm(key, v);
-    const width   = norm(key, v); // always 0→1 left-to-right
-    const hue     = quality * 120; // 0=red, 60=yellow, 120=green
-    return `width:${(width * 100).toFixed(1)}%; background:hsl(${hue.toFixed(0)},55%,38%); opacity:0.22`;
+    return makeHeatBarStyle(norm(key, v), higherIsBetter);
   }
 
   const cs = $derived(sim.currentState);
