@@ -908,6 +908,18 @@ pub struct MonteCarloSummaryDto {
     pub std_did_treasury:         Option<f64>,
     pub p5_did_treasury:          Option<f64>,
     pub p95_did_treasury:         Option<f64>,
+    pub mean_did_income:          Option<f64>,
+    pub std_did_income:           Option<f64>,
+    pub p5_did_income:            Option<f64>,
+    pub p95_did_income:           Option<f64>,
+    pub mean_did_wealth:          Option<f64>,
+    pub std_did_wealth:           Option<f64>,
+    pub p5_did_wealth:            Option<f64>,
+    pub p95_did_wealth:           Option<f64>,
+    pub mean_did_health:          Option<f32>,
+    pub std_did_health:           Option<f32>,
+    pub p5_did_health:            Option<f32>,
+    pub p95_did_health:           Option<f32>,
 }
 
 impl From<MonteCarloSummary> for MonteCarloSummaryDto {
@@ -938,6 +950,18 @@ impl From<MonteCarloSummary> for MonteCarloSummaryDto {
             std_did_treasury:      s.std_did_treasury,
             p5_did_treasury:       s.p5_did_treasury,
             p95_did_treasury:      s.p95_did_treasury,
+            mean_did_income:       s.mean_did_income,
+            std_did_income:        s.std_did_income,
+            p5_did_income:         s.p5_did_income,
+            p95_did_income:        s.p95_did_income,
+            mean_did_wealth:       s.mean_did_wealth,
+            std_did_wealth:        s.std_did_wealth,
+            p5_did_wealth:         s.p5_did_wealth,
+            p95_did_wealth:        s.p95_did_wealth,
+            mean_did_health:       s.mean_did_health,
+            std_did_health:        s.std_did_health,
+            p5_did_health:         s.p5_did_health,
+            p95_did_health:        s.p95_did_health,
         }
     }
 }

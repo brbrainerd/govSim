@@ -79,6 +79,12 @@ impl CounterfactualPair {
             |s: &WindowSummary| s.mean_legitimacy);
         let did_treasury     = compute_did_f64(lew.as_ref(), c_store, enacted_tick, window_ticks,
             |s: &WindowSummary| s.mean_treasury);
+        let did_income       = compute_did_f64(lew.as_ref(), c_store, enacted_tick, window_ticks,
+            |s: &WindowSummary| s.mean_income);
+        let did_wealth       = compute_did_f64(lew.as_ref(), c_store, enacted_tick, window_ticks,
+            |s: &WindowSummary| s.mean_wealth);
+        let did_health       = compute_did_f32(lew.as_ref(), c_store, enacted_tick, window_ticks,
+            |s: &WindowSummary| s.mean_health);
 
         let treatment_post_approval = lew.as_ref()
             .map(|l| l.treatment_post.mean_approval).unwrap_or(0.0);
@@ -94,6 +100,9 @@ impl CounterfactualPair {
             did_unemployment,
             did_legitimacy,
             did_treasury,
+            did_income,
+            did_wealth,
+            did_health,
             treatment_post_approval,
             treatment_post_gdp,
         }

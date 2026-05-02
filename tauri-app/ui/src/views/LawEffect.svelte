@@ -569,6 +569,84 @@
         </div>
         {/if}
       </div>
+
+      <!-- Mean Income DiD -->
+      <div class="mc-card">
+        <div class="mc-card-header">
+          <span class="mc-metric">Mean Income DiD</span>
+          <span class="mc-runs">{mcResult.n_runs} runs</span>
+        </div>
+        <div class="mc-value" style="color:{deltaColor(mcResult.mean_did_income ?? 0, true)}">
+          {fmtDeltaOpt(mcResult.mean_did_income, formatMoney)}
+          {#if mcResult.std_did_income !== null}
+          <span class="mc-std">± {formatMoney(mcResult.std_did_income)}</span>
+          {/if}
+        </div>
+        {#if mcResult.p5_did_income !== null && mcResult.p95_did_income !== null}
+        <div class="ci-bar-wrap">
+          <div class="ci-bar" style={ciBarStyle(mcResult.mean_did_income, mcResult.p5_did_income, mcResult.p95_did_income)}>
+            <div class="ci-range"></div>
+            <div class="ci-mean-line"></div>
+          </div>
+          <div class="ci-labels">
+            <span>P5: {fmtDeltaOpt(mcResult.p5_did_income, formatMoney)}</span>
+            <span>P95: {fmtDeltaOpt(mcResult.p95_did_income, formatMoney)}</span>
+          </div>
+        </div>
+        {/if}
+      </div>
+
+      <!-- Mean Wealth DiD -->
+      <div class="mc-card">
+        <div class="mc-card-header">
+          <span class="mc-metric">Mean Wealth DiD</span>
+          <span class="mc-runs">{mcResult.n_runs} runs</span>
+        </div>
+        <div class="mc-value" style="color:{deltaColor(mcResult.mean_did_wealth ?? 0, true)}">
+          {fmtDeltaOpt(mcResult.mean_did_wealth, formatMoney)}
+          {#if mcResult.std_did_wealth !== null}
+          <span class="mc-std">± {formatMoney(mcResult.std_did_wealth)}</span>
+          {/if}
+        </div>
+        {#if mcResult.p5_did_wealth !== null && mcResult.p95_did_wealth !== null}
+        <div class="ci-bar-wrap">
+          <div class="ci-bar" style={ciBarStyle(mcResult.mean_did_wealth, mcResult.p5_did_wealth, mcResult.p95_did_wealth)}>
+            <div class="ci-range"></div>
+            <div class="ci-mean-line"></div>
+          </div>
+          <div class="ci-labels">
+            <span>P5: {fmtDeltaOpt(mcResult.p5_did_wealth, formatMoney)}</span>
+            <span>P95: {fmtDeltaOpt(mcResult.p95_did_wealth, formatMoney)}</span>
+          </div>
+        </div>
+        {/if}
+      </div>
+
+      <!-- Mean Health DiD -->
+      <div class="mc-card">
+        <div class="mc-card-header">
+          <span class="mc-metric">Mean Health DiD</span>
+          <span class="mc-runs">{mcResult.n_runs} runs</span>
+        </div>
+        <div class="mc-value" style="color:{deltaColor(mcResult.mean_did_health ?? 0, true)}">
+          {fmtDeltaOpt(mcResult.mean_did_health, pct)}
+          {#if mcResult.std_did_health !== null}
+          <span class="mc-std">± {pct(mcResult.std_did_health)}</span>
+          {/if}
+        </div>
+        {#if mcResult.p5_did_health !== null && mcResult.p95_did_health !== null}
+        <div class="ci-bar-wrap">
+          <div class="ci-bar" style={ciBarStyle(mcResult.mean_did_health, mcResult.p5_did_health, mcResult.p95_did_health)}>
+            <div class="ci-range"></div>
+            <div class="ci-mean-line"></div>
+          </div>
+          <div class="ci-labels">
+            <span>P5: {fmtDeltaOpt(mcResult.p5_did_health, pct)}</span>
+            <span>P95: {fmtDeltaOpt(mcResult.p95_did_health, pct)}</span>
+          </div>
+        </div>
+        {/if}
+      </div>
     </div>
 
     <p class="mc-note">

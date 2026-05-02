@@ -22,6 +22,12 @@ pub struct CausalEstimate {
     pub did_legitimacy:   Option<f32>,
     /// Treasury balance change attributable to the law.
     pub did_treasury:     Option<f64>,
+    /// Mean income change attributable to the law (currency units/tick).
+    pub did_income:       Option<f64>,
+    /// Mean wealth change attributable to the law (currency units).
+    pub did_wealth:       Option<f64>,
+    /// Mean health change attributable to the law [0, 1 pp].
+    pub did_health:       Option<f32>,
 
     // --- Raw treatment-arm means (post window) ---
 

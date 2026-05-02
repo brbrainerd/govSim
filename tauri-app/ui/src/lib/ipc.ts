@@ -397,6 +397,18 @@ export interface MonteCarloSummaryDto {
   std_did_treasury:      number | null;
   p5_did_treasury:       number | null;
   p95_did_treasury:      number | null;
+  mean_did_income:       number | null;
+  std_did_income:        number | null;
+  p5_did_income:         number | null;
+  p95_did_income:        number | null;
+  mean_did_wealth:       number | null;
+  std_did_wealth:        number | null;
+  p5_did_wealth:         number | null;
+  p95_did_wealth:        number | null;
+  mean_did_health:       number | null;
+  std_did_health:        number | null;
+  p5_did_health:         number | null;
+  p95_did_health:        number | null;
 }
 
 /**

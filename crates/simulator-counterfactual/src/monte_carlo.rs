@@ -137,6 +137,24 @@ pub struct MonteCarloSummary {
     pub std_did_treasury:         Option<f64>,
     pub p5_did_treasury:          Option<f64>,
     pub p95_did_treasury:         Option<f64>,
+
+    // Mean income DiD — citizen wellbeing (positive = income grew = good)
+    pub mean_did_income:          Option<f64>,
+    pub std_did_income:           Option<f64>,
+    pub p5_did_income:            Option<f64>,
+    pub p95_did_income:           Option<f64>,
+
+    // Mean wealth DiD — citizen balance sheet (positive = wealth grew = good)
+    pub mean_did_wealth:          Option<f64>,
+    pub std_did_wealth:           Option<f64>,
+    pub p5_did_wealth:            Option<f64>,
+    pub p95_did_wealth:           Option<f64>,
+
+    // Mean health DiD — citizen health [0, 1 pp] (positive = healthier = good)
+    pub mean_did_health:          Option<f32>,
+    pub std_did_health:           Option<f32>,
+    pub p5_did_health:            Option<f32>,
+    pub p95_did_health:           Option<f32>,
 }
 
 impl MonteCarloSummary {
@@ -173,6 +191,21 @@ impl MonteCarloSummary {
         let p5_did_treasury       = percentile_f64(estimates.iter().filter_map(|e| e.did_treasury), 5);
         let p95_did_treasury      = percentile_f64(estimates.iter().filter_map(|e| e.did_treasury), 95);
 
+        let mean_did_income       = mean_f64(estimates.iter().filter_map(|e| e.did_income));
+        let std_did_income        = std_f64(estimates.iter().filter_map(|e| e.did_income));
+        let p5_did_income         = percentile_f64(estimates.iter().filter_map(|e| e.did_income), 5);
+        let p95_did_income        = percentile_f64(estimates.iter().filter_map(|e| e.did_income), 95);
+
+        let mean_did_wealth       = mean_f64(estimates.iter().filter_map(|e| e.did_wealth));
+        let std_did_wealth        = std_f64(estimates.iter().filter_map(|e| e.did_wealth));
+        let p5_did_wealth         = percentile_f64(estimates.iter().filter_map(|e| e.did_wealth), 5);
+        let p95_did_wealth        = percentile_f64(estimates.iter().filter_map(|e| e.did_wealth), 95);
+
+        let mean_did_health       = mean_f32(estimates.iter().filter_map(|e| e.did_health));
+        let std_did_health        = std_f32(estimates.iter().filter_map(|e| e.did_health));
+        let p5_did_health         = percentile_f32(estimates.iter().filter_map(|e| e.did_health), 5);
+        let p95_did_health        = percentile_f32(estimates.iter().filter_map(|e| e.did_health), 95);
+
         Self {
             n_runs,
             mean_did_approval, std_did_approval, p5_did_approval, p95_did_approval,
@@ -181,6 +214,9 @@ impl MonteCarloSummary {
             mean_did_unemployment, std_did_unemployment, p5_did_unemployment, p95_did_unemployment,
             mean_did_legitimacy, std_did_legitimacy, p5_did_legitimacy, p95_did_legitimacy,
             mean_did_treasury, std_did_treasury, p5_did_treasury, p95_did_treasury,
+            mean_did_income,  std_did_income,  p5_did_income,  p95_did_income,
+            mean_did_wealth,  std_did_wealth,  p5_did_wealth,  p95_did_wealth,
+            mean_did_health,  std_did_health,  p5_did_health,  p95_did_health,
         }
     }
 }
@@ -323,6 +359,9 @@ mod tests {
             did_unemployment:        None,
             did_legitimacy:          None,
             did_treasury:            None,
+            did_income:              None,
+            did_wealth:              None,
+            did_health:              None,
             treatment_post_approval: 0.5,
             treatment_post_gdp:      0.0,
         }).collect();
