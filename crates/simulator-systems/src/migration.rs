@@ -147,4 +147,70 @@ mod tests {
         assert!(in_region_0 < 50,
             "some citizens should have migrated out of high-unemployment region 0, got {in_region_0}");
     }
+
+    #[test]
+    fn equal_unemployment_causes_no_migration() {
+        // Both regions have identical unemployment (all employed).
+        // Neither region exceeds mean + THRESHOLD, so no one migrates.
+        let mut sim = Sim::new([88u8; 32]);
+        register_migration_system(&mut sim);
+
+        for i in 0..40  { spawn(&mut sim.world, i,     0, EmploymentStatus::Employed); }
+        for i in 40..80 { spawn(&mut sim.world, i,     1, EmploymentStatus::Employed); }
+
+        // Run 12 months — MIGRATE_PROB is 0.2%, so even if threshold were hit,
+        // the probability of 80 simultaneous non-migrations is near certain.
+        for _ in 0..360 { sim.step(); }
+
+        let in_r0 = sim.world
+            .query::<(&Citizen, &Location)>()
+            .iter(&sim.world)
+            .filter(|(_, l)| l.0.0 == 0)
+            .count();
+        let in_r1 = sim.world
+            .query::<(&Citizen, &Location)>()
+            .iter(&sim.world)
+            .filter(|(_, l)| l.0.0 == 1)
+            .count();
+
+        assert_eq!(in_r0, 40, "no migration expected from region 0");
+        assert_eq!(in_r1, 40, "no migration expected from region 1");
+    }
+
+    #[test]
+    fn migrants_land_in_low_unemployment_region() {
+        // Region 0: 100% unemployed (source).
+        // Region 1: 100% employed (destination).
+        // Region 2: 100% employed (also eligible destination).
+        // After many months all migrants should end up in region 1 or 2,
+        // never back in region 0.
+        let mut sim = Sim::new([91u8; 32]);
+        register_migration_system(&mut sim);
+
+        for i in 0..50   { spawn(&mut sim.world, i,     0, EmploymentStatus::Unemployed); }
+        for i in 50..100 { spawn(&mut sim.world, i,     1, EmploymentStatus::Employed); }
+        for i in 100..150 { spawn(&mut sim.world, i,    2, EmploymentStatus::Employed); }
+
+        // Run 36 months to allow substantial migration.
+        for _ in 0..1080 { sim.step(); }
+
+        // Any citizen that migrated must be in region 1 or 2 (not back in 0).
+        // Region 0 should have fewer citizens than it started with.
+        let in_r0 = sim.world
+            .query::<(&Citizen, &Location)>()
+            .iter(&sim.world)
+            .filter(|(_, l)| l.0.0 == 0)
+            .count();
+
+        assert!(in_r0 < 50,
+            "citizens from high-unemployment region 0 should have emigrated, got {in_r0}");
+
+        // All remaining citizens are in region 0, 1, or 2 (not some invalid region).
+        let invalid = sim.world
+            .query::<(&Citizen, &Location)>()
+            .iter(&sim.world)
+            .filter(|(_, l)| l.0.0 > 2)
+            .count();
+        assert_eq!(invalid, 0, "no citizen should land in a non-existent region");
+    }
 }
