@@ -167,8 +167,8 @@
     <!-- Inequality summary bar -->
     <div class="inequality-row">
       {#each [
-        ["Income Gini",  sim.currentState ? (sim.currentState.gini * 100).toFixed(1) + "%" : "—",         (sim.currentState?.gini ?? 0) > 0.4],
-        ["Wealth Gini",  sim.currentState ? (sim.currentState.wealth_gini * 100).toFixed(1) + "%" : "—",  (sim.currentState?.wealth_gini ?? 0) > 0.5],
+        ["Income Gini",  sim.currentState ? pct(sim.currentState.gini) : "—",         (sim.currentState?.gini ?? 0) > 0.4],
+        ["Wealth Gini",  sim.currentState ? pct(sim.currentState.wealth_gini) : "—",  (sim.currentState?.wealth_gini ?? 0) > 0.5],
         ["Unemployment", sim.currentState ? pct(sim.currentState.unemployment) : "—",                      (sim.currentState?.unemployment ?? 0) > 0.1],
         ["Population",
           ui.filterRegionId !== null && dist

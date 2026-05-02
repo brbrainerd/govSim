@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { sim, navigate, formatMoney } from "$lib/store.svelte";
+  import { sim, navigate, formatMoney, pct } from "$lib/store.svelte";
   import {
     enactFlatTax, enactUbi, enactAbatement, listLaws,
   } from "$lib/ipc";
@@ -102,7 +102,7 @@
    * will appear in the Laws table before they enact the law.
    */
   const previewMagnitude = $derived.by((): string => {
-    if (kind === "income_tax") return `${(taxRate * 100).toFixed(1)}%`;
+    if (kind === "income_tax") return pct(taxRate);
     if (kind === "ubi")        return `$${ubiAmount.toFixed(0)}/mo`;
     return `${pollRedux.toFixed(2)} PU · $${costPerPu.toFixed(0)}/PU`;
   });
@@ -190,7 +190,7 @@
           {/if}
         </span>
         {#if pctOfGdp !== null}
-        <span class="est-pct">{(pctOfGdp * 100).toFixed(1)}% of GDP per year</span>
+        <span class="est-pct">{pct(pctOfGdp)} of GDP per year</span>
         {/if}
         {#if monthlyImpact !== null}
         <span class="est-monthly">
@@ -231,7 +231,7 @@
         <div class="ctx-row"><span>Treasury</span><span class={sim.currentState.treasury_balance < 0 ? "ctx-danger" : ""}>{formatMoney(sim.currentState.treasury_balance)}</span></div>
         <div class="ctx-row"><span>Annual Revenue</span><span>{formatMoney(sim.currentState.gov_revenue * 12)}</span></div>
         <div class="ctx-row"><span>Population</span><span>{sim.currentState.population.toLocaleString()}</span></div>
-        <div class="ctx-row"><span>Approval</span><span>{(sim.currentState.approval * 100).toFixed(1)}%</span></div>
+        <div class="ctx-row"><span>Approval</span><span>{pct(sim.currentState.approval)}</span></div>
         {#if kind === "abatement"}
         <div class="ctx-row"><span>Pollution Stock</span><span>{sim.currentState.pollution_stock.toFixed(3)} PU</span></div>
         {/if}
