@@ -215,6 +215,7 @@ mod tests {
     fn empty_ctx() -> EvalCtx {
         EvalCtx { bindings: HashMap::new(), field_bindings: HashMap::new() }
     }
+    #[allow(dead_code)]
     fn money_ctx(income: f64) -> EvalCtx {
         let mut ctx = empty_ctx();
         ctx.field_bindings.insert(

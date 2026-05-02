@@ -78,4 +78,61 @@ mod tests {
             "debt should decay with no new repeals: {after_first} -> {after_second}"
         );
     }
+
+    #[test]
+    fn no_repeal_means_debt_stays_at_zero() {
+        let mut sim = Sim::new([4u8; 32]);
+        sim.world.insert_resource(LawRegistry::default());
+        register_legitimacy_system(&mut sim);
+
+        // No laws repealed — run for 2 months.
+        for _ in 0..61 { sim.step(); }
+
+        let stock = sim.world.resource::<LegitimacyDebt>().stock;
+        assert!(
+            stock.abs() < 1e-5,
+            "stock should remain 0 when nothing repealed, got {stock}"
+        );
+    }
+
+    #[test]
+    fn two_repeals_accumulate_before_monthly_drain() {
+        let mut sim = Sim::new([5u8; 32]);
+        sim.world.insert_resource(LawRegistry::default());
+        register_legitimacy_system(&mut sim);
+
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        // Repeal two benefit laws; base debt = 0.10 each = 0.20 total.
+        let id1 = registry.enact(make_dummy_benefit_law(0));
+        let id2 = registry.enact(make_dummy_benefit_law(0));
+        registry.repeal(id1, 0);
+        registry.repeal(id2, 0);
+
+        // Run through first monthly drain (tick 30, step 31).
+        for _ in 0..31 { sim.step(); }
+        let stock = sim.world.resource::<LegitimacyDebt>().stock;
+
+        // stock = (0 + 0.20) * decay; decay < 1.0, so stock should be in (0, 0.20].
+        assert!(stock > 0.0 && stock <= 0.21,
+            "expected stock in (0, 0.21], got {stock}");
+    }
+
+    #[test]
+    fn debt_does_not_fire_at_tick_zero() {
+        let mut sim = Sim::new([6u8; 32]);
+        sim.world.insert_resource(LawRegistry::default());
+        register_legitimacy_system(&mut sim);
+
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        let id = registry.enact(make_dummy_benefit_law(0));
+        registry.repeal(id, 0);
+
+        // Only one step — the system guard skips tick=0.
+        sim.step();
+        let stock = sim.world.resource::<LegitimacyDebt>().stock;
+        assert!(
+            stock.abs() < 1e-5,
+            "system should not fire at tick=0, got stock={stock}"
+        );
+    }
 }
