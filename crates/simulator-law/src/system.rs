@@ -57,7 +57,7 @@ pub fn law_dispatcher_system(
     mut treasury: ResMut<Treasury>,
     mut ledger: ResMut<GovernmentLedger>,
     mut pollution: ResMut<PollutionStock>,
-    debt: Res<LegitimacyDebt>,
+    mut debt: ResMut<LegitimacyDebt>,
     mut rights: ResMut<RightsLedger>,
     crisis: Res<CrisisState>,
     mut capacity: Option<ResMut<StateCapacity>>,
@@ -226,33 +226,62 @@ pub fn law_dispatcher_system(
                 // Phase C/I: grant a civil right by catalog ID.
                 // Update RightsCatalog if present.
                 let rid = RightId(right_id.to_string());
-                if let Some(ref mut cat) = rights_catalog {
+                let should_grant_legacy = if let Some(ref mut cat) = rights_catalog {
                     // Auto-populate definitions from the built-in catalog the
                     // first time a law grants a right into an un-seeded catalog.
-                    // This ensures grant_boost / revocation_debt metadata is
-                    // available even when configure_world was not called with
-                    // initial_rights or initial_rights_catalog.
                     if cat.defined.is_empty() {
                         cat.define_all(simulator_core::default_catalog());
                     }
-                    cat.grant(&rid, tick);
-                }
-                // Mirror into legacy RightsLedger bitflag if there's a mapping.
-                for (id, bit) in LEGACY_BIT_TO_ID {
-                    if *id == right_id {
-                        let flag = CivicRights::from_bits_truncate(*bit);
-                        rights.granted |= flag;
-                        rights.historical_max |= flag;
-                        break;
+                    // Enforce prerequisites: if any prerequisite is not yet granted,
+                    // silently skip this grant. The law remains active and will retry
+                    // on its next cadence firing.
+                    let prereqs_met = cat.defined.get(&rid)
+                        .map(|def| def.prerequisites.iter().all(|p| cat.granted.contains(p)))
+                        .unwrap_or(true); // unknown right (no def) → no prerequisites
+                    if prereqs_met {
+                        cat.grant(&rid, tick);
+                        true
+                    } else {
+                        tracing::debug!(
+                            right_id = right_id,
+                            tick,
+                            "RightGrant skipped: prerequisites not yet satisfied"
+                        );
+                        false
+                    }
+                } else {
+                    // No catalog present — grant legacy bitflag unconditionally.
+                    true
+                };
+                // Mirror into legacy RightsLedger bitflag if there's a mapping
+                // and the grant was not blocked by prerequisites.
+                if should_grant_legacy {
+                    for (id, bit) in LEGACY_BIT_TO_ID {
+                        if *id == right_id {
+                            let flag = CivicRights::from_bits_truncate(*bit);
+                            rights.granted |= flag;
+                            rights.historical_max |= flag;
+                            break;
+                        }
                     }
                 }
             }
             LawEffect::RightRevoke { right_id } => {
                 // Phase C/I: revoke a civil right by catalog ID.
                 // Update RightsCatalog if present (historical_max preserved).
+                // revoke() returns the legitimacy-debt magnitude to apply.
                 let rid = RightId(right_id.to_string());
-                if let Some(ref mut cat) = rights_catalog {
-                    cat.revoke(&rid);
+                let revocation_cost = if let Some(ref mut cat) = rights_catalog {
+                    cat.revoke(&rid)
+                } else {
+                    // No catalog: apply a fixed 0.5 debt for any legacy right revocation.
+                    0.5_f32
+                };
+                // Accumulate revocation debt immediately into LegitimacyDebt.
+                // This propagates into approval_system and election_system on the
+                // next monthly/annual tick.
+                if revocation_cost > 0.0 {
+                    debt.stock += revocation_cost;
                 }
                 // Mirror revocation into legacy RightsLedger.
                 for (id, bit) in LEGACY_BIT_TO_ID {
@@ -1704,5 +1733,125 @@ mod tests {
         registry.enact(handle);
         // Should not panic.
         for _ in 0..31 { sim.step(); }
+    }
+
+    /// `RightRevoke` accumulates legitimacy debt in `LegitimacyDebt.stock`.
+    #[test]
+    fn right_revoke_accumulates_legitimacy_debt() {
+        use crate::dsl::ast::{Program, Scope};
+        use simulator_core::{catalog_from_bits, LegitimacyDebt, RightId, RightsLedger, CivicRights};
+
+        let mut sim = Sim::new([74u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        // Pre-grant universal_suffrage in both storages.
+        let cat = catalog_from_bits(1); // bit 0 = universal_suffrage
+        sim.world.insert_resource(cat);
+        {
+            let mut ledger = sim.world.resource_mut::<RightsLedger>();
+            ledger.granted |= CivicRights::UNIVERSAL_SUFFRAGE;
+            ledger.historical_max |= CivicRights::UNIVERSAL_SUFFRAGE;
+        }
+
+        let initial_debt = sim.world.resource::<LegitimacyDebt>().stock;
+
+        let handle = LawHandle {
+            source: None,
+            id: LawId(210), version: 1,
+            program: Arc::new(Program {
+                scopes: vec![Scope { name: "D".into(), params: vec![], items: vec![] }],
+            }),
+            cadence: Cadence::Monthly,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: LawEffect::RightRevoke { right_id: "universal_suffrage" },
+        };
+
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(handle);
+        for _ in 0..31 { sim.step(); } // tick-30 monthly firing
+
+        let final_debt = sim.world.resource::<LegitimacyDebt>().stock;
+        assert!(
+            final_debt > initial_debt,
+            "revoking a right should increase LegitimacyDebt.stock; before={initial_debt}, after={final_debt}"
+        );
+    }
+
+    /// `RightGrant` skips when a prerequisite right is not yet granted.
+    #[test]
+    fn right_grant_skips_when_prerequisites_not_met() {
+        use crate::dsl::ast::{Program, Scope};
+        use simulator_core::{catalog_from_bits, RightId, RightsCatalog};
+
+        let mut sim = Sim::new([75u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        // Seed catalog with NO rights granted. collective_bargaining requires labor_rights.
+        let cat = catalog_from_bits(0);
+        sim.world.insert_resource(cat);
+
+        let handle = LawHandle {
+            source: None,
+            id: LawId(211), version: 1,
+            program: Arc::new(Program {
+                scopes: vec![Scope { name: "P".into(), params: vec![], items: vec![] }],
+            }),
+            cadence: Cadence::Monthly,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: LawEffect::RightGrant { right_id: "collective_bargaining" },
+        };
+
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(handle);
+        for _ in 0..31 { sim.step(); }
+
+        let cat = sim.world.resource::<RightsCatalog>();
+        assert!(
+            !cat.has(&RightId::new("collective_bargaining")),
+            "collective_bargaining should not be granted without labor_rights prerequisite"
+        );
+    }
+
+    /// `RightGrant` succeeds once all prerequisites are satisfied.
+    #[test]
+    fn right_grant_succeeds_when_prerequisites_met() {
+        use crate::dsl::ast::{Program, Scope};
+        use simulator_core::{catalog_from_bits, RightId, RightsCatalog, CivicRights, RightsLedger};
+
+        let mut sim = Sim::new([76u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        // labor_rights bit = 1<<5 = 32
+        let cat = catalog_from_bits(32); // pre-grant labor_rights
+        sim.world.insert_resource(cat);
+        {
+            let mut ledger = sim.world.resource_mut::<RightsLedger>();
+            ledger.granted |= CivicRights::LABOR_RIGHTS;
+            ledger.historical_max |= CivicRights::LABOR_RIGHTS;
+        }
+
+        let handle = LawHandle {
+            source: None,
+            id: LawId(212), version: 1,
+            program: Arc::new(Program {
+                scopes: vec![Scope { name: "Q".into(), params: vec![], items: vec![] }],
+            }),
+            cadence: Cadence::Monthly,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: LawEffect::RightGrant { right_id: "collective_bargaining" },
+        };
+
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(handle);
+        for _ in 0..31 { sim.step(); }
+
+        let cat = sim.world.resource::<RightsCatalog>();
+        assert!(
+            cat.has(&RightId::new("collective_bargaining")),
+            "collective_bargaining should be granted when labor_rights prerequisite is met"
+        );
     }
 }
