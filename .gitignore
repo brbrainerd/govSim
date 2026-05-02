@@ -31,6 +31,8 @@ data/grammars/*.bin
 # Snapshots
 *.ugs-snapshot
 *.zst
+# CLI snapshot output (default path for `replay` command)
+snapshot.bin
 
 # Editor
 .vscode/
