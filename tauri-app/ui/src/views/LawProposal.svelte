@@ -15,6 +15,27 @@
   let costPerPu:       number  = $state(10_000);
 
   async function submit() {
+    // Fiscal danger gate: require explicit confirmation before a high-risk enactment.
+    // This prevents accidental death-spirals while preserving player agency.
+    if (affordability === "danger") {
+      const runwayMsg = monthsTreasury !== null
+        ? ` Treasury runway: ${monthsTreasury} months.`
+        : "";
+      const ok = confirm(
+        `⚠ High fiscal risk detected.${runwayMsg}\n\n` +
+        `Estimated cost exceeds 150% of annual government revenue.\n\n` +
+        `Enact this law anyway?`
+      );
+      if (!ok) return;
+    } else if (monthsTreasury !== null && monthsTreasury < 6) {
+      const ok = confirm(
+        `⚠ Low treasury runway: ${monthsTreasury} months.\n\n` +
+        `This law will drain the treasury within ${monthsTreasury} months at current balance.\n\n` +
+        `Enact anyway?`
+      );
+      if (!ok) return;
+    }
+
     enacting = true;
     try {
       let id: number;
