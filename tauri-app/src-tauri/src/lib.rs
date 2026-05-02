@@ -39,6 +39,8 @@ pub fn run() {
             commands::enact_ubi,
             commands::enact_abatement,
             commands::repeal_law,
+            commands::grant_civic_right,
+            commands::revoke_civic_right,
             commands::get_law_effect,
             commands::export_metrics_parquet,
             commands::save_sim_snapshot,

@@ -345,6 +345,41 @@ pub async fn repeal_law(
     Ok(())
 }
 
+// ---- Civic rights -----------------------------------------------------------
+
+/// Grant a civic right by its bitflag value.
+/// Returns the new `rights_granted_bits` after the grant.
+#[tauri::command]
+pub async fn grant_civic_right(
+    state: tauri::State<'_, AppState>,
+    bit:   u32,
+) -> IpcResult<u32> {
+    let mut guard = state.sim.lock().await;
+    let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
+    let tick = bundle.sim.tick();
+    let right = simulator_core::CivicRights::from_bits_truncate(bit);
+    bundle.sim.world.resource_mut::<simulator_core::RightsLedger>().grant(right, tick);
+    Ok(bundle.sim.world.resource::<simulator_core::RightsLedger>().granted.bits())
+}
+
+/// Revoke a civic right by its bitflag value.
+/// Returns (new `rights_granted_bits`, legitimacy_debt_incurred).
+#[tauri::command]
+pub async fn revoke_civic_right(
+    state: tauri::State<'_, AppState>,
+    bit:   u32,
+) -> IpcResult<(u32, f32)> {
+    let mut guard = state.sim.lock().await;
+    let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
+    let right = simulator_core::CivicRights::from_bits_truncate(bit);
+    let debt_delta = bundle.sim.world.resource_mut::<simulator_core::RightsLedger>().revoke(right);
+    // Apply the debt to the global legitimacy-debt stock.
+    bundle.sim.world.resource_mut::<simulator_core::LegitimacyDebt>().stock =
+        (bundle.sim.world.resource::<simulator_core::LegitimacyDebt>().stock + debt_delta).min(1.0);
+    let new_bits = bundle.sim.world.resource::<simulator_core::RightsLedger>().granted.bits();
+    Ok((new_bits, debt_delta))
+}
+
 // ---- Law effect / DiD window -----------------------------------------------
 
 #[derive(serde::Serialize)]

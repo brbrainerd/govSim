@@ -1,6 +1,9 @@
 <script lang="ts">
   import { sim, navigate, pct, tickToDate, formatMoney } from "$lib/store.svelte";
-  import { PARTY_LABELS, CRISIS_LABELS, decodeCivicRights, CIVIC_RIGHTS } from "$lib/ipc";
+  import { PARTY_LABELS, CRISIS_LABELS, decodeCivicRights, CIVIC_RIGHTS,
+           grantCivicRight, revokeCivicRight } from "$lib/ipc";
+  import { toast }     from "$lib/toasts.svelte";
+  import { beginLoad, endLoad } from "$lib/store.svelte";
   import LineChart                                           from "../components/LineChart.svelte";
 
   // Derived approval trend series from the metric ring-buffer.
@@ -141,6 +144,45 @@
     }
     return result;
   });
+
+  // ── Rights actions ────────────────────────────────────────────────────────
+  let rightsWorking = $state(false);
+
+  async function handleGrant(bit: number, label: string) {
+    if (rightsWorking || !sim.currentState) return;
+    rightsWorking = true;
+    beginLoad();
+    try {
+      const newBits = await grantCivicRight(bit);
+      if (sim.currentState) sim.currentState.rights_granted_bits = newBits;
+      toast.success(`${label} granted at tick ${sim.tick}.`);
+    } catch (e) {
+      toast.error(e, "Failed to grant right");
+    } finally {
+      rightsWorking = false;
+      endLoad();
+    }
+  }
+
+  async function handleRevoke(bit: number, label: string) {
+    if (rightsWorking || !sim.currentState) return;
+    rightsWorking = true;
+    beginLoad();
+    try {
+      const [newBits, debt] = await revokeCivicRight(bit);
+      if (sim.currentState) sim.currentState.rights_granted_bits = newBits;
+      if (debt > 0) {
+        toast.warning(`${label} revoked — legitimacy debt +${debt.toFixed(1)}.`);
+      } else {
+        toast.info(`${label} revoked (was not previously held; no debt).`);
+      }
+    } catch (e) {
+      toast.error(e, "Failed to revoke right");
+    } finally {
+      rightsWorking = false;
+      endLoad();
+    }
+  }
 </script>
 
 <div class="election-view">
@@ -358,7 +400,8 @@
     <h2 class="section-title">Civic Rights Ledger</h2>
     <div class="rights-grid">
       {#each decodeCivicRights(cs.rights_granted_bits) as right, i (right.label)}
-      {@const grantedTick = rightsGrantedAt[CIVIC_RIGHTS[i]?.bit ?? 0]}
+      {@const bit = CIVIC_RIGHTS[i]?.bit ?? 0}
+      {@const grantedTick = rightsGrantedAt[bit]}
       <div class="right-item" class:right-granted={right.granted} class:right-withheld={!right.granted} title={right.description}>
         <span class="right-icon" aria-hidden="true">{right.granted ? "✓" : "✗"}</span>
         <div class="right-body">
@@ -369,6 +412,23 @@
           <span class="right-since">not granted</span>
           {/if}
         </div>
+        {#if right.granted}
+        <button
+          class="right-action right-revoke"
+          onclick={() => handleRevoke(bit, right.label)}
+          disabled={rightsWorking}
+          title="Revoke this right (+0.5 legitimacy debt)"
+          aria-label="Revoke {right.label}"
+        >✕</button>
+        {:else}
+        <button
+          class="right-action right-grant"
+          onclick={() => handleGrant(bit, right.label)}
+          disabled={rightsWorking}
+          title="Grant this right"
+          aria-label="Grant {right.label}"
+        >+</button>
+        {/if}
       </div>
       {/each}
     </div>
@@ -522,9 +582,39 @@ h1 { font-size: 20px; font-weight: 700; }
 }
 .right-granted .right-icon { color: var(--good); }
 .right-withheld .right-icon { color: var(--muted); }
-.right-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.right-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
 .right-label { font-weight: 500; }
 .right-since { font-size: 10px; color: var(--muted); }
+.right-action {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-left: auto;
+  transition: opacity .12s;
+}
+.right-action:disabled { opacity: .4; cursor: default; }
+.right-grant {
+  background: rgba(34,197,94,.12);
+  border-color: rgba(34,197,94,.4);
+  color: var(--good);
+}
+.right-grant:hover:not(:disabled) { background: rgba(34,197,94,.25); }
+.right-revoke {
+  background: rgba(239,68,68,.08);
+  border-color: rgba(239,68,68,.3);
+  color: var(--danger);
+}
+.right-revoke:hover:not(:disabled) { background: rgba(239,68,68,.2); }
 
 /* Crisis */
 .crisis-active-banner {

@@ -205,6 +205,23 @@ export async function repealLaw(law_id: number): Promise<void> {
 }
 
 /**
+ * Grant a civic right by its bitflag value (one of the `CIVIC_RIGHTS[i].bit` values).
+ * Returns the new `rights_granted_bits` after the grant.
+ */
+export async function grantCivicRight(bit: number): Promise<number> {
+  return invoke<number>("grant_civic_right", { bit });
+}
+
+/**
+ * Revoke a civic right by its bitflag value.
+ * Returns [new_rights_granted_bits, legitimacy_debt_incurred].
+ * Revoking a previously-granted right adds 0.5 legitimacy debt per right.
+ */
+export async function revokeCivicRight(bit: number): Promise<[number, number]> {
+  return invoke<[number, number]>("revoke_civic_right", { bit });
+}
+
+/**
  * Compute a before/after DiD window centred on `enacted_tick`.
  * `window_ticks` is how many ticks to look back (pre) and forward (post).
  */
