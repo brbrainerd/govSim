@@ -121,6 +121,12 @@ export interface WindowSummaryDto {
   mean_pollution: number;
   mean_legitimacy: number;
   mean_treasury: number;
+  mean_gini: number;
+  mean_wealth_gini: number;
+  mean_state_capacity: number;
+  mean_health: number;
+  mean_income: number;
+  mean_rights_breadth: number;
   min_approval: number;
   max_approval: number;
   min_gdp: number;
@@ -136,6 +142,12 @@ export interface LawEffectDto {
   delta_pollution: number;
   delta_legitimacy: number;
   delta_treasury: number;
+  delta_gini: number;
+  delta_wealth_gini: number;
+  delta_state_capacity: number;
+  delta_health: number;
+  delta_income: number;
+  delta_rights_breadth: number;
 }
 
 // ── Crisis kind helpers ──────────────────────────────────────────────────────

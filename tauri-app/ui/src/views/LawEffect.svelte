@@ -215,12 +215,18 @@
   <div role="tabpanel" id="panel-overview" aria-labelledby="tab-overview">
     <div class="delta-grid">
       {#each [
-        ["Approval",      fmtDelta(lawEffect.delta_approval,     pct),         deltaColor(lawEffect.delta_approval,     true)],
-        ["Unemployment",  fmtDelta(lawEffect.delta_unemployment, pct),         deltaColor(lawEffect.delta_unemployment, false)],
-        ["GDP",           fmtDelta(lawEffect.delta_gdp,          formatMoney), deltaColor(lawEffect.delta_gdp,          true)],
-        ["Pollution",     fmtDelta(lawEffect.delta_pollution,    v => v.toFixed(3) + " PU"), deltaColor(lawEffect.delta_pollution, false)],
-        ["Legitimacy D.", fmtDelta(lawEffect.delta_legitimacy,   v => v.toFixed(4)), deltaColor(lawEffect.delta_legitimacy, false)],
-        ["Treasury",      fmtDelta(lawEffect.delta_treasury,     formatMoney),  deltaColor(lawEffect.delta_treasury,     true)],
+        ["Approval",       fmtDelta(lawEffect.delta_approval,       pct),         deltaColor(lawEffect.delta_approval,       true)],
+        ["Unemployment",   fmtDelta(lawEffect.delta_unemployment,   pct),         deltaColor(lawEffect.delta_unemployment,   false)],
+        ["GDP",            fmtDelta(lawEffect.delta_gdp,            formatMoney), deltaColor(lawEffect.delta_gdp,            true)],
+        ["Pollution",      fmtDelta(lawEffect.delta_pollution,      v => v.toFixed(3) + " PU"), deltaColor(lawEffect.delta_pollution, false)],
+        ["Legitimacy D.",  fmtDelta(lawEffect.delta_legitimacy,     v => v.toFixed(4)), deltaColor(lawEffect.delta_legitimacy, false)],
+        ["Treasury",       fmtDelta(lawEffect.delta_treasury,       formatMoney), deltaColor(lawEffect.delta_treasury,       true)],
+        ["Income Gini",    fmtDelta(lawEffect.delta_gini,           v => v.toFixed(3)), deltaColor(lawEffect.delta_gini,      false)],
+        ["Wealth Gini",    fmtDelta(lawEffect.delta_wealth_gini,    v => v.toFixed(3)), deltaColor(lawEffect.delta_wealth_gini, false)],
+        ["State Capacity", fmtDelta(lawEffect.delta_state_capacity, pct),         deltaColor(lawEffect.delta_state_capacity, true)],
+        ["Mean Health",    fmtDelta(lawEffect.delta_health,         pct),         deltaColor(lawEffect.delta_health,         true)],
+        ["Mean Income",    fmtDelta(lawEffect.delta_income,         formatMoney), deltaColor(lawEffect.delta_income,         true)],
+        ["Rights Breadth", fmtDelta(lawEffect.delta_rights_breadth, pct),         deltaColor(lawEffect.delta_rights_breadth, true)],
       ] as [label, val, col]}
       <div class="delta-card">
         <span class="d-label">{label}</span>
@@ -311,6 +317,12 @@
           ["Pollution",      lawEffect.pre.mean_pollution,    lawEffect.post.mean_pollution,     lawEffect.delta_pollution,    (v:number)=>v.toFixed(3), false],
           ["Legitimacy Debt",lawEffect.pre.mean_legitimacy,   lawEffect.post.mean_legitimacy,    lawEffect.delta_legitimacy,   (v:number)=>v.toFixed(4), false],
           ["Treasury",       lawEffect.pre.mean_treasury,     lawEffect.post.mean_treasury,      lawEffect.delta_treasury,     formatMoney, true],
+          ["Income Gini",    lawEffect.pre.mean_gini,            lawEffect.post.mean_gini,            lawEffect.delta_gini,            (v:number)=>v.toFixed(3), false],
+          ["Wealth Gini",    lawEffect.pre.mean_wealth_gini,     lawEffect.post.mean_wealth_gini,     lawEffect.delta_wealth_gini,     (v:number)=>v.toFixed(3), false],
+          ["State Capacity", lawEffect.pre.mean_state_capacity,  lawEffect.post.mean_state_capacity,  lawEffect.delta_state_capacity,  pct,         true],
+          ["Mean Health",    lawEffect.pre.mean_health,          lawEffect.post.mean_health,          lawEffect.delta_health,          pct,         true],
+          ["Mean Income",    lawEffect.pre.mean_income,          lawEffect.post.mean_income,          lawEffect.delta_income,          formatMoney, true],
+          ["Rights Breadth", lawEffect.pre.mean_rights_breadth,  lawEffect.post.mean_rights_breadth,  lawEffect.delta_rights_breadth,  pct,         true],
         ] as [label, pre, post, delta, fmt, posGood]}
         <tr>
           <td>{label}</td>

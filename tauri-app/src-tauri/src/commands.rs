@@ -531,6 +531,12 @@ pub struct WindowSummaryDto {
     pub mean_pollution:     f64,
     pub mean_legitimacy:    f32,
     pub mean_treasury:      f64,
+    pub mean_gini:               f32,
+    pub mean_wealth_gini:        f32,
+    pub mean_state_capacity:     f32,
+    pub mean_health:             f32,
+    pub mean_income:             f64,
+    pub mean_rights_breadth:     f32,
     pub min_approval:       f32,
     pub max_approval:       f32,
     pub min_gdp:            f64,
@@ -544,6 +550,9 @@ impl From<&WindowSummary> for WindowSummaryDto {
             mean_approval: s.mean_approval, mean_unemployment: s.mean_unemployment,
             mean_gdp: s.mean_gdp, mean_pollution: s.mean_pollution,
             mean_legitimacy: s.mean_legitimacy, mean_treasury: s.mean_treasury,
+            mean_gini: s.mean_gini, mean_wealth_gini: s.mean_wealth_gini,
+            mean_state_capacity: s.mean_state_capacity, mean_health: s.mean_health,
+            mean_income: s.mean_income, mean_rights_breadth: s.mean_rights_breadth,
             min_approval: s.min_approval, max_approval: s.max_approval,
             min_gdp: s.min_gdp, max_gdp: s.max_gdp,
         }
@@ -560,6 +569,12 @@ pub struct LawEffectDto {
     pub delta_pollution:    f64,
     pub delta_legitimacy:   f32,
     pub delta_treasury:     f64,
+    pub delta_gini:               f32,
+    pub delta_wealth_gini:        f32,
+    pub delta_state_capacity:     f32,
+    pub delta_health:             f32,
+    pub delta_income:             f64,
+    pub delta_rights_breadth:     f32,
 }
 
 impl From<&WindowDiff> for LawEffectDto {
@@ -569,6 +584,9 @@ impl From<&WindowDiff> for LawEffectDto {
             delta_approval: d.delta_approval, delta_unemployment: d.delta_unemployment,
             delta_gdp: d.delta_gdp, delta_pollution: d.delta_pollution,
             delta_legitimacy: d.delta_legitimacy, delta_treasury: d.delta_treasury,
+            delta_gini: d.delta_gini, delta_wealth_gini: d.delta_wealth_gini,
+            delta_state_capacity: d.delta_state_capacity, delta_health: d.delta_health,
+            delta_income: d.delta_income, delta_rights_breadth: d.delta_rights_breadth,
         }
     }
 }

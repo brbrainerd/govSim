@@ -14,6 +14,14 @@ pub struct WindowSummary {
     pub mean_legitimacy:   f32,
     pub mean_treasury:     f64,
 
+    // Distributional & institutional means (TickRow schema v2)
+    pub mean_gini:                f32,
+    pub mean_wealth_gini:         f32,
+    pub mean_state_capacity:      f32,
+    pub mean_health:              f32,
+    pub mean_income:              f64,
+    pub mean_rights_breadth:      f32,
+
     pub min_approval:      f32,
     pub max_approval:      f32,
     pub min_gdp:           f64,
@@ -36,6 +44,13 @@ impl WindowSummary {
         let mean_legitimacy   = rows.iter().map(|r| r.legitimacy_debt as f64).sum::<f64>() / n;
         let mean_treasury     = rows.iter().map(|r| r.treasury_balance).sum::<f64>() / n;
 
+        let mean_gini           = rows.iter().map(|r| r.gini as f64).sum::<f64>() / n;
+        let mean_wealth_gini    = rows.iter().map(|r| r.wealth_gini as f64).sum::<f64>() / n;
+        let mean_state_capacity = rows.iter().map(|r| r.state_capacity_score as f64).sum::<f64>() / n;
+        let mean_health         = rows.iter().map(|r| r.mean_health as f64).sum::<f64>() / n;
+        let mean_income         = rows.iter().map(|r| r.mean_income).sum::<f64>() / n;
+        let mean_rights_breadth = rows.iter().map(|r| r.rights_breadth as f64).sum::<f64>() / n;
+
         let min_approval = rows.iter().map(|r| r.approval).fold(f32::INFINITY, f32::min);
         let max_approval = rows.iter().map(|r| r.approval).fold(f32::NEG_INFINITY, f32::max);
         let min_gdp      = rows.iter().map(|r| r.gdp).fold(f64::INFINITY, f64::min);
@@ -50,6 +65,12 @@ impl WindowSummary {
             mean_pollution,
             mean_legitimacy: mean_legitimacy as f32,
             mean_treasury,
+            mean_gini:                mean_gini as f32,
+            mean_wealth_gini:         mean_wealth_gini as f32,
+            mean_state_capacity:      mean_state_capacity as f32,
+            mean_health:              mean_health as f32,
+            mean_income,
+            mean_rights_breadth:      mean_rights_breadth as f32,
             min_approval,
             max_approval,
             min_gdp,
@@ -80,6 +101,13 @@ pub struct WindowDiff {
     pub delta_pollution:    f64,
     pub delta_legitimacy:   f32,
     pub delta_treasury:     f64,
+
+    pub delta_gini:                f32,
+    pub delta_wealth_gini:         f32,
+    pub delta_state_capacity:      f32,
+    pub delta_health:              f32,
+    pub delta_income:              f64,
+    pub delta_rights_breadth:      f32,
 }
 
 impl WindowDiff {
@@ -90,8 +118,16 @@ impl WindowDiff {
         let delta_pollution    = post.mean_pollution    - pre.mean_pollution;
         let delta_legitimacy   = post.mean_legitimacy   - pre.mean_legitimacy;
         let delta_treasury     = post.mean_treasury     - pre.mean_treasury;
+        let delta_gini             = post.mean_gini             - pre.mean_gini;
+        let delta_wealth_gini      = post.mean_wealth_gini      - pre.mean_wealth_gini;
+        let delta_state_capacity   = post.mean_state_capacity   - pre.mean_state_capacity;
+        let delta_health           = post.mean_health           - pre.mean_health;
+        let delta_income           = post.mean_income           - pre.mean_income;
+        let delta_rights_breadth   = post.mean_rights_breadth   - pre.mean_rights_breadth;
         Self { pre, post, delta_approval, delta_unemployment, delta_gdp,
-               delta_pollution, delta_legitimacy, delta_treasury }
+               delta_pollution, delta_legitimacy, delta_treasury,
+               delta_gini, delta_wealth_gini, delta_state_capacity,
+               delta_health, delta_income, delta_rights_breadth }
     }
 
     /// Build from the store, centering the split at `enacted_tick`.
