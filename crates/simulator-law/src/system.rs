@@ -13,8 +13,9 @@ use simulator_core::{
         Health, Income, LegalStatusFlags, LegalStatuses, MonthlyBenefitReceived,
         MonthlyTaxPaid, Productivity, Wealth,
     },
-    CrisisState, GovernmentLedger, Judiciary, LegitimacyDebt, MacroIndicators, Phase,
-    PollutionStock, RightsLedger, RightsCatalog, Sim, SimClock, SimRng, StateCapacity, Treasury,
+    CivicRights, CrisisState, GovernmentLedger, Judiciary, LegitimacyDebt, MacroIndicators, Phase,
+    PollutionStock, RightId, RightsLedger, RightsCatalog, Sim, SimClock, SimRng, StateCapacity,
+    Treasury, LEGACY_BIT_TO_ID,
 };
 use rand::Rng;
 use simulator_types::Money;
@@ -57,11 +58,11 @@ pub fn law_dispatcher_system(
     mut ledger: ResMut<GovernmentLedger>,
     mut pollution: ResMut<PollutionStock>,
     debt: Res<LegitimacyDebt>,
-    rights: Res<RightsLedger>,
+    mut rights: ResMut<RightsLedger>,
     crisis: Res<CrisisState>,
-    capacity: Option<Res<StateCapacity>>,
+    mut capacity: Option<ResMut<StateCapacity>>,
     judiciary: Option<Res<Judiciary>>,
-    rights_catalog: Option<Res<RightsCatalog>>,
+    mut rights_catalog: Option<ResMut<RightsCatalog>>,
     mut q: Query<(
         Option<&Citizen>,
         &Income,
@@ -221,9 +222,70 @@ pub fn law_dispatcher_system(
                 treasury.balance -= actual_cost;
                 ledger.expenditure += actual_cost;
             }
+            LawEffect::RightGrant { right_id } => {
+                // Phase C/I: grant a civil right by catalog ID.
+                // Update RightsCatalog if present.
+                let rid = RightId(right_id.to_string());
+                if let Some(ref mut cat) = rights_catalog {
+                    cat.grant(&rid, tick);
+                }
+                // Mirror into legacy RightsLedger bitflag if there's a mapping.
+                for (id, bit) in LEGACY_BIT_TO_ID {
+                    if *id == right_id {
+                        let flag = CivicRights::from_bits_truncate(*bit);
+                        rights.granted |= flag;
+                        rights.historical_max |= flag;
+                        break;
+                    }
+                }
+            }
+            LawEffect::RightRevoke { right_id } => {
+                // Phase C/I: revoke a civil right by catalog ID.
+                // Update RightsCatalog if present (historical_max preserved).
+                let rid = RightId(right_id.to_string());
+                if let Some(ref mut cat) = rights_catalog {
+                    cat.revoke(&rid);
+                }
+                // Mirror revocation into legacy RightsLedger.
+                for (id, bit) in LEGACY_BIT_TO_ID {
+                    if *id == right_id {
+                        let flag = CivicRights::from_bits_truncate(*bit);
+                        rights.granted &= !flag;
+                        break;
+                    }
+                }
+            }
+            LawEffect::StateCapacityModify { field, delta } => {
+                // Phase I: adjust a StateCapacity field by a signed delta.
+                // No-op if StateCapacity resource is absent.
+                if let Some(ref mut cap) = capacity {
+                    match field {
+                        "tax_collection_efficiency" => {
+                            cap.tax_collection_efficiency = (cap.tax_collection_efficiency + delta).clamp(0.0, 1.0);
+                        }
+                        "enforcement_reach" => {
+                            cap.enforcement_reach = (cap.enforcement_reach + delta).clamp(0.0, 1.0);
+                        }
+                        "enforcement_noise" => {
+                            cap.enforcement_noise = (cap.enforcement_noise + delta).clamp(0.0, 1.0);
+                        }
+                        "corruption_drift" => {
+                            cap.corruption_drift = (cap.corruption_drift + delta).clamp(0.0, 1.0);
+                        }
+                        "legal_predictability" => {
+                            cap.legal_predictability = (cap.legal_predictability + delta).clamp(0.0, 1.0);
+                        }
+                        "bureaucratic_effectiveness" => {
+                            cap.bureaucratic_effectiveness = (cap.bureaucratic_effectiveness + delta).clamp(0.0, 1.0);
+                        }
+                        _ => {} // Unknown field — silently ignore to allow forward compatibility.
+                    }
+                }
+            }
         }
     }
 }
+
 
 /// Build the base EvalCtx pre-loaded with time bindings and macro aggregates.
 /// Each law's per-citizen loop clones this and inserts citizen-specific fields.
@@ -1458,5 +1520,181 @@ mod tests {
             debt_war < debt_peace,
             "crisis should reduce repeal debt vs peacetime"
         );
+    }
+
+    // ------------------------------------------------------------------
+    // Phase I: RightGrant / RightRevoke / StateCapacityModify
+    // ------------------------------------------------------------------
+
+    /// `RightGrant` enacts a law that grants a right; verifies both
+    /// `RightsCatalog` and legacy `RightsLedger` are updated.
+    #[test]
+    fn right_grant_law_updates_catalog_and_ledger() {
+        use crate::dsl::ast::{Program, Scope};
+        use simulator_core::{
+            catalog_from_bits, CivicRights, RightId, RightsCatalog, RightsLedger,
+        };
+
+        let mut sim = Sim::new([70u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        // Pre-seed catalog but grant NO rights.
+        let mut cat = catalog_from_bits(0);
+        sim.world.insert_resource(cat);
+
+        let handle = LawHandle {
+            source: None,
+            id: LawId(200), version: 1,
+            program: Arc::new(Program {
+                scopes: vec![Scope { name: "G".into(), params: vec![], items: vec![] }],
+            }),
+            cadence: Cadence::Monthly,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: LawEffect::RightGrant { right_id: "universal_suffrage" },
+        };
+
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(handle);
+
+        // 31 steps: schedule fires at ticks 0-30; tick 30 is the first monthly
+        // firing (step() runs schedule, then advances clock).
+        for _ in 0..31 { sim.step(); }
+
+        let catalog = sim.world.resource::<RightsCatalog>();
+        assert!(catalog.has(&RightId::new("universal_suffrage")),
+            "RightsCatalog should contain universal_suffrage after grant");
+        assert_eq!(catalog.granted_count(), 1,
+            "exactly one right should be granted");
+        assert_eq!(catalog.historical_count(), 1,
+            "historical_max should also contain the right");
+
+        let ledger = sim.world.resource::<RightsLedger>();
+        assert!(ledger.granted.contains(CivicRights::UNIVERSAL_SUFFRAGE),
+            "legacy RightsLedger bitflag should be set");
+    }
+
+    /// `RightRevoke` removes a right from both storages; `historical_max` is preserved.
+    #[test]
+    fn right_revoke_law_clears_right_preserves_history() {
+        use crate::dsl::ast::{Program, Scope};
+        use simulator_core::{
+            catalog_from_bits, CivicRights, RightId, RightsCatalog, RightsLedger,
+        };
+
+        let mut sim = Sim::new([71u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        // Pre-grant universal_suffrage (bit 0 = 1).
+        let cat = catalog_from_bits(1);
+        sim.world.insert_resource(cat);
+        {
+            let mut ledger = sim.world.resource_mut::<RightsLedger>();
+            ledger.granted |= CivicRights::UNIVERSAL_SUFFRAGE;
+            ledger.historical_max |= CivicRights::UNIVERSAL_SUFFRAGE;
+        }
+
+        let handle = LawHandle {
+            source: None,
+            id: LawId(201), version: 1,
+            program: Arc::new(Program {
+                scopes: vec![Scope { name: "R".into(), params: vec![], items: vec![] }],
+            }),
+            cadence: Cadence::Monthly,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: LawEffect::RightRevoke { right_id: "universal_suffrage" },
+        };
+
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(handle);
+        for _ in 0..31 { sim.step(); }
+
+        let catalog = sim.world.resource::<RightsCatalog>();
+        assert!(!catalog.has(&RightId::new("universal_suffrage")),
+            "universal_suffrage should be revoked from catalog");
+        assert!(catalog.historical_max.contains(&RightId::new("universal_suffrage")),
+            "historical_max must still contain the revoked right");
+
+        let ledger = sim.world.resource::<RightsLedger>();
+        assert!(!ledger.granted.contains(CivicRights::UNIVERSAL_SUFFRAGE),
+            "legacy RightsLedger bitflag should be cleared");
+    }
+
+    /// `StateCapacityModify` adjusts a StateCapacity field each monthly firing.
+    #[test]
+    fn state_capacity_modify_law_adjusts_field() {
+        use crate::dsl::ast::{Program, Scope};
+        use simulator_core::StateCapacity;
+
+        let mut sim = Sim::new([72u8; 32]);
+        register_law_dispatcher(&mut sim);
+
+        sim.world.insert_resource(StateCapacity {
+            tax_collection_efficiency: 0.50,
+            enforcement_reach: 0.50,
+            enforcement_noise: 0.10,
+            corruption_drift: 0.0,
+            legal_predictability: 0.50,
+            bureaucratic_effectiveness: 0.50,
+        });
+
+        // Law: increase tax_collection_efficiency by +0.10 each month.
+        let handle = LawHandle {
+            source: None,
+            id: LawId(202), version: 1,
+            program: Arc::new(Program {
+                scopes: vec![Scope { name: "Cap".into(), params: vec![], items: vec![] }],
+            }),
+            cadence: Cadence::Monthly,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: LawEffect::StateCapacityModify {
+                field: "tax_collection_efficiency",
+                delta: 0.10,
+            },
+        };
+
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(handle);
+
+        // 31 steps to trigger the tick-30 monthly firing.
+        for _ in 0..31 { sim.step(); }
+
+        let sc = sim.world.resource::<StateCapacity>();
+        assert!(
+            (sc.tax_collection_efficiency - 0.60).abs() < 1e-5,
+            "after one monthly firing, tax_collection_efficiency should be 0.60, got {}",
+            sc.tax_collection_efficiency
+        );
+    }
+
+    /// `StateCapacityModify` with absent resource is a no-op (no panic).
+    #[test]
+    fn state_capacity_modify_no_op_when_resource_absent() {
+        use crate::dsl::ast::{Program, Scope};
+        let mut sim = Sim::new([73u8; 32]);
+        register_law_dispatcher(&mut sim);
+        // No StateCapacity resource inserted.
+
+        let handle = LawHandle {
+            source: None,
+            id: LawId(203), version: 1,
+            program: Arc::new(Program {
+                scopes: vec![Scope { name: "Cap".into(), params: vec![], items: vec![] }],
+            }),
+            cadence: Cadence::Monthly,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: LawEffect::StateCapacityModify {
+                field: "enforcement_reach",
+                delta: -0.50,
+            },
+        };
+
+        let registry = sim.world.resource::<LawRegistry>().clone();
+        registry.enact(handle);
+        // Should not panic.
+        for _ in 0..31 { sim.step(); }
     }
 }

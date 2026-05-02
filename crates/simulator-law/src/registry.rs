@@ -74,6 +74,33 @@ pub enum LawEffect {
         /// Treasury cost in cents per pollution unit removed.
         cost_per_pu: f64,
     },
+    /// Grant a civil right by catalog ID. Idempotent if already granted.
+    /// Inserts into `RightsCatalog.granted` and updates `historical_max`.
+    /// Also sets the corresponding `CivicRights` bitflag in `RightsLedger`
+    /// when the right ID maps to a legacy bit (via `LEGACY_BIT_TO_ID`).
+    /// Phase C/I.
+    RightGrant {
+        /// Catalog ID of the right to grant (must be defined in `RightsCatalog`).
+        right_id: &'static str,
+    },
+    /// Revoke a civil right by catalog ID. Idempotent if not currently granted.
+    /// Removes from `RightsCatalog.granted`; `historical_max` is preserved.
+    /// Also clears the corresponding `CivicRights` bitflag in `RightsLedger`.
+    /// Phase C/I.
+    RightRevoke {
+        /// Catalog ID of the right to revoke.
+        right_id: &'static str,
+    },
+    /// Adjust a StateCapacity field by a signed delta (clamped to [0, 1]).
+    /// No-op if `StateCapacity` resource is absent. Phase I.
+    StateCapacityModify {
+        /// Field to adjust: one of "tax_collection_efficiency",
+        /// "enforcement_reach", "enforcement_noise", "corruption_drift",
+        /// "legal_predictability", "bureaucratic_effectiveness".
+        field: &'static str,
+        /// Signed delta applied to the named field each firing period.
+        delta: f32,
+    },
 }
 
 #[derive(Resource, Default, Clone)]
