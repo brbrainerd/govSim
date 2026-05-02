@@ -43,7 +43,16 @@
   }
 
   async function handleRepeal(id: number) {
-    if (!confirm(`Repeal law #${id}? This cannot be undone.`)) return;
+    const law = sim.laws.find(l => l.id === id);
+    const isUbi = law?.effect_kind === "benefit";
+
+    const baseMsg = isUbi
+      ? `⚠ Repealing Citizen Benefit law #${id} will add 0.5 legitimacy debt.\n\n` +
+        `Citizens who relied on this payment may react negatively.\n\n` +
+        `Repeal anyway? This cannot be undone.`
+      : `Repeal law #${id}? This cannot be undone.`;
+
+    if (!confirm(baseMsg)) return;
     beginLoad();
     try {
       await repealLaw(id);
