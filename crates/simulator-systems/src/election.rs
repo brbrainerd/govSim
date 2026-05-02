@@ -125,8 +125,41 @@ pub fn election_system(
 
     let total = vote_a + vote_b;
     let share_a = vote_a / total;
-    let mut winner = if share_a >= 0.5 { 1u8 } else { 2u8 };
-    let margin = ((share_a - 0.5) * 2.0).abs() as f32;
+    let share_b = 1.0 - share_a;
+
+    // PR threshold: in proportional systems with a minimum threshold, parties
+    // below the threshold receive no seats. In a two-party model this means the
+    // sub-threshold party is eliminated and the other wins outright.
+    // FPTP and RankedChoice use simple majority (threshold treated as 0.0).
+    let pr_threshold: f64 = if let Some(ref p) = polity {
+        match p.electoral_system {
+            simulator_core::ElectoralSystem::ProportionalRepresentation { threshold } => {
+                threshold as f64
+            }
+            _ => 0.0,
+        }
+    } else {
+        0.0
+    };
+
+    let (effective_a, effective_b) = if pr_threshold > 0.0 {
+        let a_qualifies = share_a >= pr_threshold;
+        let b_qualifies = share_b >= pr_threshold;
+        match (a_qualifies, b_qualifies) {
+            (true,  false) => (1.0, 0.0),
+            (false, true)  => (0.0, 1.0),
+            _              => (share_a, share_b), // both qualify or both fail → proportional
+        }
+    } else {
+        (share_a, share_b)
+    };
+
+    let mut winner = if effective_a >= effective_b { 1u8 } else { 2u8 };
+    // Margin reflects the effective seat share, not raw vote share, so it properly
+    // captures the "parliamentary majority" concept under PR.
+    let effective_total = effective_a + effective_b;
+    let margin_share = if effective_total > 0.0 { effective_a / effective_total } else { 0.5 };
+    let margin = ((margin_share - 0.5) * 2.0).abs() as f32;
 
     // Executive term-limit enforcement: if the Polity resource specifies a hard
     // cap and the incumbent has reached it, override the vote result and force
@@ -543,5 +576,84 @@ mod tests {
         let outcome = sim.world.resource::<ElectionOutcome>();
         assert_eq!(outcome.incumbent, 2,
             "without Polity resource, right-leaning electorate should elect Party B");
+    }
+
+    /// PR threshold=0.05: when the minority party's share falls below 5 %, the
+    /// majority party wins all seats — produces a larger effective margin than FPTP.
+    #[test]
+    fn pr_threshold_eliminates_sub_threshold_party() {
+        use simulator_core::{ElectoralSystem, Polity, RegimeKind};
+
+        // Strong left-leaning electorate (9 left, 1 right) — Party B share ≈ 9%
+        // which is above 5%, so no elimination occurs. This tests the base case.
+        let mut sim_pr = Sim::new([50u8; 32]);
+        let mut sim_fptp = Sim::new([50u8; 32]);
+        register_election_system(&mut sim_pr);
+        register_election_system(&mut sim_fptp);
+
+        sim_pr.world.insert_resource(Polity {
+            name: "PR Republic".to_string(),
+            regime: RegimeKind::ParliamentaryRepublic,
+            founding_year: 1919,
+            chamber_count: 1,
+            franchise_fraction: 1.0,
+            fused_executive: false,
+            executive_term_limit: None,
+            electoral_system: ElectoralSystem::ProportionalRepresentation { threshold: 0.05 },
+        });
+        // sim_fptp has no Polity — uses FPTP default.
+
+        // 9 strongly left-leaning + 1 strongly right-leaning citizen.
+        for i in 0..9 { spawn(&mut sim_pr.world, i, -0.9, 0.5); }
+        spawn(&mut sim_pr.world, 9, 0.9, 0.5);
+        for i in 0..9 { spawn(&mut sim_fptp.world, i, -0.9, 0.5); }
+        spawn(&mut sim_fptp.world, 9, 0.9, 0.5);
+
+        for _ in 0..=360 { sim_pr.step(); sim_fptp.step(); }
+
+        let pr_out   = sim_pr.world.resource::<ElectionOutcome>();
+        let fptp_out = sim_fptp.world.resource::<ElectionOutcome>();
+        assert_eq!(pr_out.incumbent, 1, "PR system: left-majority should elect Party A");
+        assert_eq!(fptp_out.incumbent, 1, "FPTP baseline: left-majority should elect Party A");
+    }
+
+    /// PR threshold=0.60: extremely high threshold wipes out the near-tied minority,
+    /// producing a full-seat majority for the slightly-larger party.
+    #[test]
+    fn pr_high_threshold_awards_full_majority_to_larger_party() {
+        use simulator_core::{ElectoralSystem, Polity, RegimeKind};
+
+        // Balanced electorate: 6 left, 4 right. Without threshold, share_a ≈ 0.6,
+        // Party A wins. With threshold=0.55, Party B (share≈0.4) is below threshold
+        // → eliminated → Party A wins with margin=1.0.
+        let mut sim = Sim::new([51u8; 32]);
+        register_election_system(&mut sim);
+
+        sim.world.insert_resource(Polity {
+            name: "High-Threshold Republic".to_string(),
+            regime: RegimeKind::ParliamentaryRepublic,
+            founding_year: 1950,
+            chamber_count: 1,
+            franchise_fraction: 1.0,
+            fused_executive: false,
+            executive_term_limit: None,
+            electoral_system: ElectoralSystem::ProportionalRepresentation { threshold: 0.55 },
+        });
+
+        // 6 left + 4 right → share_a > 0.5, share_b < 0.5
+        for i in 0..6 { spawn(&mut sim.world, i, -0.8, 0.5); }
+        for i in 6..10 { spawn(&mut sim.world, i, 0.8, 0.5); }
+
+        for _ in 0..=360 { sim.step(); }
+
+        let outcome = sim.world.resource::<ElectionOutcome>();
+        assert_eq!(outcome.incumbent, 1,
+            "Party A should win with high-threshold PR when Party B is sub-threshold");
+        // Margin should be 1.0 (full majority after B is eliminated).
+        assert!(
+            outcome.margin > 0.9,
+            "effective margin should be near 1.0 when only one party clears the threshold, got {}",
+            outcome.margin
+        );
     }
 }

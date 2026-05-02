@@ -31,7 +31,8 @@ use simulator_core::{
         ApprovalRating, Citizen, EmploymentStatus, IdeologyVector,
         MonthlyBenefitReceived, MonthlyTaxPaid,
     },
-    LegitimacyDebt, MacroIndicators, Phase, PollutionStock, RightsLedger, Sim, SimClock, SimRng,
+    LegitimacyDebt, MacroIndicators, Phase, PollutionStock, RightsCatalog, RightsLedger, Sim,
+    SimClock, SimRng,
 };
 use simulator_types::Score;
 use rand::Rng;
@@ -52,6 +53,7 @@ pub fn approval_system(
     debt: Res<LegitimacyDebt>,
     rights: Res<RightsLedger>,
     pollution: Res<PollutionStock>,
+    rights_catalog: Option<Res<RightsCatalog>>,
     mut q: Query<(
         &Citizen,
         &EmploymentStatus,
@@ -75,13 +77,30 @@ pub fn approval_system(
     };
 
     // Rights-expansion honeymoon: linear decay over ~12 months from the last grant.
+    // When a RightsCatalog is present, the boost magnitude comes from the sum of
+    // grant_boost values of all rights granted since the last expansion tick (only
+    // the most recently expanded batch matters for the decay window). Falls back to
+    // a fixed 0.005 if the catalog is absent or has no definitions.
     const HONEYMOON_TICKS: u64 = 360;
-    let honeymoon_shock: f32 = if rights.last_expansion_tick > 0
-        && clock.tick.saturating_sub(rights.last_expansion_tick) < HONEYMOON_TICKS
+    let (last_expansion_tick, base_boost) = {
+        if let Some(ref cat) = rights_catalog {
+            // Sum grant_boost for every currently-granted right that has metadata.
+            let boost: f32 = cat.granted.iter()
+                .filter_map(|id| cat.defined.get(id))
+                .map(|def| def.grant_boost)
+                .sum::<f32>()
+                .clamp(0.0, 0.05); // cap total boost per tick to avoid runaway
+            (cat.last_expansion_tick, boost.max(0.003)) // minimum 0.003 if any rights
+        } else {
+            (rights.last_expansion_tick, 0.005_f32)
+        }
+    };
+    let honeymoon_shock: f32 = if last_expansion_tick > 0
+        && clock.tick.saturating_sub(last_expansion_tick) < HONEYMOON_TICKS
     {
-        let elapsed = clock.tick.saturating_sub(rights.last_expansion_tick) as f32;
+        let elapsed = clock.tick.saturating_sub(last_expansion_tick) as f32;
         let remaining = 1.0 - (elapsed / HONEYMOON_TICKS as f32);
-        0.005 * remaining
+        base_boost * remaining
     } else {
         0.0
     };

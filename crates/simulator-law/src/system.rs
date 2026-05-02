@@ -227,6 +227,14 @@ pub fn law_dispatcher_system(
                 // Update RightsCatalog if present.
                 let rid = RightId(right_id.to_string());
                 if let Some(ref mut cat) = rights_catalog {
+                    // Auto-populate definitions from the built-in catalog the
+                    // first time a law grants a right into an un-seeded catalog.
+                    // This ensures grant_boost / revocation_debt metadata is
+                    // available even when configure_world was not called with
+                    // initial_rights or initial_rights_catalog.
+                    if cat.defined.is_empty() {
+                        cat.define_all(simulator_core::default_catalog());
+                    }
                     cat.grant(&rid, tick);
                 }
                 // Mirror into legacy RightsLedger bitflag if there's a mapping.
