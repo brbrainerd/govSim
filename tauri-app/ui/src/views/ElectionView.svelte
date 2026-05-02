@@ -78,6 +78,8 @@
 
   // ── Quintile approval breakdown ───────────────────────────────────────────
   const QUINTILE_LABELS = ["Q1 Poorest", "Q2 Lower-mid", "Q3 Middle", "Q4 Upper-mid", "Q5 Wealthiest"] as const;
+  // Palette distinguishes quintiles: red (poor) → orange → neutral → teal → blue (wealthy)
+  const QUINTILE_COLORS = ["#ef4444", "#f97316", "#a3a3a3", "#14b8a6", "#6366f1"] as const;
   type QKey = "approval_q1" | "approval_q2" | "approval_q3" | "approval_q4" | "approval_q5";
   const Q_KEYS: readonly QKey[] = ["approval_q1", "approval_q2", "approval_q3", "approval_q4", "approval_q5"] as const;
 
@@ -86,6 +88,14 @@
     if (!last) return null;
     return Q_KEYS.map(k => last[k] as number);
   })());
+
+  const quintileSeries = $derived(
+    Q_KEYS.map((k, i) => ({
+      name: QUINTILE_LABELS[i],
+      data: sim.metricsRows.map(r => r[k] as number),
+      color: QUINTILE_COLORS[i],
+    }))
+  );
 
   const quintileAtElection = $derived((() => {
     if (!cs) return null;
@@ -270,6 +280,25 @@
     </table>
     <p class="table-note">Swing = change since tick {cs?.last_election_tick ?? "—"}. Income quintiles sorted by citizen income (Q1 = lowest 20%).</p>
   </section>
+
+  <!-- ── Approval by income quintile over time ── -->
+  {#if quintileSeries[0].data.length > 1}
+  <section class="section">
+    <h2 class="section-title">Approval Trend by Income Group</h2>
+    <div class="chart-wrap">
+      <LineChart
+        series={quintileSeries}
+        xLabels={approvalLabels}
+        yMin={0}
+        yMax={1}
+        yFormatter={pct}
+        height="160px"
+        markLines={lawMarkLines}
+      />
+    </div>
+    <p class="table-note">Divergence between Q1 (poorest) and Q5 (wealthiest) signals unequal policy impact.</p>
+  </section>
+  {/if}
   {/if}
 
   <!-- ── Election margin trend ── -->
