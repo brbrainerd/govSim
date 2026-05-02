@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { sim, navigate } from "$lib/store.svelte";
+  import { sim, navigate, formatMoney } from "$lib/store.svelte";
   import {
     enactFlatTax, enactUbi, enactAbatement, listLaws,
   } from "$lib/ipc";
@@ -48,12 +48,6 @@
       return pollRedux * costPerPu * 12;
     }
   });
-
-  function fmt(n: number) {
-    if (Math.abs(n) >= 1e9) return `$${(n/1e9).toFixed(1)}B`;
-    if (Math.abs(n) >= 1e6) return `$${(n/1e6).toFixed(1)}M`;
-    return `$${n.toLocaleString()}`;
-  }
 
   // ── Affordability metrics ─────────────────────────────────────────────────
 
@@ -190,7 +184,7 @@
         <span class="est-label">{kind === "income_tax" ? "Est. annual revenue" : "Est. annual cost"}</span>
         <span class="est-value">
           {#if estimatedAnnualCost !== null}
-            {fmt(Math.abs(estimatedAnnualCost))}
+            {formatMoney(Math.abs(estimatedAnnualCost))}
           {:else}
             —
           {/if}
@@ -200,7 +194,7 @@
         {/if}
         {#if monthlyImpact !== null}
         <span class="est-monthly">
-          {monthlyImpact >= 0 ? "Costs" : "Generates"} {fmt(Math.abs(monthlyImpact))}/month
+          {monthlyImpact >= 0 ? "Costs" : "Generates"} {formatMoney(Math.abs(monthlyImpact))}/month
         </span>
         {/if}
       </div>
@@ -234,8 +228,8 @@
       {#if sim.currentState}
       <div class="context-block">
         <h4>Current context</h4>
-        <div class="ctx-row"><span>Treasury</span><span class={sim.currentState.treasury_balance < 0 ? "ctx-danger" : ""}>{fmt(sim.currentState.treasury_balance)}</span></div>
-        <div class="ctx-row"><span>Annual Revenue</span><span>{fmt(sim.currentState.gov_revenue * 12)}</span></div>
+        <div class="ctx-row"><span>Treasury</span><span class={sim.currentState.treasury_balance < 0 ? "ctx-danger" : ""}>{formatMoney(sim.currentState.treasury_balance)}</span></div>
+        <div class="ctx-row"><span>Annual Revenue</span><span>{formatMoney(sim.currentState.gov_revenue * 12)}</span></div>
         <div class="ctx-row"><span>Population</span><span>{sim.currentState.population.toLocaleString()}</span></div>
         <div class="ctx-row"><span>Approval</span><span>{(sim.currentState.approval * 100).toFixed(1)}%</span></div>
         {#if kind === "abatement"}
