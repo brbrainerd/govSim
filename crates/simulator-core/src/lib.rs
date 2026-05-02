@@ -3,17 +3,21 @@
 
 pub mod components;
 pub mod phase;
+pub mod polity;
 pub mod resources;
 pub mod rng;
+pub mod state_capacity;
 pub mod tick;
 pub mod world;
 
 pub use phase::Phase;
+pub use polity::{ElectoralSystem, Polity, RegimeKind};
 pub use resources::{
     CivicRights, CrisisKind, CrisisState, GovernmentLedger, LegitimacyDebt,
     MacroIndicators, PollutionStock, PriceLevel, RightsLedger, Treasury,
 };
 pub use rng::SimRng;
+pub use state_capacity::StateCapacity;
 pub use tick::SimClock;
 pub use world::Sim;
 

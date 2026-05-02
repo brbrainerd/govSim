@@ -16,7 +16,7 @@
 use simulator_core::{
     bevy_ecs::prelude::*,
     components::{ApprovalRating, IdeologyVector, LegalStatusFlags, LegalStatuses},
-    CrisisKind, CrisisState, LegitimacyDebt, MacroIndicators, Phase, Sim, SimClock,
+    CrisisKind, CrisisState, LegitimacyDebt, MacroIndicators, Phase, Polity, Sim, SimClock,
 };
 
 #[derive(Resource, Default, Debug, Clone)]
@@ -40,9 +40,23 @@ pub fn election_system(
     mut indicators: ResMut<MacroIndicators>,
     debt: Res<LegitimacyDebt>,
     crisis: Res<CrisisState>,
+    polity: Option<Res<Polity>>,
     q: Query<(&LegalStatuses, &IdeologyVector, &ApprovalRating)>,
 ) {
     if !clock.tick.is_multiple_of(ELECTION_PERIOD) || clock.tick == 0 { return; }
+
+    // If a Polity resource is present with a non-competitive electoral system,
+    // skip citizen voting — the governing faction persists unchanged.
+    if let Some(ref p) = polity {
+        if !p.electoral_system.is_competitive() {
+            tracing::debug!(
+                tick = clock.tick,
+                regime = ?p.regime,
+                "election skipped: non-competitive electoral system"
+            );
+            return;
+        }
+    }
 
     let mut vote_a: f64 = 0.0;
     let mut vote_b: f64 = 0.0;
@@ -307,5 +321,86 @@ mod tests {
              recession={{party={}, margin={:.3}}}",
             rec_outcome.incumbent, rec_outcome.margin
         );
+    }
+
+    /// Non-competitive electoral system (Hereditary) → election system skips,
+    /// incumbent stays 0 (no election has ever fired).
+    #[test]
+    fn non_competitive_polity_skips_election() {
+        use simulator_core::{ElectoralSystem, Polity, RegimeKind};
+
+        let mut sim = Sim::new([30u8; 32]);
+        register_election_system(&mut sim);
+
+        // Insert an absolute monarchy — Hereditary succession, no popular vote.
+        sim.world.insert_resource(Polity {
+            name: "Ruritania".to_string(),
+            regime: RegimeKind::AbsoluteMonarchy,
+            founding_year: 1200,
+            chamber_count: 0,
+            franchise_fraction: 0.0,
+            fused_executive: true,
+            executive_term_limit: None,
+            electoral_system: ElectoralSystem::Hereditary,
+        });
+
+        // Spawn strongly left-leaning voters — would elect Party A if voting ran.
+        for i in 0..10 { spawn(&mut sim.world, i, -0.9, 0.8); }
+
+        // Run one full election cycle.
+        for _ in 0..=360 { sim.step(); }
+
+        // incumbent must remain 0 — no election fired.
+        let outcome = sim.world.resource::<ElectionOutcome>();
+        assert_eq!(outcome.incumbent, 0,
+            "hereditary polity must not run elections; incumbent should stay 0");
+        assert_eq!(outcome.last_election_tick, 0,
+            "last_election_tick must not advance without an election");
+    }
+
+    /// Competitive PR system → election still fires like FPTP (incumbent changes).
+    #[test]
+    fn proportional_representation_polity_runs_election() {
+        use simulator_core::{ElectoralSystem, Polity, RegimeKind};
+
+        let mut sim = Sim::new([31u8; 32]);
+        register_election_system(&mut sim);
+
+        sim.world.insert_resource(Polity {
+            name: "Federal Republic".to_string(),
+            regime: RegimeKind::ParliamentaryRepublic,
+            founding_year: 1949,
+            chamber_count: 2,
+            franchise_fraction: 1.0,
+            fused_executive: false,
+            executive_term_limit: None,
+            electoral_system: ElectoralSystem::ProportionalRepresentation { threshold: 0.05 },
+        });
+
+        // Strongly left-leaning electorate → Party A wins.
+        for i in 0..10 { spawn(&mut sim.world, i, -0.8, 0.5); }
+
+        for _ in 0..=360 { sim.step(); }
+
+        let outcome = sim.world.resource::<ElectionOutcome>();
+        assert_eq!(outcome.incumbent, 1,
+            "PR parliamentary republic should still elect Party A with left-leaning electorate");
+        assert_eq!(outcome.last_election_tick, 360);
+    }
+
+    /// No Polity resource → default competitive behaviour unchanged.
+    #[test]
+    fn absent_polity_resource_uses_default_competitive_behaviour() {
+        let mut sim = Sim::new([32u8; 32]);
+        register_election_system(&mut sim);
+        // No Polity resource inserted — Option<Res<Polity>> is None.
+
+        for i in 0..10 { spawn(&mut sim.world, i, 0.8, 0.5); }  // right-leaning
+
+        for _ in 0..=360 { sim.step(); }
+
+        let outcome = sim.world.resource::<ElectionOutcome>();
+        assert_eq!(outcome.incumbent, 2,
+            "without Polity resource, right-leaning electorate should elect Party B");
     }
 }
