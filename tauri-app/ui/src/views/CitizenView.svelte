@@ -41,17 +41,26 @@
     }
   }
 
+  // Throttle heavy IPC: refresh at most once per simulated month (30 ticks).
+  let lastFetchMonth = $state(-1);
+
   // Invalidate stale scatter whenever the region filter changes so switching
   // to the scatter tab after a filter change always shows fresh data.
   $effect(() => {
     void ui.filterRegionId;
     scatterPoints = null;
+    // Force immediate refresh on filter change regardless of month throttle.
+    lastFetchMonth = -1;
   });
 
-  // Refetch histograms on tick change or filter change.
+  // Refetch histograms at most once per simulated month or on filter change.
   $effect(() => {
-    void sim.tick;
+    const tick  = sim.tick;
+    const month = Math.floor(tick / 30);
     void ui.filterRegionId;
+    if (!sim.loaded) return;
+    if (month === lastFetchMonth) return;
+    lastFetchMonth = month;
     fetchAll();
     if (activeTab === "scatter") void fetchScatter();
   });
