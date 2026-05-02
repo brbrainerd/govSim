@@ -228,6 +228,37 @@ mod tests {
         assert!(l.has(CivicRights::UNIVERSAL_SUFFRAGE));
     }
 
+    /// Grant multiple rights at once; each must be individually grantable.
+    #[test]
+    fn rights_ledger_grant_multiple() {
+        let mut l = RightsLedger::default();
+        // Grant two rights at the same tick.
+        assert!(l.grant(CivicRights::FREE_SPEECH, 5));
+        assert!(l.grant(CivicRights::LABOR_RIGHTS, 5));
+        assert!(l.has(CivicRights::FREE_SPEECH));
+        assert!(l.has(CivicRights::LABOR_RIGHTS));
+        assert_eq!(l.last_expansion_tick, 5);
+        assert_eq!(l.historical_max, CivicRights::FREE_SPEECH | CivicRights::LABOR_RIGHTS);
+    }
+
+    /// Default CrisisState has kind=None and remaining_ticks=0.
+    #[test]
+    fn crisis_state_default_is_none() {
+        let cs = CrisisState::default();
+        assert_eq!(cs.kind, CrisisKind::None);
+        assert_eq!(cs.remaining_ticks, 0);
+        assert!((cs.cost_multiplier - 1.0).abs() < 1e-6);
+        assert!((cs.onset_shock - 0.0).abs() < 1e-6);
+    }
+
+    /// LegitimacyDebt default has stock=0 and decay=0.95.
+    #[test]
+    fn legitimacy_debt_default_values() {
+        let ld = LegitimacyDebt::default();
+        assert!((ld.stock - 0.0).abs() < 1e-6);
+        assert!((ld.decay - 0.95).abs() < 1e-6);
+    }
+
     #[test]
     fn rights_ledger_revoke_charges_only_for_held_rights() {
         let mut l = RightsLedger::default();

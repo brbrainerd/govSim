@@ -152,4 +152,43 @@ mod tests {
         assert_eq!(g1.edge_count(), g2.edge_count());
         assert_eq!(g1.csr.col_ind, g2.csr.col_ind);
     }
+
+    /// n=0 produces an empty graph with no edges.
+    #[test]
+    fn erdos_renyi_zero_nodes_is_empty() {
+        let mut rng = ChaCha20Rng::from_seed([0u8; 32]);
+        let g = InfluenceGraph::erdos_renyi(0, 0.5, &mut rng);
+        assert_eq!(g.n_citizens(), 0);
+        assert_eq!(g.edge_count(), 0);
+        // row_ptr should be a single 0 (length n+1 = 1).
+        assert_eq!(g.csr.row_ptr.len(), 1);
+    }
+
+    /// p=0.0 produces zero edges regardless of n.
+    #[test]
+    fn erdos_renyi_zero_probability_no_edges() {
+        let mut rng = ChaCha20Rng::from_seed([0u8; 32]);
+        let g = InfluenceGraph::erdos_renyi(100, 0.0, &mut rng);
+        assert_eq!(g.edge_count(), 0, "p=0 must produce no edges");
+        assert_eq!(g.n_citizens(), 100);
+    }
+
+    /// n=1 has no possible edges (no ordered pairs without self-loops).
+    #[test]
+    fn erdos_renyi_single_node_no_edges() {
+        let mut rng = ChaCha20Rng::from_seed([5u8; 32]);
+        let g = InfluenceGraph::erdos_renyi(1, 1.0, &mut rng);
+        assert_eq!(g.n_citizens(), 1);
+        assert_eq!(g.edge_count(), 0, "single node cannot have non-self edges");
+    }
+
+    /// Weights are in [-1, 1].
+    #[test]
+    fn erdos_renyi_weights_in_range() {
+        let mut rng = ChaCha20Rng::from_seed([55u8; 32]);
+        let g = InfluenceGraph::erdos_renyi(200, 0.03, &mut rng);
+        for &w in &g.csr.weights {
+            assert!(w >= -1.0 && w <= 1.0, "weight {w} out of [-1, 1]");
+        }
+    }
 }
