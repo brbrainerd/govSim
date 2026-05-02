@@ -601,4 +601,157 @@ mod tests {
             assert!((v - expected).abs() < 1.0, "income={income}: got {v}, want {expected}");
         }
     }
+
+    // ── Error paths ────────────────────────────────────────────────────────────
+
+    fn regulative(comp: Computation) -> IgStatement {
+        IgStatement::Regulative(RegulativeStmt {
+            attribute: ActorRef { class: "individual".into(), qualifier: None },
+            attribute_property: None,
+            deontic: Some(Deontic::Must),
+            aim: "pay".into(),
+            direct_object: None,
+            direct_object_property: None,
+            indirect_object: None,
+            indirect_object_property: None,
+            activation_conditions: vec![],
+            execution_constraints: vec![],
+            or_else: None,
+            computation: Some(comp),
+        })
+    }
+
+    #[test]
+    fn empty_brackets_returns_error() {
+        let stmt = regulative(Computation::BracketedTax {
+            basis: AmountBasis::AnnualIncome,
+            threshold: 0.0,
+            brackets: vec![],
+            cadence: LowerCadence::Yearly,
+        });
+        assert!(matches!(lower_statement(&stmt), Err(LowerError::EmptyBrackets)));
+    }
+
+    #[test]
+    fn unsorted_brackets_returns_error() {
+        let stmt = regulative(Computation::BracketedTax {
+            basis: AmountBasis::AnnualIncome,
+            threshold: 0.0,
+            brackets: vec![
+                TaxBracket { floor: 50_000.0, ceil: Some(100_000.0), rate: 0.22 },
+                TaxBracket { floor: 12_000.0, ceil: Some(50_000.0),  rate: 0.10 }, // wrong order
+            ],
+            cadence: LowerCadence::Yearly,
+        });
+        assert!(matches!(lower_statement(&stmt), Err(LowerError::UnsortedBrackets)));
+    }
+
+    #[test]
+    fn invalid_taper_range_returns_error() {
+        // taper_floor >= income_ceiling should fail.
+        let stmt = regulative(Computation::MeansTestedBenefit {
+            basis: AmountBasis::AnnualIncome,
+            income_ceiling: 10_000.0,
+            taper_floor: Some(10_000.0), // equal → invalid
+            amount: 1_000.0,
+            cadence: LowerCadence::Yearly,
+        });
+        assert!(matches!(lower_statement(&stmt), Err(LowerError::InvalidTaperRange)));
+    }
+
+    #[test]
+    fn not_regulative_returns_error() {
+        let stmt = IgStatement::Constitutive(crate::ig2::ConstitutiveStmt {
+            constituted_entity: "Entity".into(),
+            modal: None,
+            constitutive_function: "is".into(),
+            constituting_properties: None,
+            context: vec![],
+            or_else: None,
+        });
+        assert!(matches!(lower_statement(&stmt), Err(LowerError::NotRegulative)));
+    }
+
+    #[test]
+    fn missing_computation_returns_error() {
+        let stmt = IgStatement::Regulative(RegulativeStmt {
+            attribute: ActorRef { class: "individual".into(), qualifier: None },
+            attribute_property: None,
+            deontic: Some(Deontic::Must),
+            aim: "pay".into(),
+            direct_object: None,
+            direct_object_property: None,
+            indirect_object: None,
+            indirect_object_property: None,
+            activation_conditions: vec![],
+            execution_constraints: vec![],
+            or_else: None,
+            computation: None, // ← missing
+        });
+        assert!(matches!(lower_statement(&stmt), Err(LowerError::MissingComputation)));
+    }
+
+    // ── Happy-path coverage for remaining lowering paths ──────────────────────
+
+    #[test]
+    fn lower_universal_benefit_flat_amount() {
+        let stmt = regulative(Computation::UniversalBenefit {
+            amount: 800.0,
+            cadence: LowerCadence::Monthly,
+        });
+        let lowered = lower_statement(&stmt).unwrap();
+        typecheck_program(&lowered.program).unwrap();
+
+        let scope = &lowered.program.scopes[0];
+        let Item::Definition { body, .. } = &scope.items[0];
+        // Any citizen income → flat 800.
+        let ctx = EvalCtx { bindings: HashMap::new(), field_bindings: HashMap::new() };
+        let v = eval_default(body, &ctx).as_money().to_num::<f64>();
+        assert!((v - 800.0).abs() < 0.01, "UBI should always be 800, got {v}");
+    }
+
+    #[test]
+    fn lower_negative_income_tax_below_breakeven() {
+        // guarantee=$1200, taper=0.5 → breakeven=$2400.
+        // citizen with income $1000 (< breakeven): benefit = 1200 - 0.5×1000 = 700.
+        let stmt = regulative(Computation::NegativeIncomeTax {
+            guarantee: 1_200.0,
+            taper_rate: 0.5,
+            cadence: LowerCadence::Monthly,
+        });
+        let lowered = lower_statement(&stmt).unwrap();
+        typecheck_program(&lowered.program).unwrap();
+
+        let scope = &lowered.program.scopes[0];
+        let Item::Definition { body, .. } = &scope.items[0];
+
+        for (income, expected) in [(0.0_f64, 1_200.0), (1_000.0, 700.0), (2_400.0, 0.0)] {
+            let mut ctx = EvalCtx { bindings: HashMap::new(), field_bindings: HashMap::new() };
+            ctx.field_bindings.insert(("citizen".into(), "income".into()), Value::Money(Money::from_num(income)));
+            let v = eval_default(body, &ctx).as_money().to_num::<f64>();
+            assert!((v - expected).abs() < 5.0, "NIT income={income}: want ~{expected}, got {v}");
+        }
+    }
+
+    #[test]
+    fn lower_wealth_tax_below_exemption_is_zero() {
+        // exemption=$100k, rate=1%. citizen.wealth=$50k → $0 tax.
+        let stmt = regulative(Computation::WealthTax {
+            exemption: 100_000.0,
+            rate: 0.01,
+            cadence: LowerCadence::Yearly,
+        });
+        let lowered = lower_statement(&stmt).unwrap();
+        typecheck_program(&lowered.program).unwrap();
+
+        let scope = &lowered.program.scopes[0];
+        let Item::Definition { body, .. } = &scope.items[0];
+
+        for (wealth, expected) in [(50_000.0_f64, 0.0), (150_000.0, 500.0)] {
+            let mut ctx = EvalCtx { bindings: HashMap::new(), field_bindings: HashMap::new() };
+            ctx.field_bindings.insert(("citizen".into(), "wealth".into()), Value::Money(Money::from_num(wealth)));
+            let v = eval_default(body, &ctx).as_money().to_num::<f64>();
+            assert!((v - expected).abs() < 1.0, "wealth={wealth}: want {expected}, got {v}");
+        }
+    }
 }

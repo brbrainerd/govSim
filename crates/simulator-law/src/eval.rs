@@ -210,6 +210,157 @@ mod tests {
             "expected {expected}, got {}", result.to_num::<f64>());
     }
 
+    // ── Direct AST eval tests — no parser needed ──────────────────────────────
+
+    fn empty_ctx() -> EvalCtx {
+        EvalCtx { bindings: HashMap::new(), field_bindings: HashMap::new() }
+    }
+    fn money_ctx(income: f64) -> EvalCtx {
+        let mut ctx = empty_ctx();
+        ctx.field_bindings.insert(
+            ("citizen".into(), "income".into()),
+            Value::Money(Money::from_num(income)),
+        );
+        ctx
+    }
+
+    #[test]
+    fn if_then_else_true_branch() {
+        // `if true then 100.0 else 0.0` → 100.0
+        let e = Expr::If {
+            cond:  Box::new(Expr::LitBool(true)),
+            then_: Box::new(Expr::LitMoney(100.0)),
+            else_: Box::new(Expr::LitMoney(0.0)),
+        };
+        let ctx = empty_ctx();
+        let v = eval_expr(&e, &ctx).as_money().to_num::<f64>();
+        assert!((v - 100.0).abs() < 0.001, "true branch: expected 100, got {v}");
+    }
+
+    #[test]
+    fn if_then_else_false_branch() {
+        // `if false then 100.0 else 9.0` → 9.0
+        let e = Expr::If {
+            cond:  Box::new(Expr::LitBool(false)),
+            then_: Box::new(Expr::LitMoney(100.0)),
+            else_: Box::new(Expr::LitMoney(9.0)),
+        };
+        let v = eval_expr(&e, &empty_ctx()).as_money().to_num::<f64>();
+        assert!((v - 9.0).abs() < 0.001, "false branch: expected 9, got {v}");
+    }
+
+    #[test]
+    fn min_selects_smaller() {
+        // min(300.0, 100.0) → 100.0
+        let e = Expr::Min(
+            Box::new(Expr::LitMoney(300.0)),
+            Box::new(Expr::LitMoney(100.0)),
+        );
+        let v = eval_expr(&e, &empty_ctx()).as_money().to_num::<f64>();
+        assert!((v - 100.0).abs() < 0.001, "expected 100, got {v}");
+    }
+
+    #[test]
+    fn max_selects_larger() {
+        // max(300.0, 100.0) → 300.0
+        let e = Expr::Max(
+            Box::new(Expr::LitMoney(300.0)),
+            Box::new(Expr::LitMoney(100.0)),
+        );
+        let v = eval_expr(&e, &empty_ctx()).as_money().to_num::<f64>();
+        assert!((v - 300.0).abs() < 0.001, "expected 300, got {v}");
+    }
+
+    #[test]
+    fn unary_neg_money() {
+        // -500.0 → Value::Money(-500)
+        let e = Expr::UnaryOp {
+            op: UnaryOp::Neg,
+            expr: Box::new(Expr::LitMoney(500.0)),
+        };
+        let v = eval_expr(&e, &empty_ctx()).as_money().to_num::<f64>();
+        assert!((v + 500.0).abs() < 0.001, "expected -500, got {v}");
+    }
+
+    #[test]
+    fn unary_not_bool() {
+        // !true → false, !false → true
+        for (input, expected) in [(true, false), (false, true)] {
+            let e = Expr::UnaryOp {
+                op: UnaryOp::Not,
+                expr: Box::new(Expr::LitBool(input)),
+            };
+            match eval_expr(&e, &empty_ctx()) {
+                Value::Bool(b) => assert_eq!(b, expected, "!{input} should be {expected}"),
+                other => panic!("expected Bool, got {other:?}"),
+            }
+        }
+    }
+
+    #[test]
+    fn logical_and_or() {
+        // true && false → false; false || true → true
+        let and_e = Expr::BinOp {
+            op: BinOp::And,
+            lhs: Box::new(Expr::LitBool(true)),
+            rhs: Box::new(Expr::LitBool(false)),
+        };
+        let or_e = Expr::BinOp {
+            op: BinOp::Or,
+            lhs: Box::new(Expr::LitBool(false)),
+            rhs: Box::new(Expr::LitBool(true)),
+        };
+        match eval_expr(&and_e, &empty_ctx()) {
+            Value::Bool(b) => assert!(!b, "true && false should be false"),
+            _ => panic!("expected Bool"),
+        }
+        match eval_expr(&or_e, &empty_ctx()) {
+            Value::Bool(b) => assert!(b, "false || true should be true"),
+            _ => panic!("expected Bool"),
+        }
+    }
+
+    #[test]
+    fn comparison_operators() {
+        // 5 > 3 → true; 5 < 3 → false; 5 >= 5 → true; 5 <= 4 → false; 5 == 5 → true; 5 != 3 → true
+        let cases: &[(&str, BinOp, f64, f64, bool)] = &[
+            ("5 > 3",  BinOp::Gt, 5.0, 3.0,  true),
+            ("5 < 3",  BinOp::Lt, 5.0, 3.0,  false),
+            ("5 >= 5", BinOp::Ge, 5.0, 5.0,  true),
+            ("5 <= 4", BinOp::Le, 5.0, 4.0,  false),
+            ("5 == 5", BinOp::Eq, 5.0, 5.0,  true),
+            ("5 != 3", BinOp::Ne, 5.0, 3.0,  true),
+        ];
+        for &(label, op, lv, rv, expected) in cases {
+            let e = Expr::BinOp {
+                op,
+                lhs: Box::new(Expr::LitMoney(lv)),
+                rhs: Box::new(Expr::LitMoney(rv)),
+            };
+            match eval_expr(&e, &empty_ctx()) {
+                Value::Bool(b) => assert_eq!(b, expected, "{label}: expected {expected}"),
+                _ => panic!("{label}: expected Bool"),
+            }
+        }
+    }
+
+    #[test]
+    fn int_arithmetic() {
+        let ctx = empty_ctx();
+        // 10 + 3 = 13
+        let add = Expr::BinOp { op: BinOp::Add, lhs: Box::new(Expr::LitInt(10)), rhs: Box::new(Expr::LitInt(3)) };
+        // 10 - 3 = 7
+        let sub = Expr::BinOp { op: BinOp::Sub, lhs: Box::new(Expr::LitInt(10)), rhs: Box::new(Expr::LitInt(3)) };
+        // 4 * 5 = 20
+        let mul = Expr::BinOp { op: BinOp::Mul, lhs: Box::new(Expr::LitInt(4)),  rhs: Box::new(Expr::LitInt(5)) };
+        // 9 / 3 = 3
+        let div = Expr::BinOp { op: BinOp::Div, lhs: Box::new(Expr::LitInt(9)),  rhs: Box::new(Expr::LitInt(3)) };
+        assert!(matches!(eval_expr(&add, &ctx), Value::Int(13)));
+        assert!(matches!(eval_expr(&sub, &ctx), Value::Int(7)));
+        assert!(matches!(eval_expr(&mul, &ctx), Value::Int(20)));
+        assert!(matches!(eval_expr(&div, &ctx), Value::Int(3)));
+    }
+
     #[test]
     fn three_bracket_tax() {
         let src = r#"
