@@ -184,3 +184,194 @@ impl LawRegistry {
         self.inner.read().by_id.values().cloned().collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::dsl::ast::{Program, Scope};
+    use crate::system::Cadence;
+    use std::sync::Arc;
+
+    fn stub_prog() -> Arc<Program> {
+        Arc::new(Program { scopes: vec![Scope { name: "T".into(), params: vec![], items: vec![] }] })
+    }
+
+    fn income_tax(id: u64) -> LawHandle {
+        LawHandle {
+            source: None,
+            id: LawId(id),
+            version: 1,
+            program: stub_prog(),
+            cadence: Cadence::Yearly,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: LawEffect::PerCitizenIncomeTax { scope: "T", owed_def: "t" },
+        }
+    }
+
+    fn benefit(id: u64) -> LawHandle {
+        LawHandle {
+            source: None,
+            id: LawId(id),
+            version: 1,
+            program: stub_prog(),
+            cadence: Cadence::Monthly,
+            effective_from_tick: 0,
+            effective_until_tick: None,
+            effect: LawEffect::PerCitizenBenefit { scope: "T", amount_def: "a" },
+        }
+    }
+
+    // ── enact ──────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn enact_auto_assigns_id_when_zero() {
+        let reg = LawRegistry::default();
+        let id = reg.enact(income_tax(0)); // id.0 == 0 → auto-assign
+        assert_ne!(id.0, 0, "enact should assign a non-zero id");
+    }
+
+    #[test]
+    fn enact_preserves_nonzero_id() {
+        let reg = LawRegistry::default();
+        let id = reg.enact(income_tax(42));
+        assert_eq!(id.0, 42, "enact should preserve the given non-zero id");
+    }
+
+    #[test]
+    fn enact_increments_id_on_each_auto_call() {
+        let reg = LawRegistry::default();
+        let id1 = reg.enact(income_tax(0));
+        let id2 = reg.enact(income_tax(0));
+        assert_ne!(id1.0, id2.0, "consecutive enacts should give different ids");
+        assert!(id2.0 > id1.0, "ids should be monotonically increasing");
+    }
+
+    // ── repeal ─────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn repeal_benefit_law_adds_010_debt() {
+        let reg = LawRegistry::default();
+        let id = reg.enact(benefit(0));
+        reg.repeal(id, 30);
+        let debt = reg.drain_repeal_debt();
+        assert!((debt - 0.10).abs() < 1e-6, "repeal of benefit should add 0.10 debt, got {debt}");
+    }
+
+    #[test]
+    fn repeal_income_tax_adds_no_debt() {
+        let reg = LawRegistry::default();
+        let id = reg.enact(income_tax(0));
+        reg.repeal(id, 30);
+        let debt = reg.drain_repeal_debt();
+        assert!(debt.abs() < 1e-6, "repeal of income tax should not add debt, got {debt}");
+    }
+
+    #[test]
+    fn repeal_sets_effective_until_tick() {
+        let reg = LawRegistry::default();
+        let id = reg.enact(income_tax(0));
+        reg.repeal(id, 120);
+        let handle = reg.get_handle(id).unwrap();
+        assert_eq!(handle.effective_until_tick, Some(120));
+    }
+
+    // ── drain_repeal_debt ──────────────────────────────────────────────────────
+
+    #[test]
+    fn drain_resets_debt_to_zero() {
+        let reg = LawRegistry::default();
+        let id = reg.enact(benefit(0));
+        reg.repeal(id, 30);
+        let first = reg.drain_repeal_debt();
+        assert!(first > 0.0, "first drain should be positive");
+        let second = reg.drain_repeal_debt();
+        assert!(second.abs() < 1e-6, "second drain with no new repeals should be 0");
+    }
+
+    // ── supersede ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn supersede_benefit_adds_005_debt() {
+        let reg = LawRegistry::default();
+        let old_id = reg.enact(benefit(0));
+        reg.supersede(old_id, benefit(0), 60);
+        let debt = reg.drain_repeal_debt();
+        assert!((debt - 0.05).abs() < 1e-6, "supersede of benefit should add 0.05 debt, got {debt}");
+    }
+
+    #[test]
+    fn supersede_sets_old_effective_until() {
+        let reg = LawRegistry::default();
+        let old_id = reg.enact(income_tax(0));
+        reg.supersede(old_id, income_tax(0), 90);
+        let old_handle = reg.get_handle(old_id).unwrap();
+        assert_eq!(old_handle.effective_until_tick, Some(90));
+    }
+
+    // ── snapshot_active ────────────────────────────────────────────────────────
+
+    #[test]
+    fn snapshot_active_excludes_repealed_laws() {
+        let reg = LawRegistry::default();
+        let id = reg.enact(income_tax(0));
+        reg.repeal(id, 30); // law expires at tick 30
+        // At tick 29 the law is still active.
+        assert_eq!(reg.snapshot_active(29).len(), 1, "law still active before expiry tick");
+        // At tick 30 the law has expired.
+        assert_eq!(reg.snapshot_active(30).len(), 0, "law should be expired at its until tick");
+    }
+
+    #[test]
+    fn snapshot_active_excludes_future_laws() {
+        let reg = LawRegistry::default();
+        let mut h = income_tax(0);
+        h.effective_from_tick = 100;
+        reg.enact(h);
+        assert_eq!(reg.snapshot_active(50).len(), 0, "future law should not be active yet");
+        assert_eq!(reg.snapshot_active(100).len(), 1, "law should be active at its from tick");
+    }
+
+    // ── crisis cost multiplier ─────────────────────────────────────────────────
+
+    #[test]
+    fn crisis_multiplier_reduces_debt() {
+        let reg = LawRegistry::default();
+        // Set multiplier to 0.3 (active crisis — emergency measures cost less).
+        reg.set_crisis_cost_multiplier(0.3);
+        let id = reg.enact(benefit(0));
+        reg.repeal(id, 0);
+        let debt = reg.drain_repeal_debt();
+        // Expected: 0.10 × 0.3 = 0.03.
+        assert!((debt - 0.03).abs() < 1e-6, "crisis should reduce repeal debt to 0.03, got {debt}");
+    }
+
+    #[test]
+    fn zero_multiplier_falls_back_to_one() {
+        // multiplier == 0.0 → treat as 1.0 (guard in scaled_debt).
+        let reg = LawRegistry::default();
+        reg.set_crisis_cost_multiplier(0.0);
+        let id = reg.enact(benefit(0));
+        reg.repeal(id, 0);
+        let debt = reg.drain_repeal_debt();
+        assert!((debt - 0.10).abs() < 1e-6, "zero multiplier should fall back to 1.0, got {debt}");
+    }
+
+    // ── get_handle / snapshot_all ──────────────────────────────────────────────
+
+    #[test]
+    fn get_handle_returns_none_for_unknown_id() {
+        let reg = LawRegistry::default();
+        assert!(reg.get_handle(LawId(999)).is_none());
+    }
+
+    #[test]
+    fn snapshot_all_includes_repealed_laws() {
+        let reg = LawRegistry::default();
+        let id = reg.enact(income_tax(0));
+        reg.repeal(id, 10);
+        // snapshot_active excludes it, snapshot_all includes it.
+        assert_eq!(reg.snapshot_active(10).len(), 0);
+        assert_eq!(reg.snapshot_all().len(), 1, "snapshot_all should include repealed law");
+    }
+}
