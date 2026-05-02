@@ -1,7 +1,7 @@
 <script lang="ts">
   import { sim, navigate, pct, tickToDate, formatMoney } from "$lib/store.svelte";
-  import { PARTY_LABELS, CRISIS_LABELS }                from "$lib/ipc";
-  import LineChart                                       from "../components/LineChart.svelte";
+  import { PARTY_LABELS, CRISIS_LABELS, decodeCivicRights } from "$lib/ipc";
+  import LineChart                                           from "../components/LineChart.svelte";
 
   // Derived approval trend series from the metric ring-buffer.
   const approvalSeries = $derived([{
@@ -317,7 +317,7 @@
       <div class="quality-item">
         <span class="q-label">Rights Granted</span>
         <span class="q-value">
-          {cs.rights_granted_bits.toString(2).split("").filter((b: string) => b === "1").length} / 9
+          {decodeCivicRights(cs.rights_granted_bits).filter(r => r.granted).length} / 9
         </span>
       </div>
       <div class="quality-item">
@@ -331,6 +331,22 @@
         <span class="q-value">{formatMoney(cs.gdp / Math.max(cs.population, 1))}</span>
       </div>
     </div>
+  </section>
+
+  <!-- ── Civic Rights Ledger ── -->
+  <section class="section">
+    <h2 class="section-title">Civic Rights Ledger</h2>
+    <div class="rights-grid">
+      {#each decodeCivicRights(cs.rights_granted_bits) as right (right.label)}
+      <div class="right-item" class:right-granted={right.granted} class:right-withheld={!right.granted} title={right.description}>
+        <span class="right-icon" aria-hidden="true">{right.granted ? "✓" : "✗"}</span>
+        <span class="right-label">{right.label}</span>
+      </div>
+      {/each}
+    </div>
+    <p class="table-note">
+      Granting rights boosts approval; revoking previously granted rights increases Legitimacy Debt.
+    </p>
   </section>
 
   {/if}
@@ -444,6 +460,41 @@ h1 { font-size: 20px; font-weight: 700; }
 }
 .q-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
 .q-value  { font-size: 18px; font-weight: 700; }
+
+/* Civic Rights Ledger */
+.rights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.right-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  font-size: 13px;
+}
+.right-granted {
+  background: rgba(34, 197, 94, .08);
+  border-color: rgba(34, 197, 94, .3);
+}
+.right-withheld {
+  background: transparent;
+  opacity: .55;
+}
+.right-icon {
+  font-size: 14px;
+  font-weight: 700;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.right-granted .right-icon { color: var(--good); }
+.right-withheld .right-icon { color: var(--muted); }
+.right-label { font-weight: 500; }
 
 /* Crisis */
 .crisis-active-banner {

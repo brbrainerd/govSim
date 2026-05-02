@@ -98,6 +98,58 @@ describe("exportMetricsCsv", () => {
     expect(capturedBlob).not.toBeNull();
     expect(capturedBlob!.type).toContain("text/csv");
   });
+
+  it("CSV header row matches the field order of the first metricsRows entry", async () => {
+    const row = {
+      tick: 10, population: 1000, gdp: 5e6, gini: 0.3, wealth_gini: 0.4,
+      unemployment: 0.05, inflation: 0.02, approval: 0.65, gov_revenue: 1e5,
+      gov_expenditure: 9e4, incumbent_party: 1, election_margin: 0.12,
+      consecutive_terms: 2, pollution_stock: 0.5, legitimacy_debt: 0.05,
+      rights_granted_bits: 3, treasury_balance: 2e6, price_level: 1.02,
+      crisis_kind: 0, crisis_remaining_ticks: 0, mean_health: 0.7,
+      mean_productivity: 0.6, mean_income: 3000,
+    };
+    sim.metricsRows = [row];
+    let capturedBlob: Blob | null = null;
+    (URL.createObjectURL as ReturnType<typeof vi.fn>).mockImplementation((b: Blob) => {
+      capturedBlob = b; return "blob:mock";
+    });
+    exportMetricsCsv();
+
+    const text    = await capturedBlob!.text();
+    const lines   = text.split("\n");
+    const headers = lines[0].split(",");
+
+    // Header order must exactly match Object.keys of the row.
+    expect(headers).toEqual(Object.keys(row));
+  });
+
+  it("CSV data row values match the source TickRow", async () => {
+    const row = {
+      tick: 99, population: 500, gdp: 2e6, gini: 0.25, wealth_gini: 0.35,
+      unemployment: 0.08, inflation: 0.03, approval: 0.55, gov_revenue: 8e4,
+      gov_expenditure: 7e4, incumbent_party: 2, election_margin: 0.07,
+      consecutive_terms: 1, pollution_stock: 1.2, legitimacy_debt: 0.15,
+      rights_granted_bits: 255, treasury_balance: -5e5, price_level: 1.05,
+      crisis_kind: 1, crisis_remaining_ticks: 10, mean_health: 0.6,
+      mean_productivity: 0.55, mean_income: 2500,
+    };
+    sim.metricsRows = [row];
+    let capturedBlob: Blob | null = null;
+    (URL.createObjectURL as ReturnType<typeof vi.fn>).mockImplementation((b: Blob) => {
+      capturedBlob = b; return "blob:mock";
+    });
+    exportMetricsCsv();
+
+    const text   = await capturedBlob!.text();
+    const lines  = text.split("\n").filter(l => l.length > 0);
+    const values = lines[1].split(","); // second line = first data row
+
+    // Each value in the CSV must round-trip to the string of the original field.
+    Object.values(row).forEach((expected, i) => {
+      expect(values[i]).toBe(String(expected));
+    });
+  });
 });
 
 // ── navigate ─────────────────────────────────────────────────────────────────

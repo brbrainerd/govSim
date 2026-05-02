@@ -107,6 +107,28 @@ export const PARTY_LABELS: Record<number, string> = {
   0: "—", 1: "Progressive", 2: "Conservative",
 };
 
+/**
+ * Mirrors `CivicRights` bitflags from `simulator-core/src/resources.rs`.
+ * Ordered by bit position (LSB first = bit 0 first).
+ * Use `decodeCivicRights(bits)` to turn a packed u32 into human-readable entries.
+ */
+export const CIVIC_RIGHTS: ReadonlyArray<{ bit: number; label: string; description: string }> = [
+  { bit: 1 << 0, label: "Universal Suffrage",   description: "All adult citizens may vote." },
+  { bit: 1 << 1, label: "Racial Equality",       description: "Equal protection regardless of race." },
+  { bit: 1 << 2, label: "Gender Equality",       description: "Equal rights regardless of gender." },
+  { bit: 1 << 3, label: "LGBTQ+ Protections",   description: "Legal recognition and anti-discrimination." },
+  { bit: 1 << 4, label: "Religious Freedom",     description: "Freedom of religion and conscience." },
+  { bit: 1 << 5, label: "Labor Rights",          description: "Right to organize, collective bargaining." },
+  { bit: 1 << 6, label: "Due Process",           description: "Fair trial and legal representation." },
+  { bit: 1 << 7, label: "Free Speech",           description: "Freedom of expression and press." },
+  { bit: 1 << 8, label: "Abolition of Slavery",  description: "Prohibition of forced servitude." },
+];
+
+/** Decode a packed `rights_granted_bits` integer into granted/withheld right entries. */
+export function decodeCivicRights(bits: number): Array<{ label: string; description: string; granted: boolean }> {
+  return CIVIC_RIGHTS.map(r => ({ label: r.label, description: r.description, granted: (bits & r.bit) !== 0 }));
+}
+
 // ── Command wrappers ─────────────────────────────────────────────────────────
 
 /** Load a scenario by name (looks up `scenarios/<name>.yaml`). */
