@@ -1,6 +1,6 @@
 <script lang="ts">
   import { sim, navigate, pct, tickToDate, formatMoney } from "$lib/store.svelte";
-  import { PARTY_LABELS, CRISIS_LABELS, decodeCivicRights } from "$lib/ipc";
+  import { PARTY_LABELS, CRISIS_LABELS, decodeCivicRights, CIVIC_RIGHTS } from "$lib/ipc";
   import LineChart                                           from "../components/LineChart.svelte";
 
   // Derived approval trend series from the metric ring-buffer.
@@ -126,6 +126,21 @@
     }
     return records.slice(-10).reverse(); // Most recent first, max 10
   })());
+
+  // ── Rights granted-at timeline ────────────────────────────────────────────
+  // Scan the metric ring-buffer to find the first tick at which each right bit
+  // was set. Returns a Record<bit, tick> (undefined = right not yet granted).
+  const rightsGrantedAt = $derived.by((): Record<number, number> => {
+    const result: Record<number, number> = {};
+    for (const row of sim.metricsRows) {
+      for (const r of CIVIC_RIGHTS) {
+        if (!(r.bit in result) && (row.rights_granted_bits & r.bit) !== 0) {
+          result[r.bit] = row.tick;
+        }
+      }
+    }
+    return result;
+  });
 </script>
 
 <div class="election-view">
@@ -342,10 +357,18 @@
   <section class="section">
     <h2 class="section-title">Civic Rights Ledger</h2>
     <div class="rights-grid">
-      {#each decodeCivicRights(cs.rights_granted_bits) as right (right.label)}
+      {#each decodeCivicRights(cs.rights_granted_bits) as right, i (right.label)}
+      {@const grantedTick = rightsGrantedAt[CIVIC_RIGHTS[i]?.bit ?? 0]}
       <div class="right-item" class:right-granted={right.granted} class:right-withheld={!right.granted} title={right.description}>
         <span class="right-icon" aria-hidden="true">{right.granted ? "✓" : "✗"}</span>
-        <span class="right-label">{right.label}</span>
+        <div class="right-body">
+          <span class="right-label">{right.label}</span>
+          {#if right.granted && grantedTick !== undefined}
+          <span class="right-since">since {tickToDate(grantedTick)}</span>
+          {:else if !right.granted}
+          <span class="right-since">not granted</span>
+          {/if}
+        </div>
       </div>
       {/each}
     </div>
@@ -499,7 +522,9 @@ h1 { font-size: 20px; font-weight: 700; }
 }
 .right-granted .right-icon { color: var(--good); }
 .right-withheld .right-icon { color: var(--muted); }
+.right-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .right-label { font-weight: 500; }
+.right-since { font-size: 10px; color: var(--muted); }
 
 /* Crisis */
 .crisis-active-banner {
