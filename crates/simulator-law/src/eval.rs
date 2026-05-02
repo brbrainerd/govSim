@@ -361,6 +361,116 @@ mod tests {
         assert!(matches!(eval_expr(&div, &ctx), Value::Int(3)));
     }
 
+    // ── Additional coverage ────────────────────────────────────────────────────
+
+    #[test]
+    fn lit_rate_evaluates() {
+        let e = Expr::LitRate(0.25);
+        match eval_expr(&e, &empty_ctx()) {
+            Value::Rate(r) => assert!((r - 0.25).abs() < 1e-10, "expected 0.25, got {r}"),
+            other => panic!("expected Rate, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn ident_lookup_from_bindings() {
+        let mut ctx = empty_ctx();
+        ctx.bindings.insert("x".to_string(), Value::Int(42));
+        let e = Expr::Ident("x".to_string());
+        assert!(matches!(eval_expr(&e, &ctx), Value::Int(42)));
+    }
+
+    #[test]
+    fn div_money_by_money_gives_rate() {
+        // 1000.0 / 2000.0 = 0.5
+        let e = Expr::BinOp {
+            op: BinOp::Div,
+            lhs: Box::new(Expr::LitMoney(1000.0)),
+            rhs: Box::new(Expr::LitMoney(2000.0)),
+        };
+        match eval_expr(&e, &empty_ctx()) {
+            Value::Rate(r) => assert!((r - 0.5).abs() < 1e-9, "expected 0.5, got {r}"),
+            other => panic!("expected Rate, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn div_money_by_int_gives_money() {
+        // 900.0 / 3 = 300.0
+        let e = Expr::BinOp {
+            op: BinOp::Div,
+            lhs: Box::new(Expr::LitMoney(900.0)),
+            rhs: Box::new(Expr::LitInt(3)),
+        };
+        let v = eval_expr(&e, &empty_ctx()).as_money().to_num::<f64>();
+        assert!((v - 300.0).abs() < 0.01, "expected 300.0, got {v}");
+    }
+
+    #[test]
+    fn div_money_by_rate_gives_money() {
+        // 500.0 / rate(0.5) = 1000.0
+        let e = Expr::BinOp {
+            op: BinOp::Div,
+            lhs: Box::new(Expr::LitMoney(500.0)),
+            rhs: Box::new(Expr::LitRate(0.5)),
+        };
+        let v = eval_expr(&e, &empty_ctx()).as_money().to_num::<f64>();
+        assert!((v - 1000.0).abs() < 0.01, "expected 1000.0, got {v}");
+    }
+
+    #[test]
+    fn mul_money_by_int_gives_money() {
+        // 250.0 * 4 = 1000.0
+        let e = Expr::BinOp {
+            op: BinOp::Mul,
+            lhs: Box::new(Expr::LitMoney(250.0)),
+            rhs: Box::new(Expr::LitInt(4)),
+        };
+        let v = eval_expr(&e, &empty_ctx()).as_money().to_num::<f64>();
+        assert!((v - 1000.0).abs() < 0.01, "expected 1000.0, got {v}");
+    }
+
+    #[test]
+    fn unary_neg_int() {
+        let e = Expr::UnaryOp { op: UnaryOp::Neg, expr: Box::new(Expr::LitInt(7)) };
+        assert!(matches!(eval_expr(&e, &empty_ctx()), Value::Int(-7)));
+    }
+
+    #[test]
+    fn unary_neg_rate() {
+        let e = Expr::UnaryOp { op: UnaryOp::Neg, expr: Box::new(Expr::LitRate(0.10)) };
+        match eval_expr(&e, &empty_ctx()) {
+            Value::Rate(r) => assert!((r + 0.10).abs() < 1e-10, "expected -0.10, got {r}"),
+            other => panic!("expected Rate, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn exception_last_wins_when_multiple_guards_fire() {
+        // base=0; exception1 (true) = 100; exception2 (true) = 200
+        // Both guards are true → last exception (200) wins.
+        let body = DefaultExpr {
+            base: Expr::LitMoney(0.0),
+            exceptions: vec![
+                (Expr::LitBool(true), Expr::LitMoney(100.0)),
+                (Expr::LitBool(true), Expr::LitMoney(200.0)),
+            ],
+        };
+        let v = eval_default(&body, &empty_ctx()).as_money().to_num::<f64>();
+        assert!((v - 200.0).abs() < 0.01, "last-wins: expected 200, got {v}");
+    }
+
+    #[test]
+    fn exception_base_returned_when_no_guard_fires() {
+        // base=42; exception (false) = 999 → base wins.
+        let body = DefaultExpr {
+            base: Expr::LitMoney(42.0),
+            exceptions: vec![(Expr::LitBool(false), Expr::LitMoney(999.0))],
+        };
+        let v = eval_default(&body, &empty_ctx()).as_money().to_num::<f64>();
+        assert!((v - 42.0).abs() < 0.01, "base fallback: expected 42, got {v}");
+    }
+
     #[test]
     fn three_bracket_tax() {
         let src = r#"
