@@ -241,4 +241,71 @@ mod tests {
         // Dissatisfied citizens with Party A incumbent → satisfaction bonus flips to B.
         assert_eq!(outcome.incumbent, 2, "dissatisfied electorate should oust incumbent (A→B)");
     }
+
+    #[test]
+    fn same_party_re_election_increments_consecutive_terms() {
+        // Start with Party A incumbent (terms=1). Strongly left-leaning electorate
+        // should re-elect A → consecutive_terms becomes 2.
+        let mut sim = Sim::new([9u8; 32]);
+        register_election_system(&mut sim);
+
+        {
+            let mut o = sim.world.resource_mut::<ElectionOutcome>();
+            o.incumbent = 1;
+            o.consecutive_terms = 1;
+        }
+
+        // 10 strongly left-leaning, high approval → Party A wins comfortably.
+        for i in 0..10 { spawn(&mut sim.world, i, -0.9, 0.8); }
+
+        for _ in 0..=360 { sim.step(); }
+
+        let outcome = sim.world.resource::<ElectionOutcome>();
+        assert_eq!(outcome.incumbent, 1, "strongly left electorate should re-elect Party A");
+        assert_eq!(outcome.consecutive_terms, 2,
+            "second consecutive win should give consecutive_terms=2, got {}",
+            outcome.consecutive_terms);
+    }
+
+    #[test]
+    fn recession_crisis_hurts_incumbent_margin() {
+        // Two identical balanced sims: one has an active Recession crisis, one is clean.
+        // Recession penalty should reduce or flip incumbent's margin.
+        let mut sim_clean = Sim::new([20u8; 32]);
+        let mut sim_rec   = Sim::new([20u8; 32]);
+        register_election_system(&mut sim_clean);
+        register_election_system(&mut sim_rec);
+
+        // Party A incumbent in both.
+        sim_clean.world.resource_mut::<ElectionOutcome>().incumbent = 1;
+        sim_rec.world.resource_mut::<ElectionOutcome>().incumbent   = 1;
+
+        // Inject a Recession crisis into sim_rec.
+        {
+            let mut cs = sim_rec.world.resource_mut::<CrisisState>();
+            cs.kind = CrisisKind::Recession;
+            cs.remaining_ticks = 9_999; // still active at election time
+        }
+
+        // Neutral electorate (half left, half right, neutral approval).
+        for i in 0..5  { spawn(&mut sim_clean.world, i, -0.05, 0.5); }
+        for i in 5..10 { spawn(&mut sim_clean.world, i,  0.05, 0.5); }
+        for i in 0..5  { spawn(&mut sim_rec.world,   i, -0.05, 0.5); }
+        for i in 5..10 { spawn(&mut sim_rec.world,   i,  0.05, 0.5); }
+
+        for _ in 0..=360 { sim_clean.step(); }
+        for _ in 0..=360 { sim_rec.step(); }
+
+        let clean_a = sim_clean.world.resource::<ElectionOutcome>().incumbent;
+        let rec_outcome = sim_rec.world.resource::<ElectionOutcome>();
+        let clean_margin = sim_clean.world.resource::<ElectionOutcome>().margin;
+
+        // During a recession the incumbent (Party A) should lose margin or be ousted.
+        assert!(
+            rec_outcome.incumbent != clean_a || rec_outcome.margin < clean_margin,
+            "recession crisis should hurt incumbent: clean={{party={clean_a}, margin={clean_margin:.3}}}, \
+             recession={{party={}, margin={:.3}}}",
+            rec_outcome.incumbent, rec_outcome.margin
+        );
+    }
 }

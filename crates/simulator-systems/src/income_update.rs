@@ -204,4 +204,78 @@ mod tests {
         assert!(income >= MINIMUM_WAGE_MONTHLY - 1.0,
             "income below minimum wage: {income:.2}");
     }
+
+    #[test]
+    fn retired_income_unchanged_across_quarters() {
+        // Retired citizens fall through to `current` with no modification.
+        let mut sim = Sim::new([30u8; 32]);
+        register_income_update_system(&mut sim);
+
+        let initial = 2_500.0;
+        spawn(&mut sim.world, 0, EmploymentStatus::Retired, initial, 0.5);
+
+        // Run 4 quarters (360 ticks → 4 firings).
+        for _ in 0..360 { sim.step(); }
+
+        let income: f64 = sim.world
+            .query::<(&Citizen, &Income)>()
+            .iter(&sim.world)
+            .next()
+            .map(|(_, i)| i.0.to_num::<f64>())
+            .unwrap();
+
+        assert!(
+            (income - initial).abs() < 1.0,
+            "retired income should be unchanged at {initial}, got {income:.2}"
+        );
+    }
+
+    #[test]
+    fn out_of_labor_force_income_unchanged() {
+        // OutOfLaborForce falls through to `current` same as Retired.
+        let mut sim = Sim::new([31u8; 32]);
+        register_income_update_system(&mut sim);
+
+        let initial = 1_800.0;
+        spawn(&mut sim.world, 0, EmploymentStatus::OutOfLaborForce, initial, 0.3);
+
+        for _ in 0..360 { sim.step(); }
+
+        let income: f64 = sim.world
+            .query::<(&Citizen, &Income)>()
+            .iter(&sim.world)
+            .next()
+            .map(|(_, i)| i.0.to_num::<f64>())
+            .unwrap();
+
+        assert!(
+            (income - initial).abs() < 1.0,
+            "out-of-labor-force income should be unchanged at {initial}, got {income:.2}"
+        );
+    }
+
+    #[test]
+    fn student_income_grows_slightly() {
+        // Students get a small random growth each quarter (0–0.5%).
+        // Over 4 quarters, expected income ≥ initial.
+        let mut sim = Sim::new([32u8; 32]);
+        register_income_update_system(&mut sim);
+
+        let initial = 2_000.0;
+        spawn(&mut sim.world, 0, EmploymentStatus::Student, initial, 0.4);
+
+        for _ in 0..360 { sim.step(); }
+
+        let income: f64 = sim.world
+            .query::<(&Citizen, &Income)>()
+            .iter(&sim.world)
+            .next()
+            .map(|(_, i)| i.0.to_num::<f64>())
+            .unwrap();
+
+        assert!(
+            income >= initial,
+            "student income should not decrease, got {income:.2} (started {initial:.2})"
+        );
+    }
 }
