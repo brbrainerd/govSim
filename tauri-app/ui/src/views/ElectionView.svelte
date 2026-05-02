@@ -2,6 +2,7 @@
   import { sim, navigate, pct, tickToDate, formatMoney } from "$lib/store.svelte";
   import { PARTY_LABELS, CRISIS_LABELS, decodeCivicRights, CIVIC_RIGHTS,
            grantCivicRight, revokeCivicRight } from "$lib/ipc";
+  import { buildElectionHistory, buildCrisisHistory, buildRightsGrantedAt } from "$lib/election-utils";
   import { toast }     from "$lib/toasts.svelte";
   import { beginLoad, endLoad } from "$lib/store.svelte";
   import LineChart                                           from "../components/LineChart.svelte";
@@ -73,77 +74,15 @@
     : "var(--muted)");
 
   // Recent elections inferred from metrics: look for ticks where election_margin changes.
-  interface ElectionRecord {
-    tick:             number;
-    incumbent_party:  number;
-    margin:           number;
-    consecutive_terms: number;
-  }
-
-  const electionHistory = $derived((() => {
-    const rows = sim.metricsRows;
-    const records: ElectionRecord[] = [];
-    for (let i = 1; i < rows.length; i++) {
-      const prev = rows[i - 1];
-      const curr = rows[i];
-      // Detect election event: incumbent changes OR consecutive_terms increases.
-      if (
-        prev.incumbent_party !== curr.incumbent_party ||
-        prev.consecutive_terms !== curr.consecutive_terms
-      ) {
-        records.push({
-          tick:              curr.tick,
-          incumbent_party:   curr.incumbent_party,
-          margin:            curr.election_margin,
-          consecutive_terms: curr.consecutive_terms,
-        });
-      }
-    }
-    return records.slice(-10).reverse(); // Most recent first, max 10
-  })());
+  const electionHistory = $derived(buildElectionHistory(sim.metricsRows));
 
   // ── Crisis history ────────────────────────────────────────────────────────
-  interface CrisisRecord {
-    tick:      number;
-    kind:      number;
-    /** Approximate duration: ticks until crisis_kind returns to 0. */
-    duration:  number;
-  }
-
-  const crisisHistory = $derived((() => {
-    const rows = sim.metricsRows;
-    const records: CrisisRecord[] = [];
-    for (let i = 1; i < rows.length; i++) {
-      const prev = rows[i - 1];
-      const curr = rows[i];
-      // Onset: crisis_kind transitions from 0 (None) to non-zero.
-      if (prev.crisis_kind === 0 && curr.crisis_kind !== 0) {
-        // Scan forward to find when the crisis ends.
-        let endTick = curr.tick;
-        for (let j = i + 1; j < rows.length; j++) {
-          if (rows[j].crisis_kind === 0) { endTick = rows[j].tick; break; }
-          endTick = rows[j].tick; // still active at last known row
-        }
-        records.push({ tick: curr.tick, kind: curr.crisis_kind, duration: endTick - curr.tick });
-      }
-    }
-    return records.slice(-10).reverse(); // Most recent first, max 10
-  })());
+  const crisisHistory = $derived(buildCrisisHistory(sim.metricsRows));
 
   // ── Rights granted-at timeline ────────────────────────────────────────────
   // Scan the metric ring-buffer to find the first tick at which each right bit
   // was set. Returns a Record<bit, tick> (undefined = right not yet granted).
-  const rightsGrantedAt = $derived.by((): Record<number, number> => {
-    const result: Record<number, number> = {};
-    for (const row of sim.metricsRows) {
-      for (const r of CIVIC_RIGHTS) {
-        if (!(r.bit in result) && (row.rights_granted_bits & r.bit) !== 0) {
-          result[r.bit] = row.tick;
-        }
-      }
-    }
-    return result;
-  });
+  const rightsGrantedAt = $derived(buildRightsGrantedAt(sim.metricsRows, CIVIC_RIGHTS));
 
   // ── Rights actions ────────────────────────────────────────────────────────
   let rightsWorking = $state(false);
