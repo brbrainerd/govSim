@@ -35,6 +35,11 @@ export interface TickRow {
   mean_productivity: number;
   mean_income: number;
   state_capacity_score: number;
+  approval_q1: number;
+  approval_q2: number;
+  approval_q3: number;
+  approval_q4: number;
+  approval_q5: number;
 }
 
 export interface CurrentState {
@@ -131,6 +136,11 @@ export interface WindowSummaryDto {
   max_approval: number;
   min_gdp: number;
   max_gdp: number;
+  approval_q1: number;
+  approval_q2: number;
+  approval_q3: number;
+  approval_q4: number;
+  approval_q5: number;
 }
 
 export interface LawEffectDto {
@@ -148,6 +158,8 @@ export interface LawEffectDto {
   delta_health: number;
   delta_income: number;
   delta_rights_breadth: number;
+  /** Δ mean approval per income quintile [Q1=bottom 20% .. Q5=top 20%]. */
+  delta_approval_by_quintile: [number, number, number, number, number];
 }
 
 // ── Crisis kind helpers ──────────────────────────────────────────────────────

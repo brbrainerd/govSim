@@ -26,6 +26,9 @@ pub struct WindowSummary {
     pub max_approval:      f32,
     pub min_gdp:           f64,
     pub max_gdp:           f64,
+
+    /// Mean approval per income quintile [Q1=bottom, Q5=top] over this window.
+    pub mean_approval_by_quintile: [f32; 5],
 }
 
 impl WindowSummary {
@@ -56,6 +59,18 @@ impl WindowSummary {
         let min_gdp      = rows.iter().map(|r| r.gdp).fold(f64::INFINITY, f64::min);
         let max_gdp      = rows.iter().map(|r| r.gdp).fold(f64::NEG_INFINITY, f64::max);
 
+        let mut mean_approval_by_quintile = [0.0f32; 5];
+        for q in 0..5usize {
+            let field_values = [
+                |r: &&TickRow| r.approval_q1,
+                |r: &&TickRow| r.approval_q2,
+                |r: &&TickRow| r.approval_q3,
+                |r: &&TickRow| r.approval_q4,
+                |r: &&TickRow| r.approval_q5,
+            ];
+            mean_approval_by_quintile[q] = (rows.iter().map(field_values[q]).sum::<f32>() as f64 / n) as f32;
+        }
+
         Some(Self {
             from_tick, to_tick,
             n_rows: rows.len(),
@@ -75,6 +90,7 @@ impl WindowSummary {
             max_approval,
             min_gdp,
             max_gdp,
+            mean_approval_by_quintile,
         })
     }
 
@@ -108,6 +124,9 @@ pub struct WindowDiff {
     pub delta_health:              f32,
     pub delta_income:              f64,
     pub delta_rights_breadth:      f32,
+
+    /// post − pre mean approval per income quintile [Q1=bottom, Q5=top].
+    pub delta_approval_by_quintile: [f32; 5],
 }
 
 impl WindowDiff {
@@ -124,10 +143,16 @@ impl WindowDiff {
         let delta_health           = post.mean_health           - pre.mean_health;
         let delta_income           = post.mean_income           - pre.mean_income;
         let delta_rights_breadth   = post.mean_rights_breadth   - pre.mean_rights_breadth;
+        let mut delta_approval_by_quintile = [0.0f32; 5];
+        for q in 0..5 {
+            delta_approval_by_quintile[q] =
+                post.mean_approval_by_quintile[q] - pre.mean_approval_by_quintile[q];
+        }
         Self { pre, post, delta_approval, delta_unemployment, delta_gdp,
                delta_pollution, delta_legitimacy, delta_treasury,
                delta_gini, delta_wealth_gini, delta_state_capacity,
-               delta_health, delta_income, delta_rights_breadth }
+               delta_health, delta_income, delta_rights_breadth,
+               delta_approval_by_quintile }
     }
 
     /// Build from the store, centering the split at `enacted_tick`.

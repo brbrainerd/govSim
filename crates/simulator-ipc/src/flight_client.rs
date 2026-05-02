@@ -49,6 +49,11 @@ fn fake_batch(tick: u64) -> Result<RecordBatch, IpcError> {
             Arc::new(UInt32Array::from(vec![0u32])),    // rights_granted_count
             Arc::new(Float32Array::from(vec![0.0f32])), // rights_breadth
             Arc::new(Float32Array::from(vec![1.0f32])), // state_capacity_score
+            Arc::new(Float32Array::from(vec![0.5f32])), // approval_q1
+            Arc::new(Float32Array::from(vec![0.5f32])), // approval_q2
+            Arc::new(Float32Array::from(vec![0.5f32])), // approval_q3
+            Arc::new(Float32Array::from(vec![0.5f32])), // approval_q4
+            Arc::new(Float32Array::from(vec![0.5f32])), // approval_q5
         ],
     )
     .map_err(|e| IpcError::Arrow(e.to_string()))?;
@@ -139,6 +144,6 @@ mod tests {
     fn fake_batch_schema_matches() {
         let batch = fake_batch(1).unwrap();
         assert_eq!(batch.num_rows(), 1);
-        assert_eq!(batch.num_columns(), 11); // tick, population, gdp, gini, unemployment, inflation, approval, pollution_stock, rights_granted_count, rights_breadth, state_capacity_score
+        assert_eq!(batch.num_columns(), 16); // 11 previous + approval_q1..q5
     }
 }

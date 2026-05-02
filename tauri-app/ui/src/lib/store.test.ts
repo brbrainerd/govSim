@@ -148,7 +148,7 @@ describe("exportMetricsCsv", () => {
       rights_granted_bits: 3, rights_granted_count: 2, rights_breadth: 0.22,
       treasury_balance: 2e6, price_level: 1.02,
       crisis_kind: 0, crisis_remaining_ticks: 0, mean_health: 0.7,
-      mean_productivity: 0.6, mean_income: 3000, state_capacity_score: 1.0,
+      mean_productivity: 0.6, mean_income: 3000, state_capacity_score: 1.0, approval_q1: 0.5, approval_q2: 0.5, approval_q3: 0.5, approval_q4: 0.5, approval_q5: 0.5,
     };
     sim.metricsRows = [row];
     let capturedBlob: Blob | null = null;
@@ -174,7 +174,7 @@ describe("exportMetricsCsv", () => {
       rights_granted_bits: 255, rights_granted_count: 8, rights_breadth: 0.89,
       treasury_balance: -5e5, price_level: 1.05,
       crisis_kind: 1, crisis_remaining_ticks: 10, mean_health: 0.6,
-      mean_productivity: 0.55, mean_income: 2500, state_capacity_score: 0.85,
+      mean_productivity: 0.55, mean_income: 2500, state_capacity_score: 0.85, approval_q1: 0.5, approval_q2: 0.5, approval_q3: 0.5, approval_q4: 0.5, approval_q5: 0.5,
     };
     sim.metricsRows = [row];
     let capturedBlob: Blob | null = null;
@@ -204,7 +204,7 @@ describe("exportMetricsCsv", () => {
       treasury_balance: 1e6,
       price_level: 1.01, crisis_kind: 0, crisis_remaining_ticks: 0,
       mean_health: 0.75, mean_productivity: 0.6, mean_income: 2800,
-      state_capacity_score: 1.0,
+      state_capacity_score: 1.0, approval_q1: 0.5, approval_q2: 0.5, approval_q3: 0.5, approval_q4: 0.5, approval_q5: 0.5,
     });
 
     const rows = [makeRow(1, 0.60), makeRow(2, 0.61), makeRow(3, 0.62)];

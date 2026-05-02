@@ -162,6 +162,11 @@ fn rows_to_df(rows: &[&TickRow]) -> anyhow::Result<DataFrame> {
         col_f32!(mean_productivity),
         col_f64!(mean_income),
         col_f32!(state_capacity_score),
+        col_f32!(approval_q1),
+        col_f32!(approval_q2),
+        col_f32!(approval_q3),
+        col_f32!(approval_q4),
+        col_f32!(approval_q5),
     ])
     .context("building DataFrame")
 }
@@ -234,6 +239,11 @@ fn df_to_rows(df: &DataFrame) -> anyhow::Result<Vec<TickRow>> {
     let mean_productivity     = get_f32!("mean_productivity");
     let mean_income           = get_f64!("mean_income");
     let state_capacity_score  = get_f32!("state_capacity_score");
+    let approval_q1           = get_f32!("approval_q1");
+    let approval_q2           = get_f32!("approval_q2");
+    let approval_q3           = get_f32!("approval_q3");
+    let approval_q4           = get_f32!("approval_q4");
+    let approval_q5           = get_f32!("approval_q5");
 
     let len = df.height();
     let mut rows = Vec::with_capacity(len);
@@ -265,6 +275,11 @@ fn df_to_rows(df: &DataFrame) -> anyhow::Result<Vec<TickRow>> {
             mean_productivity:      mean_productivity.get(i).unwrap_or(0.0),
             mean_income:            mean_income.get(i).unwrap_or(0.0),
             state_capacity_score:   state_capacity_score.get(i).unwrap_or(1.0),
+            approval_q1:            approval_q1.get(i).unwrap_or(0.5),
+            approval_q2:            approval_q2.get(i).unwrap_or(0.5),
+            approval_q3:            approval_q3.get(i).unwrap_or(0.5),
+            approval_q4:            approval_q4.get(i).unwrap_or(0.5),
+            approval_q5:            approval_q5.get(i).unwrap_or(0.5),
         });
     }
     Ok(rows)

@@ -47,6 +47,14 @@ pub struct TickRow {
     /// Composite state-capacity score [0, 1] (unweighted mean of 5 capacity fields).
     /// 1.0 when no StateCapacity resource is present (perfect / default capacity).
     pub state_capacity_score: f32,
+
+    // --- Per-income-quintile mean approval (Q1 = bottom 20%, Q5 = top 20%) ---
+    // Enables heterogeneous DiD: "did this law help the poor or the wealthy?"
+    pub approval_q1: f32,
+    pub approval_q2: f32,
+    pub approval_q3: f32,
+    pub approval_q4: f32,
+    pub approval_q5: f32,
 }
 
 impl TickRow {
@@ -64,6 +72,7 @@ impl TickRow {
         mean_health: f32,
         mean_productivity: f32,
         mean_income: f64,
+        approval_by_quintile: [f32; 5],
     ) -> Self {
         let default_cap = StateCapacity::default();
         let cap = capacity.unwrap_or(&default_cap);
@@ -94,6 +103,11 @@ impl TickRow {
             mean_productivity,
             mean_income,
             state_capacity_score: cap.composite_score(),
+            approval_q1: approval_by_quintile[0],
+            approval_q2: approval_by_quintile[1],
+            approval_q3: approval_by_quintile[2],
+            approval_q4: approval_by_quintile[3],
+            approval_q5: approval_by_quintile[4],
         }
     }
 }
@@ -106,6 +120,29 @@ pub(crate) fn crisis_kind_u8(kind: CrisisKind) -> u8 {
         CrisisKind::Recession     => 3,
         CrisisKind::NaturalDisaster => 4,
     }
+}
+
+/// Compute mean approval by income quintile.
+/// Collects (income, approval) pairs, sorts by income, buckets into 5 equal groups,
+/// returns `[q1_mean, q2_mean, q3_mean, q4_mean, q5_mean]` (Q1 = bottom 20%).
+/// Returns `[0.5; 5]` if there are fewer than 5 citizens.
+pub(crate) fn compute_quintile_approval(
+    pairs: impl Iterator<Item = (f64, f32)>,
+) -> [f32; 5] {
+    let mut v: Vec<(f64, f32)> = pairs.collect();
+    if v.len() < 5 { return [0.5; 5]; }
+    // Sort ascending by income (NaN-safe: treat NaN as 0).
+    v.sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+    let n = v.len();
+    let mut out = [0.0f32; 5];
+    for q in 0..5 {
+        let start = q * n / 5;
+        let end   = (q + 1) * n / 5;
+        let slice = &v[start..end];
+        let sum: f32 = slice.iter().map(|(_, a)| a).sum();
+        out[q] = if slice.is_empty() { 0.5 } else { sum / slice.len() as f32 };
+    }
+    out
 }
 
 /// Compute mean health, mean productivity, and mean income over component queries.

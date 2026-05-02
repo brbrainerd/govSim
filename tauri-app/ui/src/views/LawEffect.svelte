@@ -19,6 +19,7 @@
 
   const TABS = [
     { id: "overview",  label: "Δ Overview" },
+    { id: "quintile",  label: "By Income Group" },
     { id: "detail",    label: "Window Detail" },
     { id: "causal",    label: "Counterfactual DiD" },
   ];
@@ -239,6 +240,53 @@
     <p class="overview-note">
       Naive before/after difference — not causal. See <button class="inline-link" onclick={() => activeTab = "causal"}>Counterfactual DiD</button> for a controlled estimate.
     </p>
+  </div>
+
+  <!-- ─── Tab: By Income Group ───────────────────────────────── -->
+  {:else if activeTab === "quintile"}
+  <div role="tabpanel" id="panel-quintile" aria-labelledby="tab-quintile">
+    <p class="overview-note" style="margin-bottom:0.75rem">
+      Approval change per income group (Q1 = bottom 20%, Q5 = top 20%).
+      Positive = that group approved of the law; negative = disapproved.
+    </p>
+    {#if lawEffect}
+    <table class="quintile-table">
+      <thead>
+        <tr>
+          <th>Group</th>
+          <th>Pre mean</th>
+          <th>Post mean</th>
+          <th>Δ Approval</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each [
+          { label: "Q1 (bottom 20%)", preKey: "approval_q1", postKey: "approval_q1", idx: 0 },
+          { label: "Q2",              preKey: "approval_q2", postKey: "approval_q2", idx: 1 },
+          { label: "Q3 (middle)",     preKey: "approval_q3", postKey: "approval_q3", idx: 2 },
+          { label: "Q4",              preKey: "approval_q4", postKey: "approval_q4", idx: 3 },
+          { label: "Q5 (top 20%)",    preKey: "approval_q5", postKey: "approval_q5", idx: 4 },
+        ] as row}
+        {@const delta = lawEffect.delta_approval_by_quintile[row.idx]}
+        {@const pre   = (lawEffect.pre  as any)[row.preKey]  as number}
+        {@const post  = (lawEffect.post as any)[row.postKey] as number}
+        <tr>
+          <td>{row.label}</td>
+          <td>{(pre  * 100).toFixed(1)}%</td>
+          <td>{(post * 100).toFixed(1)}%</td>
+          <td class:pos={delta > 0.005} class:neg={delta < -0.005}>
+            {delta > 0 ? "+" : ""}{(delta * 100).toFixed(1)}%
+          </td>
+        </tr>
+        {/each}
+      </tbody>
+    </table>
+    <p class="overview-note" style="margin-top:0.75rem">
+      Naive pre/post difference per quintile — see <button class="inline-link" onclick={() => activeTab = "causal"}>Counterfactual DiD</button> for a controlled estimate.
+    </p>
+    {:else}
+    <p class="no-data">No law effect data available.</p>
+    {/if}
   </div>
 
   <!-- ─── Tab: Window Detail ──────────────────────────────────── -->
@@ -696,6 +744,15 @@ h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap:
 }
 .effect-table tr:last-child td { border-bottom: none; }
 .window-meta { font-size: 11px; color: var(--muted); }
+
+/* Quintile table */
+.quintile-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.quintile-table th { padding: 6px 12px; text-align: left; font-weight: 600; font-size: 11px;
+  color: var(--muted); border-bottom: 2px solid var(--border); }
+.quintile-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.quintile-table tr:last-child td { border-bottom: none; }
+.quintile-table td.pos { color: var(--good); font-weight: 600; }
+.quintile-table td.neg { color: var(--danger); font-weight: 600; }
 
 /* Monte Carlo tab */
 .mc-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }

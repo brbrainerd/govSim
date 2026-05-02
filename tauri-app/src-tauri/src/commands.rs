@@ -687,6 +687,12 @@ pub struct WindowSummaryDto {
     pub max_approval:       f32,
     pub min_gdp:            f64,
     pub max_gdp:            f64,
+    /// Mean approval per quintile [Q1=bottom .. Q5=top] over this window.
+    pub approval_q1: f32,
+    pub approval_q2: f32,
+    pub approval_q3: f32,
+    pub approval_q4: f32,
+    pub approval_q5: f32,
 }
 
 impl From<&WindowSummary> for WindowSummaryDto {
@@ -701,6 +707,11 @@ impl From<&WindowSummary> for WindowSummaryDto {
             mean_income: s.mean_income, mean_rights_breadth: s.mean_rights_breadth,
             min_approval: s.min_approval, max_approval: s.max_approval,
             min_gdp: s.min_gdp, max_gdp: s.max_gdp,
+            approval_q1: s.mean_approval_by_quintile[0],
+            approval_q2: s.mean_approval_by_quintile[1],
+            approval_q3: s.mean_approval_by_quintile[2],
+            approval_q4: s.mean_approval_by_quintile[3],
+            approval_q5: s.mean_approval_by_quintile[4],
         }
     }
 }
@@ -721,6 +732,8 @@ pub struct LawEffectDto {
     pub delta_health:             f32,
     pub delta_income:             f64,
     pub delta_rights_breadth:     f32,
+    /// Δ mean approval per income quintile [Q1=bottom 20% .. Q5=top 20%].
+    pub delta_approval_by_quintile: [f32; 5],
 }
 
 impl From<&WindowDiff> for LawEffectDto {
@@ -733,6 +746,7 @@ impl From<&WindowDiff> for LawEffectDto {
             delta_gini: d.delta_gini, delta_wealth_gini: d.delta_wealth_gini,
             delta_state_capacity: d.delta_state_capacity, delta_health: d.delta_health,
             delta_income: d.delta_income, delta_rights_breadth: d.delta_rights_breadth,
+            delta_approval_by_quintile: d.delta_approval_by_quintile,
         }
     }
 }

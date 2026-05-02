@@ -2,11 +2,11 @@ use bevy_ecs::prelude::*;
 use simulator_core::{
     CrisisState, LegitimacyDebt, MacroIndicators, Phase, PollutionStock, PriceLevel,
     RightsLedger, Sim, SimClock, StateCapacity, Treasury,
-    components::{Health, Income, Productivity},
+    components::{ApprovalRating, Health, Income, Productivity},
 };
 
 use crate::{
-    row::{TickRow, compute_citizen_means},
+    row::{TickRow, compute_citizen_means, compute_quintile_approval},
     store::MetricStore,
 };
 
@@ -27,6 +27,7 @@ pub fn collect_metrics_system(
     health_q:    Query<&Health>,
     prod_q:      Query<&Productivity>,
     income_q:    Query<&Income>,
+    quintile_q:  Query<(&Income, &ApprovalRating)>,
 ) {
     let (mean_health, mean_productivity, mean_income) = compute_citizen_means(
         health_q.iter().copied(),
@@ -34,11 +35,16 @@ pub fn collect_metrics_system(
         income_q.iter().copied(),
     );
 
+    let approval_by_quintile = compute_quintile_approval(
+        quintile_q.iter().map(|(inc, app)| (inc.0.to_num::<f64>(), app.0.to_num::<f32>()))
+    );
+
     let row = TickRow::from_resources(
         &clock, &indicators, &treasury, &price,
         &debt, &rights, &crisis, &pollution,
         capacity.as_deref(),
         mean_health, mean_productivity, mean_income,
+        approval_by_quintile,
     );
     store.push(row);
 }
