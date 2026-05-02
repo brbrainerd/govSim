@@ -328,4 +328,64 @@ mod tests {
         let p95 = summary.p95_did_approval.unwrap();
         assert!(p5 <= p95, "p5={p5:.4} should be ≤ p95={p95:.4}");
     }
+
+    // ── Statistics helpers unit tests ─────────────────────────────────────────
+
+    #[test]
+    fn mean_f32_empty_is_none() {
+        assert!(mean_f32(std::iter::empty()).is_none());
+    }
+
+    #[test]
+    fn mean_f32_single_value() {
+        let v = mean_f32(std::iter::once(7.0_f32)).unwrap();
+        assert!((v - 7.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn mean_f32_known_values() {
+        let v = mean_f32([1.0_f32, 2.0, 3.0, 4.0].into_iter()).unwrap();
+        assert!((v - 2.5).abs() < 1e-5, "mean of [1,2,3,4] should be 2.5, got {v}");
+    }
+
+    #[test]
+    fn std_f32_single_element_is_none() {
+        // Population std of a single value is undefined → None.
+        assert!(std_f32(std::iter::once(5.0_f32)).is_none());
+    }
+
+    #[test]
+    fn std_f32_constant_values_is_zero() {
+        // All identical values → sample std = 0.
+        let v = std_f32([5.0_f32, 5.0, 5.0, 5.0].into_iter()).unwrap();
+        assert!(v.abs() < 1e-5, "std of constant series should be 0, got {v:.6}");
+    }
+
+    #[test]
+    fn std_f32_nonzero_for_varying_values() {
+        // [0, 10, 20]: mean=10, sample variance = (100+0+100)/2=100, std=10.
+        let v = std_f32([0.0_f32, 10.0, 20.0].into_iter()).unwrap();
+        assert!((v - 10.0).abs() < 0.01, "std of [0,10,20] should be 10.0, got {v:.4}");
+    }
+
+    #[test]
+    fn percentile_f32_single_element() {
+        let v = percentile_f32(std::iter::once(42.0_f32), 50).unwrap();
+        assert!((v - 42.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn percentile_f32_empty_is_none() {
+        assert!(percentile_f32(std::iter::empty(), 50).is_none());
+    }
+
+    #[test]
+    fn perturb_rng_changes_seed() {
+        use simulator_core::Sim;
+        let mut sim = Sim::new([42u8; 32]);
+        let seed_before = sim.world.resource::<simulator_core::SimRng>().root_seed();
+        perturb_rng(&mut sim, 1);
+        let seed_after = sim.world.resource::<simulator_core::SimRng>().root_seed();
+        assert_ne!(seed_before, seed_after, "perturb_rng should change the seed");
+    }
 }
