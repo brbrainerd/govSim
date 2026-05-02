@@ -35,17 +35,23 @@
 //!
 //! ## Calibration
 //!
+//! Thresholds are symmetric at ±0.5% of GDP — a small persistent imbalance is
+//! enough to trigger the loop. This figure was set empirically by running all
+//! three calibrated scenarios (modern_democracy, australia_2022, pre_rights_era)
+//! at default settings: their natural treasury equilibrium sits at 0.4–0.8% of
+//! GDP, so the threshold lets healthy polities slowly grow capacity while
+//! treating any meaningful deficit as fiscal stress. The empirical rate
+//! asymmetry (austerity 2× faster than investment) is preserved.
+//!
 //! INVEST_RATE = 0.005/month → +6% capacity per year of sustained surplus.
 //! AUSTERITY_RATE = 0.010/month → −12% capacity per year of sustained deficit.
-//! Conservative magnitudes so the loop manifests over several simulated years
-//! rather than dominating short-run dynamics.
 
 use simulator_core::{MacroIndicators, Phase, Sim, SimClock, StateCapacity, Treasury};
 use simulator_core::bevy_ecs::prelude::*;
 
 const FISCAL_PERIOD:       u64 = 30;
-const SURPLUS_THRESHOLD:   f64 = 0.10;   // treasury > +10% of monthly GDP
-const DEFICIT_THRESHOLD:   f64 = 0.10;   // treasury < −10% of monthly GDP
+const SURPLUS_THRESHOLD:   f64 = 0.005;  // treasury > +0.5% of monthly GDP
+const DEFICIT_THRESHOLD:   f64 = 0.005;  // treasury < −0.5% of monthly GDP
 const INVEST_RATE:         f32 = 0.005;
 const AUSTERITY_RATE:      f32 = 0.010;
 
@@ -223,6 +229,27 @@ mod tests {
             "must not exceed 1.0, got {}", sc.tax_collection_efficiency);
         assert!(sc.enforcement_noise >= 0.0,
             "noise must not go negative, got {}", sc.enforcement_noise);
+    }
+
+    /// Calibration regression: a small surplus (~0.7% of GDP, the empirical
+    /// equilibrium of the three baseline scenarios) IS in the active zone and
+    /// drives capacity upward. This pins the threshold choice so a future
+    /// recalibration can't silently drop the baseline polities back into the
+    /// no-op stable zone.
+    #[test]
+    fn baseline_scenario_treasury_ratio_triggers_growth() {
+        let cap = StateCapacity {
+            tax_collection_efficiency: 0.5,
+            corruption_drift: 0.0,
+            ..StateCapacity::default()
+        };
+        // 0.7% of GDP — measured at tick 690 in modern_democracy / australia_2022.
+        let mut sim = setup_sim([10u8; 32], 70_000.0, 10_000_000.0, cap);
+        for _ in 0..(12 * 30 + 1) { sim.step(); } // 12 months
+        let sc = sim.world.resource::<StateCapacity>();
+        assert!(sc.tax_collection_efficiency > 0.5,
+            "0.7%-of-GDP surplus must trigger growth at the 0.5% threshold, got {}",
+            sc.tax_collection_efficiency);
     }
 
     /// Tick 0 is skipped (avoids drift before any policy has run).
