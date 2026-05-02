@@ -9,6 +9,10 @@ __pycache__/
 .uv/
 uv.lock.bak
 
+# Node / Vite (root-level artifacts from vitest runs, not just tauri-app)
+node_modules/
+.vite/
+
 # Tauri
 tauri-app/ui/node_modules/
 tauri-app/ui/dist/

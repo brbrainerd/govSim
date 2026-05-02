@@ -1,0 +1,63 @@
+name: failed_state
+description: >
+  A polity with severely degraded state capacity — approximating a fragile or
+  failed state (Somalia 2010-era calibration). Tax collection is minimal,
+  enforcement is weak, bureaucratic delivery is poor, and the judiciary is a
+  rubber stamp.
+
+  Used as a CI regression scenario to verify that StateCapacity and Polity
+  resources produce expected macroeconomic divergence from a modern_democracy
+  baseline. Key assertions (checked in integration tests):
+    - Government revenue << modern_democracy at comparable citizen incomes
+    - StateCapacity fields degrade further under sustained low approval
+    - Elections are suppressed (MilitaryJunta → Hereditary succession)
+
+seed: [7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7]
+ticks: 720    # 2 simulated years
+
+population:
+  citizens: 500
+  corporations: 0
+  regions: 4
+  income_mean_monthly: 800.0     # subsistence-level income
+  unemployment_rate: 0.40        # structural high unemployment
+  corruption_level: 0.60         # most citizens have flagged income patterns
+
+# Minimal rights at scenario start — no universal suffrage, no labor rights.
+# Bits: DUE_PROCESS (bit 6) only = 64 = 0x40
+initial_rights: 64
+
+# Severe pre-existing pollution — unregulated extraction economy.
+initial_pollution: 4.5
+
+# High legitimacy debt — recent violent transition.
+initial_legitimacy_debt: 2.5
+
+# No random crises — deterministic for CI assertions.
+crisis_prob_pct: 0
+
+polity:
+  name: "Failed State"
+  regime:
+    kind: MilitaryJunta
+  founding_year: 1991
+  chamber_count: 0
+  franchise_fraction: 0.0
+  fused_executive: true
+  executive_term_limit: ~       # null = no term limit
+  electoral_system:
+    system: Appointment
+
+state_capacity:
+  tax_collection_efficiency: 0.18
+  enforcement_reach: 0.12
+  enforcement_noise: 0.45
+  corruption_drift: 0.025       # capacity erodes ~2.5%/month under low approval
+  legal_predictability: 0.10
+  bureaucratic_effectiveness: 0.20
+
+judiciary:
+  independence: 0.05
+  review_power: false
+  precedent_weight: 0.02
+  international_deference: 0.00

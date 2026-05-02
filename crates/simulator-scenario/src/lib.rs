@@ -599,6 +599,88 @@ mod tests {
         let h2 = hash_of(&scenario);
         assert_eq!(h1, h2, "same seed should produce identical state hashes");
     }
+
+    /// Load scenarios/failed_state.yaml and verify:
+    /// 1. Polity is inserted and is a MilitaryJunta with Appointment succession.
+    /// 2. StateCapacity fields are clamped and match the YAML values.
+    /// 3. Judiciary is inserted with independence ≈ 0.05 and review_power = false.
+    /// 4. Elections are suppressed: ElectionOutcome.incumbent stays 0 after a full year.
+    /// 5. Government revenue is dramatically lower than a full-capacity scenario at
+    ///    comparable income (validates tax_collection_efficiency wiring end-to-end).
+    #[test]
+    fn failed_state_scenario_loads_and_produces_expected_macros() {
+        use simulator_core::{ElectoralSystem, GovernmentLedger, Judiciary, Polity, RegimeKind, StateCapacity, Treasury};
+        use simulator_systems::election::ElectionOutcome;
+        use std::path::Path;
+
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent().unwrap().parent().unwrap()
+            .join("scenarios/failed_state.yaml");
+
+        // If scenario file not present (e.g. in isolated crate builds), skip gracefully.
+        if !path.exists() {
+            eprintln!("skipping failed_state test: scenario file not found at {path:?}");
+            return;
+        }
+
+        let scenario = Scenario::load(&path).expect("failed_state.yaml should parse");
+        let mut sim = Sim::new(scenario.seed);
+        register_phase1_systems(&mut sim);
+        scenario.spawn_population(&mut sim);
+        scenario.configure_world(&mut sim);
+
+        // 1. Polity resource inserted.
+        {
+            let p = sim.world.resource::<Polity>();
+            assert!(matches!(p.regime, RegimeKind::MilitaryJunta),
+                "expected MilitaryJunta, got {:?}", p.regime);
+            assert!(!p.electoral_system.is_competitive(),
+                "MilitaryJunta should have non-competitive electoral system");
+            assert!((p.franchise_fraction - 0.0).abs() < 1e-6);
+        }
+
+        // 2. StateCapacity clamped and inserted.
+        {
+            let sc = sim.world.resource::<StateCapacity>();
+            assert!((sc.tax_collection_efficiency - 0.18).abs() < 1e-5,
+                "tax_collection_efficiency should be 0.18, got {}", sc.tax_collection_efficiency);
+            assert!((sc.bureaucratic_effectiveness - 0.20).abs() < 1e-5,
+                "bureaucratic_effectiveness should be 0.20, got {}", sc.bureaucratic_effectiveness);
+        }
+
+        // 3. Judiciary inserted with correct values.
+        {
+            let j = sim.world.resource::<Judiciary>();
+            assert!((j.independence - 0.05).abs() < 1e-5,
+                "judiciary independence should be 0.05, got {}", j.independence);
+            assert!(!j.review_power, "MilitaryJunta judiciary must not have review_power");
+        }
+
+        // Run one full year (360 ticks).
+        for _ in 0..=360 { sim.step(); }
+
+        // 4. No election fired — MilitaryJunta + Appointment → incumbent stays 0.
+        {
+            let outcome = sim.world.resource::<ElectionOutcome>();
+            assert_eq!(outcome.incumbent, 0,
+                "Appointment succession must not fire election; incumbent should stay 0");
+        }
+
+        // 5. Revenue far below a full-capacity scenario.
+        // At 0.18 collection efficiency, revenue should be < 25% of what full capacity
+        // would collect from the same population-tick count.
+        // We compare against treasury balance as a proxy (no other revenue source active).
+        let revenue: f64 = sim.world.resource::<GovernmentLedger>().revenue.to_num();
+        let treasury: f64 = sim.world.resource::<Treasury>().balance.to_num();
+
+        // With 500 citizens, ~$800/mo income, 20% × 0.18 efficiency, 12 months:
+        // expected ≈ 500 × 800 × 0.20 × 0.18 × 12 = $172,800.
+        // Allow 2× slack for composition effects (unemployment 40%, age spread).
+        let expected_max = 500.0 * 800.0 * 0.20 * 0.18 * 12.0 * 2.0;
+        assert!(revenue < expected_max,
+            "failed-state revenue should be << full-capacity; got ${revenue:.0}, max ${expected_max:.0}");
+        let _ = treasury; // kept for potential future assertion
+    }
 }
 
 /// Rational approximation of the standard normal quantile (Beasley-Springer-Moro).

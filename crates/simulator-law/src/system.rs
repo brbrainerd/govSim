@@ -13,8 +13,8 @@ use simulator_core::{
         Health, Income, LegalStatusFlags, LegalStatuses, MonthlyBenefitReceived,
         MonthlyTaxPaid, Productivity, Wealth,
     },
-    CrisisState, GovernmentLedger, LegitimacyDebt, MacroIndicators, Phase,
-    PollutionStock, RightsLedger, Sim, SimClock, SimRng, Treasury,
+    CrisisState, GovernmentLedger, Judiciary, LegitimacyDebt, MacroIndicators, Phase,
+    PollutionStock, RightsLedger, Sim, SimClock, SimRng, StateCapacity, Treasury,
 };
 use rand::Rng;
 use simulator_types::Money;
@@ -59,7 +59,8 @@ pub fn law_dispatcher_system(
     debt: Res<LegitimacyDebt>,
     rights: Res<RightsLedger>,
     crisis: Res<CrisisState>,
-    capacity: Option<Res<simulator_core::StateCapacity>>,
+    capacity: Option<Res<StateCapacity>>,
+    judiciary: Option<Res<Judiciary>>,
     mut q: Query<(
         Option<&Citizen>,
         &Income,
@@ -100,7 +101,8 @@ pub fn law_dispatcher_system(
     if active.is_empty() { return; }
 
     let tick = clock.tick;
-    let base_ctx = make_dispatch_ctx(tick, &macro_, &treasury, &debt, &rights, &crisis, &pollution);
+    let base_ctx = make_dispatch_ctx(tick, &macro_, &treasury, &debt, &rights, &crisis, &pollution,
+        judiciary.as_deref());
     for h in &active {
         if !h.cadence.fires_at(tick) { continue; }
 
@@ -232,6 +234,7 @@ fn make_dispatch_ctx(
     rights: &RightsLedger,
     crisis: &CrisisState,
     pollution: &PollutionStock,
+    judiciary: Option<&Judiciary>,
 ) -> EvalCtx {
     let mut b = HashMap::new();
     // Time
@@ -255,6 +258,23 @@ fn make_dispatch_ctx(
     b.insert("rights_granted".into(),         Value::Int(rights.granted.bits() as i64));
     b.insert("crisis_kind".into(),            Value::Int(crisis_kind_to_int(crisis)));
     b.insert("crisis_remaining".into(),       Value::Int(crisis.remaining_ticks as i64));
+    // Judiciary (Phase D) — present only when a Judiciary resource is inserted.
+    // DSL programs can condition on these to model rule-of-law constraints.
+    // Default = 0 (no judicial constraint), so laws written without judiciary
+    // awareness behave identically to pre-Phase-D scenarios.
+    let (jud_ind, jud_review, jud_precedent, jud_intl) = match judiciary {
+        Some(j) => (
+            j.independence as f64,
+            if j.review_power { 1i64 } else { 0i64 },
+            j.precedent_weight as f64,
+            j.international_deference as f64,
+        ),
+        None => (0.0, 0, 0.0, 0.0),
+    };
+    b.insert("judiciary_independence".into(),         Value::Rate(jud_ind));
+    b.insert("judiciary_review_power".into(),         Value::Int(jud_review));
+    b.insert("judiciary_precedent_weight".into(),     Value::Rate(jud_precedent));
+    b.insert("judiciary_international_deference".into(), Value::Rate(jud_intl));
     EvalCtx { bindings: b, field_bindings: HashMap::new() }
 }
 
