@@ -78,3 +78,51 @@ pub fn crisis_kind_u8(kind: CrisisKind) -> u8 {
         CrisisKind::NaturalDisaster => 4,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── crisis_kind_u8 ────────────────────────────────────────────────────────
+    // The u8 values are the IPC contract with the TypeScript frontend.
+    // Changing them silently breaks the crisis display in Dashboard / ElectionView.
+
+    #[test]
+    fn none_is_zero() {
+        assert_eq!(crisis_kind_u8(CrisisKind::None), 0);
+    }
+
+    #[test]
+    fn war_is_one() {
+        assert_eq!(crisis_kind_u8(CrisisKind::War), 1);
+    }
+
+    #[test]
+    fn pandemic_is_two() {
+        assert_eq!(crisis_kind_u8(CrisisKind::Pandemic), 2);
+    }
+
+    #[test]
+    fn recession_is_three() {
+        assert_eq!(crisis_kind_u8(CrisisKind::Recession), 3);
+    }
+
+    #[test]
+    fn natural_disaster_is_four() {
+        assert_eq!(crisis_kind_u8(CrisisKind::NaturalDisaster), 4);
+    }
+
+    // ── IpcError ──────────────────────────────────────────────────────────────
+
+    #[test]
+    fn no_sim_error_message_is_user_readable() {
+        let e = IpcError::no_sim();
+        assert!(e.0.contains("load_scenario"), "should mention the fix: {}", e.0);
+    }
+
+    #[test]
+    fn ipc_error_from_string() {
+        let e: IpcError = "test error".into();
+        assert_eq!(e.0, "test error");
+    }
+}

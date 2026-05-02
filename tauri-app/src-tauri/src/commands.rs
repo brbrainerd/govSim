@@ -716,7 +716,7 @@ fn citizen_distribution_core(
         .query::<(&Income, &Wealth, &Health, &Productivity, &Location)>()
         .iter(w)
     {
-        if region_id.map_or(true, |id| loc.0.0 == id) {
+        if region_id.is_none_or(|id| loc.0.0 == id) {
             income_vals.push(inc.0.to_num::<f64>());
             wealth_vals.push(wlt.0.to_num::<f64>());
             health_vals.push(hlt.0.to_num::<f64>());
@@ -762,7 +762,7 @@ pub async fn get_citizen_scatter(
     let all: Vec<[f64; 4]> = w
         .query::<(&Income, &Wealth, &Health, &Productivity, &Location)>()
         .iter(w)
-        .filter(|(_, _, _, _, loc)| region_id.map_or(true, |id| loc.0.0 == id))
+        .filter(|(_, _, _, _, loc)| region_id.is_none_or(|id| loc.0.0 == id))
         .map(|(inc, wlt, hlt, prd, _)| [
             inc.0.to_num::<f64>(),
             wlt.0.to_num::<f64>(),
@@ -1173,3 +1173,76 @@ mod effect_magnitude_tests {
 
 #[tauri::command]
 pub fn ping() -> &'static str { "pong" }
+
+#[cfg(test)]
+mod enum_string_tests {
+    use super::{effect_kind_str, effect_label_str};
+    use simulator_law::{ig2::AmountBasis, registry::LawEffect};
+
+    // ── effect_kind_str ───────────────────────────────────────────────────────
+    // These strings are the CSS badge class suffixes used by the frontend
+    // (badge-income_tax, badge-benefit, etc.) — a mismatch silently breaks UI.
+
+    #[test]
+    fn kind_income_tax() {
+        let e = LawEffect::PerCitizenIncomeTax { scope: "t", owed_def: "o" };
+        assert_eq!(effect_kind_str(&e), "income_tax");
+    }
+
+    #[test]
+    fn kind_benefit() {
+        let e = LawEffect::PerCitizenBenefit { scope: "c", amount_def: "a" };
+        assert_eq!(effect_kind_str(&e), "benefit");
+    }
+
+    #[test]
+    fn kind_registration() {
+        let e = LawEffect::RegistrationMarker { basis: AmountBasis::AnnualIncome, threshold: 0.0 };
+        assert_eq!(effect_kind_str(&e), "registration");
+    }
+
+    #[test]
+    fn kind_audit() {
+        let e = LawEffect::Audit { selection_prob: 0.1, penalty_rate: 2.0 };
+        assert_eq!(effect_kind_str(&e), "audit");
+    }
+
+    #[test]
+    fn kind_abatement() {
+        let e = LawEffect::Abatement { pollution_reduction_pu: 1.0, cost_per_pu: 5000.0 };
+        assert_eq!(effect_kind_str(&e), "abatement");
+    }
+
+    // ── effect_label_str ──────────────────────────────────────────────────────
+    // These are the human-readable badge labels rendered in the Laws table.
+
+    #[test]
+    fn label_income_tax() {
+        let e = LawEffect::PerCitizenIncomeTax { scope: "t", owed_def: "o" };
+        assert_eq!(effect_label_str(&e), "Income Tax");
+    }
+
+    #[test]
+    fn label_benefit() {
+        let e = LawEffect::PerCitizenBenefit { scope: "c", amount_def: "a" };
+        assert_eq!(effect_label_str(&e), "Citizen Benefit");
+    }
+
+    #[test]
+    fn label_registration() {
+        let e = LawEffect::RegistrationMarker { basis: AmountBasis::AnnualIncome, threshold: 0.0 };
+        assert_eq!(effect_label_str(&e), "Registration");
+    }
+
+    #[test]
+    fn label_audit() {
+        let e = LawEffect::Audit { selection_prob: 0.1, penalty_rate: 2.0 };
+        assert_eq!(effect_label_str(&e), "Audit");
+    }
+
+    #[test]
+    fn label_abatement() {
+        let e = LawEffect::Abatement { pollution_reduction_pu: 1.0, cost_per_pu: 5000.0 };
+        assert_eq!(effect_label_str(&e), "Abatement");
+    }
+}
