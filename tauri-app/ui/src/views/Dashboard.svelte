@@ -219,8 +219,8 @@
         ]}
         markLines={lawMarkLines} markBands={crisisBands} />
       <LineChart title="Election Margin" xLabels={xLabels} series={electionMarginSeries}
-        yMin={-1} yMax={1} yFormatter={pct}
-        yMarkLines={[{y: 0, label: "Tied", color: "var(--color-text-muted)"}]}
+        yMin={0} yMax={1} yFormatter={pct}
+        yMarkLines={[{y: 0.05, label: "< 5% (razor-thin)", color: "var(--color-danger)"}]}
         markLines={lawMarkLines} markBands={crisisBands} />
     </div>
   </section>

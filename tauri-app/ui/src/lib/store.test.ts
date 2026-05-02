@@ -150,6 +150,47 @@ describe("exportMetricsCsv", () => {
       expect(values[i]).toBe(String(expected));
     });
   });
+
+  it("multi-row CSV: produces exactly 1 header + N data lines, values match per row", async () => {
+    const makeRow = (tick: number, approval: number) => ({
+      tick,
+      population: 1000, gdp: 5e6, gini: 0.3, wealth_gini: 0.4,
+      unemployment: 0.05, inflation: 0.02, approval,
+      gov_revenue: 1e5, gov_expenditure: 9e4, incumbent_party: 1,
+      election_margin: 0.1, consecutive_terms: 1, pollution_stock: 0.4,
+      legitimacy_debt: 0.02, rights_granted_bits: 0, treasury_balance: 1e6,
+      price_level: 1.01, crisis_kind: 0, crisis_remaining_ticks: 0,
+      mean_health: 0.75, mean_productivity: 0.6, mean_income: 2800,
+    });
+
+    const rows = [makeRow(1, 0.60), makeRow(2, 0.61), makeRow(3, 0.62)];
+    sim.metricsRows = rows as any;
+
+    let capturedBlob: Blob | null = null;
+    (URL.createObjectURL as ReturnType<typeof vi.fn>).mockImplementation((b: Blob) => {
+      capturedBlob = b; return "blob:mock";
+    });
+    exportMetricsCsv();
+
+    const text         = await capturedBlob!.text();
+    const nonEmptyLines = text.split("\n").filter(l => l.length > 0);
+
+    // 1 header + 3 data rows = 4 lines
+    expect(nonEmptyLines).toHaveLength(4);
+
+    // Each data line round-trips its tick and approval correctly
+    rows.forEach((r, i) => {
+      const cells = nonEmptyLines[i + 1].split(",");
+      expect(cells[0]).toBe(String(r.tick));           // tick is first field
+      expect(cells[7]).toBe(String(r.approval));       // approval is 8th field (index 7)
+    });
+
+    // No row bleeds into the next — each line has the same number of commas
+    const expectedFields = Object.keys(rows[0]).length;
+    nonEmptyLines.slice(1).forEach(line => {
+      expect(line.split(",")).toHaveLength(expectedFields);
+    });
+  });
 });
 
 // ── navigate ─────────────────────────────────────────────────────────────────

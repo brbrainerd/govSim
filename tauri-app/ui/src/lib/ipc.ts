@@ -124,8 +124,21 @@ export const CIVIC_RIGHTS: ReadonlyArray<{ bit: number; label: string; descripti
   { bit: 1 << 8, label: "Abolition of Slavery",  description: "Prohibition of forced servitude." },
 ];
 
-/** Decode a packed `rights_granted_bits` integer into granted/withheld right entries. */
+/**
+ * Decode a packed `rights_granted_bits` integer into granted/withheld right entries.
+ *
+ * Emits a console.warn in development if any bits above the highest known flag
+ * (bit 8) are set — this indicates `CivicRights` in Rust has gained new flags
+ * that `CIVIC_RIGHTS` does not yet enumerate.
+ */
 export function decodeCivicRights(bits: number): Array<{ label: string; description: string; granted: boolean }> {
+  const knownMask = CIVIC_RIGHTS.reduce((acc, r) => acc | r.bit, 0);
+  if (import.meta.env.DEV && (bits & ~knownMask) !== 0) {
+    console.warn(
+      `[ipc] decodeCivicRights: unknown bits 0b${(bits & ~knownMask).toString(2)} in rights_granted_bits=${bits}. ` +
+      `Update CIVIC_RIGHTS in ipc.ts to match the Rust CivicRights enum.`
+    );
+  }
   return CIVIC_RIGHTS.map(r => ({ label: r.label, description: r.description, granted: (bits & r.bit) !== 0 }));
 }
 
