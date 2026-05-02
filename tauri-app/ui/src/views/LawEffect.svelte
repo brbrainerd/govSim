@@ -260,18 +260,13 @@
         </tr>
       </thead>
       <tbody>
-        {#each [
-          { label: "Q1 (bottom 20%)", preKey: "approval_q1", postKey: "approval_q1", idx: 0 },
-          { label: "Q2",              preKey: "approval_q2", postKey: "approval_q2", idx: 1 },
-          { label: "Q3 (middle)",     preKey: "approval_q3", postKey: "approval_q3", idx: 2 },
-          { label: "Q4",              preKey: "approval_q4", postKey: "approval_q4", idx: 3 },
-          { label: "Q5 (top 20%)",    preKey: "approval_q5", postKey: "approval_q5", idx: 4 },
-        ] as row}
-        {@const delta = lawEffect.delta_approval_by_quintile[row.idx]}
-        {@const pre   = (lawEffect.pre  as any)[row.preKey]  as number}
-        {@const post  = (lawEffect.post as any)[row.postKey] as number}
+        {#each (["approval_q1","approval_q2","approval_q3","approval_q4","approval_q5"] as const) as key, idx}
+        {@const labels = ["Q1 (bottom 20%)", "Q2", "Q3 (middle)", "Q4", "Q5 (top 20%)"]}
+        {@const delta  = lawEffect.delta_approval_by_quintile[idx]}
+        {@const pre    = lawEffect.pre[key]}
+        {@const post   = lawEffect.post[key]}
         <tr>
-          <td>{row.label}</td>
+          <td>{labels[idx]}</td>
           <td>{(pre  * 100).toFixed(1)}%</td>
           <td>{(post * 100).toFixed(1)}%</td>
           <td class:pos={delta > 0.005} class:neg={delta < -0.005}>

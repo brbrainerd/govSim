@@ -40,7 +40,7 @@ pub fn savings_rate_for_age(age: u8) -> f32 {
 #[allow(clippy::type_complexity)]
 pub fn age_advance_system(
     clock: Res<SimClock>,
-    mut rng: ResMut<SimRng>,
+    rng: ResMut<SimRng>,
     polity: Option<Res<Polity>>,
     mut q: Query<(&mut Age, &mut EmploymentStatus, &mut LegalStatuses, Option<&mut SavingsRate>)>,
 ) {

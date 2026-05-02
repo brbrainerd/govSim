@@ -178,3 +178,43 @@ pub(crate) fn compute_citizen_means(
     let mean_i = if i_n > 0 { i_sum / i_n as f64 } else { 0.0 };
     (mean_h, mean_p, mean_i)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn quintile_splits_evenly() {
+        // 10 citizens sorted by income: incomes 1..=10, approvals 0.1..=1.0
+        let pairs = (1..=10u64).map(|i| (i as f64, i as f32 * 0.1));
+        let q = compute_quintile_approval(pairs);
+        // Q1 = incomes 1-2, approvals 0.1+0.2 / 2 = 0.15
+        assert!((q[0] - 0.15).abs() < 1e-5, "Q1 expected 0.15, got {}", q[0]);
+        // Q5 = incomes 9-10, approvals 0.9+1.0 / 2 = 0.95
+        assert!((q[4] - 0.95).abs() < 1e-5, "Q5 expected 0.95, got {}", q[4]);
+        // Q3 (middle) = incomes 5-6, approvals 0.5+0.6 / 2 = 0.55
+        assert!((q[2] - 0.55).abs() < 1e-5, "Q3 expected 0.55, got {}", q[2]);
+    }
+
+    #[test]
+    fn quintile_with_fewer_than_5_returns_default() {
+        let pairs = vec![(1.0f64, 0.5f32), (2.0, 0.6)].into_iter();
+        let q = compute_quintile_approval(pairs);
+        assert_eq!(q, [0.5; 5], "fewer than 5 citizens should return default 0.5");
+    }
+
+    #[test]
+    fn quintile_unsorted_input_sorts_by_income() {
+        // High-income citizen has low approval; low-income has high.
+        // Q1 (poor) should have high approval; Q5 (rich) should have low.
+        let pairs = vec![
+            (100.0f64, 0.1f32), // high income, low approval
+            (100.0, 0.1),
+            (10.0, 0.9),        // low income, high approval
+            (10.0, 0.9),
+            (50.0, 0.5),
+        ].into_iter();
+        let q = compute_quintile_approval(pairs);
+        assert!(q[0] > q[4], "Q1 (poor, high approval) should exceed Q5 (rich, low approval)");
+    }
+}
