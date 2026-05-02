@@ -117,6 +117,8 @@ fn indicators_from_batch(batch: &RecordBatch) -> Result<MacroIndicators, IpcErro
         pollution_stock:        col_f64!("pollution_stock"),
         rights_granted_count:   col_u32!("rights_granted_count"),
         rights_breadth:         col_f32!("rights_breadth"),
+        mean_income:            col_f64!("mean_income"),
+        mean_wealth:            col_f64!("mean_wealth"),
     })
 }
 

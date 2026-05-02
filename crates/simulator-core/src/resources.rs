@@ -40,6 +40,12 @@ pub struct MacroIndicators {
     /// 0.0 when no rights are defined. Uses RightsCatalog when available,
     /// falls back to CivicRights bit-popcount / total-bits otherwise.
     pub rights_breadth: f32,
+    /// Mean monthly income per citizen in whole currency units.
+    /// Updated monthly alongside gini. 0 until first monthly tick.
+    pub mean_income: f64,
+    /// Mean net wealth per citizen in whole currency units (can be negative).
+    /// Updated monthly alongside wealth_gini. 0 until first monthly tick.
+    pub mean_wealth: f64,
 }
 
 /// Government balance sheet. Phase 1 just tracks revenue.

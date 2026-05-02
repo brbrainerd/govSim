@@ -70,8 +70,15 @@ pub fn macro_indicators_system(
     if compute_gini {
         indicators.gdp  = gdp;
         indicators.gini = if incomes.len() < 2 { 0.0 } else { gini_sorted(&mut incomes) };
-        // Wealth Gini: shift so minimum is 0 before computing.
+        // Mean monthly income (annual income / 360 to convert back from annual sum).
+        if !incomes.is_empty() {
+            let annual_sum: f64 = incomes.iter().sum();
+            indicators.mean_income = annual_sum / (incomes.len() as f64 * 360.0);
+        }
+        // Wealth Gini: shift so minimum is 0 before computing; also compute mean.
         if wealths.len() >= 2 {
+            let raw_sum: f64 = wealths.iter().sum();
+            indicators.mean_wealth = raw_sum / wealths.len() as f64;
             let min_w = wealths.iter().cloned().fold(f64::INFINITY, f64::min);
             if min_w < 0.0 {
                 let offset = -min_w;

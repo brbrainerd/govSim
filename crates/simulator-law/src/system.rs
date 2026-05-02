@@ -361,6 +361,8 @@ fn make_dispatch_ctx(
     b.insert("government_revenue".into(),     Value::Money(macro_.government_revenue));
     b.insert("government_expenditure".into(), Value::Money(macro_.government_expenditure));
     b.insert("treasury_balance".into(),       Value::Money(treasury.balance));
+    b.insert("mean_income".into(),            Value::Money(simulator_types::Money::from_num(macro_.mean_income)));
+    b.insert("mean_wealth".into(),            Value::Money(simulator_types::Money::from_num(macro_.mean_wealth)));
     // Externalities & political state (v10)
     b.insert("pollution_stock".into(),        Value::Rate(pollution.stock));
     b.insert("legitimacy_debt".into(),        Value::Rate(debt.stock as f64));
