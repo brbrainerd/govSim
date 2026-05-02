@@ -125,8 +125,35 @@ pub fn election_system(
 
     let total = vote_a + vote_b;
     let share_a = vote_a / total;
-    let winner = if share_a >= 0.5 { 1u8 } else { 2u8 };
+    let mut winner = if share_a >= 0.5 { 1u8 } else { 2u8 };
     let margin = ((share_a - 0.5) * 2.0).abs() as f32;
+
+    // Executive term-limit enforcement: if the Polity resource specifies a hard
+    // cap and the incumbent has reached it, override the vote result and force
+    // a party handover. This models constitutional term limits (e.g. US 22nd
+    // Amendment: max 2 consecutive terms). The behavioral fatigue heuristic above
+    // already makes long incumbency less likely; the term limit makes it impossible.
+    let term_limit_triggered = if let Some(ref p) = polity {
+        if let Some(limit) = p.executive_term_limit {
+            winner == outcome.incumbent && outcome.consecutive_terms >= limit
+        } else {
+            false
+        }
+    } else {
+        false
+    };
+
+    if term_limit_triggered {
+        // Mandatory succession: winner flips to the other party.
+        winner = if winner == 1 { 2 } else { 1 };
+        tracing::info!(
+            tick = clock.tick,
+            term_limit = polity.as_ref().and_then(|p| p.executive_term_limit),
+            consecutive_terms = outcome.consecutive_terms,
+            forced_winner = if winner == 1 { "Progressive (A)" } else { "Conservative (B)" },
+            "term limit enforced — incumbent barred from re-election"
+        );
+    }
 
     let same_party = winner == outcome.incumbent;
     let consecutive = if same_party { outcome.consecutive_terms + 1 } else { 1 };
@@ -137,6 +164,7 @@ pub fn election_system(
         share_a = format!("{:.1}%", share_a * 100.0),
         margin = format!("{:.3}", margin),
         consecutive_terms = consecutive,
+        term_limit_triggered,
         "election result"
     );
 
@@ -386,6 +414,119 @@ mod tests {
         assert_eq!(outcome.incumbent, 1,
             "PR parliamentary republic should still elect Party A with left-leaning electorate");
         assert_eq!(outcome.last_election_tick, 360);
+    }
+
+    /// Term limit = 1: incumbent cannot win a second consecutive term even
+    /// with a strongly supportive electorate.
+    #[test]
+    fn term_limit_forces_handover_after_limit_reached() {
+        use simulator_core::{ElectoralSystem, Polity, RegimeKind};
+
+        let mut sim = Sim::new([40u8; 32]);
+        register_election_system(&mut sim);
+
+        // Presidential republic with 1-term limit.
+        sim.world.insert_resource(Polity {
+            name: "Term-Limited Republic".to_string(),
+            regime: RegimeKind::PresidentialRepublic,
+            founding_year: 1900,
+            chamber_count: 2,
+            franchise_fraction: 1.0,
+            fused_executive: true,
+            executive_term_limit: Some(1),
+            electoral_system: ElectoralSystem::FirstPastThePost,
+        });
+
+        // Party A incumbent at exactly the limit (1 term served).
+        {
+            let mut o = sim.world.resource_mut::<ElectionOutcome>();
+            o.incumbent = 1;
+            o.consecutive_terms = 1;
+        }
+
+        // Strongly left-leaning electorate — would re-elect A without term limit.
+        for i in 0..10 { spawn(&mut sim.world, i, -0.9, 0.8); }
+
+        for _ in 0..=360 { sim.step(); }
+
+        let outcome = sim.world.resource::<ElectionOutcome>();
+        assert_eq!(outcome.incumbent, 2,
+            "term limit of 1 must force handover to Party B regardless of vote share");
+        assert_eq!(outcome.consecutive_terms, 1,
+            "Party B starts with consecutive_terms = 1 after winning");
+    }
+
+    /// Term limit not yet reached: incumbent can still win.
+    #[test]
+    fn term_limit_not_yet_reached_allows_reelection() {
+        use simulator_core::{ElectoralSystem, Polity, RegimeKind};
+
+        let mut sim = Sim::new([41u8; 32]);
+        register_election_system(&mut sim);
+
+        sim.world.insert_resource(Polity {
+            name: "Two-Term Republic".to_string(),
+            regime: RegimeKind::PresidentialRepublic,
+            founding_year: 1900,
+            chamber_count: 2,
+            franchise_fraction: 1.0,
+            fused_executive: true,
+            executive_term_limit: Some(2), // 2-term limit
+            electoral_system: ElectoralSystem::FirstPastThePost,
+        });
+
+        // Party A incumbent with only 1 term served — can serve one more.
+        {
+            let mut o = sim.world.resource_mut::<ElectionOutcome>();
+            o.incumbent = 1;
+            o.consecutive_terms = 1;
+        }
+
+        // Strongly left-leaning electorate.
+        for i in 0..10 { spawn(&mut sim.world, i, -0.9, 0.8); }
+
+        for _ in 0..=360 { sim.step(); }
+
+        let outcome = sim.world.resource::<ElectionOutcome>();
+        assert_eq!(outcome.incumbent, 1,
+            "1 term served with 2-term limit must allow re-election");
+        assert_eq!(outcome.consecutive_terms, 2);
+    }
+
+    /// No executive_term_limit (None): incumbent can win indefinitely.
+    #[test]
+    fn no_term_limit_allows_indefinite_tenure() {
+        use simulator_core::{ElectoralSystem, Polity, RegimeKind};
+
+        let mut sim = Sim::new([42u8; 32]);
+        register_election_system(&mut sim);
+
+        sim.world.insert_resource(Polity {
+            name: "Unlimited Republic".to_string(),
+            regime: RegimeKind::PresidentialRepublic,
+            founding_year: 1900,
+            chamber_count: 2,
+            franchise_fraction: 1.0,
+            fused_executive: true,
+            executive_term_limit: None, // no limit
+            electoral_system: ElectoralSystem::FirstPastThePost,
+        });
+
+        // Party A incumbent with 5 terms served.
+        {
+            let mut o = sim.world.resource_mut::<ElectionOutcome>();
+            o.incumbent = 1;
+            o.consecutive_terms = 5;
+        }
+
+        // Strongly left-leaning electorate; fatigue drag exists but shouldn't flip.
+        for i in 0..10 { spawn(&mut sim.world, i, -0.9, 0.9); }
+
+        for _ in 0..=360 { sim.step(); }
+
+        let outcome = sim.world.resource::<ElectionOutcome>();
+        assert_eq!(outcome.incumbent, 1,
+            "no term limit: strongly supported incumbent must not be forced out");
     }
 
     /// No Polity resource → default competitive behaviour unchanged.

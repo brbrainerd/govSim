@@ -102,7 +102,7 @@ pub fn law_dispatcher_system(
 
     let tick = clock.tick;
     let base_ctx = make_dispatch_ctx(tick, &macro_, &treasury, &debt, &rights, &crisis, &pollution,
-        judiciary.as_deref());
+        judiciary.as_deref(), capacity.as_deref());
     for h in &active {
         if !h.cadence.fires_at(tick) { continue; }
 
@@ -235,6 +235,7 @@ fn make_dispatch_ctx(
     crisis: &CrisisState,
     pollution: &PollutionStock,
     judiciary: Option<&Judiciary>,
+    capacity: Option<&StateCapacity>,
 ) -> EvalCtx {
     let mut b = HashMap::new();
     // Time
@@ -271,10 +272,29 @@ fn make_dispatch_ctx(
         ),
         None => (0.0, 0, 0.0, 0.0),
     };
-    b.insert("judiciary_independence".into(),         Value::Rate(jud_ind));
-    b.insert("judiciary_review_power".into(),         Value::Int(jud_review));
-    b.insert("judiciary_precedent_weight".into(),     Value::Rate(jud_precedent));
+    b.insert("judiciary_independence".into(),            Value::Rate(jud_ind));
+    b.insert("judiciary_review_power".into(),            Value::Int(jud_review));
+    b.insert("judiciary_precedent_weight".into(),        Value::Rate(jud_precedent));
     b.insert("judiciary_international_deference".into(), Value::Rate(jud_intl));
+    // StateCapacity (Phase B) — present only when a StateCapacity resource is inserted.
+    // DSL programs can condition on institutional effectiveness, e.g. to model
+    // laws that are harder to enforce in weak states. Default = 1.0 (full capacity)
+    // so laws without capacity awareness behave identically to pre-Phase-B scenarios.
+    let (tax_eff, enf_reach, enf_noise, legal_pred, bureau_eff) = match capacity {
+        Some(c) => (
+            c.tax_collection_efficiency as f64,
+            c.enforcement_reach as f64,
+            c.enforcement_noise as f64,
+            c.legal_predictability as f64,
+            c.bureaucratic_effectiveness as f64,
+        ),
+        None => (1.0, 1.0, 0.0, 1.0, 1.0),
+    };
+    b.insert("state_tax_efficiency".into(),        Value::Rate(tax_eff));
+    b.insert("state_enforcement_reach".into(),     Value::Rate(enf_reach));
+    b.insert("state_enforcement_noise".into(),     Value::Rate(enf_noise));
+    b.insert("state_legal_predictability".into(),  Value::Rate(legal_pred));
+    b.insert("state_bureaucratic_effectiveness".into(), Value::Rate(bureau_eff));
     EvalCtx { bindings: b, field_bindings: HashMap::new() }
 }
 
