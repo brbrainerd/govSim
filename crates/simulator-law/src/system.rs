@@ -14,7 +14,7 @@ use simulator_core::{
         MonthlyTaxPaid, Productivity, Wealth,
     },
     CrisisState, GovernmentLedger, Judiciary, LegitimacyDebt, MacroIndicators, Phase,
-    PollutionStock, RightsLedger, Sim, SimClock, SimRng, StateCapacity, Treasury,
+    PollutionStock, RightsLedger, RightsCatalog, Sim, SimClock, SimRng, StateCapacity, Treasury,
 };
 use rand::Rng;
 use simulator_types::Money;
@@ -61,6 +61,7 @@ pub fn law_dispatcher_system(
     crisis: Res<CrisisState>,
     capacity: Option<Res<StateCapacity>>,
     judiciary: Option<Res<Judiciary>>,
+    rights_catalog: Option<Res<RightsCatalog>>,
     mut q: Query<(
         Option<&Citizen>,
         &Income,
@@ -102,7 +103,7 @@ pub fn law_dispatcher_system(
 
     let tick = clock.tick;
     let base_ctx = make_dispatch_ctx(tick, &macro_, &treasury, &debt, &rights, &crisis, &pollution,
-        judiciary.as_deref(), capacity.as_deref());
+        judiciary.as_deref(), capacity.as_deref(), rights_catalog.as_deref());
     for h in &active {
         if !h.cadence.fires_at(tick) { continue; }
 
@@ -236,6 +237,7 @@ fn make_dispatch_ctx(
     pollution: &PollutionStock,
     judiciary: Option<&Judiciary>,
     capacity: Option<&StateCapacity>,
+    rights_catalog: Option<&RightsCatalog>,
 ) -> EvalCtx {
     let mut b = HashMap::new();
     // Time
@@ -295,6 +297,21 @@ fn make_dispatch_ctx(
     b.insert("state_enforcement_noise".into(),     Value::Rate(enf_noise));
     b.insert("state_legal_predictability".into(),  Value::Rate(legal_pred));
     b.insert("state_bureaucratic_effectiveness".into(), Value::Rate(bureau_eff));
+    // RightsCatalog (Phase C) — present only when a RightsCatalog resource is inserted.
+    // DSL programs can condition on the number and breadth of civil rights granted.
+    // Default = 0 / 0.0 so laws without rights-catalog awareness behave identically
+    // to pre-Phase-C scenarios.
+    let (cat_count, cat_breadth, cat_historical) = match rights_catalog {
+        Some(c) => (
+            c.granted_count() as i64,
+            c.breadth_score() as f64,
+            c.historical_count() as i64,
+        ),
+        None => (0, 0.0, 0),
+    };
+    b.insert("rights_catalog_count".into(),     Value::Int(cat_count));
+    b.insert("rights_catalog_breadth".into(),   Value::Rate(cat_breadth));
+    b.insert("rights_catalog_historical".into(), Value::Int(cat_historical));
     EvalCtx { bindings: b, field_bindings: HashMap::new() }
 }
 

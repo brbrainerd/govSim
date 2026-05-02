@@ -6,6 +6,7 @@ pub mod judiciary;
 pub mod phase;
 pub mod polity;
 pub mod resources;
+pub mod rights_catalog;
 pub mod rng;
 pub mod state_capacity;
 pub mod tick;
@@ -14,6 +15,10 @@ pub mod world;
 pub use judiciary::Judiciary;
 pub use phase::Phase;
 pub use polity::{ElectoralSystem, Polity, RegimeKind};
+pub use rights_catalog::{
+    catalog_from_bits, catalog_from_strings, default_catalog, RightDefinition, RightId,
+    RightsCatalog, LEGACY_BIT_TO_ID,
+};
 pub use resources::{
     CivicRights, CrisisKind, CrisisState, GovernmentLedger, LegitimacyDebt,
     MacroIndicators, PollutionStock, PriceLevel, RightsLedger, Treasury,

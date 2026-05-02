@@ -7,14 +7,15 @@ use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
 
 use simulator_core::{
+    catalog_from_bits, catalog_from_strings,
     components::{
         Age, ApprovalRating, AuditFlagBits, AuditFlags, Citizen, ConsumptionExpenditure,
         EmploymentStatus, EvasionPropensity, Health, IdeologyVector, Income, LegalStatusFlags,
         LegalStatuses, Location, MonthlyBenefitReceived, MonthlyTaxPaid, Productivity,
         SavingsRate, Sex, Wealth,
     },
-    CivicRights, Judiciary, LegitimacyDebt, Polity, PollutionStock, RightsLedger, Sim,
-    StateCapacity,
+    CivicRights, Judiciary, LegitimacyDebt, Polity, PollutionStock, RightsLedger, RightsCatalog,
+    Sim, StateCapacity,
 };
 use simulator_types::{CitizenId, Money, RegionId, Score};
 
@@ -59,6 +60,11 @@ pub struct Scenario {
     /// legislation is applied. Phase D (added 2026-05).
     #[serde(default)]
     pub judiciary: Option<Judiciary>,
+    /// Optional explicit rights catalog as a list of right IDs (e.g. `["suffrage",
+    /// "free_speech"]`). Takes precedence over `initial_rights` bitmask if both
+    /// are present. Phase C (added 2026-05).
+    #[serde(default)]
+    pub initial_rights_catalog: Option<Vec<String>>,
 }
 
 fn default_seed() -> [u8; 32] { [0u8; 32] }
@@ -269,6 +275,20 @@ impl Scenario {
         if let Some(ref j) = self.judiciary {
             world.insert_resource(j.clone());
         }
+
+        // Seed RightsCatalog (Phase C). Explicit string list takes precedence
+        // over the legacy bitmask; if neither is present, no catalog resource
+        // is inserted (systems fall back to RightsLedger-only behaviour).
+        let catalog: Option<RightsCatalog> = if let Some(ref ids) = self.initial_rights_catalog {
+            Some(catalog_from_strings(ids))
+        } else if let Some(bits) = self.initial_rights {
+            Some(catalog_from_bits(bits))
+        } else {
+            None
+        };
+        if let Some(cat) = catalog {
+            world.insert_resource(cat);
+        }
     }
 }
 
@@ -311,6 +331,7 @@ mod tests {
             polity: None,
             state_capacity: None,
             judiciary: None,
+            initial_rights_catalog: None,
         }
     }
 

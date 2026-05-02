@@ -272,6 +272,7 @@ mod tests {
             polity: None,
             state_capacity: None,
             judiciary: None,
+            initial_rights_catalog: None,
         }
     }
 
