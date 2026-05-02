@@ -76,6 +76,27 @@
   // Recent elections inferred from metrics: look for ticks where election_margin changes.
   const electionHistory = $derived(buildElectionHistory(sim.metricsRows));
 
+  // ── Quintile approval breakdown ───────────────────────────────────────────
+  const QUINTILE_LABELS = ["Q1 Poorest", "Q2 Lower-mid", "Q3 Middle", "Q4 Upper-mid", "Q5 Wealthiest"] as const;
+  type QKey = "approval_q1" | "approval_q2" | "approval_q3" | "approval_q4" | "approval_q5";
+  const Q_KEYS: readonly QKey[] = ["approval_q1", "approval_q2", "approval_q3", "approval_q4", "approval_q5"] as const;
+
+  const quintileCurrent = $derived((() => {
+    const last = sim.metricsRows.at(-1);
+    if (!last) return null;
+    return Q_KEYS.map(k => last[k] as number);
+  })());
+
+  const quintileAtElection = $derived((() => {
+    if (!cs) return null;
+    const row = sim.metricsRows.find(r => r.tick === cs.last_election_tick)
+      ?? sim.metricsRows.reduce<typeof sim.metricsRows[0] | null>((best, r) =>
+          r.tick <= cs.last_election_tick && (!best || r.tick > best.tick) ? r : best
+        , null);
+    if (!row) return null;
+    return Q_KEYS.map(k => row[k] as number);
+  })());
+
   // ── Crisis history ────────────────────────────────────────────────────────
   const crisisHistory = $derived(buildCrisisHistory(sim.metricsRows));
 
@@ -216,6 +237,40 @@
       />
     </div>
   </section>
+
+  <!-- ── Support by income group ── -->
+  {#if quintileCurrent}
+  <section class="section">
+    <h2 class="section-title">Support by Income Group</h2>
+    <table class="hist-table quintile-table">
+      <thead>
+        <tr>
+          <th>Group</th>
+          <th>At Last Election</th>
+          <th>Current Approval</th>
+          <th>Swing</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each QUINTILE_LABELS as label, i}
+        {@const cur = quintileCurrent[i]}
+        {@const atEl = quintileAtElection ? quintileAtElection[i] : null}
+        {@const swing = atEl !== null ? cur - atEl : null}
+        <tr>
+          <td class="q-group-label">{label}</td>
+          <td>{atEl !== null ? pct(atEl) : "—"}</td>
+          <td style="color:{cur > 0.5 ? 'var(--good)' : cur > 0.35 ? 'var(--warn)' : 'var(--danger)'}; font-weight:600">{pct(cur)}</td>
+          <td class:q-pos={swing !== null && swing > 0.005}
+              class:q-neg={swing !== null && swing < -0.005}>
+            {swing !== null ? (swing >= 0 ? "+" : "") + pct(swing) : "—"}
+          </td>
+        </tr>
+        {/each}
+      </tbody>
+    </table>
+    <p class="table-note">Swing = change since tick {cs?.last_election_tick ?? "—"}. Income quintiles sorted by citizen income (Q1 = lowest 20%).</p>
+  </section>
+  {/if}
 
   <!-- ── Election margin trend ── -->
   <section class="section">
@@ -554,6 +609,11 @@ h1 { font-size: 20px; font-weight: 700; }
   color: var(--danger);
 }
 .right-revoke:hover:not(:disabled) { background: rgba(239,68,68,.2); }
+
+/* Quintile table */
+.quintile-table .q-group-label { font-weight: 600; }
+.q-pos { color: var(--good); font-weight: 600; }
+.q-neg { color: var(--danger); font-weight: 600; }
 
 /* Crisis */
 .crisis-active-banner {
