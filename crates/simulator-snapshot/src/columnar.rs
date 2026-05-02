@@ -342,7 +342,7 @@ pub fn save_snapshot(world: &mut World) -> Result<Vec<u8>, SnapshotError> {
     });
 
     // Optional institutional resources (v12+).
-    let polity_block:   Option<PolityBlock>   = world.get_resource::<Polity>().map(|p| PolityBlock::from_polity(p));
+    let polity_block:   Option<PolityBlock>   = world.get_resource::<Polity>().map(PolityBlock::from_polity);
     let judiciary_block: Option<Judiciary>    = world.get_resource::<Judiciary>().cloned();
     let capacity_block: Option<StateCapacity> = world.get_resource::<StateCapacity>().cloned();
 

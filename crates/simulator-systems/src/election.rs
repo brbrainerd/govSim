@@ -47,15 +47,15 @@ pub fn election_system(
 
     // If a Polity resource is present with a non-competitive electoral system,
     // skip citizen voting — the governing faction persists unchanged.
-    if let Some(ref p) = polity {
-        if !p.electoral_system.is_competitive() {
-            tracing::debug!(
-                tick = clock.tick,
-                regime = ?p.regime,
-                "election skipped: non-competitive electoral system"
-            );
-            return;
-        }
+    if let Some(ref p) = polity
+        && !p.electoral_system.is_competitive()
+    {
+        tracing::debug!(
+            tick = clock.tick,
+            regime = ?p.regime,
+            "election skipped: non-competitive electoral system"
+        );
+        return;
     }
 
     let mut vote_a: f64 = 0.0;

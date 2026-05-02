@@ -144,9 +144,10 @@ impl WindowDiff {
         let delta_income           = post.mean_income           - pre.mean_income;
         let delta_rights_breadth   = post.mean_rights_breadth   - pre.mean_rights_breadth;
         let mut delta_approval_by_quintile = [0.0f32; 5];
-        for q in 0..5 {
-            delta_approval_by_quintile[q] =
-                post.mean_approval_by_quintile[q] - pre.mean_approval_by_quintile[q];
+        for (slot, (p, q)) in delta_approval_by_quintile.iter_mut()
+            .zip(post.mean_approval_by_quintile.iter().zip(pre.mean_approval_by_quintile.iter()))
+        {
+            *slot = p - q;
         }
         Self { pre, post, delta_approval, delta_unemployment, delta_gdp,
                delta_pollution, delta_legitimacy, delta_treasury,

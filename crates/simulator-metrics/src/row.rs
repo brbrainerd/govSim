@@ -135,12 +135,12 @@ pub(crate) fn compute_quintile_approval(
     v.sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
     let n = v.len();
     let mut out = [0.0f32; 5];
-    for q in 0..5 {
+    for (q, slot) in out.iter_mut().enumerate() {
         let start = q * n / 5;
         let end   = (q + 1) * n / 5;
         let slice = &v[start..end];
         let sum: f32 = slice.iter().map(|(_, a)| a).sum();
-        out[q] = if slice.is_empty() { 0.5 } else { sum / slice.len() as f32 };
+        *slot = if slice.is_empty() { 0.5 } else { sum / slice.len() as f32 };
     }
     out
 }

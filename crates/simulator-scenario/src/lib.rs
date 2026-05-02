@@ -288,13 +288,10 @@ impl Scenario {
         // Seed RightsCatalog (Phase C). Explicit string list takes precedence
         // over the legacy bitmask; if neither is present, no catalog resource
         // is inserted (systems fall back to RightsLedger-only behaviour).
-        let catalog: Option<RightsCatalog> = if let Some(ref ids) = self.initial_rights_catalog {
-            Some(catalog_from_strings(ids))
-        } else if let Some(bits) = self.initial_rights {
-            Some(catalog_from_bits(bits))
-        } else {
-            None
-        };
+        let catalog: Option<RightsCatalog> = self.initial_rights_catalog
+            .as_ref()
+            .map(|ids| catalog_from_strings(ids))
+            .or_else(|| self.initial_rights.map(catalog_from_bits));
         if let Some(cat) = catalog {
             world.insert_resource(cat);
         }
