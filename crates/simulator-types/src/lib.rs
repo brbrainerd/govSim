@@ -58,5 +58,52 @@ mod tests {
         let d = SimDate::from_tick(0);
         assert_eq!(d.year, 2026);
         assert_eq!(d.quarter, 0);
+        assert_eq!(d.day, 0);
+        assert_eq!(d.tick, 0);
+    }
+
+    /// Year increments at tick 360 (one simulated year).
+    #[test]
+    fn date_year_advances_at_tick_360() {
+        let d = SimDate::from_tick(360);
+        assert_eq!(d.year, 2027, "year should be 2027 at tick 360");
+        assert_eq!(d.quarter, 0);
+        assert_eq!(d.day, 0);
+    }
+
+    /// Quarter advances correctly every 90 days.
+    #[test]
+    fn date_quarter_calculation() {
+        // Q0: days 0-89, Q1: days 90-179, Q2: days 180-269, Q3: days 270-359
+        assert_eq!(SimDate::from_tick(0).quarter,   0);
+        assert_eq!(SimDate::from_tick(89).quarter,  0);
+        assert_eq!(SimDate::from_tick(90).quarter,  1);
+        assert_eq!(SimDate::from_tick(179).quarter, 1);
+        assert_eq!(SimDate::from_tick(180).quarter, 2);
+        assert_eq!(SimDate::from_tick(269).quarter, 2);
+        assert_eq!(SimDate::from_tick(270).quarter, 3);
+        assert_eq!(SimDate::from_tick(359).quarter, 3);
+    }
+
+    /// Day-within-year wraps correctly at year boundaries.
+    #[test]
+    fn date_day_within_year_wraps() {
+        let d = SimDate::from_tick(359);
+        assert_eq!(d.year, 2026);
+        assert_eq!(d.day, 359, "last day of year 1 should be 359");
+
+        let d2 = SimDate::from_tick(360);
+        assert_eq!(d2.year, 2027);
+        assert_eq!(d2.day, 0, "first day of year 2 should be 0");
+    }
+
+    /// Large tick values produce correct years.
+    #[test]
+    fn date_large_tick() {
+        // 10 simulated years = 3600 ticks.
+        let d = SimDate::from_tick(3600);
+        assert_eq!(d.year, 2036);
+        assert_eq!(d.quarter, 0);
+        assert_eq!(d.day, 0);
     }
 }

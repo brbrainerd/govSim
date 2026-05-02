@@ -407,6 +407,81 @@ mod tests {
         );
     }
 
+    /// Save/load with citizens preserves all citizen fields.
+    #[test]
+    fn save_load_round_trip_with_citizen() {
+        use simulator_core::components::{
+            Age, ApprovalRating, AuditFlags, Citizen, ConsumptionExpenditure,
+            EmploymentStatus, EvasionPropensity, Health, IdeologyVector, Income,
+            LegalStatusFlags, LegalStatuses, Location, Productivity, SavingsRate, Sex, Wealth,
+        };
+        use simulator_types::{CitizenId, Money, RegionId, Score};
+
+        let mut sim = Sim::new([2u8; 32]);
+        let ideology = [0.1, -0.3, 0.5, 0.0, -0.7];
+        sim.world.spawn(((
+            Citizen(CitizenId(42)),
+            Age(33),
+            Sex::Female,
+            Location(RegionId(5)),
+            Health(Score::from_num(0.75_f32)),
+            Income(Money::from_num(2500_i32)),
+            Wealth(Money::from_num(15000_i32)),
+            EmploymentStatus::Employed,
+        ), (
+            Productivity(Score::from_num(0.6_f32)),
+            IdeologyVector(ideology),
+            ApprovalRating(Score::from_num(0.4_f32)),
+            LegalStatuses(LegalStatusFlags::CITIZEN | LegalStatusFlags::REGISTERED_VOTER),
+            AuditFlags::default(),
+            EvasionPropensity(0.05),
+            ConsumptionExpenditure(Money::from_num(2000_i32)),
+            SavingsRate(0.15),
+        )));
+
+        let blob = save_snapshot(&mut sim.world).expect("save");
+
+        let mut sim2 = Sim::new([0u8; 32]);
+        let (n, _) = load_snapshot(&mut sim2.world, &blob).expect("load");
+        assert_eq!(n, 1, "should have loaded 1 citizen");
+
+        let mut q = sim2.world.query::<(
+            &Citizen, &Age, &EmploymentStatus, &IdeologyVector, &SavingsRate, &EvasionPropensity,
+        )>();
+        let (c, a, emp, iv, sr, ep) = q.single(&sim2.world).unwrap();
+        assert_eq!(c.0.0, 42);
+        assert_eq!(a.0, 33);
+        assert!(matches!(*emp, EmploymentStatus::Employed));
+        for k in 0..5 {
+            assert!((iv.0[k] - ideology[k]).abs() < 1e-6, "ideology[{k}] mismatch");
+        }
+        assert!((sr.0 - 0.15).abs() < 1e-6, "savings rate mismatch");
+        assert!((ep.0 - 0.05).abs() < 1e-6, "evasion propensity mismatch");
+    }
+
+    /// Loading a blob with a mismatched version returns VersionMismatch error.
+    #[test]
+    fn load_wrong_version_returns_error() {
+        use crate::SnapshotError;
+
+        // Build a valid snapshot then corrupt version byte by tampering the raw bincode.
+        let mut sim = Sim::new([3u8; 32]);
+        let blob = save_snapshot(&mut sim.world).expect("save");
+
+        // Decompress, flip first 4 bytes (version u32 in little-endian), re-compress.
+        let mut raw = zstd::decode_all(blob.as_slice()).unwrap();
+        // version 10 = 0x0A 0x00 0x00 0x00 → change to 99 = 0x63 0x00 0x00 0x00
+        raw[0] = 99;
+        let tampered = zstd::encode_all(raw.as_slice(), 3).unwrap();
+
+        let mut sim2 = Sim::new([0u8; 32]);
+        let result = load_snapshot(&mut sim2.world, &tampered);
+        assert!(
+            matches!(result, Err(SnapshotError::VersionMismatch { found: 99, expected: 10 })),
+            "expected VersionMismatch error, got {result:?}"
+        );
+    }
+
     #[test]
     fn save_load_preserves_new_resources() {
         use simulator_core::{CivicRights, CrisisKind, CrisisState, LegitimacyDebt,
