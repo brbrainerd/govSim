@@ -2,6 +2,7 @@
 //! and the tick clock. See blueprint §3 for design.
 
 pub mod components;
+pub mod judiciary;
 pub mod phase;
 pub mod polity;
 pub mod resources;
@@ -10,6 +11,7 @@ pub mod state_capacity;
 pub mod tick;
 pub mod world;
 
+pub use judiciary::Judiciary;
 pub use phase::Phase;
 pub use polity::{ElectoralSystem, Polity, RegimeKind};
 pub use resources::{

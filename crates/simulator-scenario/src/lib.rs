@@ -13,7 +13,8 @@ use simulator_core::{
         LegalStatuses, Location, MonthlyBenefitReceived, MonthlyTaxPaid, Productivity,
         SavingsRate, Sex, Wealth,
     },
-    CivicRights, LegitimacyDebt, Polity, PollutionStock, RightsLedger, Sim, StateCapacity,
+    CivicRights, Judiciary, LegitimacyDebt, Polity, PollutionStock, RightsLedger, Sim,
+    StateCapacity,
 };
 use simulator_types::{CitizenId, Money, RegionId, Score};
 
@@ -53,6 +54,11 @@ pub struct Scenario {
     /// field is used (perfect capacity, current behaviour). Phase B (added 2026-05).
     #[serde(default)]
     pub state_capacity: Option<StateCapacity>,
+    /// Optional judiciary configuration (independence, review power, precedent
+    /// weight, international deference). If absent, no judicial constraint on
+    /// legislation is applied. Phase D (added 2026-05).
+    #[serde(default)]
+    pub judiciary: Option<Judiciary>,
 }
 
 fn default_seed() -> [u8; 32] { [0u8; 32] }
@@ -256,6 +262,13 @@ impl Scenario {
             clamped.clamp_fields();
             world.insert_resource(clamped);
         }
+
+        // Insert Judiciary resource if scenario specifies one. Law dispatcher
+        // (Phase D/I) consults this via `Option<Res<Judiciary>>` to gate
+        // judicial review of legislation.
+        if let Some(ref j) = self.judiciary {
+            world.insert_resource(j.clone());
+        }
     }
 }
 
@@ -297,6 +310,7 @@ mod tests {
             crisis_prob_pct: Some(0), // suppress random crises for determinism
             polity: None,
             state_capacity: None,
+            judiciary: None,
         }
     }
 

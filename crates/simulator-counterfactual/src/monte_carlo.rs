@@ -271,6 +271,7 @@ mod tests {
             crisis_prob_pct: Some(0),
             polity: None,
             state_capacity: None,
+            judiciary: None,
         }
     }
 
