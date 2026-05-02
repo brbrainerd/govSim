@@ -39,19 +39,24 @@ describe("formatMoney", () => {
   });
 
   it("handles negatives by magnitude", () => {
-    expect(formatMoney(-1500)).toBe("$-1.5K");
-    expect(formatMoney(-2e6)).toBe("$-2.0M");
+    expect(formatMoney(-1500)).toBe("-$1.5K");
+    expect(formatMoney(-2e6)).toBe("-$2.0M");
   });
 
   it("handles negative billions", () => {
-    expect(formatMoney(-1e9)).toBe("$-1.0B");
-    expect(formatMoney(-3.75e9)).toBe("$-3.8B");
+    expect(formatMoney(-1e9)).toBe("-$1.0B");
+    expect(formatMoney(-3.75e9)).toBe("-$3.8B");
   });
 
   it("sub-1000 values use integer formatting", () => {
     expect(formatMoney(0.4)).toBe("$0");
     expect(formatMoney(0.5)).toBe("$1"); // JS rounds 0.5 up with toFixed(0)
     expect(formatMoney(999.4)).toBe("$999");
+  });
+
+  it("negative sub-1000 places sign before $", () => {
+    expect(formatMoney(-500)).toBe("-$500");
+    expect(formatMoney(-1)).toBe("-$1");
   });
 
   it("boundary: 999_999 formats as K (rounds to 1000.0K, not M)", () => {

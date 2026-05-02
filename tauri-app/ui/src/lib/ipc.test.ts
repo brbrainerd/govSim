@@ -1,14 +1,16 @@
 /**
- * Tests for ipc.ts helpers that have pure-function implementations.
+ * Tests for ipc.ts helpers.
  *
  * Covers:
  *  - decodeCivicRights: bitmask → labelled array mapping
  *  - CIVIC_RIGHTS: structural invariants (9 entries, unique bits, unique labels)
+ *  - invoke wrappers: correct command name + argument shape passed to Tauri invoke
  *
  * No Tauri bridge or tinro import — ipc.ts only imports from @tauri-apps/api/core
  * which is mocked below.
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { invoke } from "@tauri-apps/api/core";
 
 // @tauri-apps/api/core is only available inside a real Tauri window.
 // Stub invoke so the module loads cleanly in Node.
@@ -16,7 +18,15 @@ vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
 }));
 
-import { CIVIC_RIGHTS, decodeCivicRights } from "./ipc";
+import {
+  CIVIC_RIGHTS, decodeCivicRights,
+  grantCivicRight, revokeCivicRight,
+  saveSimSnapshot, getCounterfactualDiff, runMonteCarlo,
+  getCitizenDistribution, getCitizenScatter,
+  getRegionStats,
+} from "./ipc";
+
+const mockedInvoke = vi.mocked(invoke);
 
 // ── CIVIC_RIGHTS structural invariants ────────────────────────────────────────
 
@@ -126,5 +136,218 @@ describe("decodeCivicRights", () => {
     const result       = decodeCivicRights(withJunk);
     expect(result).toHaveLength(9);
     expect(result.every(r => r.granted)).toBe(true);
+  });
+});
+
+// ── invoke wrapper tests ──────────────────────────────────────────────────────
+//
+// Each wrapper must pass the exact Tauri command name and parameter object.
+// We verify both so a rename or typo in ipc.ts fails a test immediately.
+
+describe("grantCivicRight", () => {
+  beforeEach(() => { mockedInvoke.mockResolvedValue(7); });
+
+  it("calls invoke with command 'grant_civic_right'", async () => {
+    await grantCivicRight(1);
+    expect(mockedInvoke).toHaveBeenCalledWith("grant_civic_right", { bit: 1 });
+  });
+
+  it("passes the bit value through to invoke", async () => {
+    await grantCivicRight(1 << 5);
+    expect(mockedInvoke).toHaveBeenCalledWith("grant_civic_right", { bit: 32 });
+  });
+
+  it("resolves to the value returned by invoke", async () => {
+    mockedInvoke.mockResolvedValue(255);
+    const result = await grantCivicRight(1 << 0);
+    expect(result).toBe(255);
+  });
+});
+
+describe("revokeCivicRight", () => {
+  beforeEach(() => { mockedInvoke.mockResolvedValue([3, 0.5]); });
+
+  it("calls invoke with command 'revoke_civic_right'", async () => {
+    await revokeCivicRight(1);
+    expect(mockedInvoke).toHaveBeenCalledWith("revoke_civic_right", { bit: 1 });
+  });
+
+  it("passes the bit value through to invoke", async () => {
+    await revokeCivicRight(1 << 4);
+    expect(mockedInvoke).toHaveBeenCalledWith("revoke_civic_right", { bit: 16 });
+  });
+
+  it("resolves to the [newBits, debtDelta] tuple returned by invoke", async () => {
+    mockedInvoke.mockResolvedValue([6, 0.5]);
+    const result = await revokeCivicRight(1);
+    expect(result).toEqual([6, 0.5]);
+  });
+
+  it("resolves to [bits, 0] when revoking a never-granted right", async () => {
+    mockedInvoke.mockResolvedValue([0, 0]);
+    const result = await revokeCivicRight(1 << 8);
+    expect(result).toEqual([0, 0]);
+  });
+});
+
+describe("saveSimSnapshot", () => {
+  beforeEach(() => { mockedInvoke.mockResolvedValue(42); });
+
+  it("calls invoke with command 'save_sim_snapshot' and no extra args", async () => {
+    await saveSimSnapshot();
+    expect(mockedInvoke).toHaveBeenCalledWith("save_sim_snapshot");
+  });
+
+  it("resolves to the tick number returned by invoke", async () => {
+    mockedInvoke.mockResolvedValue(180);
+    const tick = await saveSimSnapshot();
+    expect(tick).toBe(180);
+  });
+});
+
+describe("getCounterfactualDiff", () => {
+  const fakeEstimate = {
+    enacted_tick: 30, window_ticks: 30,
+    did_approval: 0.02, did_gdp: 500, did_pollution: -0.1,
+    did_unemployment: -0.01, did_legitimacy: 0.0, did_treasury: 1000,
+    treatment_post_approval: 0.65, treatment_post_gdp: 5e6,
+  };
+
+  beforeEach(() => { mockedInvoke.mockResolvedValue(fakeEstimate); });
+
+  it("calls invoke with 'get_counterfactual_diff' and correct args", async () => {
+    await getCounterfactualDiff(7, 30);
+    expect(mockedInvoke).toHaveBeenCalledWith("get_counterfactual_diff", {
+      lawId: 7, windowTicks: 30,
+    });
+  });
+
+  it("uses default windowTicks=30 when not supplied", async () => {
+    await getCounterfactualDiff(7);
+    expect(mockedInvoke).toHaveBeenCalledWith("get_counterfactual_diff", {
+      lawId: 7, windowTicks: 30,
+    });
+  });
+
+  it("resolves to the CausalEstimateDto returned by invoke", async () => {
+    const result = await getCounterfactualDiff(7);
+    expect(result).toEqual(fakeEstimate);
+  });
+});
+
+describe("runMonteCarlo", () => {
+  const fakeSummary = {
+    n_runs: 20,
+    mean_did_approval: 0.01, std_did_approval: 0.002,
+    p5_did_approval: -0.01, p95_did_approval: 0.03,
+    mean_did_gdp: 200,       std_did_gdp: 50,
+    p5_did_gdp: 100,         p95_did_gdp: 300,
+    mean_did_pollution: null, std_did_pollution: null,
+    p5_did_pollution: null,   p95_did_pollution: null,
+    mean_did_unemployment: -0.005, std_did_unemployment: 0.001,
+    p5_did_unemployment: -0.01,    p95_did_unemployment: 0.0,
+    mean_did_legitimacy: 0.0, std_did_legitimacy: 0.0,
+    p5_did_legitimacy: 0.0,   p95_did_legitimacy: 0.0,
+    mean_did_treasury: 500,   std_did_treasury: 100,
+    p5_did_treasury: 300,     p95_did_treasury: 700,
+  };
+
+  beforeEach(() => { mockedInvoke.mockResolvedValue(fakeSummary); });
+
+  it("calls invoke with 'run_monte_carlo' and correct args", async () => {
+    await runMonteCarlo(3, 30, 20);
+    expect(mockedInvoke).toHaveBeenCalledWith("run_monte_carlo", {
+      lawId: 3, windowTicks: 30, nRuns: 20,
+    });
+  });
+
+  it("uses defaults windowTicks=30, nRuns=20 when not supplied", async () => {
+    await runMonteCarlo(3);
+    expect(mockedInvoke).toHaveBeenCalledWith("run_monte_carlo", {
+      lawId: 3, windowTicks: 30, nRuns: 20,
+    });
+  });
+
+  it("resolves to the MonteCarloSummaryDto returned by invoke", async () => {
+    const result = await runMonteCarlo(3);
+    expect(result).toEqual(fakeSummary);
+  });
+
+  it("passes custom nRuns through to invoke", async () => {
+    await runMonteCarlo(5, 60, 50);
+    expect(mockedInvoke).toHaveBeenCalledWith("run_monte_carlo", {
+      lawId: 5, windowTicks: 60, nRuns: 50,
+    });
+  });
+});
+
+describe("getCitizenDistribution", () => {
+  const fakeDistribution = {
+    income: { edges: [0, 1000], counts: [100], min: 0, max: 1000, mean: 500, n: 100 },
+    wealth: { edges: [0, 5000], counts: [100], min: 0, max: 5000, mean: 2500, n: 100 },
+    health: { edges: [0, 1], counts: [100], min: 0, max: 1, mean: 0.7, n: 100 },
+    productivity: { edges: [0, 1], counts: [100], min: 0, max: 1, mean: 0.6, n: 100 },
+    n_citizens: 100,
+  };
+
+  beforeEach(() => { mockedInvoke.mockResolvedValue(fakeDistribution); });
+
+  it("calls invoke with 'get_citizen_distribution' and regionId=null by default", async () => {
+    await getCitizenDistribution();
+    expect(mockedInvoke).toHaveBeenCalledWith("get_citizen_distribution", { regionId: null });
+  });
+
+  it("passes regionId when supplied", async () => {
+    await getCitizenDistribution(2);
+    expect(mockedInvoke).toHaveBeenCalledWith("get_citizen_distribution", { regionId: 2 });
+  });
+
+  it("resolves to the CitizenDistributionDto returned by invoke", async () => {
+    const result = await getCitizenDistribution();
+    expect(result).toEqual(fakeDistribution);
+  });
+});
+
+describe("getCitizenScatter", () => {
+  const fakePoints: [number, number, number, number][] = [[500, 2000, 0.7, 0.6]];
+
+  beforeEach(() => { mockedInvoke.mockResolvedValue(fakePoints); });
+
+  it("calls invoke with 'get_citizen_scatter' and correct defaults", async () => {
+    await getCitizenScatter();
+    expect(mockedInvoke).toHaveBeenCalledWith("get_citizen_scatter", {
+      maxPoints: 500, regionId: null,
+    });
+  });
+
+  it("passes custom maxPoints and regionId", async () => {
+    await getCitizenScatter(200, 3);
+    expect(mockedInvoke).toHaveBeenCalledWith("get_citizen_scatter", {
+      maxPoints: 200, regionId: 3,
+    });
+  });
+
+  it("resolves to the scatter point array returned by invoke", async () => {
+    const result = await getCitizenScatter();
+    expect(result).toEqual(fakePoints);
+  });
+});
+
+describe("getRegionStats", () => {
+  const fakeStats = [
+    { region_id: 0, population: 1000, mean_approval: 0.6,
+      mean_income: 3000, unemployment_rate: 0.05, mean_health: 0.7 },
+  ];
+
+  beforeEach(() => { mockedInvoke.mockResolvedValue(fakeStats); });
+
+  it("calls invoke with 'get_region_stats' and no extra args", async () => {
+    await getRegionStats();
+    expect(mockedInvoke).toHaveBeenCalledWith("get_region_stats");
+  });
+
+  it("resolves to the RegionStatsDto array returned by invoke", async () => {
+    const result = await getRegionStats();
+    expect(result).toEqual(fakeStats);
   });
 });
