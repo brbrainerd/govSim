@@ -13,7 +13,7 @@ use simulator_core::{
         LegalStatuses, Location, MonthlyBenefitReceived, MonthlyTaxPaid, Productivity,
         SavingsRate, Sex, Wealth,
     },
-    CivicRights, LegitimacyDebt, PollutionStock, RightsLedger, Sim,
+    CivicRights, LegitimacyDebt, Polity, PollutionStock, RightsLedger, Sim, StateCapacity,
 };
 use simulator_types::{CitizenId, Money, RegionId, Score};
 
@@ -43,6 +43,16 @@ pub struct Scenario {
     /// Starting legitimacy debt stock. Defaults to 0.0.
     #[serde(default)]
     pub initial_legitimacy_debt: Option<f32>,
+    /// Optional polity description (form of government, electoral system, etc).
+    /// If absent, no `Polity` resource is inserted and the default two-party
+    /// FPTP behaviour applies. Phase A (added 2026-05).
+    #[serde(default)]
+    pub polity: Option<Polity>,
+    /// Optional state-capacity overrides (tax efficiency, enforcement reach,
+    /// bureaucratic effectiveness, …). If absent the default of 1.0 on every
+    /// field is used (perfect capacity, current behaviour). Phase B (added 2026-05).
+    #[serde(default)]
+    pub state_capacity: Option<StateCapacity>,
 }
 
 fn default_seed() -> [u8; 32] { [0u8; 32] }
@@ -231,6 +241,21 @@ impl Scenario {
             // SAFETY: single-threaded scenario setup; no concurrent threads at this point.
             unsafe { std::env::set_var("UGS_CRISIS_PROB_PCT", pct.min(100).to_string()); }
         }
+
+        // Insert Polity resource if scenario specifies one. Election system
+        // consults this via `Option<Res<Polity>>` to gate non-competitive regimes.
+        if let Some(ref polity) = self.polity {
+            world.insert_resource(polity.clone());
+        }
+
+        // Insert StateCapacity resource if scenario specifies one. Taxation
+        // and law dispatcher use this to scale collected revenue and delivered
+        // benefits. Fields are clamped to [0, 1] before insertion.
+        if let Some(ref sc) = self.state_capacity {
+            let mut clamped = sc.clone();
+            clamped.clamp_fields();
+            world.insert_resource(clamped);
+        }
     }
 }
 
@@ -270,7 +295,80 @@ mod tests {
             initial_pollution: Some(1.5),
             initial_legitimacy_debt: Some(0.2),
             crisis_prob_pct: Some(0), // suppress random crises for determinism
+            polity: None,
+            state_capacity: None,
         }
+    }
+
+    /// `polity` field on a Scenario inserts a `Polity` resource with the
+    /// configured electoral system; absent field inserts no resource.
+    #[test]
+    fn scenario_polity_field_inserts_resource() {
+        use simulator_core::{ElectoralSystem, Polity, RegimeKind};
+
+        let mut s = minimal_scenario();
+        s.polity = Some(Polity {
+            name: "Federal Republic".to_string(),
+            regime: RegimeKind::ParliamentaryRepublic,
+            founding_year: 1949,
+            chamber_count: 2,
+            franchise_fraction: 1.0,
+            fused_executive: false,
+            executive_term_limit: None,
+            electoral_system: ElectoralSystem::ProportionalRepresentation { threshold: 0.05 },
+        });
+
+        let mut sim = Sim::new(s.seed);
+        register_phase1_systems(&mut sim);
+        s.spawn_population(&mut sim);
+        s.configure_world(&mut sim);
+
+        let p = sim.world.resource::<Polity>();
+        assert_eq!(p.name, "Federal Republic");
+        assert!(matches!(p.regime, RegimeKind::ParliamentaryRepublic));
+        assert!(p.electoral_system.is_competitive());
+    }
+
+    /// `state_capacity` field clamps out-of-range values before insertion.
+    #[test]
+    fn scenario_state_capacity_field_inserts_clamped_resource() {
+        let mut s = minimal_scenario();
+        s.state_capacity = Some(StateCapacity {
+            tax_collection_efficiency: 1.5,   // out of range, should clamp to 1.0
+            enforcement_reach: 0.5,
+            enforcement_noise: -0.2,          // out of range, should clamp to 0.0
+            corruption_drift: 0.1,
+            legal_predictability: 0.7,
+            bureaucratic_effectiveness: 0.8,
+        });
+
+        let mut sim = Sim::new(s.seed);
+        register_phase1_systems(&mut sim);
+        s.spawn_population(&mut sim);
+        s.configure_world(&mut sim);
+
+        let sc = sim.world.resource::<StateCapacity>();
+        assert!((sc.tax_collection_efficiency - 1.0).abs() < 1e-6,
+            "out-of-range tax efficiency should clamp to 1.0");
+        assert!((sc.enforcement_noise - 0.0).abs() < 1e-6,
+            "negative noise should clamp to 0.0");
+        assert!((sc.bureaucratic_effectiveness - 0.8).abs() < 1e-6);
+    }
+
+    /// Absent polity/state_capacity → no resources inserted; election still
+    /// runs (Option<Res<Polity>> guard falls through to default behaviour).
+    #[test]
+    fn scenario_without_polity_does_not_insert_resource() {
+        let s = minimal_scenario(); // polity: None, state_capacity: None
+        let mut sim = Sim::new(s.seed);
+        register_phase1_systems(&mut sim);
+        s.spawn_population(&mut sim);
+        s.configure_world(&mut sim);
+
+        assert!(sim.world.get_resource::<Polity>().is_none(),
+            "absent polity field must not insert a Polity resource");
+        assert!(sim.world.get_resource::<StateCapacity>().is_none(),
+            "absent state_capacity field must not insert a StateCapacity resource");
     }
 
     #[test]

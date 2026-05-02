@@ -269,6 +269,8 @@ mod tests {
             initial_pollution: Some(2.0),
             initial_legitimacy_debt: None,
             crisis_prob_pct: Some(0),
+            polity: None,
+            state_capacity: None,
         }
     }
 

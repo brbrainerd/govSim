@@ -59,6 +59,7 @@ pub fn law_dispatcher_system(
     debt: Res<LegitimacyDebt>,
     rights: Res<RightsLedger>,
     crisis: Res<CrisisState>,
+    capacity: Option<Res<simulator_core::StateCapacity>>,
     mut q: Query<(
         Option<&Citizen>,
         &Income,
@@ -74,6 +75,19 @@ pub fn law_dispatcher_system(
     )>,
 ) {
     let active = registry.snapshot_active(clock.tick);
+
+    // State-capacity multipliers. Default = 1.0 (perfect) so legacy worlds
+    // without StateCapacity resource see no behavioural change.
+    let tax_eff: f64 = capacity
+        .as_ref()
+        .map(|c| c.tax_collection_efficiency.clamp(0.0, 1.0) as f64)
+        .unwrap_or(1.0);
+    let bureaucratic_eff: f64 = capacity
+        .as_ref()
+        .map(|c| c.bureaucratic_effectiveness.clamp(0.0, 1.0) as f64)
+        .unwrap_or(1.0);
+    let tax_eff_money = Money::from_num(tax_eff);
+    let bureau_eff_money = Money::from_num(bureaucratic_eff);
 
     // Reset monthly accumulators at the start of each monthly period.
     if clock.tick.is_multiple_of(30) && clock.tick != 0 {
@@ -111,9 +125,12 @@ pub fn law_dispatcher_system(
                         ctx.field_bindings.insert(("citizen".into(), "productivity".into()), Value::Rate(p.0.to_num::<f64>()));
                     }
                     if let Value::Money(owed) = eval_default(body, &ctx) {
-                        wealth.0 -= owed;
-                        collected += owed;
-                        if let Some(mut t) = tax_opt { t.0 += owed; }
+                        // tax_collection_efficiency: only the collected fraction is
+                        // actually deducted; the leakage stays in citizen wealth.
+                        let actual = owed * tax_eff_money;
+                        wealth.0 -= actual;
+                        collected += actual;
+                        if let Some(mut t) = tax_opt { t.0 += actual; }
                     }
                 }
                 treasury.balance += collected;
@@ -137,9 +154,13 @@ pub fn law_dispatcher_system(
                         ctx.field_bindings.insert(("citizen".into(), "productivity".into()), Value::Rate(p.0.to_num::<f64>()));
                     }
                     if let Value::Money(paid) = eval_default(body, &ctx) {
-                        wealth.0 += paid;
+                        // bureaucratic_effectiveness: leakage in delivery means
+                        // citizens receive less; treasury still spends the full
+                        // amount (the gap is administrative loss).
+                        let delivered = paid * bureau_eff_money;
+                        wealth.0 += delivered;
                         disbursed += paid;
-                        if let Some(mut b) = benefit_opt { b.0 += paid; }
+                        if let Some(mut b) = benefit_opt { b.0 += delivered; }
                     }
                 }
                 treasury.balance -= disbursed;
@@ -170,9 +191,11 @@ pub fn law_dispatcher_system(
                     if rng.random::<f64>() >= selection_prob { continue; }
                     let annual = income.0 * Money::from_num(360);
                     let penalty = annual * Money::from_num(evasion.0) * Money::from_num(penalty_rate);
-                    wealth.0 -= penalty;
-                    collected += penalty;
-                    if let Some(mut t) = tax_opt { t.0 += penalty; }
+                    // Audit recovery scaled by tax_collection_efficiency.
+                    let actual = penalty * tax_eff_money;
+                    wealth.0 -= actual;
+                    collected += actual;
+                    if let Some(mut t) = tax_opt { t.0 += actual; }
                 }
                 treasury.balance += collected;
                 ledger.revenue += collected;
@@ -186,7 +209,10 @@ pub fn law_dispatcher_system(
                     let balance: f64 = treasury.balance.to_num();
                     (balance / full_cost_cents).clamp(0.0, 1.0)
                 };
-                let actual_pu   = pollution_reduction_pu * affordable_fraction;
+                // bureaucratic_effectiveness applies to pollution reduction
+                // delivered (administrative leakage in implementation), but
+                // treasury still spends the full affordable cost.
+                let actual_pu   = pollution_reduction_pu * affordable_fraction * bureaucratic_eff;
                 let actual_cost = Money::from_num(full_cost_cents * affordable_fraction);
                 pollution.stock = (pollution.stock - actual_pu).max(0.0);
                 treasury.balance -= actual_cost;
