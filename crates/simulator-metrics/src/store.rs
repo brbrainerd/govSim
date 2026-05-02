@@ -161,6 +161,7 @@ fn rows_to_df(rows: &[&TickRow]) -> anyhow::Result<DataFrame> {
         col_f32!(mean_health),
         col_f32!(mean_productivity),
         col_f64!(mean_income),
+        col_f64!(mean_wealth),
         col_f32!(state_capacity_score),
         col_f32!(approval_q1),
         col_f32!(approval_q2),
@@ -238,6 +239,7 @@ fn df_to_rows(df: &DataFrame) -> anyhow::Result<Vec<TickRow>> {
     let mean_health           = get_f32!("mean_health");
     let mean_productivity     = get_f32!("mean_productivity");
     let mean_income           = get_f64!("mean_income");
+    let mean_wealth           = get_f64!("mean_wealth");
     let state_capacity_score  = get_f32!("state_capacity_score");
     let approval_q1           = get_f32!("approval_q1");
     let approval_q2           = get_f32!("approval_q2");
@@ -274,6 +276,7 @@ fn df_to_rows(df: &DataFrame) -> anyhow::Result<Vec<TickRow>> {
             mean_health:            mean_health.get(i).unwrap_or(0.0),
             mean_productivity:      mean_productivity.get(i).unwrap_or(0.0),
             mean_income:            mean_income.get(i).unwrap_or(0.0),
+            mean_wealth:            mean_wealth.get(i).unwrap_or(0.0),
             state_capacity_score:   state_capacity_score.get(i).unwrap_or(1.0),
             approval_q1:            approval_q1.get(i).unwrap_or(0.5),
             approval_q2:            approval_q2.get(i).unwrap_or(0.5),

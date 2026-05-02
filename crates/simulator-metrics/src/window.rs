@@ -20,6 +20,7 @@ pub struct WindowSummary {
     pub mean_state_capacity:      f32,
     pub mean_health:              f32,
     pub mean_income:              f64,
+    pub mean_wealth:              f64,
     pub mean_rights_breadth:      f32,
 
     pub min_approval:      f32,
@@ -52,6 +53,7 @@ impl WindowSummary {
         let mean_state_capacity = rows.iter().map(|r| r.state_capacity_score as f64).sum::<f64>() / n;
         let mean_health         = rows.iter().map(|r| r.mean_health as f64).sum::<f64>() / n;
         let mean_income         = rows.iter().map(|r| r.mean_income).sum::<f64>() / n;
+        let mean_wealth         = rows.iter().map(|r| r.mean_wealth).sum::<f64>() / n;
         let mean_rights_breadth = rows.iter().map(|r| r.rights_breadth as f64).sum::<f64>() / n;
 
         let min_approval = rows.iter().map(|r| r.approval).fold(f32::INFINITY, f32::min);
@@ -85,6 +87,7 @@ impl WindowSummary {
             mean_state_capacity:      mean_state_capacity as f32,
             mean_health:              mean_health as f32,
             mean_income,
+            mean_wealth,
             mean_rights_breadth:      mean_rights_breadth as f32,
             min_approval,
             max_approval,
@@ -123,6 +126,7 @@ pub struct WindowDiff {
     pub delta_state_capacity:      f32,
     pub delta_health:              f32,
     pub delta_income:              f64,
+    pub delta_wealth:              f64,
     pub delta_rights_breadth:      f32,
 
     /// post − pre mean approval per income quintile [Q1=bottom, Q5=top].
@@ -142,6 +146,7 @@ impl WindowDiff {
         let delta_state_capacity   = post.mean_state_capacity   - pre.mean_state_capacity;
         let delta_health           = post.mean_health           - pre.mean_health;
         let delta_income           = post.mean_income           - pre.mean_income;
+        let delta_wealth           = post.mean_wealth           - pre.mean_wealth;
         let delta_rights_breadth   = post.mean_rights_breadth   - pre.mean_rights_breadth;
         let mut delta_approval_by_quintile = [0.0f32; 5];
         for (slot, (p, q)) in delta_approval_by_quintile.iter_mut()
@@ -152,7 +157,7 @@ impl WindowDiff {
         Self { pre, post, delta_approval, delta_unemployment, delta_gdp,
                delta_pollution, delta_legitimacy, delta_treasury,
                delta_gini, delta_wealth_gini, delta_state_capacity,
-               delta_health, delta_income, delta_rights_breadth,
+               delta_health, delta_income, delta_wealth, delta_rights_breadth,
                delta_approval_by_quintile }
     }
 

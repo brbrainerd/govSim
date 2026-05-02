@@ -28,7 +28,7 @@ function makeRow(overrides: Partial<TickRow> = {}): TickRow {
     rights_granted_count: 0, rights_breadth: 0,
     treasury_balance: 1e5, price_level: 1, crisis_kind: 0,
     crisis_remaining_ticks: 0, mean_health: 0.7,
-    mean_productivity: 0.5, mean_income: 3000, state_capacity_score: 1.0, approval_q1: 0.5, approval_q2: 0.5, approval_q3: 0.5, approval_q4: 0.5, approval_q5: 0.5,
+    mean_productivity: 0.5, mean_income: 3000, mean_wealth: 0, state_capacity_score: 1.0, approval_q1: 0.5, approval_q2: 0.5, approval_q3: 0.5, approval_q4: 0.5, approval_q5: 0.5,
     ...overrides,
   };
 }

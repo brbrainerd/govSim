@@ -2,7 +2,7 @@ use bevy_ecs::prelude::*;
 use simulator_core::{
     CrisisState, LegitimacyDebt, MacroIndicators, Phase, PollutionStock, PriceLevel,
     RightsLedger, Sim, SimClock, StateCapacity, Treasury,
-    components::{ApprovalRating, Health, Income, Productivity},
+    components::{ApprovalRating, Health, Income, Productivity, Wealth},
 };
 
 use crate::{
@@ -27,12 +27,14 @@ pub fn collect_metrics_system(
     health_q:    Query<&Health>,
     prod_q:      Query<&Productivity>,
     income_q:    Query<&Income>,
+    wealth_q:    Query<&Wealth>,
     quintile_q:  Query<(&Income, &ApprovalRating)>,
 ) {
-    let (mean_health, mean_productivity, mean_income) = compute_citizen_means(
+    let (mean_health, mean_productivity, mean_income, mean_wealth) = compute_citizen_means(
         health_q.iter().copied(),
         prod_q.iter().copied(),
         income_q.iter().copied(),
+        wealth_q.iter().copied(),
     );
 
     let approval_by_quintile = compute_quintile_approval(
@@ -43,7 +45,7 @@ pub fn collect_metrics_system(
         &clock, &indicators, &treasury, &price,
         &debt, &rights, &crisis, &pollution,
         capacity.as_deref(),
-        mean_health, mean_productivity, mean_income,
+        mean_health, mean_productivity, mean_income, mean_wealth,
         approval_by_quintile,
     );
     store.push(row);

@@ -34,6 +34,7 @@ export interface TickRow {
   mean_health: number;
   mean_productivity: number;
   mean_income: number;
+  mean_wealth: number;
   state_capacity_score: number;
   approval_q1: number;
   approval_q2: number;
@@ -131,6 +132,7 @@ export interface WindowSummaryDto {
   mean_state_capacity: number;
   mean_health: number;
   mean_income: number;
+  mean_wealth: number;
   mean_rights_breadth: number;
   min_approval: number;
   max_approval: number;
@@ -157,6 +159,7 @@ export interface LawEffectDto {
   delta_state_capacity: number;
   delta_health: number;
   delta_income: number;
+  delta_wealth: number;
   delta_rights_breadth: number;
   /** Δ mean approval per income quintile [Q1=bottom 20% .. Q5=top 20%]. */
   delta_approval_by_quintile: [number, number, number, number, number];

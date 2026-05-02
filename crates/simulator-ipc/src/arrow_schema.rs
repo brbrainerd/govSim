@@ -30,6 +30,8 @@ pub fn macro_indicators_schema() -> Arc<Schema> {
         Field::new("pollution_stock",      DataType::Float64, false),
         Field::new("rights_granted_count",  DataType::UInt32,  false),
         Field::new("rights_breadth",        DataType::Float32, false),
+        Field::new("mean_income",           DataType::Float64, false),
+        Field::new("mean_wealth",           DataType::Float64, false),
         Field::new("state_capacity_score",  DataType::Float32, false),
         Field::new("approval_q1",           DataType::Float32, false),
         Field::new("approval_q2",           DataType::Float32, false),
@@ -63,6 +65,7 @@ mod tests {
         assert_eq!(names, [
             "tick","population","gdp","gini","unemployment","inflation",
             "approval","pollution_stock","rights_granted_count","rights_breadth",
+            "mean_income","mean_wealth",
             "state_capacity_score",
             "approval_q1","approval_q2","approval_q3","approval_q4","approval_q5",
         ]);

@@ -86,6 +86,7 @@
   // Wellbeing series — citizen-level means from the ring-buffer
   const healthSeries       = $derived([{ name: "Mean Health", data: rows.map(r => r.mean_health) }]);
   const incomeSeries       = $derived([{ name: "Mean Income", data: rows.map(r => r.mean_income) }]);
+  const wealthSeries       = $derived([{ name: "Mean Wealth", data: rows.map(r => r.mean_wealth) }]);
   const productivitySeries = $derived([{ name: "Productivity", data: rows.map(r => r.mean_productivity) }]);
 
   // Fiscal balance: revenue vs expenditure as two overlapping series
@@ -269,12 +270,14 @@
     <div class="stat-grid">
       <StatCard label="Mean Health"       value={lastRow ? pct(lastRow.mean_health) : "—"}       trend={trendOf("mean_health")}       color={lastRow && lastRow.mean_health < 0.5 ? "danger" : lastRow && lastRow.mean_health > 0.7 ? "good" : "warn"} onclick={() => navigate("regions")} clickLabel="View regional health breakdown" />
       <StatCard label="Mean Income"       value={lastRow ? formatMoney(lastRow.mean_income) : "—"} trend={trendOf("mean_income")} onclick={() => navigate("regions")} clickLabel="View regional income breakdown" />
+      <StatCard label="Mean Wealth"       value={lastRow ? formatMoney(lastRow.mean_wealth) : "—"} trend={trendOf("mean_wealth")} sparkData={sparkOf("mean_wealth")} onclick={() => navigate("citizens")} clickLabel="View citizen wealth distribution" />
       <StatCard label="Mean Productivity" value={lastRow ? pct(lastRow.mean_productivity) : "—"} trend={trendOf("mean_productivity")} onclick={() => navigate("citizens")} />
       <StatCard label="Population"        value={cs.population.toLocaleString()} onclick={() => navigate("regions")} clickLabel="View regional breakdown" />
     </div>
-    <div class="chart-row chart-row--3">
+    <div class="chart-row chart-row--4">
       <LineChart title="Mean Health"       xLabels={xLabels} series={healthSeries}       yMin={0} yMax={1} yFormatter={pct}         markLines={lawMarkLines} markBands={crisisBands} />
       <LineChart title="Mean Income"       xLabels={xLabels} series={incomeSeries}       yFormatter={formatMoney}                    markLines={lawMarkLines} markBands={crisisBands} />
+      <LineChart title="Mean Wealth"       xLabels={xLabels} series={wealthSeries}       yFormatter={formatMoney}                    markLines={lawMarkLines} markBands={crisisBands} />
       <LineChart title="Mean Productivity" xLabels={xLabels} series={productivitySeries} yMin={0} yMax={1} yFormatter={pct}         markLines={lawMarkLines} markBands={crisisBands} />
     </div>
   </section>
@@ -429,8 +432,12 @@
 .chart-row--3 {
   grid-template-columns: 1fr 1fr 1fr;
 }
+.chart-row--4 {
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+}
 @media (max-width: 900px) {
   .chart-row--3 { grid-template-columns: 1fr 1fr; }
+  .chart-row--4 { grid-template-columns: 1fr 1fr; }
 }
 
 /* ── Governance info chips ── */

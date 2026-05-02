@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use simulator_core::{
     CrisisKind, CrisisState, LegitimacyDebt, MacroIndicators, PollutionStock, PriceLevel,
     RightsLedger, SimClock, StateCapacity, Treasury,
-    components::{Health, Income, Productivity},
+    components::{Health, Income, Productivity, Wealth},
 };
 
 /// One record per simulation tick, using plain numeric types for portability.
@@ -44,6 +44,8 @@ pub struct TickRow {
     pub mean_productivity: f32,
     /// Mean income in whole currency units.
     pub mean_income: f64,
+    /// Mean wealth (net worth) in whole currency units.
+    pub mean_wealth: f64,
     /// Composite state-capacity score [0, 1] (unweighted mean of 5 capacity fields).
     /// 1.0 when no StateCapacity resource is present (perfect / default capacity).
     pub state_capacity_score: f32,
@@ -72,6 +74,7 @@ impl TickRow {
         mean_health: f32,
         mean_productivity: f32,
         mean_income: f64,
+        mean_wealth: f64,
         approval_by_quintile: [f32; 5],
     ) -> Self {
         let default_cap = StateCapacity::default();
@@ -102,6 +105,7 @@ impl TickRow {
             mean_health,
             mean_productivity,
             mean_income,
+            mean_wealth,
             state_capacity_score: cap.composite_score(),
             approval_q1: approval_by_quintile[0],
             approval_q2: approval_by_quintile[1],
@@ -145,38 +149,31 @@ pub(crate) fn compute_quintile_approval(
     out
 }
 
-/// Compute mean health, mean productivity, and mean income over component queries.
-/// Returns (mean_health, mean_productivity, mean_income).
+/// Compute mean health, mean productivity, mean income, and mean wealth.
+/// Returns (mean_health, mean_productivity, mean_income, mean_wealth).
 pub(crate) fn compute_citizen_means(
-    health_iter: impl Iterator<Item = Health>,
-    prod_iter: impl Iterator<Item = Productivity>,
-    income_iter: impl Iterator<Item = Income>,
-) -> (f32, f32, f64) {
-    let mut h_sum = 0.0f64;
-    let mut h_n   = 0u64;
-    for h in health_iter {
-        h_sum += h.0.to_num::<f64>();
-        h_n += 1;
-    }
+    health_iter:  impl Iterator<Item = Health>,
+    prod_iter:    impl Iterator<Item = Productivity>,
+    income_iter:  impl Iterator<Item = Income>,
+    wealth_iter:  impl Iterator<Item = Wealth>,
+) -> (f32, f32, f64, f64) {
+    let mut h_sum = 0.0f64; let mut h_n = 0u64;
+    for h in health_iter  { h_sum += h.0.to_num::<f64>(); h_n += 1; }
 
-    let mut p_sum = 0.0f64;
-    let mut p_n   = 0u64;
-    for p in prod_iter {
-        p_sum += p.0.to_num::<f64>();
-        p_n += 1;
-    }
+    let mut p_sum = 0.0f64; let mut p_n = 0u64;
+    for p in prod_iter    { p_sum += p.0.to_num::<f64>(); p_n += 1; }
 
-    let mut i_sum = 0.0f64;
-    let mut i_n   = 0u64;
-    for i in income_iter {
-        i_sum += i.0.to_num::<f64>();
-        i_n += 1;
-    }
+    let mut i_sum = 0.0f64; let mut i_n = 0u64;
+    for i in income_iter  { i_sum += i.0.to_num::<f64>(); i_n += 1; }
+
+    let mut w_sum = 0.0f64; let mut w_n = 0u64;
+    for w in wealth_iter  { w_sum += w.0.to_num::<f64>(); w_n += 1; }
 
     let mean_h = if h_n > 0 { (h_sum / h_n as f64) as f32 } else { 0.0 };
     let mean_p = if p_n > 0 { (p_sum / p_n as f64) as f32 } else { 0.0 };
     let mean_i = if i_n > 0 { i_sum / i_n as f64 } else { 0.0 };
-    (mean_h, mean_p, mean_i)
+    let mean_w = if w_n > 0 { w_sum / w_n as f64 } else { 0.0 };
+    (mean_h, mean_p, mean_i, mean_w)
 }
 
 #[cfg(test)]
