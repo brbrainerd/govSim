@@ -257,6 +257,52 @@ export async function repealLaw(law_id: number): Promise<void> {
   return invoke<void>("repeal_law", { lawId: law_id });
 }
 
+// ── Right & state-capacity laws ────────────────────────────────────────────
+
+export interface RightInfo {
+  id: string;
+  label: string;
+  granted: boolean;
+  prerequisites: string[];
+  prerequisites_met: boolean;
+  revocation_debt: number;
+  grant_boost: number;
+  beneficiary_fraction: number;
+}
+
+/** List every right defined in the live RightsCatalog with grant + prereq state. */
+export async function listRights(): Promise<RightInfo[]> {
+  return invoke<RightInfo[]>("list_rights");
+}
+
+/** Enact a Law that grants the named civic right when its prerequisites are met. */
+export async function enactRightGrant(right_id: string): Promise<number> {
+  return invoke<number>("enact_right_grant", { params: { right_id } });
+}
+
+/** Enact a Law that revokes the named civic right; accrues legitimacy debt. */
+export async function enactRightRevoke(right_id: string): Promise<number> {
+  return invoke<number>("enact_right_revoke", { params: { right_id } });
+}
+
+/** Allowed StateCapacity field names. Mirrors the Rust CAPACITY_FIELDS const. */
+export const CAPACITY_FIELDS = [
+  "tax_collection_efficiency",
+  "enforcement_reach",
+  "enforcement_noise",
+  "corruption_drift",
+  "legal_predictability",
+  "bureaucratic_effectiveness",
+] as const;
+export type CapacityField = typeof CAPACITY_FIELDS[number];
+
+/** Enact a Law that adjusts a StateCapacity field by a signed delta. */
+export async function enactStateCapacityModify(
+  field: CapacityField, delta: number,
+): Promise<number> {
+  return invoke<number>("enact_state_capacity_modify", { params: { field, delta } });
+}
+
 /**
  * Grant a civic right by its bitflag value (one of the `CIVIC_RIGHTS[i].bit` values).
  * Returns the new `rights_granted_bits` after the grant.

@@ -444,6 +444,152 @@ pub async fn enact_abatement(
     Ok(id.0)
 }
 
+// ─── Right & state-capacity laws ────────────────────────────────────────────
+//
+// These enact a *Law* (entered into LawRegistry, repealable, DiD-analyzable),
+// distinct from the immediate-mutation `grant_civic_right` / `revoke_civic_right`
+// commands above. They Box::leak the right_id / field name to obtain the
+// `&'static str` payload `LawEffect` requires; this leaks ~30 bytes per unique
+// id, which is bounded by the ~9 known rights and 6 capacity fields.
+
+#[derive(serde::Serialize, Clone)]
+pub struct RightInfoDto {
+    pub id:                    String,
+    pub label:                 String,
+    pub granted:               bool,
+    pub prerequisites:         Vec<String>,
+    pub prerequisites_met:     bool,
+    pub revocation_debt:       f32,
+    pub grant_boost:           f32,
+    pub beneficiary_fraction:  f32,
+}
+
+/// List every right defined in the live RightsCatalog with its grant state
+/// and prerequisite status. Drives the Right Grant / Right Revoke dropdowns
+/// on the Propose page.
+#[tauri::command]
+pub async fn list_rights(
+    state: tauri::State<'_, AppState>,
+) -> IpcResult<Vec<RightInfoDto>> {
+    let guard = state.sim.lock().await;
+    let bundle = guard.as_ref().ok_or_else(IpcError::no_sim)?;
+    let cat = bundle.sim.world.get_resource::<simulator_core::RightsCatalog>()
+        .ok_or_else(|| IpcError("no RightsCatalog in this scenario".into()))?;
+    let mut out: Vec<RightInfoDto> = cat.defined.values().map(|d| RightInfoDto {
+        id:                   d.id.0.clone(),
+        label:                d.label.clone(),
+        granted:              cat.granted.contains(&d.id),
+        prerequisites:        d.prerequisites.iter().map(|p| p.0.clone()).collect(),
+        prerequisites_met:    d.prerequisites.iter().all(|p| cat.granted.contains(p)),
+        revocation_debt:      d.revocation_debt,
+        grant_boost:          d.grant_boost,
+        beneficiary_fraction: d.beneficiary_fraction,
+    }).collect();
+    out.sort_by(|a, b| a.label.cmp(&b.label));
+    Ok(out)
+}
+
+#[derive(serde::Deserialize)]
+pub struct RightLawParams { pub right_id: String }
+
+fn enact_law_with_effect(
+    bundle: &mut crate::state::SimBundle,
+    src: String,
+    effect: LawEffect,
+    cadence: Cadence,
+) -> IpcResult<u64> {
+    let dsl_src = Arc::new(src.clone());
+    let prog = parse_program(&src).map_err(|e| IpcError(format!("dsl: {e:?}")))?;
+    typecheck_program(&prog).map_err(|e| IpcError(format!("typecheck: {e:?}")))?;
+    let tick = bundle.sim.tick();
+    if let Ok(blob) = save_snapshot(&mut bundle.sim.world) {
+        bundle.snapshot = Some((tick, blob));
+    }
+    let registry = bundle.sim.world.resource::<LawRegistry>().clone();
+    let id = registry.enact(LawHandle {
+        source:               Some(dsl_src),
+        id:                   LawId(0),
+        version:              1,
+        program:              Arc::new(prog),
+        cadence,
+        effective_from_tick:  tick,
+        effective_until_tick: None,
+        effect,
+    });
+    Ok(id.0)
+}
+
+#[tauri::command]
+pub async fn enact_right_grant(
+    state: tauri::State<'_, AppState>,
+    params: RightLawParams,
+) -> IpcResult<u64> {
+    let id = params.right_id.trim();
+    if id.is_empty() {
+        return Err(IpcError("right_id must be non-empty".into()));
+    }
+    let leaked: &'static str = Box::leak(id.to_string().into_boxed_str());
+    let src = format!("// right_grant {id}\nscope citizen {{ }}");
+    let mut guard = state.sim.lock().await;
+    let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
+    enact_law_with_effect(
+        bundle, src, LawEffect::RightGrant { right_id: leaked }, Cadence::Monthly,
+    )
+}
+
+#[tauri::command]
+pub async fn enact_right_revoke(
+    state: tauri::State<'_, AppState>,
+    params: RightLawParams,
+) -> IpcResult<u64> {
+    let id = params.right_id.trim();
+    if id.is_empty() {
+        return Err(IpcError("right_id must be non-empty".into()));
+    }
+    let leaked: &'static str = Box::leak(id.to_string().into_boxed_str());
+    let src = format!("// right_revoke {id}\nscope citizen {{ }}");
+    let mut guard = state.sim.lock().await;
+    let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
+    enact_law_with_effect(
+        bundle, src, LawEffect::RightRevoke { right_id: leaked }, Cadence::Monthly,
+    )
+}
+
+/// Allowed StateCapacity field names — anything else returns an error so the
+/// engine never sees an unknown identifier through this path.
+const CAPACITY_FIELDS: &[&str] = &[
+    "tax_collection_efficiency",
+    "enforcement_reach",
+    "enforcement_noise",
+    "corruption_drift",
+    "legal_predictability",
+    "bureaucratic_effectiveness",
+];
+
+#[derive(serde::Deserialize)]
+pub struct CapacityLawParams { pub field: String, pub delta: f32 }
+
+#[tauri::command]
+pub async fn enact_state_capacity_modify(
+    state: tauri::State<'_, AppState>,
+    params: CapacityLawParams,
+) -> IpcResult<u64> {
+    let f = params.field.trim();
+    let known = CAPACITY_FIELDS.iter().find(|k| **k == f)
+        .ok_or_else(|| IpcError(format!("unknown capacity field: {f}")))?;
+    if !params.delta.is_finite() || params.delta.abs() > 0.5 {
+        return Err(IpcError("delta must be finite and within ±0.5".into()));
+    }
+    let src = format!("// capacity {} {:+.4}\nscope citizen {{ }}", known, params.delta);
+    let mut guard = state.sim.lock().await;
+    let bundle = guard.as_mut().ok_or_else(IpcError::no_sim)?;
+    enact_law_with_effect(
+        bundle, src,
+        LawEffect::StateCapacityModify { field: known, delta: params.delta },
+        Cadence::Monthly,
+    )
+}
+
 #[tauri::command]
 pub async fn repeal_law(
     state: tauri::State<'_, AppState>,

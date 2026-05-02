@@ -1,11 +1,17 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { sim, navigate, formatMoney, pct } from "$lib/store.svelte";
   import {
     enactFlatTax, enactUbi, enactAbatement, listLaws,
+    listRights, enactRightGrant, enactRightRevoke, enactStateCapacityModify,
+    CAPACITY_FIELDS,
+    type RightInfo, type CapacityField,
   } from "$lib/ipc";
   import { toast } from "$lib/toasts.svelte";
 
-  type LawKind = "income_tax" | "ubi" | "abatement";
+  type LawKind =
+    | "income_tax" | "ubi" | "abatement"
+    | "right_grant" | "right_revoke" | "capacity";
 
   let enacting:        boolean = $state(false);
   let kind:            LawKind = $state("income_tax");
@@ -13,6 +19,67 @@
   let ubiAmount:       number  = $state(500);
   let pollRedux:       number  = $state(0.5);
   let costPerPu:       number  = $state(10_000);
+
+  // Live RightsCatalog (fetched once on mount, refetched after each enactment).
+  let rightsCatalog: RightInfo[] = $state([]);
+  let rightsLoadError: string = $state("");
+  let selectedRightId: string = $state("");
+  let capacityField: CapacityField = $state("tax_collection_efficiency");
+  let capacityDelta: number = $state(0.05);
+
+  async function refreshRights() {
+    try {
+      rightsCatalog = await listRights();
+      rightsLoadError = "";
+      // Auto-select a sensible default for whichever tab needs it.
+      if (kind === "right_grant" && !selectedRightId) {
+        const first = rightsCatalog.find(r => !r.granted && r.prerequisites_met);
+        if (first) selectedRightId = first.id;
+      }
+      if (kind === "right_revoke" && !selectedRightId) {
+        const first = rightsCatalog.find(r => r.granted);
+        if (first) selectedRightId = first.id;
+      }
+    } catch (e) {
+      // RightsCatalog is absent in some scenarios; show a friendly message
+      // and leave Right Grant / Revoke / Capacity tabs disabled at submit.
+      rightsLoadError = String(e);
+      rightsCatalog = [];
+    }
+  }
+  onMount(() => { void refreshRights(); });
+
+  // Re-derive default selection when the tab changes (kind switch).
+  $effect(() => {
+    void kind;
+    if (rightsCatalog.length === 0) return;
+    if (kind === "right_grant") {
+      const cur = rightsCatalog.find(r => r.id === selectedRightId);
+      if (!cur || cur.granted || !cur.prerequisites_met) {
+        const first = rightsCatalog.find(r => !r.granted && r.prerequisites_met);
+        selectedRightId = first?.id ?? "";
+      }
+    } else if (kind === "right_revoke") {
+      const cur = rightsCatalog.find(r => r.id === selectedRightId);
+      if (!cur || !cur.granted) {
+        const first = rightsCatalog.find(r => r.granted);
+        selectedRightId = first?.id ?? "";
+      }
+    }
+  });
+
+  /** Rights eligible to be granted: defined, not granted, prereqs met. */
+  const grantableRights = $derived(
+    rightsCatalog.filter(r => !r.granted && r.prerequisites_met),
+  );
+  /** Rights eligible to be revoked: currently granted. */
+  const revocableRights = $derived(
+    rightsCatalog.filter(r => r.granted),
+  );
+  /** Lookup the metadata for the currently-selected right (for warnings/preview). */
+  const selectedRight = $derived(
+    rightsCatalog.find(r => r.id === selectedRightId) ?? null,
+  );
 
   async function submit() {
     // Fiscal danger gate: require explicit confirmation before a high-risk enactment.
@@ -36,6 +103,18 @@
       if (!ok) return;
     }
 
+    // Right Revoke confirmation: revoking is destructive and accrues legitimacy
+    // debt scaled by the right's revocation_debt magnitude. Force confirmation.
+    if (kind === "right_revoke" && selectedRight) {
+      const rev = selectedRight.revocation_debt.toFixed(2);
+      const ok = confirm(
+        `⚠ Revoking ${selectedRight.label} will accrue ${rev} legitimacy debt.\n\n` +
+        `Citizens who relied on this right may react negatively.\n\n` +
+        `Enact this revocation?`
+      );
+      if (!ok) return;
+    }
+
     enacting = true;
     try {
       let id: number;
@@ -43,10 +122,22 @@
         id = await enactFlatTax(taxRate);
       } else if (kind === "ubi") {
         id = await enactUbi(ubiAmount);
-      } else {
+      } else if (kind === "abatement") {
         id = await enactAbatement(pollRedux, costPerPu);
+      } else if (kind === "right_grant") {
+        if (!selectedRightId) throw new Error("no right selected");
+        id = await enactRightGrant(selectedRightId);
+      } else if (kind === "right_revoke") {
+        if (!selectedRightId) throw new Error("no right selected");
+        id = await enactRightRevoke(selectedRightId);
+      } else {
+        id = await enactStateCapacityModify(capacityField, capacityDelta);
       }
       sim.laws = await listLaws();
+      // RightsCatalog state changed → refetch so the selector reflects it.
+      if (kind === "right_grant" || kind === "right_revoke") {
+        await refreshRights();
+      }
       toast.success(`Law #${id} enacted at tick ${sim.tick}.`);
       navigate("laws");
     } catch (e) {
@@ -57,6 +148,7 @@
   }
 
   // Rough fiscal estimates displayed in the preview panel.
+  // Right & capacity laws don't have direct fiscal cost — null means "not applicable".
   const estimatedAnnualCost = $derived.by(() => {
     if (kind === "income_tax") {
       // Flat tax revenue ≈ GDP * rate * 12 months (per-citizen proxy: GDP = Σ incomes).
@@ -65,9 +157,10 @@
         : null;
     } else if (kind === "ubi") {
       return sim.currentState ? sim.currentState.population * ubiAmount * 12 : null;
-    } else {
+    } else if (kind === "abatement") {
       return pollRedux * costPerPu * 12;
     }
+    return null; // right_grant / right_revoke / capacity
   });
 
   // ── Affordability metrics ─────────────────────────────────────────────────
@@ -77,7 +170,8 @@
     if (!sim.currentState) return null;
     if (kind === "income_tax") return -(sim.currentState.gdp * taxRate); // revenue (negative cost)
     if (kind === "ubi")        return sim.currentState.population * ubiAmount;
-    return pollRedux * costPerPu; // abatement monthly cost
+    if (kind === "abatement")  return pollRedux * costPerPu;
+    return null; // right_grant / right_revoke / capacity
   });
 
   /** Estimated annual as % of GDP. */
@@ -95,14 +189,25 @@
 
   type Afford = "good" | "warn" | "danger";
   const affordability = $derived.by((): Afford | null => {
-    if (estimatedAnnualCost === null || !sim.currentState) return null;
     if (kind === "income_tax") {
       // Tax: warn if rate > 50% (high approval drag), danger if > 80%
       if (taxRate > 0.8)  return "danger";
       if (taxRate > 0.5)  return "warn";
       return "good";
     }
+    if (kind === "right_revoke") {
+      // Legitimacy-debt cost dominates fiscal cost for revocations.
+      const d = selectedRight?.revocation_debt ?? 0;
+      if (d >= 0.4) return "danger";
+      if (d >= 0.2) return "warn";
+      return "good";
+    }
+    if (kind === "right_grant" || kind === "capacity") {
+      // No direct fiscal cost; treat as "good" by default.
+      return "good";
+    }
     // Cost laws: compare against annual revenue proxy
+    if (estimatedAnnualCost === null || !sim.currentState) return null;
     const annualRevenue = sim.currentState.gov_revenue * 12;
     const ratio = estimatedAnnualCost / Math.max(annualRevenue, 1);
     if (ratio > 1.5)  return "danger";
@@ -123,23 +228,42 @@
    * will appear in the Laws table before they enact the law.
    */
   const previewMagnitude = $derived.by((): string => {
-    if (kind === "income_tax") return pct(taxRate);
-    if (kind === "ubi")        return `$${ubiAmount.toFixed(0)}/mo`;
-    return `${pollRedux.toFixed(2)} PU · $${costPerPu.toFixed(0)}/PU`;
+    if (kind === "income_tax")   return pct(taxRate);
+    if (kind === "ubi")          return `$${ubiAmount.toFixed(0)}/mo`;
+    if (kind === "abatement")    return `${pollRedux.toFixed(2)} PU · $${costPerPu.toFixed(0)}/PU`;
+    if (kind === "right_grant")  return `Grant ${selectedRightId || "—"}`;
+    if (kind === "right_revoke") return `Revoke ${selectedRightId || "—"}`;
+    return `${capacityField} ${capacityDelta >= 0 ? "+" : ""}${capacityDelta.toFixed(3)}`;
   });
 
   const previewLabel: Record<LawKind, string> = {
-    income_tax: "Income Tax",
-    ubi:        "Citizen Benefit",
-    abatement:  "Abatement",
+    income_tax:   "Income Tax",
+    ubi:          "Citizen Benefit",
+    abatement:    "Abatement",
+    right_grant:  "Right Grant",
+    right_revoke: "Right Revoke",
+    capacity:     "State Capacity",
   };
 
   /** Maps proposal kind → effect_kind used by Rust/LawsView badge CSS classes. */
   const BADGE_KIND: Record<LawKind, string> = {
-    income_tax: "income_tax",
-    ubi:        "benefit",    // Rust effect_kind for UBI is "benefit"
-    abatement:  "abatement",
+    income_tax:   "income_tax",
+    ubi:          "benefit",    // Rust effect_kind for UBI is "benefit"
+    abatement:    "abatement",
+    right_grant:  "right_grant",
+    right_revoke: "right_revoke",
+    capacity:     "state_capacity",
   };
+
+  /** Disable the Enact button when the current selection isn't actionable. */
+  const submitDisabled = $derived.by((): boolean => {
+    if (enacting || !sim.loaded) return true;
+    if (kind === "right_grant"  && grantableRights.length === 0) return true;
+    if (kind === "right_revoke" && revocableRights.length === 0) return true;
+    if ((kind === "right_grant" || kind === "right_revoke") && !selectedRightId) return true;
+    if (kind === "capacity" && (!Number.isFinite(capacityDelta) || Math.abs(capacityDelta) > 0.5)) return true;
+    return false;
+  });
 </script>
 
 <div class="proposal-view">
@@ -154,7 +278,14 @@
       <div class="form-section">
         <p class="field-label">Law Type</p>
         <div class="kind-tabs">
-          {#each [["income_tax","📊 Income Tax"],["ubi","💰 UBI"],["abatement","🌿 Abatement"]] as [k,l]}
+          {#each [
+            ["income_tax",   "📊 Income Tax"],
+            ["ubi",          "💰 UBI"],
+            ["abatement",    "🌿 Abatement"],
+            ["right_grant",  "✓ Grant Right"],
+            ["right_revoke", "✗ Revoke Right"],
+            ["capacity",     "🏛 Capacity"],
+          ] as [k,l]}
           <button
             class="kind-tab"
             class:active={kind === k}
@@ -181,7 +312,7 @@
         <p class="hint">Unconditional monthly payment to every citizen. Costs deducted from Treasury.</p>
       </div>
 
-      {:else}
+      {:else if kind === "abatement"}
       <div class="form-section">
         <label for="poll-redux">Pollution reduction per month (PU)</label>
         <input id="poll-redux" type="number" min="0" step="0.1" bind:value={pollRedux} />
@@ -191,9 +322,83 @@
         <input id="cost-per-pu" type="number" min="0" step="1000" bind:value={costPerPu} />
         <p class="hint">Treasury is charged each month. If insufficient funds, abatement is proportionally reduced.</p>
       </div>
+
+      {:else if kind === "right_grant"}
+      {#if rightsLoadError}
+      <div class="form-section">
+        <p class="hint">RightsCatalog unavailable in this scenario: {rightsLoadError}</p>
+      </div>
+      {:else if grantableRights.length === 0}
+      <div class="form-section">
+        <p class="hint">No rights are currently grantable. Either every defined right is already granted, or none have their prerequisites met.</p>
+      </div>
+      {:else}
+      <div class="form-section">
+        <label for="right-grant">Right to grant</label>
+        <select id="right-grant" bind:value={selectedRightId}>
+          {#each grantableRights as r (r.id)}
+          <option value={r.id}>{r.label}</option>
+          {/each}
+        </select>
+        {#if selectedRight}
+        <p class="hint">
+          Beneficiary: {pct(selectedRight.beneficiary_fraction)} of population ·
+          Honeymoon boost: +{pct(selectedRight.grant_boost)} approval (decays over 12 months) ·
+          Revocation cost: {selectedRight.revocation_debt.toFixed(2)} legitimacy debt
+        </p>
+        {#if selectedRight.prerequisites.length > 0}
+        <p class="hint">Prerequisites: {selectedRight.prerequisites.join(", ")} ✓</p>
+        {/if}
+        {/if}
+      </div>
       {/if}
 
-      <button class="btn-enact" onclick={submit} disabled={enacting || !sim.loaded}>
+      {:else if kind === "right_revoke"}
+      {#if rightsLoadError}
+      <div class="form-section">
+        <p class="hint">RightsCatalog unavailable: {rightsLoadError}</p>
+      </div>
+      {:else if revocableRights.length === 0}
+      <div class="form-section">
+        <p class="hint">No rights are currently granted to revoke.</p>
+      </div>
+      {:else}
+      <div class="form-section">
+        <label for="right-revoke">Right to revoke</label>
+        <select id="right-revoke" bind:value={selectedRightId}>
+          {#each revocableRights as r (r.id)}
+          <option value={r.id}>{r.label}</option>
+          {/each}
+        </select>
+        {#if selectedRight}
+        <p class="hint danger-hint">
+          ⚠ Revoking this right accrues <strong>{selectedRight.revocation_debt.toFixed(2)}</strong> legitimacy debt
+          and may harm approval among the {pct(selectedRight.beneficiary_fraction)} of citizens it covers.
+        </p>
+        {/if}
+      </div>
+      {/if}
+
+      {:else if kind === "capacity"}
+      <div class="form-section">
+        <label for="cap-field">State Capacity field</label>
+        <select id="cap-field" bind:value={capacityField}>
+          {#each CAPACITY_FIELDS as f (f)}
+          <option value={f}>{f.replace(/_/g, " ")}</option>
+          {/each}
+        </select>
+      </div>
+      <div class="form-section">
+        <label for="cap-delta">Monthly delta (signed)</label>
+        <div class="slider-row">
+          <input id="cap-delta" type="range" min="-0.5" max="0.5" step="0.005" bind:value={capacityDelta} />
+          <span class="slider-value">{capacityDelta >= 0 ? "+" : ""}{capacityDelta.toFixed(3)}</span>
+        </div>
+        <p class="hint">Applied each month while the law is active. Clamped to [0,1] in the engine. Repeal stops further application but does not undo prior changes.</p>
+      </div>
+      {/if}
+
+      <button class="btn-enact" onclick={submit} disabled={submitDisabled}>
         {enacting ? "Enacting…" : "Enact Law"}
       </button>
     </div>
@@ -202,10 +407,19 @@
     <div class="preview-panel">
       <h3>Fiscal Estimate</h3>
       <div class="estimate-row">
-        <span class="est-label">{kind === "income_tax" ? "Est. annual revenue" : "Est. annual cost"}</span>
+        <span class="est-label">{
+          kind === "income_tax" ? "Est. annual revenue"
+            : kind === "right_grant" || kind === "right_revoke" ? "Est. legitimacy impact"
+            : kind === "capacity" ? "Est. fiscal impact"
+            : "Est. annual cost"
+        }</span>
         <span class="est-value">
           {#if estimatedAnnualCost !== null}
             {formatMoney(Math.abs(estimatedAnnualCost))}
+          {:else if kind === "right_revoke" && selectedRight}
+            +{selectedRight.revocation_debt.toFixed(2)} debt
+          {:else if kind === "right_grant" && selectedRight}
+            +{pct(selectedRight.grant_boost)} approval
           {:else}
             —
           {/if}
@@ -274,11 +488,32 @@
           <li>↓ Treasury each month (high ongoing cost)</li>
           <li>⚠ Repeal incurs legitimacy debt</li>
         </ul>
-        {:else}
+        {:else if kind === "abatement"}
         <ul>
           <li>↓ Pollution stock each month</li>
           <li>→ Improved citizen health over time</li>
           <li>↓ Treasury (monthly deduction)</li>
+        </ul>
+        {:else if kind === "right_grant"}
+        <ul>
+          <li>↑ Approval (honeymoon boost over 12 months)</li>
+          <li>↑ Rights breadth — institutional legitimacy stock</li>
+          <li>Re-fires monthly until prerequisites are met (idempotent)</li>
+          <li>⚠ Future revocation will cost legitimacy debt</li>
+        </ul>
+        {:else if kind === "right_revoke"}
+        <ul>
+          <li>↑ Legitimacy debt (one-time, scaled by right's revocation_debt)</li>
+          <li>↓ Rights breadth</li>
+          <li>↓ Approval among the affected beneficiary share</li>
+          <li>Idempotent: no-op if the right is not currently granted</li>
+        </ul>
+        {:else}
+        <ul>
+          <li>Adjusts the named StateCapacity field by Δ each month</li>
+          <li>Field is clamped to [0,1] in the engine</li>
+          <li>Downstream: tax efficiency / enforcement / legal predictability</li>
+          <li>Repeal stops the monthly delta but does not undo prior changes</li>
         </ul>
         {/if}
       </div>
@@ -357,6 +592,17 @@ input[type="range"]::-webkit-slider-thumb {
 input[type="number"] { width: 100%; }
 
 .hint { font-size: 12px; color: var(--muted); }
+.danger-hint { color: var(--danger, #ef4444); }
+.danger-hint strong { color: var(--danger, #ef4444); font-weight: 700; }
+select {
+  width: 100%;
+  background: var(--bg);
+  color: var(--color-text-primary, inherit);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 8px;
+  font-size: 13px;
+}
 .field-label { font-size: 12px; color: var(--muted); margin-bottom: 0; }
 
 
