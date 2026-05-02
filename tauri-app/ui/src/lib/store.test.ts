@@ -2,6 +2,10 @@
  * Tests for store.svelte.ts utility functions.
  *
  * Covers:
+ *  - formatMoney: compact currency formatting ($B/$M/$K/plain).
+ *  - pct: fraction → "%.1f%" string.
+ *  - tickToDate: tick integer → "Y<year> M<month>" string.
+ *  - beginLoad / endLoad / setError: loading-flag and error-slot helpers.
  *  - exportMetricsCsv: CSV generation, download trigger, early-return on empty.
  *  - navigate: view switching, router.goto routing, path deduplication.
  *  - initRouting: hash-based startup view, router.subscribe wiring.
@@ -20,8 +24,148 @@ vi.mock("tinro", () => ({
 
 // ── Imports (after vi.mock declarations) ─────────────────────────────────────
 
-import { router }                                             from "tinro";
-import { sim, ui, navigate, initRouting, exportMetricsCsv }  from "./store.svelte";
+import { router }                                                           from "tinro";
+import { sim, ui, navigate, initRouting, exportMetricsCsv,
+         formatMoney, pct, tickToDate, beginLoad, endLoad, setError }       from "./store.svelte";
+
+// ── formatMoney ───────────────────────────────────────────────────────────────
+
+describe("formatMoney", () => {
+  it("formats billions with one decimal", () => {
+    expect(formatMoney(1_500_000_000)).toBe("$1.5B");
+    expect(formatMoney(2_000_000_000)).toBe("$2.0B");
+  });
+
+  it("formats millions with one decimal", () => {
+    expect(formatMoney(3_400_000)).toBe("$3.4M");
+    expect(formatMoney(1_000_000)).toBe("$1.0M");
+  });
+
+  it("formats thousands with one decimal", () => {
+    expect(formatMoney(50_000)).toBe("$50.0K");
+    expect(formatMoney(1_000)).toBe("$1.0K");
+  });
+
+  it("formats sub-thousand as rounded dollars", () => {
+    expect(formatMoney(500)).toBe("$500");
+    expect(formatMoney(0)).toBe("$0");
+    expect(formatMoney(999)).toBe("$999");
+  });
+
+  it("handles negative billions correctly", () => {
+    expect(formatMoney(-2_000_000_000)).toBe("$-2.0B");
+  });
+
+  it("handles negative millions correctly", () => {
+    expect(formatMoney(-1_500_000)).toBe("$-1.5M");
+  });
+
+  it("handles negative thousands correctly", () => {
+    expect(formatMoney(-5_000)).toBe("$-5.0K");
+  });
+
+  it("handles negative sub-thousand correctly", () => {
+    expect(formatMoney(-250)).toBe("$-250");
+  });
+});
+
+// ── pct ──────────────────────────────────────────────────────────────────────
+
+describe("pct", () => {
+  it("formats 0 as '0.0%'", () => {
+    expect(pct(0)).toBe("0.0%");
+  });
+
+  it("formats 1 as '100.0%'", () => {
+    expect(pct(1)).toBe("100.0%");
+  });
+
+  it("formats 0.5 as '50.0%'", () => {
+    expect(pct(0.5)).toBe("50.0%");
+  });
+
+  it("formats 0.123 to one decimal place", () => {
+    expect(pct(0.123)).toBe("12.3%");
+  });
+
+  it("rounds via toFixed(1) — 0.1235 → '12.3%' (IEEE 754 truncation)", () => {
+    // 0.1235 cannot be represented exactly in binary; V8's toFixed(1) gives "12.3".
+    expect(pct(0.1235)).toBe("12.3%");
+  });
+
+  it("handles negative fractions", () => {
+    expect(pct(-0.05)).toBe("-5.0%");
+  });
+});
+
+// ── tickToDate ────────────────────────────────────────────────────────────────
+
+describe("tickToDate", () => {
+  it("tick 0 → Y2026 M1", () => {
+    expect(tickToDate(0)).toBe("Y2026 M1");
+  });
+
+  it("tick 29 → Y2026 M1 (still month 1)", () => {
+    expect(tickToDate(29)).toBe("Y2026 M1");
+  });
+
+  it("tick 30 → Y2026 M2 (second month)", () => {
+    expect(tickToDate(30)).toBe("Y2026 M2");
+  });
+
+  it("tick 359 → Y2026 M12 (last month of year 0)", () => {
+    expect(tickToDate(359)).toBe("Y2026 M12");
+  });
+
+  it("tick 360 → Y2027 M1 (first tick of year 2)", () => {
+    expect(tickToDate(360)).toBe("Y2027 M1");
+  });
+
+  it("tick 720 → Y2028 M1", () => {
+    expect(tickToDate(720)).toBe("Y2028 M1");
+  });
+
+  it("month cycles 1–12 within each year", () => {
+    // 11 months into year 1: tick = 11 * 30 = 330 → Y2026 M12
+    expect(tickToDate(11 * 30)).toBe("Y2026 M12");
+  });
+});
+
+// ── beginLoad / endLoad / setError ────────────────────────────────────────────
+
+describe("beginLoad / endLoad / setError", () => {
+  beforeEach(() => {
+    sim.loading = false;
+    sim.error   = null;
+  });
+
+  it("beginLoad sets loading=true and clears error", () => {
+    sim.error = "prior error";
+    beginLoad();
+    expect(sim.loading).toBe(true);
+    expect(sim.error).toBe(null);
+  });
+
+  it("endLoad sets loading=false without touching error", () => {
+    sim.loading = true;
+    sim.error   = "existing error";
+    endLoad();
+    expect(sim.loading).toBe(false);
+    expect(sim.error).toBe("existing error");
+  });
+
+  it("setError records the message and clears loading", () => {
+    sim.loading = true;
+    setError("boom");
+    expect(sim.error).toBe("boom");
+    expect(sim.loading).toBe(false);
+  });
+
+  it("setError with empty string stores empty string", () => {
+    setError("");
+    expect(sim.error).toBe("");
+  });
+});
 
 // ── exportMetricsCsv ─────────────────────────────────────────────────────────
 
