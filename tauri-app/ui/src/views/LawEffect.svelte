@@ -227,6 +227,7 @@
         ["State Capacity", fmtDelta(lawEffect.delta_state_capacity, pct),         deltaColor(lawEffect.delta_state_capacity, true)],
         ["Mean Health",    fmtDelta(lawEffect.delta_health,         pct),         deltaColor(lawEffect.delta_health,         true)],
         ["Mean Income",    fmtDelta(lawEffect.delta_income,         formatMoney), deltaColor(lawEffect.delta_income,         true)],
+        ["Mean Wealth",    fmtDelta(lawEffect.delta_wealth,         formatMoney), deltaColor(lawEffect.delta_wealth,         true)],
         ["Rights Breadth", fmtDelta(lawEffect.delta_rights_breadth, pct),         deltaColor(lawEffect.delta_rights_breadth, true)],
       ] as [label, val, col]}
       <div class="delta-card">
@@ -365,6 +366,7 @@
           ["State Capacity", lawEffect.pre.mean_state_capacity,  lawEffect.post.mean_state_capacity,  lawEffect.delta_state_capacity,  pct,         true],
           ["Mean Health",    lawEffect.pre.mean_health,          lawEffect.post.mean_health,          lawEffect.delta_health,          pct,         true],
           ["Mean Income",    lawEffect.pre.mean_income,          lawEffect.post.mean_income,          lawEffect.delta_income,          formatMoney, true],
+          ["Mean Wealth",    lawEffect.pre.mean_wealth,          lawEffect.post.mean_wealth,          lawEffect.delta_wealth,          formatMoney, true],
           ["Rights Breadth", lawEffect.pre.mean_rights_breadth,  lawEffect.post.mean_rights_breadth,  lawEffect.delta_rights_breadth,  pct,         true],
         ] as [label, pre, post, delta, fmt, posGood]}
         <tr>

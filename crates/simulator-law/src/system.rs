@@ -332,6 +332,7 @@ pub fn law_dispatcher_system(
 
 /// Build the base EvalCtx pre-loaded with time bindings and macro aggregates.
 /// Each law's per-citizen loop clones this and inserts citizen-specific fields.
+#[allow(clippy::too_many_arguments)]
 fn make_dispatch_ctx(
     tick: u64,
     macro_: &MacroIndicators,
