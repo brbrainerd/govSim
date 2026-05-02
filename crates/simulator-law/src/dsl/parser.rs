@@ -416,6 +416,8 @@ pub fn parse_program(src: &str) -> Result<Program, ParseError> {
 mod tests {
     use super::*;
 
+    // ── existing tests ────────────────────────────────────────────────────────
+
     #[test]
     fn empty_scope() {
         let p = parse_program("scope Foo() { }").unwrap();
@@ -466,5 +468,306 @@ mod tests {
         "#;
         let p = parse_program(src).unwrap();
         assert_eq!(p.scopes[0].items.len(), 1);
+    }
+
+    // ── literals ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn integer_literal_parses_as_lit_int() {
+        let p = parse_program("scope T() { def n : int = 42 }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(body.base, Expr::LitInt(42)));
+    }
+
+    #[test]
+    fn float_literal_parses_as_lit_money() {
+        let p = parse_program("scope T() { def n : money = 3.14 }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(body.base, Expr::LitMoney(v) if (v - 3.14).abs() < 1e-10));
+    }
+
+    #[test]
+    fn true_literal_parses_as_lit_bool_true() {
+        let p = parse_program("scope T() { def b : bool = true }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(body.base, Expr::LitBool(true)));
+    }
+
+    #[test]
+    fn false_literal_parses_as_lit_bool_false() {
+        let p = parse_program("scope T() { def b : bool = false }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(body.base, Expr::LitBool(false)));
+    }
+
+    #[test]
+    fn underscore_separator_in_integer_parses() {
+        let p = parse_program("scope T() { def n : int = 1_000_000 }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(body.base, Expr::LitInt(1_000_000)));
+    }
+
+    #[test]
+    fn underscore_separator_in_float_parses() {
+        let p = parse_program("scope T() { def n : money = 1_000.50 }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(body.base, Expr::LitMoney(v) if (v - 1000.50).abs() < 1e-9));
+    }
+
+    // ── field access ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn field_access_parses() {
+        let p = parse_program("scope T(c: money) { def x : money = c.income }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(
+            matches!(&body.base, Expr::Field { obj, field } if obj == "c" && field == "income")
+        );
+    }
+
+    // ── unary operators ───────────────────────────────────────────────────────
+
+    #[test]
+    fn unary_neg_parses() {
+        let p = parse_program("scope T(x: money) { def n : money = -x }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(
+            &body.base,
+            Expr::UnaryOp { op: UnaryOp::Neg, .. }
+        ));
+    }
+
+    #[test]
+    fn unary_not_parses() {
+        let p = parse_program("scope T() { def b : bool = !false }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(
+            &body.base,
+            Expr::UnaryOp { op: UnaryOp::Not, .. }
+        ));
+    }
+
+    // ── min / max ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn min_parses() {
+        let p = parse_program("scope T(x: money) { def n : money = min(x, 100.0) }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(&body.base, Expr::Min(_, _)));
+    }
+
+    #[test]
+    fn max_parses() {
+        let p = parse_program("scope T(x: money) { def n : money = max(x, 0.0) }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(&body.base, Expr::Max(_, _)));
+    }
+
+    // ── if-then-else ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn if_then_else_parses() {
+        let p = parse_program(
+            "scope T(x: money) { def n : money = if x > 0.0 then 1.0 else 0.0 }",
+        )
+        .unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(&body.base, Expr::If { .. }));
+    }
+
+    // ── operator precedence ───────────────────────────────────────────────────
+
+    #[test]
+    fn mul_binds_tighter_than_add() {
+        // `1 + 2 * 3` should parse as `1 + (2 * 3)`, i.e. top-level is Add.
+        let p = parse_program("scope T() { def n : money = 1.0 + 2.0 * 3.0 }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(
+            matches!(&body.base, Expr::BinOp { op: BinOp::Add, .. }),
+            "expected Add at top level"
+        );
+    }
+
+    #[test]
+    fn add_binds_tighter_than_comparison() {
+        // `a + b > c` → top-level is Gt, not Add.
+        let p = parse_program("scope T(a: money) { def b : bool = a + 1.0 > 2.0 }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(
+            matches!(&body.base, Expr::BinOp { op: BinOp::Gt, .. }),
+            "expected Gt at top level"
+        );
+    }
+
+    #[test]
+    fn comparison_binds_tighter_than_logical_and() {
+        // `a > 0 && b > 0` → top-level is And; both children are Gt.
+        let p = parse_program(
+            "scope T(a: money, b: money) { def ok : bool = a > 0.0 && b > 0.0 }",
+        )
+        .unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        let Expr::BinOp { op, lhs, rhs } = &body.base else {
+            panic!("expected BinOp");
+        };
+        assert_eq!(*op, BinOp::And, "expected And at top level");
+        assert!(matches!(lhs.as_ref(), Expr::BinOp { op: BinOp::Gt, .. }));
+        assert!(matches!(rhs.as_ref(), Expr::BinOp { op: BinOp::Gt, .. }));
+    }
+
+    #[test]
+    fn logical_and_binds_tighter_than_or() {
+        // `a || b && c` → top-level is Or; rhs is And.
+        let p = parse_program(
+            "scope T() { def ok : bool = true || false && true }",
+        )
+        .unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(
+            matches!(&body.base, Expr::BinOp { op: BinOp::Or, .. }),
+            "expected Or at top level"
+        );
+    }
+
+    #[test]
+    fn parentheses_override_precedence() {
+        // `(1 + 2) * 3` → top-level is Mul.
+        let p =
+            parse_program("scope T() { def n : money = (1.0 + 2.0) * 3.0 }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(
+            matches!(&body.base, Expr::BinOp { op: BinOp::Mul, .. }),
+            "expected Mul at top level after parenthesized add"
+        );
+    }
+
+    // ── multi-char comparison operators ──────────────────────────────────────
+
+    #[test]
+    fn ge_operator_parses() {
+        let p = parse_program("scope T(x: money) { def b : bool = x >= 0.0 }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(&body.base, Expr::BinOp { op: BinOp::Ge, .. }));
+    }
+
+    #[test]
+    fn le_operator_parses() {
+        let p = parse_program("scope T(x: money) { def b : bool = x <= 0.0 }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(&body.base, Expr::BinOp { op: BinOp::Le, .. }));
+    }
+
+    #[test]
+    fn eq_operator_parses() {
+        let p = parse_program("scope T(x: money) { def b : bool = x == 0.0 }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(&body.base, Expr::BinOp { op: BinOp::Eq, .. }));
+    }
+
+    #[test]
+    fn ne_operator_parses() {
+        let p = parse_program("scope T(x: money) { def b : bool = x != 0.0 }").unwrap();
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(&body.base, Expr::BinOp { op: BinOp::Ne, .. }));
+    }
+
+    // ── comments ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn hash_comment_is_skipped() {
+        let src = r#"
+            # This whole line is a comment
+            scope T() {
+              # another comment
+              def n : int = 7 # inline comment
+            }
+        "#;
+        let p = parse_program(src).unwrap();
+        assert_eq!(p.scopes[0].name, "T");
+        let Item::Definition { body, .. } = &p.scopes[0].items[0];
+        assert!(matches!(body.base, Expr::LitInt(7)));
+    }
+
+    // ── multi-scope programs ──────────────────────────────────────────────────
+
+    #[test]
+    fn multi_scope_program_parses() {
+        let src = r#"
+            scope A(x: money) { def v : money = x }
+            scope B(y: int)   { def w : int   = y }
+        "#;
+        let p = parse_program(src).unwrap();
+        assert_eq!(p.scopes.len(), 2);
+        assert_eq!(p.scopes[0].name, "A");
+        assert_eq!(p.scopes[1].name, "B");
+    }
+
+    #[test]
+    fn scope_with_multiple_definitions() {
+        let src = r#"
+            scope T(x: money) {
+              def a : money = x
+              def b : bool  = x > 0.0
+            }
+        "#;
+        let p = parse_program(src).unwrap();
+        assert_eq!(p.scopes[0].items.len(), 2);
+    }
+
+    #[test]
+    fn scope_with_multiple_params() {
+        let src = r#"
+            scope T(a: money, b: int, c: rate, d: bool) { def x : bool = d }
+        "#;
+        let p = parse_program(src).unwrap();
+        assert_eq!(p.scopes[0].params.len(), 4);
+        assert_eq!(p.scopes[0].params[0].ty, Type::Money);
+        assert_eq!(p.scopes[0].params[1].ty, Type::Int);
+        assert_eq!(p.scopes[0].params[2].ty, Type::Rate);
+        assert_eq!(p.scopes[0].params[3].ty, Type::Bool);
+    }
+
+    // ── error paths ───────────────────────────────────────────────────────────
+
+    #[test]
+    fn unexpected_char_is_error() {
+        // `@` is not a valid token.
+        assert!(parse_program("scope T() { def n : money = @0.0 }").is_err());
+    }
+
+    #[test]
+    fn eof_inside_scope_is_error() {
+        // Missing closing brace → hits EOF.
+        assert!(parse_program("scope T() {").is_err());
+    }
+
+    #[test]
+    fn missing_colon_in_def_is_error() {
+        // `def n money = 0.0` — missing `:` before type.
+        assert!(parse_program("scope T() { def n money = 0.0 }").is_err());
+    }
+
+    #[test]
+    fn missing_eq_in_def_is_error() {
+        // `def n : money 0.0` — missing `=`.
+        assert!(parse_program("scope T() { def n : money 0.0 }").is_err());
+    }
+
+    #[test]
+    fn invalid_type_keyword_is_error() {
+        // `def n : string = 0.0` — `string` is not a type keyword.
+        assert!(parse_program("scope T() { def n : string = 0.0 }").is_err());
+    }
+
+    #[test]
+    fn empty_input_produces_empty_program() {
+        let p = parse_program("").unwrap();
+        assert!(p.scopes.is_empty());
+    }
+
+    #[test]
+    fn whitespace_only_input_produces_empty_program() {
+        let p = parse_program("   \n\t  ").unwrap();
+        assert!(p.scopes.is_empty());
     }
 }

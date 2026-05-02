@@ -259,4 +259,158 @@ mod tests {
         let did = lew.did_approval().unwrap();
         assert!((did - 0.2).abs() < 1e-4, "expected 0.2, got {did}");
     }
+
+    // ── WindowSummary edge cases ───────────────────────────────────────────────
+
+    #[test]
+    fn from_rows_empty_returns_none() {
+        let result = WindowSummary::from_rows(&[]);
+        assert!(result.is_none(), "empty rows should return None");
+    }
+
+    #[test]
+    fn from_rows_single_row() {
+        let row = TickRow { tick: 7, approval: 0.75, gdp: 12_000.0, price_level: 1.0, ..Default::default() };
+        let summary = WindowSummary::from_rows(&[&row]).unwrap();
+        assert_eq!(summary.n_rows, 1);
+        assert_eq!(summary.from_tick, 7);
+        assert_eq!(summary.to_tick,   7);
+        assert!((summary.mean_approval - 0.75).abs() < 1e-5);
+        assert!((summary.mean_gdp - 12_000.0).abs() < 1e-3);
+    }
+
+    #[test]
+    fn window_summary_min_max_approval() {
+        let mut store = MetricStore::new(20);
+        for (t, a) in [(0, 0.1f32), (1, 0.5), (2, 0.9)] {
+            store.push(TickRow { tick: t, approval: a, price_level: 1.0, ..Default::default() });
+        }
+        let s = WindowSummary::from_store(&store, 0, 2).unwrap();
+        assert!((s.min_approval - 0.1).abs() < 1e-5, "min_approval should be 0.1");
+        assert!((s.max_approval - 0.9).abs() < 1e-5, "max_approval should be 0.9");
+    }
+
+    #[test]
+    fn window_summary_min_max_gdp() {
+        let mut store = MetricStore::new(20);
+        for (t, g) in [(0, 1000.0f64), (1, 5000.0), (2, 2000.0)] {
+            store.push(TickRow { tick: t, gdp: g, price_level: 1.0, ..Default::default() });
+        }
+        let s = WindowSummary::from_store(&store, 0, 2).unwrap();
+        assert!((s.min_gdp - 1000.0).abs() < 1e-3, "min_gdp should be 1000");
+        assert!((s.max_gdp - 5000.0).abs() < 1e-3, "max_gdp should be 5000");
+    }
+
+    #[test]
+    fn window_summary_n_rows_and_tick_range() {
+        let mut store = MetricStore::new(20);
+        for t in 10..15u64 {
+            push_row(&mut store, t, 0.5, 1000.0);
+        }
+        let s = WindowSummary::from_store(&store, 10, 14).unwrap();
+        assert_eq!(s.n_rows, 5);
+        assert_eq!(s.from_tick, 10);
+        assert_eq!(s.to_tick,   14);
+    }
+
+    #[test]
+    fn window_diff_from_store_returns_none_when_enacted_tick_too_small() {
+        let mut store = MetricStore::new(20);
+        for t in 0..10u64 {
+            push_row(&mut store, t, 0.5, 5000.0);
+        }
+        // enacted_tick=3, window_size=5 → 3 < 5 → None
+        let result = WindowDiff::from_store(&store, 3, 5);
+        assert!(result.is_none(), "should return None when enacted_tick < window_size");
+    }
+
+    #[test]
+    fn law_effect_window_returns_none_when_insufficient_pre_data() {
+        let mut store = MetricStore::new(20);
+        for t in 0..10u64 {
+            push_row(&mut store, t, 0.5, 5000.0);
+        }
+        // enacted_tick=3, window_size=5 → 3 < 5 → None
+        let result = LawEffectWindow::from_treatment(&store, 3, 5);
+        assert!(result.is_none(), "should return None when pre-window underruns data");
+    }
+
+    #[test]
+    fn did_pollution_with_control_computes_correctly() {
+        let mut treat_store = MetricStore::new(20);
+        let mut ctrl_store  = MetricStore::new(20);
+
+        // Treatment pollution: pre=2.0, post=1.0 → delta=-1.0
+        for t in 0..5u64  {
+            treat_store.push(TickRow { tick: t, pollution_stock: 2.0, price_level: 1.0, ..Default::default() });
+        }
+        for t in 5..10u64 {
+            treat_store.push(TickRow { tick: t, pollution_stock: 1.0, price_level: 1.0, ..Default::default() });
+        }
+        // Control pollution: pre=2.0, post=2.0 → delta=0.0
+        for t in 0..5u64  {
+            ctrl_store.push(TickRow { tick: t, pollution_stock: 2.0, price_level: 1.0, ..Default::default() });
+        }
+        for t in 5..10u64 {
+            ctrl_store.push(TickRow { tick: t, pollution_stock: 2.0, price_level: 1.0, ..Default::default() });
+        }
+
+        let lew = LawEffectWindow::from_treatment(&treat_store, 5, 5).unwrap();
+        let ctrl_pre  = WindowSummary::from_store(&ctrl_store, 0, 4).unwrap();
+        let ctrl_post = WindowSummary::from_store(&ctrl_store, 5, 9).unwrap();
+        let lew = lew.with_control(ctrl_pre, ctrl_post);
+
+        // DiD = (-1.0) - (0.0) = -1.0
+        let did = lew.did_pollution().unwrap();
+        assert!((did - (-1.0)).abs() < 1e-5, "expected -1.0, got {did}");
+    }
+
+    #[test]
+    fn did_gdp_with_control_computes_correctly() {
+        let mut treat_store = MetricStore::new(20);
+        let mut ctrl_store  = MetricStore::new(20);
+
+        // Treatment GDP: pre=5000, post=8000 → delta=+3000
+        for t in 0..5u64  { push_row(&mut treat_store, t, 0.5, 5000.0); }
+        for t in 5..10u64 { push_row(&mut treat_store, t, 0.5, 8000.0); }
+        // Control GDP: pre=5000, post=6000 → delta=+1000
+        for t in 0..5u64  { push_row(&mut ctrl_store, t, 0.5, 5000.0); }
+        for t in 5..10u64 { push_row(&mut ctrl_store, t, 0.5, 6000.0); }
+
+        let lew = LawEffectWindow::from_treatment(&treat_store, 5, 5).unwrap();
+        let ctrl_pre  = WindowSummary::from_store(&ctrl_store, 0, 4).unwrap();
+        let ctrl_post = WindowSummary::from_store(&ctrl_store, 5, 9).unwrap();
+        let lew = lew.with_control(ctrl_pre, ctrl_post);
+
+        // DiD = (3000) - (1000) = 2000
+        let did = lew.did_gdp().unwrap();
+        assert!((did - 2000.0).abs() < 1e-3, "expected 2000.0, got {did}");
+    }
+
+    #[test]
+    fn window_diff_deltas_all_metrics() {
+        let mut store = MetricStore::new(20);
+        // Build rows with known values for all tracked metrics.
+        for t in 0..5u64 {
+            store.push(TickRow {
+                tick: t, approval: 0.40, unemployment: 0.10, gdp: 5_000.0,
+                pollution_stock: 3.0, legitimacy_debt: 0.20, treasury_balance: 10_000.0,
+                price_level: 1.0, ..Default::default()
+            });
+        }
+        for t in 5..10u64 {
+            store.push(TickRow {
+                tick: t, approval: 0.60, unemployment: 0.05, gdp: 7_000.0,
+                pollution_stock: 2.0, legitimacy_debt: 0.10, treasury_balance: 15_000.0,
+                price_level: 1.0, ..Default::default()
+            });
+        }
+        let diff = WindowDiff::from_store(&store, 5, 5).unwrap();
+        assert!((diff.delta_approval     -  0.20).abs() < 1e-4);
+        assert!((diff.delta_unemployment - -0.05).abs() < 1e-4);
+        assert!((diff.delta_gdp          - 2000.0).abs() < 1e-3);
+        assert!((diff.delta_pollution    - -1.0).abs() < 1e-5);
+        assert!((diff.delta_legitimacy   - -0.10).abs() < 1e-4);
+        assert!((diff.delta_treasury     - 5000.0).abs() < 1e-3);
+    }
 }
