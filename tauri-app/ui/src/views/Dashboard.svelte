@@ -127,6 +127,22 @@
   // Wellbeing values from the latest metric row (not in CurrentState snapshot).
   const lastRow = $derived(sim.metricsRows.length > 0 ? sim.metricsRows[sim.metricsRows.length - 1] : null);
 
+  // Pollution trend: monthly delta + estimated equilibrium.
+  // At equilibrium: emissions = stock × (1 − decay). Default decay = 0.95, so
+  // equilibrium = stock_current + monthly_delta / 0.05 when still growing.
+  const POLLUTION_DECAY_RATE = 0.05; // 1 − default_decay (= 1 − 0.95)
+  const pollTrend = $derived((() => {
+    const all = sim.metricsRows;
+    if (all.length < 31) return null;
+    const current = all[all.length - 1].pollution_stock;
+    const prev    = all[Math.max(0, all.length - 31)].pollution_stock;
+    const monthlyDelta = current - prev;
+    const estimatedEq = monthlyDelta > 0.1
+      ? Math.round(current + monthlyDelta / POLLUTION_DECAY_RATE)
+      : null;
+    return { monthlyDelta, estimatedEq };
+  })());
+
   // Critical condition alerts — surfaced in the alert banner.
   interface Alert { level: "warn" | "danger"; msg: string; }
   const alerts = $derived((() => {
@@ -137,7 +153,8 @@
     if (cs.treasury_balance < -1e7)  a.push({ level: "danger", msg: `Treasury deep in deficit: ${formatMoney(cs.treasury_balance)}` });
     else if (cs.treasury_balance < 0) a.push({ level: "warn",  msg: `Treasury negative: ${formatMoney(cs.treasury_balance)}` });
     if (cs.unemployment > 0.2)       a.push({ level: "danger", msg: `Unemployment high: ${pct(cs.unemployment)}` });
-    if (cs.pollution_stock > 5)      a.push({ level: "danger", msg: `Pollution critical: ${cs.pollution_stock.toFixed(2)} PU` });
+    if (cs.pollution_stock > 500)     a.push({ level: "danger", msg: `Pollution critical: ${cs.pollution_stock.toFixed(1)} PU` });
+    else if (cs.pollution_stock > 300) a.push({ level: "warn", msg: `Pollution elevated: ${cs.pollution_stock.toFixed(1)} PU` });
     if (cs.legitimacy_debt > 0.7)    a.push({ level: "danger", msg: `Legitimacy collapsing: debt ${cs.legitimacy_debt.toFixed(3)}` });
     if (cs.crisis_kind > 0)          a.push({ level: "warn",   msg: `Active crisis: ${CRISIS_LABELS[cs.crisis_kind]} (${cs.crisis_remaining_ticks} ticks)` });
     return a;
@@ -266,7 +283,18 @@
   <section class="section">
     <h2 class="section-title">Environment &amp; Fiscal</h2>
     <div class="stat-grid">
-      <StatCard label="Pollution Stock" value={cs.pollution_stock.toFixed(3)} sub="PU" color={cs.pollution_stock > 3 ? "danger" : cs.pollution_stock > 1.5 ? "warn" : "good"} />
+      <StatCard
+        label="Pollution Stock"
+        value={cs.pollution_stock.toFixed(1)}
+        sub={pollTrend
+          ? pollTrend.estimatedEq
+            ? `+${pollTrend.monthlyDelta.toFixed(1)} PU/mo · eq ~${pollTrend.estimatedEq} PU`
+            : `${pollTrend.monthlyDelta.toFixed(1)} PU/mo · stabilising`
+          : "PU"}
+        trend={trendOf("pollution_stock")}
+        sparkData={sparkOf("pollution_stock")}
+        color={cs.pollution_stock > 500 ? "danger" : cs.pollution_stock > 200 ? "warn" : "good"}
+      />
       <StatCard label="Price Level"     value={cs.price_level.toFixed(4)} sub="base = 1.0" />
       <StatCard label="Treasury"        value={formatMoney(cs.treasury_balance)} trend={trendOf("treasury_balance")} color={cs.treasury_balance < 0 ? "danger" : "default"} />
       <StatCard label="Gov Revenue"     value={formatMoney(cs.gov_revenue)}     sub="this year" />
