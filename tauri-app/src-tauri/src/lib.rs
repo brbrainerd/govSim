@@ -51,6 +51,7 @@ pub fn run() {
             commands::get_counterfactual_diff,
             commands::run_monte_carlo,
             commands::export_monte_carlo_csv,
+            commands::compare_two_laws,
             commands::get_citizen_distribution,
             commands::get_law_dsl_source,
             commands::step_and_get_state,

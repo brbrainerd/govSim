@@ -64,8 +64,22 @@ impl CounterfactualPair {
     pub fn compute_did(&self, enacted_tick: u64, window_ticks: u64) -> CausalEstimate {
         let t_store = self.treatment.world.resource::<MetricStore>();
         let c_store = self.control.world.resource::<MetricStore>();
+        compute_did_from_stores(t_store, c_store, enacted_tick, window_ticks)
+    }
+}
 
-        let lew = LawEffectWindow::from_treatment(t_store, enacted_tick, window_ticks);
+/// Compute a `CausalEstimate` from any pair of metric stores.
+///
+/// Exposed so multi-arm counterfactuals (e.g. `CounterfactualTriple`) can
+/// reuse the same DiD logic against a shared control store, without owning
+/// the Sim instances themselves.
+pub fn compute_did_from_stores(
+    t_store: &MetricStore,
+    c_store: &MetricStore,
+    enacted_tick: u64,
+    window_ticks: u64,
+) -> CausalEstimate {
+    let lew = LawEffectWindow::from_treatment(t_store, enacted_tick, window_ticks);
 
         let did_approval     = compute_did_f32(lew.as_ref(), c_store, enacted_tick, window_ticks,
             |s: &WindowSummary| s.mean_approval);
@@ -100,22 +114,21 @@ impl CounterfactualPair {
         let treatment_post_gdp = lew.as_ref()
             .map(|l| l.treatment_post.mean_gdp).unwrap_or(0.0);
 
-        CausalEstimate {
-            enacted_tick,
-            window_ticks,
-            did_approval,
-            did_gdp,
-            did_pollution,
-            did_unemployment,
-            did_legitimacy,
-            did_treasury,
-            did_income,
-            did_wealth,
-            did_health,
-            did_approval_by_quintile,
-            treatment_post_approval,
-            treatment_post_gdp,
-        }
+    CausalEstimate {
+        enacted_tick,
+        window_ticks,
+        did_approval,
+        did_gdp,
+        did_pollution,
+        did_unemployment,
+        did_legitimacy,
+        did_treasury,
+        did_income,
+        did_wealth,
+        did_health,
+        did_approval_by_quintile,
+        treatment_post_approval,
+        treatment_post_gdp,
     }
 }
 

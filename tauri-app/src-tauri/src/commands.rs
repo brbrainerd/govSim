@@ -7,6 +7,7 @@ use simulator_counterfactual::{
     estimate::CausalEstimate,
     monte_carlo::{MonteCarloRunner, MonteCarloSummary},
     pair::CounterfactualPair,
+    triple::CounterfactualTriple,
 };
 use simulator_law::{
     dsl::{parser::parse_program, typecheck::typecheck_program},
@@ -882,6 +883,59 @@ pub async fn get_counterfactual_diff(
     pair.step_both(window_ticks as u32);
 
     Ok(pair.compute_did(fork_tick, window_ticks).into())
+}
+
+/// Three-arm counterfactual: two enacted laws compared against a shared
+/// no-law control, both forked from the saved snapshot. Returns a pair of
+/// `CausalEstimateDto`s plus pre-computed net contrasts (A − B).
+#[derive(serde::Serialize)]
+pub struct ComparativeEstimateDto {
+    pub law_a:           CausalEstimateDto,
+    pub law_b:           CausalEstimateDto,
+    /// (law_a.did_approval − law_b.did_approval). Positive = A lifted approval more.
+    pub net_approval:    Option<f32>,
+    pub net_gdp:         Option<f64>,
+    /// Negative = A reduced pollution more than B.
+    pub net_pollution:   Option<f64>,
+}
+
+#[tauri::command]
+pub async fn compare_two_laws(
+    state:        tauri::State<'_, AppState>,
+    law_a_id:     u64,
+    law_b_id:     u64,
+    window_ticks: u64,
+) -> IpcResult<ComparativeEstimateDto> {
+    if law_a_id == law_b_id {
+        return Err(IpcError("law_a_id and law_b_id must differ".into()));
+    }
+    let guard = state.sim.lock().await;
+    let bundle = guard.as_ref().ok_or_else(IpcError::no_sim)?;
+
+    let (fork_tick, blob) = bundle
+        .snapshot
+        .as_ref()
+        .map(|(t, b)| (*t, b.clone()))
+        .ok_or_else(|| IpcError("no snapshot saved — call save_sim_snapshot first".into()))?;
+
+    let registry = bundle.sim.world.resource::<LawRegistry>().clone();
+    let template_a = law_template_from_registry(&registry, law_a_id, bundle.sim.tick())?;
+    let template_b = law_template_from_registry(&registry, law_b_id, bundle.sim.tick())?;
+
+    let mut triple = CounterfactualTriple::from_blob(&blob, register_all_for_cf)
+        .map_err(|e| IpcError(format!("triple fork: {e}")))?;
+    triple.apply_treatment_a(LawHandle { effective_from_tick: fork_tick, ..template_a });
+    triple.apply_treatment_b(LawHandle { effective_from_tick: fork_tick, ..template_b });
+    triple.step_all(window_ticks as u32);
+
+    let cmp = triple.compute_comparative(fork_tick, window_ticks);
+    Ok(ComparativeEstimateDto {
+        net_approval:  cmp.net_approval(),
+        net_gdp:       cmp.net_gdp(),
+        net_pollution: cmp.net_pollution(),
+        law_a:         cmp.law_a.into(),
+        law_b:         cmp.law_b.into(),
+    })
 }
 
 /// Monte Carlo summary DTO.

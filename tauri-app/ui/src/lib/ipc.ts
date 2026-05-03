@@ -521,6 +521,32 @@ export async function exportMonteCarloCsv(): Promise<string> {
   return invoke<string>("export_monte_carlo_csv");
 }
 
+/**
+ * Three-arm counterfactual: two enacted laws compared against a shared
+ * no-law control, both forked from the saved snapshot. Each law's DiD is
+ * computed against the same control window so the two estimates are
+ * directly comparable. Net fields are A − B.
+ */
+export interface ComparativeEstimateDto {
+  law_a:         CausalEstimateDto;
+  law_b:         CausalEstimateDto;
+  net_approval:  number | null;
+  net_gdp:       number | null;
+  net_pollution: number | null;
+}
+
+export async function compareTwoLaws(
+  law_a_id: number,
+  law_b_id: number,
+  window_ticks: number = 30,
+): Promise<ComparativeEstimateDto> {
+  return invoke<ComparativeEstimateDto>("compare_two_laws", {
+    lawAId: law_a_id,
+    lawBId: law_b_id,
+    windowTicks: window_ticks,
+  });
+}
+
 // ── Region stats ─────────────────────────────────────────────────────────────
 
 export interface RegionStatsDto {

@@ -17,7 +17,9 @@
 pub mod estimate;
 pub mod pair;
 pub mod monte_carlo;
+pub mod triple;
 
 pub use estimate::CausalEstimate;
 pub use pair::CounterfactualPair;
 pub use monte_carlo::MonteCarloRunner;
+pub use triple::{CounterfactualTriple, ComparativeEstimate};
