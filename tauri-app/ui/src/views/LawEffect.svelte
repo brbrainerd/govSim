@@ -1,7 +1,9 @@
 <script lang="ts">
   import { sim, ui, navigate, formatMoney, pct, tickToDate } from "$lib/store.svelte";
-  import { getLawEffect, runMonteCarlo, exportMonteCarloCsv } from "$lib/ipc";
-  import type { LawEffectDto, MonteCarloSummaryDto }         from "$lib/ipc";
+  import { getLawEffect, runMonteCarlo, exportMonteCarloCsv,
+           compareTwoLaws, runComparativeMonteCarlo, listLaws } from "$lib/ipc";
+  import type { LawEffectDto, MonteCarloSummaryDto, LawInfo,
+                ComparativeEstimateDto, ComparativeSummaryDto } from "$lib/ipc";
   import { ciBarStyle }                                      from "$lib/chart-utils";
   import Tabs      from "../components/ui/Tabs.svelte";
   import Spinner   from "../components/ui/Spinner.svelte";
@@ -17,11 +19,22 @@
   let mcError:    string                      = $state("");
   let activeTab:  string                      = $state("overview");
 
+  // ─── Compare-two-laws tab state ───────────────────────────────────────────
+  let availableLaws:    LawInfo[]                      = $state([]);
+  let secondLawId:      number | null                  = $state(null);
+  let cmpResult:        ComparativeEstimateDto | null  = $state(null);
+  let cmpMcResult:      ComparativeSummaryDto | null   = $state(null);
+  let cmpLoading:       boolean                        = $state(false);
+  let cmpMcLoading:     boolean                        = $state(false);
+  let cmpError:         string                         = $state("");
+  let cmpMcError:       string                         = $state("");
+
   const TABS = [
     { id: "overview",  label: "Δ Overview" },
     { id: "quintile",  label: "By Income Group" },
     { id: "detail",    label: "Window Detail" },
     { id: "causal",    label: "Counterfactual DiD" },
+    { id: "compare",   label: "Compare Two Laws" },
   ];
 
   async function fetchEffect() {
@@ -48,6 +61,50 @@
       mcLoading = false;
     }
   }
+
+  async function loadAvailableLaws() {
+    try {
+      const all = await listLaws();
+      // Exclude the law currently being inspected and any repealed laws —
+      // only show enactable counterfactual candidates.
+      availableLaws = all.filter(l => !l.repealed && l.id !== ui.effectLawId);
+      if (secondLawId !== null && !availableLaws.some(l => l.id === secondLawId)) {
+        secondLawId = null;
+      }
+    } catch (e) {
+      cmpError = `failed to list laws: ${e}`;
+    }
+  }
+
+  async function fetchCompare() {
+    if (ui.effectLawId === null || secondLawId === null) return;
+    cmpLoading = true; cmpError = ""; cmpResult = null;
+    try {
+      cmpResult = await compareTwoLaws(ui.effectLawId, secondLawId, windowSize);
+    } catch (e) {
+      cmpError = String(e);
+    } finally {
+      cmpLoading = false;
+    }
+  }
+
+  async function fetchCompareMc() {
+    if (ui.effectLawId === null || secondLawId === null) return;
+    cmpMcLoading = true; cmpMcError = ""; cmpMcResult = null;
+    try {
+      cmpMcResult = await runComparativeMonteCarlo(ui.effectLawId, secondLawId, windowSize, nRuns);
+    } catch (e) {
+      cmpMcError = String(e);
+    } finally {
+      cmpMcLoading = false;
+    }
+  }
+
+  // Refresh the law list when the inspected law changes.
+  $effect(() => {
+    void ui.effectLawId;
+    loadAvailableLaws();
+  });
 
   async function downloadMcCsv() {
     try {
@@ -730,6 +787,119 @@
       Click <strong>▶ Run MC</strong> to run counterfactual simulations.
       A snapshot was saved automatically when the law was enacted.
     </div>
+    {/if}
+  </div>
+
+  <!-- ─── Tab: Compare two laws ───────────────────────────────────────── -->
+  {:else if activeTab === "compare"}
+  <div role="tabpanel" id="panel-compare" aria-labelledby="tab-compare">
+    <div class="mc-header">
+      <p class="mc-desc">
+        Compare law #{ui.effectLawId} (this view) against another enacted law.
+        Both arms fork from the saved snapshot and run against a shared no-law
+        control, so the two DiD estimates are directly comparable.
+      </p>
+      <div class="mc-controls">
+        <label for="cmp-law-sel" class="field-label">vs.</label>
+        <select id="cmp-law-sel" bind:value={secondLawId}>
+          <option value={null}>(select law)</option>
+          {#each availableLaws as law}
+            <option value={law.id}>#{law.id} {law.label}{law.magnitude ? ` (${law.magnitude})` : ""}</option>
+          {/each}
+        </select>
+        <button class="btn-mc" onclick={fetchCompare}
+                disabled={cmpLoading || secondLawId === null}>
+          {#if cmpLoading}<Spinner size="sm" />{:else}▶ Compare{/if}
+        </button>
+        <button class="btn-mc-secondary" onclick={fetchCompareMc}
+                disabled={cmpMcLoading || secondLawId === null}>
+          {#if cmpMcLoading}<Spinner size="sm" />{:else}MC ({nRuns}){/if}
+        </button>
+      </div>
+    </div>
+
+    {#if availableLaws.length === 0}
+      <div class="mc-placeholder">
+        No other enacted laws available. Enact a second law in the Laws view
+        to enable comparison.
+      </div>
+    {:else if cmpError}
+      <div class="error-msg">⚠ {cmpError}</div>
+    {:else if cmpResult}
+      <h3 class="quintile-did-title">Single-run comparison</h3>
+      <table class="quintile-did-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Law #{ui.effectLawId} DiD</th>
+            <th>Law #{secondLawId} DiD</th>
+            <th>Net (A − B)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each [
+            ["Approval",   cmpResult.law_a.did_approval,   cmpResult.law_b.did_approval,   cmpResult.net_approval,  pct,         true],
+            ["GDP",        cmpResult.law_a.did_gdp,        cmpResult.law_b.did_gdp,        cmpResult.net_gdp,       formatMoney, true],
+            ["Pollution",  cmpResult.law_a.did_pollution,  cmpResult.law_b.did_pollution,  cmpResult.net_pollution, (v: number) => v.toFixed(3) + " PU", false],
+          ] as [label, a, b, net, fmt, positiveGood]}
+            <tr>
+              <td>{label}</td>
+              <td style="color:{a !== null ? deltaColor(a as number, positiveGood as boolean) : 'var(--muted)'}">
+                {a !== null ? fmtDelta(a as number, fmt as (n: number) => string) : "—"}
+              </td>
+              <td style="color:{b !== null ? deltaColor(b as number, positiveGood as boolean) : 'var(--muted)'}">
+                {b !== null ? fmtDelta(b as number, fmt as (n: number) => string) : "—"}
+              </td>
+              <td style="color:{net !== null ? deltaColor(net as number, positiveGood as boolean) : 'var(--muted)'}; font-weight:600;">
+                {net !== null ? fmtDelta(net as number, fmt as (n: number) => string) : "—"}
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+      <p class="overview-note" style="margin-top:0.75rem">
+        Net &gt; 0 on Approval / GDP means law A produced a stronger lift.
+        Net &lt; 0 on Pollution means A reduced pollution more than B.
+        Single run uses one RNG seed — for confidence intervals, click <strong>MC</strong>.
+      </p>
+    {/if}
+
+    {#if cmpMcError}
+      <div class="error-msg" style="margin-top:1rem">⚠ {cmpMcError}</div>
+    {:else if cmpMcResult}
+      <h3 class="quintile-did-title" style="margin-top:1.5rem">
+        Monte Carlo comparison ({cmpMcResult.n_runs} runs)
+      </h3>
+      <table class="quintile-did-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Mean Net (A − B)</th>
+            <th>P5</th>
+            <th>P95</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each [
+            ["Approval",   cmpMcResult.mean_net_approval,  cmpMcResult.p5_net_approval,  cmpMcResult.p95_net_approval,  pct,         true],
+            ["GDP",        cmpMcResult.mean_net_gdp,       cmpMcResult.p5_net_gdp,       cmpMcResult.p95_net_gdp,       formatMoney, true],
+            ["Pollution",  cmpMcResult.mean_net_pollution, cmpMcResult.p5_net_pollution, cmpMcResult.p95_net_pollution, (v: number) => v.toFixed(3) + " PU", false],
+          ] as [label, mean, p5, p95, fmt, positiveGood]}
+            <tr>
+              <td>{label}</td>
+              <td style="color:{mean !== null ? deltaColor(mean as number, positiveGood as boolean) : 'var(--muted)'}; font-weight:600;">
+                {mean !== null ? fmtDelta(mean as number, fmt as (n: number) => string) : "—"}
+              </td>
+              <td class="muted">{p5 !== null ? fmtDelta(p5 as number, fmt as (n: number) => string) : "—"}</td>
+              <td class="muted">{p95 !== null ? fmtDelta(p95 as number, fmt as (n: number) => string) : "—"}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+      <p class="overview-note" style="margin-top:0.75rem">
+        If P5 and P95 straddle zero, the contrast is within MC noise — the two
+        laws are not reliably distinguishable on that metric.
+      </p>
     {/if}
   </div>
   {/if}
