@@ -999,7 +999,64 @@ pub async fn run_monte_carlo(
     let runner = MonteCarloRunner::new(n_runs, window_ticks);
     let estimates = runner.run(&blob, fork_tick, template, register_all_for_cf);
 
-    Ok(MonteCarloSummary::from_estimates(&estimates).into())
+    let summary = MonteCarloSummary::from_estimates(&estimates);
+
+    // Cache raw estimates so the frontend can request a CSV export later
+    // without re-running Monte Carlo.
+    drop(guard);
+    *state.last_mc.lock().await = Some(estimates);
+
+    Ok(summary.into())
+}
+
+/// Serialize the most recent `run_monte_carlo` raw estimates as CSV.
+///
+/// One row per Monte Carlo run plus a header row. Returned as a UTF-8 string;
+/// the frontend writes it to disk via the browser's download API.
+#[tauri::command]
+pub async fn export_monte_carlo_csv(
+    state: tauri::State<'_, AppState>,
+) -> IpcResult<String> {
+    let guard = state.last_mc.lock().await;
+    let estimates = guard
+        .as_ref()
+        .ok_or_else(|| IpcError("no Monte Carlo run to export — call run_monte_carlo first".into()))?;
+
+    let mut csv = String::new();
+    csv.push_str(
+        "run_idx,enacted_tick,window_ticks,\
+did_approval,did_gdp,did_pollution,did_unemployment,did_legitimacy,did_treasury,\
+did_income,did_wealth,did_health,\
+did_approval_q1,did_approval_q2,did_approval_q3,did_approval_q4,did_approval_q5,\
+treatment_post_approval,treatment_post_gdp\n",
+    );
+
+    fn opt_f32(v: Option<f32>) -> String { v.map(|x| format!("{x:.6}")).unwrap_or_default() }
+    fn opt_f64(v: Option<f64>) -> String { v.map(|x| format!("{x:.6}")).unwrap_or_default() }
+
+    for (i, e) in estimates.iter().enumerate() {
+        csv.push_str(&format!(
+            "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{:.6},{:.6}\n",
+            i, e.enacted_tick, e.window_ticks,
+            opt_f32(e.did_approval),
+            opt_f64(e.did_gdp),
+            opt_f64(e.did_pollution),
+            opt_f32(e.did_unemployment),
+            opt_f32(e.did_legitimacy),
+            opt_f64(e.did_treasury),
+            opt_f64(e.did_income),
+            opt_f64(e.did_wealth),
+            opt_f32(e.did_health),
+            opt_f32(e.did_approval_by_quintile[0]),
+            opt_f32(e.did_approval_by_quintile[1]),
+            opt_f32(e.did_approval_by_quintile[2]),
+            opt_f32(e.did_approval_by_quintile[3]),
+            opt_f32(e.did_approval_by_quintile[4]),
+            e.treatment_post_approval,
+            e.treatment_post_gdp,
+        ));
+    }
+    Ok(csv)
 }
 
 // ---- Citizen distribution ──────────────────────────────────────────────────

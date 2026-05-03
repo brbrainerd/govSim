@@ -1,6 +1,6 @@
 <script lang="ts">
   import { sim, ui, navigate, formatMoney, pct, tickToDate } from "$lib/store.svelte";
-  import { getLawEffect, runMonteCarlo }                     from "$lib/ipc";
+  import { getLawEffect, runMonteCarlo, exportMonteCarloCsv } from "$lib/ipc";
   import type { LawEffectDto, MonteCarloSummaryDto }         from "$lib/ipc";
   import { ciBarStyle }                                      from "$lib/chart-utils";
   import Tabs      from "../components/ui/Tabs.svelte";
@@ -46,6 +46,25 @@
       mcError = String(e);
     } finally {
       mcLoading = false;
+    }
+  }
+
+  async function downloadMcCsv() {
+    try {
+      const csv = await exportMonteCarloCsv();
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      const lawId = ui.effectLawId ?? 0;
+      const tick  = ui.effectEnactedTick ?? 0;
+      a.href     = url;
+      a.download = `mc_law${lawId}_tick${tick}_${nRuns}runs.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      mcError = `CSV export failed: ${e}`;
     }
   }
 
@@ -404,6 +423,11 @@
         <button class="btn-mc" onclick={fetchMonteCarlo} disabled={mcLoading}>
           {#if mcLoading}<Spinner size="sm" />{:else}▶ Run MC{/if}
         </button>
+        {#if mcResult}
+        <button class="btn-mc-secondary" onclick={downloadMcCsv} title="Download raw MC estimates as CSV">
+          ⬇ CSV
+        </button>
+        {/if}
       </div>
     </div>
 
@@ -912,6 +936,17 @@ h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap:
   gap: 6px;
 }
 .btn-mc:disabled { opacity: .5; cursor: wait; }
+.btn-mc-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.btn-mc-secondary:hover { background: rgba(99,102,241,.12); }
 
 .mc-grid {
   display: grid;

@@ -513,6 +513,14 @@ export async function runMonteCarlo(
   });
 }
 
+/**
+ * Serialize the most recent `runMonteCarlo` raw estimates as CSV.
+ * Throws if no MC run has been performed yet in this session.
+ */
+export async function exportMonteCarloCsv(): Promise<string> {
+  return invoke<string>("export_monte_carlo_csv");
+}
+
 // ── Region stats ─────────────────────────────────────────────────────────────
 
 export interface RegionStatsDto {

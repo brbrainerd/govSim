@@ -50,6 +50,7 @@ pub fn run() {
             commands::save_sim_snapshot,
             commands::get_counterfactual_diff,
             commands::run_monte_carlo,
+            commands::export_monte_carlo_csv,
             commands::get_citizen_distribution,
             commands::get_law_dsl_source,
             commands::step_and_get_state,
