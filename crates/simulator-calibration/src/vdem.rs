@@ -90,6 +90,8 @@ impl VdemLoader {
         }
 
         // Columns we need — request only these to avoid scanning 100+ columns.
+        // `e_migdpgro` was deprecated in V-Dem v16; `gdp_growth` falls back to
+        // 0.0 below. Don't add it back unless your CSV variant actually has it.
         let needed = [
             "country_text_id",
             "year",
@@ -99,7 +101,6 @@ impl VdemLoader {
             "v2x_corr",
             "v2x_rule",
             "e_gdppc",
-            "e_migdpgro",
         ];
 
         let df = CsvReadOptions::default()
@@ -138,7 +139,11 @@ impl VdemLoader {
                     AnyValue::Int32(i)   => i as f64,
                     AnyValue::Int64(i)   => i as f64,
                     AnyValue::Null       => f64::NAN,
-                    other => panic!("unexpected type {other:?}"),
+                    // V-Dem encodes some numeric columns as strings (to carry
+                    // "NA" markers). Parse leniently; treat unparseable as NaN.
+                    AnyValue::String(s) => s.parse::<f64>().unwrap_or(f64::NAN),
+                    AnyValue::StringOwned(ref s) => s.parse::<f64>().unwrap_or(f64::NAN),
+                    _ => f64::NAN,
                 })
                 .unwrap_or(f64::NAN))
         };

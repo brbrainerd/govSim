@@ -22,6 +22,10 @@ tauri-app/src-tauri/target/
 data/vdem/*.parquet
 data/vdem/*.csv
 data/vdem/*.rds
+data/calibration/*.csv
+data/calibration/*.RData
+data/calibration/*.rds
+data/calibration/*.parquet
 data/grammars/*.bin
 
 # Models
