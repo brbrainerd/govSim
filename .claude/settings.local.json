@@ -136,7 +136,9 @@
       "Bash(tasklist)",
       "Bash(/c/Users/Owner/govSim/target/release/deps/long_horizon-b5988a70b3e8510c.exe --ignored --test-threads=1)",
       "Bash(tee \"C:\\\\Users\\\\Owner\\\\govSim\\\\target\\\\long_horizon_results.txt\")",
-      "Bash(/c/Users/Owner/govSim/target/release/deps/long_horizon-b5988a70b3e8510c.exe failed_state --ignored --nocapture)"
+      "Bash(/c/Users/Owner/govSim/target/release/deps/long_horizon-b5988a70b3e8510c.exe failed_state --ignored --nocapture)",
+      "Bash(sed -i.bak 's/    pub did_health:              Option<f32>,/    \\\\/\\\\/ TEMP REMOVED: pub did_health:/' tauri-app/src-tauri/src/commands.rs)",
+      "Bash(sed -i 's/            did_health:               e.did_health,/            \\\\/\\\\/ TEMP REMOVED/' tauri-app/src-tauri/src/commands.rs)"
     ]
   }
 }

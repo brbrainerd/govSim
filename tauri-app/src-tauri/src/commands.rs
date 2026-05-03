@@ -1800,3 +1800,80 @@ mod mc_csv_tests {
         assert_eq!(cells[4], "", "did_gdp=None should render as empty cell");
     }
 }
+
+/// DTO-domain field-set parity tests.
+///
+/// Three times this session we added a field to a counterfactual domain type
+/// (e.g. `CausalEstimate`, `MonteCarloSummary`) and forgot to update the
+/// parallel DTO that crosses the IPC boundary, silently dropping data on the
+/// way to the frontend. These tests enumerate the JSON keys of both sides
+/// and assert equality, so the next addition fails loudly at `cargo test`.
+#[cfg(test)]
+mod dto_parity_tests {
+    use simulator_counterfactual::estimate::CausalEstimate;
+    use simulator_counterfactual::monte_carlo::MonteCarloSummary;
+    use super::{CausalEstimateDto, MonteCarloSummaryDto};
+    use std::collections::BTreeSet;
+
+    fn keys_of<T: serde::Serialize>(v: &T) -> BTreeSet<String> {
+        let value = serde_json::to_value(v).expect("serialize");
+        value.as_object()
+            .expect("expected object")
+            .keys()
+            .cloned()
+            .collect()
+    }
+
+    fn sample_estimate() -> CausalEstimate {
+        CausalEstimate {
+            enacted_tick: 100, window_ticks: 30,
+            did_approval: Some(0.05), did_gdp: Some(1234.5),
+            did_pollution: Some(-0.2), did_unemployment: Some(-0.01),
+            did_legitimacy: Some(-0.05), did_treasury: Some(500.0),
+            did_income: Some(10.0), did_wealth: Some(200.0),
+            did_health: Some(0.02),
+            did_approval_by_quintile: [Some(0.01), Some(0.02), Some(0.03), Some(0.04), Some(0.05)],
+            treatment_post_approval: 0.55, treatment_post_gdp: 9000.0,
+        }
+    }
+
+    /// Every field on `CausalEstimate` must be present on `CausalEstimateDto`.
+    /// (Reverse direction is allowed — the DTO can add UI-only computed fields,
+    /// though currently it doesn't.) This catches the recurring failure mode
+    /// where domain growth silently bypasses the DTO at the IPC boundary.
+    #[test]
+    fn causal_estimate_dto_covers_all_domain_fields() {
+        let domain = sample_estimate();
+        let dto: CausalEstimateDto = domain.clone().into();
+
+        let domain_keys = keys_of(&domain);
+        let dto_keys    = keys_of(&dto);
+
+        let missing: Vec<&String> = domain_keys.difference(&dto_keys).collect();
+        assert!(missing.is_empty(),
+            "CausalEstimateDto is missing {} fields from CausalEstimate: {:?}\n\
+             Domain keys: {:?}\nDTO keys: {:?}\n\
+             Add the missing fields to CausalEstimateDto and its From impl.",
+            missing.len(), missing, domain_keys, dto_keys);
+    }
+
+    /// Same guard for the Monte Carlo summary DTO. Adding a metric to
+    /// `MonteCarloSummary` (e.g. introducing `did_inflation`) without
+    /// extending `MonteCarloSummaryDto` would silently drop it from the
+    /// dashboard's MC tab — pin field-set parity here.
+    #[test]
+    fn monte_carlo_summary_dto_covers_all_domain_fields() {
+        let domain = MonteCarloSummary::from_estimates(&[sample_estimate()]);
+        let dto: MonteCarloSummaryDto = domain.clone().into();
+
+        let domain_keys = keys_of(&domain);
+        let dto_keys    = keys_of(&dto);
+
+        let missing: Vec<&String> = domain_keys.difference(&dto_keys).collect();
+        assert!(missing.is_empty(),
+            "MonteCarloSummaryDto is missing {} fields from MonteCarloSummary: {:?}\n\
+             Domain keys: {:?}\nDTO keys: {:?}\n\
+             Add the missing fields to MonteCarloSummaryDto and its From impl.",
+            missing.len(), missing, domain_keys, dto_keys);
+    }
+}

@@ -98,7 +98,7 @@ fn perturb_rng(sim: &mut Sim, idx: u32) {
 }
 
 /// Summary statistics over a collection of DiD estimates.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MonteCarloSummary {
     pub n_runs: usize,
 
