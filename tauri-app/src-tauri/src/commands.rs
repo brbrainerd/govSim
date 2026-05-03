@@ -864,6 +864,13 @@ fn law_template_from_registry(
         .ok_or_else(|| IpcError(format!("law {law_id} not found in registry at tick {fork_tick}")))
 }
 
+/// Error returned by all counterfactual commands when the snapshot has not been
+/// saved yet. Defined as a constant so the message is consistent across
+/// `get_counterfactual_diff`, `run_monte_carlo`, `compare_two_laws`, and
+/// `run_comparative_monte_carlo`, and testable without an async Tauri runtime.
+pub const ERR_NO_SNAPSHOT: &str =
+    "no snapshot saved — call save_sim_snapshot first";
+
 /// Single-run counterfactual DiD.
 #[tauri::command]
 pub async fn get_counterfactual_diff(
@@ -878,7 +885,7 @@ pub async fn get_counterfactual_diff(
         .snapshot
         .as_ref()
         .map(|(t, b)| (*t, b.clone()))
-        .ok_or_else(|| IpcError("no snapshot saved — call save_sim_snapshot first".into()))?;
+        .ok_or_else(|| IpcError(ERR_NO_SNAPSHOT.into()))?;
 
     let registry = bundle.sim.world.resource::<LawRegistry>().clone();
     let template = law_template_from_registry(&registry, law_id, bundle.sim.tick())?;
@@ -933,7 +940,7 @@ pub async fn compare_two_laws(
         .snapshot
         .as_ref()
         .map(|(t, b)| (*t, b.clone()))
-        .ok_or_else(|| IpcError("no snapshot saved — call save_sim_snapshot first".into()))?;
+        .ok_or_else(|| IpcError(ERR_NO_SNAPSHOT.into()))?;
 
     let registry = bundle.sim.world.resource::<LawRegistry>().clone();
     let template_a = law_template_from_registry(&registry, law_a_id, bundle.sim.tick())?;
@@ -1075,7 +1082,7 @@ pub async fn run_comparative_monte_carlo(
         .snapshot
         .as_ref()
         .map(|(t, b)| (*t, b.clone()))
-        .ok_or_else(|| IpcError("no snapshot saved — call save_sim_snapshot first".into()))?;
+        .ok_or_else(|| IpcError(ERR_NO_SNAPSHOT.into()))?;
 
     let registry = bundle.sim.world.resource::<LawRegistry>().clone();
     let template_a = law_template_from_registry(&registry, law_a_id, bundle.sim.tick())?;
@@ -1201,7 +1208,7 @@ pub async fn run_monte_carlo(
         .snapshot
         .as_ref()
         .map(|(t, b)| (*t, b.clone()))
-        .ok_or_else(|| IpcError("no snapshot saved — call save_sim_snapshot first".into()))?;
+        .ok_or_else(|| IpcError(ERR_NO_SNAPSHOT.into()))?;
 
     let registry = bundle.sim.world.resource::<LawRegistry>().clone();
     let template = law_template_from_registry(&registry, law_id, bundle.sim.tick())?;
@@ -1287,10 +1294,13 @@ const COMPARATIVE_MC_CSV_HEADER: &str =
     "run_idx,\
 a_did_approval,a_did_gdp,a_did_pollution,a_did_unemployment,a_did_legitimacy,a_did_treasury,\
 a_did_income,a_did_wealth,a_did_health,\
+a_did_approval_q1,a_did_approval_q2,a_did_approval_q3,a_did_approval_q4,a_did_approval_q5,\
 b_did_approval,b_did_gdp,b_did_pollution,b_did_unemployment,b_did_legitimacy,b_did_treasury,\
 b_did_income,b_did_wealth,b_did_health,\
+b_did_approval_q1,b_did_approval_q2,b_did_approval_q3,b_did_approval_q4,b_did_approval_q5,\
 net_approval,net_gdp,net_pollution,net_unemployment,net_legitimacy,net_treasury,\
-net_income,net_wealth,net_health";
+net_income,net_wealth,net_health,\
+net_approval_q1,net_approval_q2,net_approval_q3,net_approval_q4,net_approval_q5";
 
 /// Pure formatter for a slice of `ComparativeEstimate` → CSV string.
 pub fn format_comparative_estimates_csv(estimates: &[ComparativeEstimate]) -> String {
@@ -1303,20 +1313,32 @@ pub fn format_comparative_estimates_csv(estimates: &[ComparativeEstimate]) -> St
     csv.push_str(COMPARATIVE_MC_CSV_HEADER);
     csv.push('\n');
     for (i, e) in estimates.iter().enumerate() {
-        let a = &e.law_a;
-        let b = &e.law_b;
+        let a   = &e.law_a;
+        let b   = &e.law_b;
+        let net = e.net_approval_by_quintile();
         csv.push_str(&format!(
-            "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n",
-            i,
+            "{i},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},\
+{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n",
             of32(a.did_approval), of64(a.did_gdp), of64(a.did_pollution),
             of32(a.did_unemployment), of32(a.did_legitimacy), of64(a.did_treasury),
             of64(a.did_income), of64(a.did_wealth), of32(a.did_health),
+            // per-quintile arm-A
+            of32(a.did_approval_by_quintile[0]), of32(a.did_approval_by_quintile[1]),
+            of32(a.did_approval_by_quintile[2]), of32(a.did_approval_by_quintile[3]),
+            of32(a.did_approval_by_quintile[4]),
             of32(b.did_approval), of64(b.did_gdp), of64(b.did_pollution),
             of32(b.did_unemployment), of32(b.did_legitimacy), of64(b.did_treasury),
             of64(b.did_income), of64(b.did_wealth), of32(b.did_health),
+            // per-quintile arm-B
+            of32(b.did_approval_by_quintile[0]), of32(b.did_approval_by_quintile[1]),
+            of32(b.did_approval_by_quintile[2]), of32(b.did_approval_by_quintile[3]),
+            of32(b.did_approval_by_quintile[4]),
+            // net scalars
             of32(e.net_approval()), of64(e.net_gdp()), of64(e.net_pollution()),
             of32(e.net_unemployment()), of32(e.net_legitimacy()), of64(e.net_treasury()),
             of64(e.net_income()), of64(e.net_wealth()), of32(e.net_health()),
+            // net per-quintile
+            of32(net[0]), of32(net[1]), of32(net[2]), of32(net[3]), of32(net[4]),
         ));
     }
     csv
@@ -2062,33 +2084,46 @@ mod comparative_csv_tests {
     /// as empty cells (not "null", "NaN", or a float literal) so that pandas
     /// and Excel treat them as missing rather than string data.
     ///
-    /// Column layout (0-indexed after run_idx at col 0):
-    ///   cols 1–9:   law_a DiD fields  (approval=1, gdp=2, …, health=9)
-    ///   cols 10–18: law_b DiD fields
-    ///   cols 19–27: net_* fields      (net_approval=19, net_gdp=20, …)
+    /// Column layout (0-indexed):
+    ///   col  0:     run_idx
+    ///   cols 1–9:   a_did_* (approval=1, gdp=2, …, health=9)
+    ///   cols 10–14: a_did_approval_q1..q5
+    ///   cols 15–23: b_did_* (approval=15, gdp=16, …, health=23)
+    ///   cols 24–28: b_did_approval_q1..q5
+    ///   cols 29–37: net_* (net_approval=29, net_gdp=30, …, net_health=37)
+    ///   cols 38–42: net_approval_q1..q5
     #[test]
     fn none_values_render_as_empty_cells() {
-        let mut e = sample_comparative();
-        // Null out approval on both arms — net_approval should also be empty.
-        e.law_a.did_approval = None;
-        e.law_b.did_approval = None;
-        // Null out gdp on law_b only — net_gdp should be empty too.
-        e.law_b.did_gdp = None;
+        // Use a header parse to derive column indices dynamically — immune to
+        // future column additions shifting the hard-coded constants above.
+        let csv = {
+            let mut e = sample_comparative();
+            e.law_a.did_approval = None;
+            e.law_b.did_approval = None;
+            e.law_b.did_gdp = None;
+            format_comparative_estimates_csv(&[e])
+        };
+        let mut lines = csv.lines();
+        let header = lines.next().unwrap();
+        let row    = lines.next().unwrap();
 
-        let csv = format_comparative_estimates_csv(&[e]);
-        let row  = csv.lines().nth(1).unwrap();
+        let col: std::collections::HashMap<&str, usize> = header
+            .split(',')
+            .enumerate()
+            .map(|(i, k)| (k, i))
+            .collect();
         let cells: Vec<&str> = row.split(',').collect();
 
-        // law_a.did_approval → col 1
-        assert_eq!(cells[1], "", "law_a.did_approval=None should be empty");
-        // law_b.did_approval → col 10
-        assert_eq!(cells[10], "", "law_b.did_approval=None should be empty");
-        // net_approval (a-b, both None) → col 19
-        assert_eq!(cells[19], "", "net_approval with both arms None should be empty");
-        // law_b.did_gdp → col 11
-        assert_eq!(cells[11], "", "law_b.did_gdp=None should be empty");
-        // net_gdp (law_b None) → col 20
-        assert_eq!(cells[20], "", "net_gdp with law_b None should be empty");
+        assert_eq!(cells[col["a_did_approval"]], "",
+            "a_did_approval=None should be empty");
+        assert_eq!(cells[col["b_did_approval"]], "",
+            "b_did_approval=None should be empty");
+        assert_eq!(cells[col["net_approval"]], "",
+            "net_approval with both arms None should be empty");
+        assert_eq!(cells[col["b_did_gdp"]], "",
+            "b_did_gdp=None should be empty");
+        assert_eq!(cells[col["net_gdp"]], "",
+            "net_gdp with law_b None should be empty");
     }
 }
 
@@ -2243,5 +2278,44 @@ mod dto_parity_tests {
              Domain keys: {:?}\nDTO keys: {:?}\n\
              Add the missing fields to ComparativeSummaryDto and its From impl.",
             missing.len(), missing, domain_keys, dto_keys);
+    }
+}
+
+/// Pre-condition guard tests: verify error-path messages are stable and
+/// user-actionable. These tests don't require an async Tauri runtime — they
+/// work directly against the constants and helper types.
+#[cfg(test)]
+mod precondition_tests {
+    use super::{ERR_NO_SNAPSHOT, IpcError};
+
+    /// The snapshot-missing error message must be present in all four
+    /// counterfactual commands. By using the `ERR_NO_SNAPSHOT` constant in
+    /// every call site and testing the constant here, drift between commands
+    /// is impossible.
+    #[test]
+    fn err_no_snapshot_is_user_readable() {
+        assert!(
+            ERR_NO_SNAPSHOT.contains("save_sim_snapshot"),
+            "error should tell the user which command to call: {ERR_NO_SNAPSHOT}"
+        );
+        assert!(
+            !ERR_NO_SNAPSHOT.is_empty(),
+            "error message must not be empty"
+        );
+    }
+
+    /// `IpcError::no_sim()` and `ERR_NO_SNAPSHOT` are the two pre-condition
+    /// errors that can fire before any computation. Both must be distinct and
+    /// non-empty so the frontend can display meaningful guidance.
+    #[test]
+    fn precondition_errors_are_distinct() {
+        let no_sim      = IpcError::no_sim().0;
+        let no_snapshot = ERR_NO_SNAPSHOT;
+        assert_ne!(no_sim, no_snapshot,
+            "no_sim and no_snapshot errors must be distinct messages");
+        assert!(no_sim.contains("load_scenario"),
+            "no_sim error should mention load_scenario: {no_sim}");
+        assert!(no_snapshot.contains("save_sim_snapshot"),
+            "no_snapshot error should mention save_sim_snapshot: {no_snapshot}");
     }
 }

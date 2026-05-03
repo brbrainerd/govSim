@@ -881,6 +881,28 @@
           {/each}
         </tbody>
       </table>
+      {#if cmpResult.net_approval_by_quintile.some((v: number | null) => v !== null)}
+        <h4 class="quintile-did-title" style="margin-top:1.25rem; font-size:0.85rem">
+          Net Approval by Income Quintile (A − B)
+        </h4>
+        <table class="quintile-did-table">
+          <thead><tr><th>Quintile</th><th>Law A DiD</th><th>Law B DiD</th><th>Net (A − B)</th></tr></thead>
+          <tbody>
+            {#each [1,2,3,4,5] as q}
+              {@const qi = q - 1}
+              {@const a   = cmpResult.law_a.did_approval_by_quintile?.[qi] ?? null}
+              {@const b   = cmpResult.law_b.did_approval_by_quintile?.[qi] ?? null}
+              {@const net = cmpResult.net_approval_by_quintile[qi]}
+              <tr>
+                <td>Q{q} ({["Bottom","Lower","Middle","Upper","Top"][qi]})</td>
+                <td style="color:{a !== null ? deltaColor(a, true) : 'var(--muted)'}">{a !== null ? fmtDelta(a, pct) : "—"}</td>
+                <td style="color:{b !== null ? deltaColor(b, true) : 'var(--muted)'}">{b !== null ? fmtDelta(b, pct) : "—"}</td>
+                <td style="color:{net !== null ? deltaColor(net, true) : 'var(--muted)'}; font-weight:600">{net !== null ? fmtDelta(net, pct) : "—"}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      {/if}
       <p class="overview-note" style="margin-top:0.75rem">
         Net &gt; 0 on Approval / GDP means law A produced a stronger lift.
         Net &lt; 0 on Pollution means A reduced pollution more than B.
@@ -926,6 +948,28 @@
           {/each}
         </tbody>
       </table>
+      {#if cmpMcResult.law_a.mean_did_approval_by_quintile?.some((v: number | null) => v !== null)}
+        <h4 class="quintile-did-title" style="margin-top:1.25rem; font-size:0.85rem">
+          Mean Net Approval by Income Quintile (A − B across {cmpMcResult.n_runs} runs)
+        </h4>
+        <table class="quintile-did-table">
+          <thead><tr><th>Quintile</th><th>Mean Law A</th><th>Mean Law B</th><th>Mean Net (A − B)</th></tr></thead>
+          <tbody>
+            {#each [1,2,3,4,5] as q}
+              {@const qi   = q - 1}
+              {@const ma   = cmpMcResult.law_a.mean_did_approval_by_quintile?.[qi] ?? null}
+              {@const mb   = cmpMcResult.law_b.mean_did_approval_by_quintile?.[qi] ?? null}
+              {@const mnet = (ma !== null && mb !== null) ? (ma - mb) : null}
+              <tr>
+                <td>Q{q} ({["Bottom","Lower","Middle","Upper","Top"][qi]})</td>
+                <td style="color:{ma !== null ? deltaColor(ma, true) : 'var(--muted)'}">{ma !== null ? fmtDelta(ma, pct) : "—"}</td>
+                <td style="color:{mb !== null ? deltaColor(mb, true) : 'var(--muted)'}">{mb !== null ? fmtDelta(mb, pct) : "—"}</td>
+                <td style="color:{mnet !== null ? deltaColor(mnet, true) : 'var(--muted)'}; font-weight:600">{mnet !== null ? fmtDelta(mnet, pct) : "—"}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      {/if}
       <p class="overview-note" style="margin-top:0.75rem">
         If P5 and P95 straddle zero, the contrast is within MC noise — the two
         laws are not reliably distinguishable on that metric.
