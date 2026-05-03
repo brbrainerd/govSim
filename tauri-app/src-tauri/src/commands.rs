@@ -875,6 +875,12 @@ pub const ERR_NO_SNAPSHOT: &str =
 pub const ERR_SAME_LAW: &str =
     "law_a_id and law_b_id must differ";
 
+/// Error returned by comparative MC CSV export commands when no run has been
+/// cached yet. Defined as a constant so both `export_comparative_monte_carlo_csv`
+/// and `export_comparative_mc_summary_csv` stay in sync.
+pub const ERR_NO_COMPARATIVE_MC: &str =
+    "no comparative MC run to export — call run_comparative_monte_carlo first";
+
 /// Single-run counterfactual DiD.
 #[tauri::command]
 pub async fn get_counterfactual_diff(
@@ -1362,7 +1368,7 @@ pub async fn export_comparative_monte_carlo_csv(
 ) -> IpcResult<String> {
     let guard = state.last_comparative_mc.lock().await;
     let estimates = guard.as_ref().ok_or_else(|| {
-        IpcError("no comparative MC run to export — call run_comparative_monte_carlo first".into())
+        IpcError(ERR_NO_COMPARATIVE_MC.into())
     })?;
     Ok(format_comparative_estimates_csv(estimates))
 }
@@ -1426,7 +1432,7 @@ pub async fn export_comparative_mc_summary_csv(
 ) -> IpcResult<String> {
     let guard = state.last_comparative_mc.lock().await;
     let estimates = guard.as_ref().ok_or_else(|| {
-        IpcError("no comparative MC run to export — call run_comparative_monte_carlo first".into())
+        IpcError(ERR_NO_COMPARATIVE_MC.into())
     })?;
     let summary = ComparativeSummary::from_estimates(estimates);
     Ok(format_comparative_summary_csv(&summary))
@@ -2262,6 +2268,46 @@ mod comparative_summary_csv_tests {
         let first = csv.lines().nth(1).unwrap().split(',').next().unwrap();
         assert_eq!(first, "3", "first cell of data row should be n_runs=3, got {first}");
     }
+
+    /// When a quintile net value is `None` (e.g. one arm had no quintile data),
+    /// the three CI cells for that quintile (mean/p5/p95) must all render as
+    /// empty strings — not "null", not "0", not any other sentinel.
+    #[test]
+    fn none_quintile_net_renders_as_empty_cells() {
+        // Build a summary where quintile-0 nets are all None.
+        let mut causal_no_q0 = sample_causal();
+        causal_no_q0.did_approval_by_quintile[0] = None;
+        let e = ComparativeEstimate { law_a: causal_no_q0, law_b: sample_causal() };
+        let summary = ComparativeSummary::from_estimates(&[e]);
+
+        // Sanity: the domain type should produce None for all three q0 CI values.
+        assert!(summary.mean_net_approval_by_quintile[0].is_none(),
+            "mean_net_approval_by_quintile[0] should be None when one arm has no data");
+
+        let csv = format_comparative_summary_csv(&summary);
+
+        // Build a column-index map from the header so the test is immune to
+        // column-order changes in COMPARATIVE_MC_SUMMARY_CSV_HEADER.
+        let header: Vec<&str> = csv.lines().next().unwrap().split(',').collect();
+        let col = |name: &str| -> usize {
+            header.iter().position(|h| *h == name)
+                .unwrap_or_else(|| panic!("column {name} not found in summary header"))
+        };
+        let data: Vec<&str> = csv.lines().nth(1).unwrap().split(',').collect();
+
+        for col_name in &[
+            "mean_net_approval_q1",
+            "p5_net_approval_q1",
+            "p95_net_approval_q1",
+        ] {
+            let idx = col(col_name);
+            assert_eq!(
+                data[idx], "",
+                "column {col_name} should be empty when quintile net is None, got {:?}",
+                data[idx]
+            );
+        }
+    }
 }
 
 /// DTO-domain field-set parity tests.
@@ -2423,7 +2469,7 @@ mod dto_parity_tests {
 /// work directly against the constants and helper types.
 #[cfg(test)]
 mod precondition_tests {
-    use super::{ERR_NO_SNAPSHOT, ERR_SAME_LAW, IpcError};
+    use super::{ERR_NO_COMPARATIVE_MC, ERR_NO_SNAPSHOT, ERR_SAME_LAW, IpcError};
 
     /// The snapshot-missing error message must be present in all four
     /// counterfactual commands. By using the `ERR_NO_SNAPSHOT` constant in
@@ -2468,6 +2514,25 @@ mod precondition_tests {
             "ERR_SAME_LAW and ERR_NO_SNAPSHOT must be distinct");
         assert_ne!(ERR_SAME_LAW, IpcError::no_sim().0,
             "ERR_SAME_LAW and no_sim error must be distinct");
+    }
+
+    /// `ERR_NO_COMPARATIVE_MC` guards the two comparative-MC export commands.
+    /// Verify it is non-empty, mentions the command that must precede export,
+    /// and is distinct from all other pre-condition error constants.
+    #[test]
+    fn err_no_comparative_mc_is_user_readable() {
+        assert!(!ERR_NO_COMPARATIVE_MC.is_empty(),
+            "ERR_NO_COMPARATIVE_MC must not be empty");
+        assert!(
+            ERR_NO_COMPARATIVE_MC.contains("run_comparative_monte_carlo"),
+            "error should tell the user which command to call first: {ERR_NO_COMPARATIVE_MC}"
+        );
+        assert_ne!(ERR_NO_COMPARATIVE_MC, ERR_NO_SNAPSHOT,
+            "ERR_NO_COMPARATIVE_MC and ERR_NO_SNAPSHOT must be distinct");
+        assert_ne!(ERR_NO_COMPARATIVE_MC, ERR_SAME_LAW,
+            "ERR_NO_COMPARATIVE_MC and ERR_SAME_LAW must be distinct");
+        assert_ne!(ERR_NO_COMPARATIVE_MC, IpcError::no_sim().0,
+            "ERR_NO_COMPARATIVE_MC and no_sim error must be distinct");
     }
 }
 
