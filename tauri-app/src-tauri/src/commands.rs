@@ -99,6 +99,10 @@ pub async fn load_scenario(
     let bundle = build_sim_from_scenario(&scenario);
     let out = bundle.scenario_name.clone();
     *state.sim.lock().await = Some(bundle);
+    // Cached MC estimates were taken against the previous scenario's snapshot;
+    // they're meaningless under the new sim state. Clear to prevent the CSV
+    // export from returning stale data from a different scenario.
+    *state.last_mc.lock().await = None;
     Ok(out)
 }
 
@@ -1009,31 +1013,24 @@ pub async fn run_monte_carlo(
     Ok(summary.into())
 }
 
-/// Serialize the most recent `run_monte_carlo` raw estimates as CSV.
-///
-/// One row per Monte Carlo run plus a header row. Returned as a UTF-8 string;
-/// the frontend writes it to disk via the browser's download API.
-#[tauri::command]
-pub async fn export_monte_carlo_csv(
-    state: tauri::State<'_, AppState>,
-) -> IpcResult<String> {
-    let guard = state.last_mc.lock().await;
-    let estimates = guard
-        .as_ref()
-        .ok_or_else(|| IpcError("no Monte Carlo run to export — call run_monte_carlo first".into()))?;
-
-    let mut csv = String::new();
-    csv.push_str(
-        "run_idx,enacted_tick,window_ticks,\
+/// CSV header for `format_estimates_csv` — kept as a constant so the column
+/// count is impossible to drift between header and per-row formatting.
+const MC_CSV_HEADER: &str =
+    "run_idx,enacted_tick,window_ticks,\
 did_approval,did_gdp,did_pollution,did_unemployment,did_legitimacy,did_treasury,\
 did_income,did_wealth,did_health,\
 did_approval_q1,did_approval_q2,did_approval_q3,did_approval_q4,did_approval_q5,\
-treatment_post_approval,treatment_post_gdp\n",
-    );
+treatment_post_approval,treatment_post_gdp";
 
+/// Pure formatter for a slice of `CausalEstimate` → CSV string.
+/// One row per estimate plus a header. Optional values render as empty cells.
+pub fn format_estimates_csv(estimates: &[CausalEstimate]) -> String {
     fn opt_f32(v: Option<f32>) -> String { v.map(|x| format!("{x:.6}")).unwrap_or_default() }
     fn opt_f64(v: Option<f64>) -> String { v.map(|x| format!("{x:.6}")).unwrap_or_default() }
 
+    let mut csv = String::with_capacity(MC_CSV_HEADER.len() + estimates.len() * 200);
+    csv.push_str(MC_CSV_HEADER);
+    csv.push('\n');
     for (i, e) in estimates.iter().enumerate() {
         csv.push_str(&format!(
             "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{:.6},{:.6}\n",
@@ -1056,7 +1053,22 @@ treatment_post_approval,treatment_post_gdp\n",
             e.treatment_post_gdp,
         ));
     }
-    Ok(csv)
+    csv
+}
+
+/// Serialize the most recent `run_monte_carlo` raw estimates as CSV.
+///
+/// One row per Monte Carlo run plus a header row. Returned as a UTF-8 string;
+/// the frontend writes it to disk via the browser's download API.
+#[tauri::command]
+pub async fn export_monte_carlo_csv(
+    state: tauri::State<'_, AppState>,
+) -> IpcResult<String> {
+    let guard = state.last_mc.lock().await;
+    let estimates = guard
+        .as_ref()
+        .ok_or_else(|| IpcError("no Monte Carlo run to export — call run_monte_carlo first".into()))?;
+    Ok(format_estimates_csv(estimates))
 }
 
 // ---- Citizen distribution ──────────────────────────────────────────────────
@@ -1659,5 +1671,70 @@ mod enum_string_tests {
     fn label_abatement() {
         let e = LawEffect::Abatement { pollution_reduction_pu: 1.0, cost_per_pu: 5000.0 };
         assert_eq!(effect_label_str(&e), "Abatement");
+    }
+}
+
+#[cfg(test)]
+mod mc_csv_tests {
+    use super::{format_estimates_csv, MC_CSV_HEADER};
+    use simulator_counterfactual::estimate::CausalEstimate;
+
+    fn sample_estimate() -> CausalEstimate {
+        CausalEstimate {
+            enacted_tick:            100,
+            window_ticks:            30,
+            did_approval:            Some(0.05),
+            did_gdp:                 Some(1234.5),
+            did_pollution:           Some(-0.2),
+            did_unemployment:        Some(-0.01),
+            did_legitimacy:          Some(-0.05),
+            did_treasury:            Some(500.0),
+            did_income:              Some(10.0),
+            did_wealth:              Some(200.0),
+            did_health:              Some(0.02),
+            did_approval_by_quintile: [Some(0.01), Some(0.02), Some(0.03), Some(0.04), Some(0.05)],
+            treatment_post_approval: 0.55,
+            treatment_post_gdp:      9000.0,
+        }
+    }
+
+    /// Header column count must match per-row column count. Drift here breaks
+    /// downstream pandas/Excel parsing silently — pin it with a guard test.
+    #[test]
+    fn header_column_count_matches_row_column_count() {
+        let csv = format_estimates_csv(&[sample_estimate()]);
+        let mut lines = csv.lines();
+        let header_cols = lines.next().unwrap().split(',').count();
+        let row_cols    = lines.next().unwrap().split(',').count();
+        assert_eq!(header_cols, row_cols,
+            "CSV header has {header_cols} columns but row has {row_cols} — column drift");
+    }
+
+    #[test]
+    fn empty_estimates_yields_header_only() {
+        let csv = format_estimates_csv(&[]);
+        assert_eq!(csv.trim_end(), MC_CSV_HEADER, "empty input should produce header line only");
+    }
+
+    #[test]
+    fn n_rows_matches_n_estimates() {
+        let estimates: Vec<_> = (0..7).map(|_| sample_estimate()).collect();
+        let csv = format_estimates_csv(&estimates);
+        let line_count = csv.lines().count();
+        assert_eq!(line_count, 1 + 7, "expected 1 header + 7 data rows, got {line_count}");
+    }
+
+    #[test]
+    fn none_values_render_as_empty_cells() {
+        let mut e = sample_estimate();
+        e.did_approval = None;
+        e.did_gdp = None;
+        let csv = format_estimates_csv(&[e]);
+        let row = csv.lines().nth(1).unwrap();
+        // Columns: run_idx,enacted_tick,window_ticks,did_approval,did_gdp,...
+        // Indices 3 and 4 should be empty.
+        let cells: Vec<&str> = row.split(',').collect();
+        assert_eq!(cells[3], "", "did_approval=None should render as empty cell");
+        assert_eq!(cells[4], "", "did_gdp=None should render as empty cell");
     }
 }

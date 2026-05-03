@@ -155,10 +155,14 @@ fn failed_state_720_ticks_capacity_degrades() {
         "failed_state: approval={:.4} out of [0,1]", r.approval);
     // Verify state capacity has actually degraded (the fragility system works).
     // Initial tax_collection_efficiency = 0.18 with corruption_drift=0.025.
-    // After 2 years of <30% approval we expect it to have eroded further.
-    let final_cap = r.final_tax_efficiency;
-    assert!(final_cap.unwrap_or(1.0) < 0.18,
-        "failed_state: state capacity should degrade below initial 0.18, got {:.4}", final_cap.unwrap_or(1.0));
+    // After 2 years of <30% approval we expect it to have eroded further; the
+    // failed_state scenario is intentionally designed to allow capacity to
+    // collapse all the way to 0.0 (total state failure), so we only assert
+    // strict degradation here. The [0.0, 1.0] clamp is verified separately
+    // via `capacity_in_range`.
+    let final_cap = r.final_tax_efficiency.unwrap_or(1.0);
+    assert!(final_cap < 0.18,
+        "failed_state: state capacity should degrade below initial 0.18, got {final_cap:.4}");
 }
 
 // ---------------------------------------------------------------------------

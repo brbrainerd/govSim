@@ -135,7 +135,8 @@
       "Bash(awk -F: '$1>312')",
       "Bash(tasklist)",
       "Bash(/c/Users/Owner/govSim/target/release/deps/long_horizon-b5988a70b3e8510c.exe --ignored --test-threads=1)",
-      "Bash(tee \"C:\\\\Users\\\\Owner\\\\govSim\\\\target\\\\long_horizon_results.txt\")"
+      "Bash(tee \"C:\\\\Users\\\\Owner\\\\govSim\\\\target\\\\long_horizon_results.txt\")",
+      "Bash(/c/Users/Owner/govSim/target/release/deps/long_horizon-b5988a70b3e8510c.exe failed_state --ignored --nocapture)"
     ]
   }
 }
