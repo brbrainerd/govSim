@@ -391,7 +391,7 @@ mod tests {
             "custom right not in default catalog should still be grantable");
         assert_eq!(cat.granted_count(), 1);
         // No definition for the custom right — that's expected.
-        assert!(cat.defined.get(&RightId::new("caste_mobility")).is_none());
+        assert!(!cat.defined.contains_key(&RightId::new("caste_mobility")));
     }
 
     // ── RightsCatalog methods ─────────────────────────────────────────────────

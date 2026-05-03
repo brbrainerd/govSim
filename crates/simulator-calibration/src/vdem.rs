@@ -215,7 +215,7 @@ mod tests {
     fn baseline_unemployment_result_always_in_valid_range() {
         for &egal in &[0.0, 0.25, 0.5, 0.75, 1.0] {
             let u = profile(egal, 30_000.0).baseline_unemployment();
-            assert!(u >= 0.03 && u <= 0.30, "egal_dem={egal}: u={u} out of [0.03, 0.30]");
+            assert!((0.03..=0.30).contains(&u), "egal_dem={egal}: u={u} out of [0.03, 0.30]");
         }
     }
 

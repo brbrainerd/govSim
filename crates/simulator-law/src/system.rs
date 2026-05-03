@@ -1585,7 +1585,7 @@ mod tests {
         register_law_dispatcher(&mut sim);
 
         // Pre-seed catalog but grant NO rights.
-        let mut cat = catalog_from_bits(0);
+        let cat = catalog_from_bits(0);
         sim.world.insert_resource(cat);
 
         let handle = LawHandle {
@@ -1748,7 +1748,7 @@ mod tests {
     #[test]
     fn right_revoke_accumulates_legitimacy_debt() {
         use crate::dsl::ast::{Program, Scope};
-        use simulator_core::{catalog_from_bits, LegitimacyDebt, RightId, RightsLedger, CivicRights};
+        use simulator_core::{catalog_from_bits, LegitimacyDebt, RightsLedger, CivicRights};
 
         let mut sim = Sim::new([74u8; 32]);
         register_law_dispatcher(&mut sim);

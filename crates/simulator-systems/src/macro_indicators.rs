@@ -266,7 +266,7 @@ mod tests {
 
     #[test]
     fn rights_breadth_from_catalog_reflected_monthly() {
-        use simulator_core::{catalog_from_bits, RightId, RightsCatalog};
+        use simulator_core::catalog_from_bits;
         let mut sim = Sim::new([55u8; 32]);
         register_macro_indicators_system(&mut sim);
 

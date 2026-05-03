@@ -154,6 +154,42 @@ fn check_expr(e: &Expr, env: &HashMap<String, Type>) -> Result<Type, TypeError> 
     }
 }
 
+fn check_binop(op: BinOp, l: Type, r: Type) -> Result<Type, TypeError> {
+    use BinOp::*;
+    use Type::*;
+    match op {
+        // arithmetic
+        Add | Sub => match (l, r) {
+            (Money, Money) | (Int, Int) | (Rate, Rate) => Ok(l),
+            _ => Err(TypeError::BadOp { op, lhs: l, rhs: r }),
+        },
+        Mul => match (l, r) {
+            (Money, Money) => Ok(Money),         // tax brackets need this (rate * money via Money literal)
+            (Int, Int) => Ok(Int),
+            (Money, Int) | (Int, Money) => Ok(Money),
+            (Rate, Money) | (Money, Rate) => Ok(Money),
+            (Rate, Rate) => Ok(Rate),
+            _ => Err(TypeError::BadOp { op, lhs: l, rhs: r }),
+        },
+        Div => match (l, r) {
+            (Money, Money) => Ok(Rate),
+            (Int, Int) => Ok(Int),
+            (Money, Int) => Ok(Money),
+            (Money, Rate) => Ok(Money),
+            _ => Err(TypeError::BadOp { op, lhs: l, rhs: r }),
+        },
+        // comparison
+        Gt | Ge | Lt | Le | Eq | Ne => {
+            if l == r { Ok(Bool) } else { Err(TypeError::BadOp { op, lhs: l, rhs: r }) }
+        }
+        // logical
+        And | Or => match (l, r) {
+            (Bool, Bool) => Ok(Bool),
+            _ => Err(TypeError::BadOp { op, lhs: l, rhs: r }),
+        },
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -326,41 +362,5 @@ mod tests {
         let e = Expr::Min(Box::new(Expr::LitMoney(1.0)), Box::new(Expr::LitInt(2)));
         let result = check_expr(&e, &HashMap::new());
         assert!(result.is_err(), "min(Money, Int) should be a type error");
-    }
-}
-
-fn check_binop(op: BinOp, l: Type, r: Type) -> Result<Type, TypeError> {
-    use BinOp::*;
-    use Type::*;
-    match op {
-        // arithmetic
-        Add | Sub => match (l, r) {
-            (Money, Money) | (Int, Int) | (Rate, Rate) => Ok(l),
-            _ => Err(TypeError::BadOp { op, lhs: l, rhs: r }),
-        },
-        Mul => match (l, r) {
-            (Money, Money) => Ok(Money),         // tax brackets need this (rate * money via Money literal)
-            (Int, Int) => Ok(Int),
-            (Money, Int) | (Int, Money) => Ok(Money),
-            (Rate, Money) | (Money, Rate) => Ok(Money),
-            (Rate, Rate) => Ok(Rate),
-            _ => Err(TypeError::BadOp { op, lhs: l, rhs: r }),
-        },
-        Div => match (l, r) {
-            (Money, Money) => Ok(Rate),
-            (Int, Int) => Ok(Int),
-            (Money, Int) => Ok(Money),
-            (Money, Rate) => Ok(Money),
-            _ => Err(TypeError::BadOp { op, lhs: l, rhs: r }),
-        },
-        // comparison
-        Gt | Ge | Lt | Le | Eq | Ne => {
-            if l == r { Ok(Bool) } else { Err(TypeError::BadOp { op, lhs: l, rhs: r }) }
-        }
-        // logical
-        And | Or => match (l, r) {
-            (Bool, Bool) => Ok(Bool),
-            _ => Err(TypeError::BadOp { op, lhs: l, rhs: r }),
-        },
     }
 }

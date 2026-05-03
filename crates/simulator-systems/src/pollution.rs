@@ -182,8 +182,7 @@ mod tests {
 
     #[test]
     fn apply_abatement_clamps_at_zero() {
-        let mut p = PollutionStock::default();
-        p.stock = 2.0;
+        let mut p = PollutionStock { stock: 2.0, ..Default::default() };
         apply_abatement(&mut p, 5.0); // over-abate
         assert_eq!(p.stock, 0.0);
     }

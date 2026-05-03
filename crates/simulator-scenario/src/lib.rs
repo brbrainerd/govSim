@@ -309,6 +309,21 @@ fn savings_rate_for_age(age: u8) -> f32 {
     }
 }
 
+/// Rational approximation of the standard normal quantile (Beasley-Springer-Moro).
+/// Maps u ∈ (0,1) → z ∈ ℝ. Used for log-normal income generation.
+fn normal_quantile(u: f64) -> f64 {
+    // Clamp to avoid infinity at edges.
+    let u = u.clamp(1e-9, 1.0 - 1e-9);
+    // Rational approximation coefficients (Abramowitz & Stegun 26.2.17).
+    let t = (-2.0 * u.min(1.0 - u).ln()).sqrt();
+    let c = [2.515517, 0.802853, 0.010328];
+    let d = [1.432788, 0.189269, 0.001308];
+    let num = c[0] + c[1] * t + c[2] * t * t;
+    let den = 1.0 + d[0] * t + d[1] * t * t + d[2] * t * t * t;
+    let z = t - num / den;
+    if u < 0.5 { -z } else { z }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -584,7 +599,7 @@ mod tests {
         let p = athens.polity.as_ref().expect("athens should have a polity");
         assert!(p.franchise_fraction < 0.20,
             "Athenian franchise should be < 20 %, got {}", p.franchise_fraction);
-        assert!(!athens.judiciary.as_ref().map_or(false, |j| j.review_power),
+        assert!(!athens.judiciary.as_ref().is_some_and(|j| j.review_power),
             "Athens had no constitutional judicial review");
 
         let weimar = Scenario::load(&root.join("weimar_1919.yaml"))
@@ -592,13 +607,13 @@ mod tests {
         assert_eq!(weimar.name, "weimar_1919");
         assert!(weimar.initial_legitimacy_debt.unwrap_or(0.0) > 2.0,
             "Weimar had very high legitimacy debt (Versailles)");
-        assert!(weimar.polity.as_ref().map_or(false, |p| p.franchise_fraction >= 1.0),
+        assert!(weimar.polity.as_ref().is_some_and(|p| p.franchise_fraction >= 1.0),
             "Weimar had universal suffrage (franchise_fraction = 1.0)");
 
         let new_deal = Scenario::load(&root.join("new_deal_1933.yaml"))
             .expect("new_deal_1933.yaml should parse");
         assert_eq!(new_deal.name, "new_deal_1933");
-        assert!(new_deal.judiciary.as_ref().map_or(false, |j| j.review_power),
+        assert!(new_deal.judiciary.as_ref().is_some_and(|j| j.review_power),
             "New Deal USA had active Supreme Court review");
         let unemp_nd = new_deal.population.unemployment_rate.unwrap_or(0.0);
         assert!(unemp_nd > 0.20,
@@ -785,7 +800,7 @@ mod tests {
         // With p=0.12 and ~200 trials, expected ≈ 24, σ ≈ 4.6.
         // Generous bounds [3, 60] to avoid flakiness while still catching p≈1.0.
         assert!(
-            voters >= 3 && voters <= 60,
+            (3..=60).contains(&voters),
             "Athens voters {voters} / {adults} adults is outside expected range [3, 60] for franchise=0.12"
         );
         let actual_rate = voters as f32 / adults as f32;
@@ -863,19 +878,4 @@ mod tests {
             "franchise_fraction=0.0: no citizen should be a registered voter after one year, \
              got {voter_count}");
     }
-}
-
-/// Rational approximation of the standard normal quantile (Beasley-Springer-Moro).
-/// Maps u ∈ (0,1) → z ∈ ℝ. Used for log-normal income generation.
-fn normal_quantile(u: f64) -> f64 {
-    // Clamp to avoid infinity at edges.
-    let u = u.clamp(1e-9, 1.0 - 1e-9);
-    // Rational approximation coefficients (Abramowitz & Stegun 26.2.17).
-    let t = (-2.0 * u.min(1.0 - u).ln()).sqrt();
-    let c = [2.515517, 0.802853, 0.010328];
-    let d = [1.432788, 0.189269, 0.001308];
-    let num = c[0] + c[1] * t + c[2] * t * t;
-    let den = 1.0 + d[0] * t + d[1] * t * t + d[2] * t * t * t;
-    let z = t - num / den;
-    if u < 0.5 { -z } else { z }
 }

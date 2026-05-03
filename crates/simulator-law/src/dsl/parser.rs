@@ -481,9 +481,10 @@ mod tests {
 
     #[test]
     fn float_literal_parses_as_lit_money() {
-        let p = parse_program("scope T() { def n : money = 3.14 }").unwrap();
+        // Use 2.5 (not 3.14) so clippy's approx_constant lint doesn't flag it as PI.
+        let p = parse_program("scope T() { def n : money = 2.5 }").unwrap();
         let Item::Definition { body, .. } = &p.scopes[0].items[0];
-        assert!(matches!(body.base, Expr::LitMoney(v) if (v - 3.14).abs() < 1e-10));
+        assert!(matches!(body.base, Expr::LitMoney(v) if (v - 2.5).abs() < 1e-10));
     }
 
     #[test]

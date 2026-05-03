@@ -268,7 +268,7 @@ mod tests {
         for (_, iv) in q.iter(&sim.world) {
             for &v in &iv.0 {
                 assert!(
-                    v >= -1.0 && v <= 1.0,
+                    (-1.0..=1.0).contains(&v),
                     "ideology must be clamped to [-1, 1], got {v}"
                 );
             }

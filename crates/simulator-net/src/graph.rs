@@ -188,7 +188,7 @@ mod tests {
         let mut rng = ChaCha20Rng::from_seed([55u8; 32]);
         let g = InfluenceGraph::erdos_renyi(200, 0.03, &mut rng);
         for &w in &g.csr.weights {
-            assert!(w >= -1.0 && w <= 1.0, "weight {w} out of [-1, 1]");
+            assert!((-1.0..=1.0).contains(&w), "weight {w} out of [-1, 1]");
         }
     }
 }

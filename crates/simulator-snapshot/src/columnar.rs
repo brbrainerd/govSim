@@ -624,8 +624,8 @@ mod tests {
         assert_eq!(c.0.0, 42);
         assert_eq!(a.0, 33);
         assert!(matches!(*emp, EmploymentStatus::Employed));
-        for k in 0..5 {
-            assert!((iv.0[k] - ideology[k]).abs() < 1e-6, "ideology[{k}] mismatch");
+        for (k, &expected) in ideology.iter().enumerate() {
+            assert!((iv.0[k] - expected).abs() < 1e-6, "ideology[{k}] mismatch");
         }
         assert!((sr.0 - 0.15).abs() < 1e-6, "savings rate mismatch");
         assert!((ep.0 - 0.05).abs() < 1e-6, "evasion propensity mismatch");
