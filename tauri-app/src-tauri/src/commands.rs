@@ -5,7 +5,7 @@ use simulator_core::{CrisisState, Judiciary, LegitimacyDebt, MacroIndicators, Po
 use simulator_core::components::{ApprovalRating, EmploymentStatus, Health, Income, Location, Productivity, Wealth};
 use simulator_counterfactual::{
     estimate::CausalEstimate,
-    monte_carlo::{MonteCarloRunner, MonteCarloSummary},
+    monte_carlo::{ComparativeSummary, MonteCarloRunner, MonteCarloSummary},
     pair::CounterfactualPair,
     triple::CounterfactualTriple,
 };
@@ -946,6 +946,84 @@ pub async fn compare_two_laws(
     })
 }
 
+/// DTO mirror of `simulator_counterfactual::monte_carlo::ComparativeSummary`.
+/// Field-set parity with the domain type is enforced by `dto_parity_tests`.
+#[derive(serde::Serialize)]
+pub struct ComparativeSummaryDto {
+    pub n_runs:             usize,
+    pub mean_net_approval:  Option<f32>,
+    pub std_net_approval:   Option<f32>,
+    pub p5_net_approval:    Option<f32>,
+    pub p95_net_approval:   Option<f32>,
+    pub mean_net_gdp:       Option<f64>,
+    pub std_net_gdp:        Option<f64>,
+    pub p5_net_gdp:         Option<f64>,
+    pub p95_net_gdp:        Option<f64>,
+    pub mean_net_pollution: Option<f64>,
+    pub std_net_pollution:  Option<f64>,
+    pub p5_net_pollution:   Option<f64>,
+    pub p95_net_pollution:  Option<f64>,
+    pub law_a:              MonteCarloSummaryDto,
+    pub law_b:              MonteCarloSummaryDto,
+}
+
+impl From<ComparativeSummary> for ComparativeSummaryDto {
+    fn from(s: ComparativeSummary) -> Self {
+        Self {
+            n_runs:             s.n_runs,
+            mean_net_approval:  s.mean_net_approval,
+            std_net_approval:   s.std_net_approval,
+            p5_net_approval:    s.p5_net_approval,
+            p95_net_approval:   s.p95_net_approval,
+            mean_net_gdp:       s.mean_net_gdp,
+            std_net_gdp:        s.std_net_gdp,
+            p5_net_gdp:         s.p5_net_gdp,
+            p95_net_gdp:        s.p95_net_gdp,
+            mean_net_pollution: s.mean_net_pollution,
+            std_net_pollution:  s.std_net_pollution,
+            p5_net_pollution:   s.p5_net_pollution,
+            p95_net_pollution:  s.p95_net_pollution,
+            law_a:              s.law_a.into(),
+            law_b:              s.law_b.into(),
+        }
+    }
+}
+
+/// Run Monte Carlo over the three-arm counterfactual: two laws compared
+/// against a shared no-law control, repeated `n_runs` times with varied
+/// post-fork RNG seeds. Returns a `ComparativeSummary` with mean/p5/p95
+/// of the net contrasts plus per-arm DiD distributions.
+#[tauri::command]
+pub async fn run_comparative_monte_carlo(
+    state:        tauri::State<'_, AppState>,
+    law_a_id:     u64,
+    law_b_id:     u64,
+    window_ticks: u64,
+    n_runs:       u32,
+) -> IpcResult<ComparativeSummaryDto> {
+    if law_a_id == law_b_id {
+        return Err(IpcError("law_a_id and law_b_id must differ".into()));
+    }
+    let guard = state.sim.lock().await;
+    let bundle = guard.as_ref().ok_or_else(IpcError::no_sim)?;
+
+    let (fork_tick, blob) = bundle
+        .snapshot
+        .as_ref()
+        .map(|(t, b)| (*t, b.clone()))
+        .ok_or_else(|| IpcError("no snapshot saved — call save_sim_snapshot first".into()))?;
+
+    let registry = bundle.sim.world.resource::<LawRegistry>().clone();
+    let template_a = law_template_from_registry(&registry, law_a_id, bundle.sim.tick())?;
+    let template_b = law_template_from_registry(&registry, law_b_id, bundle.sim.tick())?;
+    let template_a = LawHandle { effective_from_tick: fork_tick, ..template_a };
+    let template_b = LawHandle { effective_from_tick: fork_tick, ..template_b };
+
+    let runner = MonteCarloRunner::new(n_runs, window_ticks);
+    let estimates = runner.run_comparative(&blob, fork_tick, template_a, template_b, register_all_for_cf);
+    Ok(ComparativeSummary::from_estimates(&estimates).into())
+}
+
 /// Monte Carlo summary DTO.
 #[derive(serde::Serialize)]
 pub struct MonteCarloSummaryDto {
@@ -1811,8 +1889,9 @@ mod mc_csv_tests {
 #[cfg(test)]
 mod dto_parity_tests {
     use simulator_counterfactual::estimate::CausalEstimate;
-    use simulator_counterfactual::monte_carlo::MonteCarloSummary;
-    use super::{CausalEstimateDto, MonteCarloSummaryDto};
+    use simulator_counterfactual::monte_carlo::{ComparativeSummary, MonteCarloSummary};
+    use simulator_counterfactual::triple::ComparativeEstimate;
+    use super::{CausalEstimateDto, ComparativeSummaryDto, MonteCarloSummaryDto};
     use std::collections::BTreeSet;
 
     fn keys_of<T: serde::Serialize>(v: &T) -> BTreeSet<String> {
@@ -1874,6 +1953,29 @@ mod dto_parity_tests {
             "MonteCarloSummaryDto is missing {} fields from MonteCarloSummary: {:?}\n\
              Domain keys: {:?}\nDTO keys: {:?}\n\
              Add the missing fields to MonteCarloSummaryDto and its From impl.",
+            missing.len(), missing, domain_keys, dto_keys);
+    }
+
+    /// Same guard for the comparative-MC summary DTO. Covers the new
+    /// run_comparative_monte_carlo path so future net-metric additions
+    /// (e.g. net_unemployment, net_treasury) can't silently drop at IPC.
+    #[test]
+    fn comparative_summary_dto_covers_all_domain_fields() {
+        let estimate = ComparativeEstimate {
+            law_a: sample_estimate(),
+            law_b: sample_estimate(),
+        };
+        let domain = ComparativeSummary::from_estimates(&[estimate]);
+        let dto: ComparativeSummaryDto = domain.clone().into();
+
+        let domain_keys = keys_of(&domain);
+        let dto_keys    = keys_of(&dto);
+
+        let missing: Vec<&String> = domain_keys.difference(&dto_keys).collect();
+        assert!(missing.is_empty(),
+            "ComparativeSummaryDto is missing {} fields from ComparativeSummary: {:?}\n\
+             Domain keys: {:?}\nDTO keys: {:?}\n\
+             Add the missing fields to ComparativeSummaryDto and its From impl.",
             missing.len(), missing, domain_keys, dto_keys);
     }
 }

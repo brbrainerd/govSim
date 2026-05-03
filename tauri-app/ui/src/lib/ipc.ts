@@ -551,6 +551,43 @@ export async function compareTwoLaws(
   });
 }
 
+/**
+ * Distributional summary of a comparative Monte Carlo run: mean / std /
+ * p5 / p95 of the pairwise net contrasts (A − B), plus the full per-arm
+ * MonteCarloSummary for each treatment law against the shared control.
+ */
+export interface ComparativeSummaryDto {
+  n_runs:             number;
+  mean_net_approval:  number | null;
+  std_net_approval:   number | null;
+  p5_net_approval:    number | null;
+  p95_net_approval:   number | null;
+  mean_net_gdp:       number | null;
+  std_net_gdp:        number | null;
+  p5_net_gdp:         number | null;
+  p95_net_gdp:        number | null;
+  mean_net_pollution: number | null;
+  std_net_pollution:  number | null;
+  p5_net_pollution:   number | null;
+  p95_net_pollution:  number | null;
+  law_a:              MonteCarloSummaryDto;
+  law_b:              MonteCarloSummaryDto;
+}
+
+export async function runComparativeMonteCarlo(
+  law_a_id: number,
+  law_b_id: number,
+  window_ticks: number = 30,
+  n_runs: number = 20,
+): Promise<ComparativeSummaryDto> {
+  return invoke<ComparativeSummaryDto>("run_comparative_monte_carlo", {
+    lawAId: law_a_id,
+    lawBId: law_b_id,
+    windowTicks: window_ticks,
+    nRuns: n_runs,
+  });
+}
+
 // ── Region stats ─────────────────────────────────────────────────────────────
 
 export interface RegionStatsDto {

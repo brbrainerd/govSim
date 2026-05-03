@@ -1,7 +1,11 @@
 use simulator_core::{Sim, SimRng};
 use simulator_law::LawHandle;
 
-use crate::{estimate::CausalEstimate, pair::CounterfactualPair};
+use crate::{
+    estimate::CausalEstimate,
+    pair::CounterfactualPair,
+    triple::{ComparativeEstimate, CounterfactualTriple},
+};
 
 /// Runs `n_runs` counterfactual experiments from the same fork point,
 /// each with a slightly different post-enactment RNG seed, to produce
@@ -76,6 +80,42 @@ impl MonteCarloRunner {
             estimates.push(est);
         }
 
+        estimates
+    }
+
+    /// Three-arm Monte Carlo: two laws compared against a shared no-law
+    /// control, repeated `n_runs` times with varied post-fork RNG seeds.
+    /// Each run produces a `ComparativeEstimate` (`{ law_a, law_b }`); the
+    /// caller aggregates via `ComparativeSummary::from_estimates`.
+    pub fn run_comparative(
+        &self,
+        blob:           &[u8],
+        enacted_tick:   u64,
+        law_a_template: LawHandle,
+        law_b_template: LawHandle,
+        register_fn:    impl Fn(&mut Sim) + Clone,
+    ) -> Vec<ComparativeEstimate> {
+        let mut estimates = Vec::with_capacity(self.n_runs as usize);
+
+        for run_idx in 0..self.n_runs {
+            let mut triple = match CounterfactualTriple::from_blob(blob, register_fn.clone()) {
+                Ok(t) => t,
+                Err(e) => {
+                    tracing::warn!("monte_carlo run_comparative {run_idx}: fork failed: {e}");
+                    continue;
+                }
+            };
+
+            perturb_rng(&mut triple.treatment_a, run_idx);
+            perturb_rng(&mut triple.treatment_b, run_idx);
+            perturb_rng(&mut triple.control,     run_idx);
+
+            triple.apply_treatment_a(law_a_template.clone());
+            triple.apply_treatment_b(law_b_template.clone());
+            triple.step_all(self.window_ticks as u32);
+
+            estimates.push(triple.compute_comparative(enacted_tick, self.window_ticks));
+        }
         estimates
     }
 }
@@ -243,6 +283,75 @@ impl MonteCarloSummary {
     }
 }
 
+/// Distributional summary of `Vec<ComparativeEstimate>` from
+/// `run_comparative`. Reports mean/std/p5/p95 of the pairwise net contrasts
+/// (A − B) plus the per-arm `MonteCarloSummary` for each treatment.
+///
+/// `net_approval > 0` means law A produced a stronger approval lift than law B
+/// (averaged across MC runs); the CI half-width signals whether the contrast
+/// is reliable or noise.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ComparativeSummary {
+    pub n_runs: usize,
+
+    pub mean_net_approval:  Option<f32>,
+    pub std_net_approval:   Option<f32>,
+    pub p5_net_approval:    Option<f32>,
+    pub p95_net_approval:   Option<f32>,
+
+    pub mean_net_gdp:       Option<f64>,
+    pub std_net_gdp:        Option<f64>,
+    pub p5_net_gdp:         Option<f64>,
+    pub p95_net_gdp:        Option<f64>,
+
+    pub mean_net_pollution: Option<f64>,
+    pub std_net_pollution:  Option<f64>,
+    pub p5_net_pollution:   Option<f64>,
+    pub p95_net_pollution:  Option<f64>,
+
+    /// Full per-arm summary for law A (DiD vs control across MC runs).
+    pub law_a: MonteCarloSummary,
+    /// Full per-arm summary for law B (DiD vs control across MC runs).
+    pub law_b: MonteCarloSummary,
+}
+
+impl ComparativeSummary {
+    pub fn from_estimates(estimates: &[ComparativeEstimate]) -> Self {
+        let n_runs = estimates.len();
+
+        let nets_approval:  Vec<f32> = estimates.iter().filter_map(|e| e.net_approval()).collect();
+        let nets_gdp:       Vec<f64> = estimates.iter().filter_map(|e| e.net_gdp()).collect();
+        let nets_pollution: Vec<f64> = estimates.iter().filter_map(|e| e.net_pollution()).collect();
+
+        let mean_net_approval  = mean_f32(nets_approval.iter().copied());
+        let std_net_approval   = std_f32(nets_approval.iter().copied());
+        let p5_net_approval    = percentile_f32(nets_approval.iter().copied(), 5);
+        let p95_net_approval   = percentile_f32(nets_approval.iter().copied(), 95);
+
+        let mean_net_gdp       = mean_f64(nets_gdp.iter().copied());
+        let std_net_gdp        = std_f64(nets_gdp.iter().copied());
+        let p5_net_gdp         = percentile_f64(nets_gdp.iter().copied(), 5);
+        let p95_net_gdp        = percentile_f64(nets_gdp.iter().copied(), 95);
+
+        let mean_net_pollution = mean_f64(nets_pollution.iter().copied());
+        let std_net_pollution  = std_f64(nets_pollution.iter().copied());
+        let p5_net_pollution   = percentile_f64(nets_pollution.iter().copied(), 5);
+        let p95_net_pollution  = percentile_f64(nets_pollution.iter().copied(), 95);
+
+        let law_a_estimates: Vec<CausalEstimate> = estimates.iter().map(|e| e.law_a.clone()).collect();
+        let law_b_estimates: Vec<CausalEstimate> = estimates.iter().map(|e| e.law_b.clone()).collect();
+
+        Self {
+            n_runs,
+            mean_net_approval, std_net_approval, p5_net_approval, p95_net_approval,
+            mean_net_gdp, std_net_gdp, p5_net_gdp, p95_net_gdp,
+            mean_net_pollution, std_net_pollution, p5_net_pollution, p95_net_pollution,
+            law_a: MonteCarloSummary::from_estimates(&law_a_estimates),
+            law_b: MonteCarloSummary::from_estimates(&law_b_estimates),
+        }
+    }
+}
+
 // ── Internal statistics helpers ──────────────────────────────────────────────
 
 fn mean_f32(it: impl Iterator<Item = f32>) -> Option<f32> {
@@ -393,6 +502,59 @@ mod tests {
         let p5  = summary.p5_did_approval.unwrap();
         let p95 = summary.p95_did_approval.unwrap();
         assert!(p5 <= p95, "p5={p5:.4} should be ≤ p95={p95:.4}");
+    }
+
+    /// `ComparativeSummary::from_estimates` aggregates net contrasts across
+    /// MC runs. Verify mean computation, P5 ≤ P95 ordering, and that the
+    /// per-arm summaries are populated.
+    #[test]
+    fn comparative_summary_aggregates_net_contrasts() {
+        use crate::triple::ComparativeEstimate;
+
+        // Construct 5 estimates where law A is consistently better than B
+        // on approval (net = +0.05 each run) and worse on pollution (net = +0.1).
+        let estimates: Vec<ComparativeEstimate> = (0..5).map(|i| ComparativeEstimate {
+            law_a: CausalEstimate {
+                enacted_tick: 0, window_ticks: 30,
+                did_approval: Some(0.10 + i as f32 * 0.001),
+                did_gdp: Some(1000.0), did_pollution: Some(0.5),
+                did_unemployment: None, did_legitimacy: None, did_treasury: None,
+                did_income: None, did_wealth: None, did_health: None,
+                did_approval_by_quintile: [None; 5],
+                treatment_post_approval: 0.0, treatment_post_gdp: 0.0,
+            },
+            law_b: CausalEstimate {
+                enacted_tick: 0, window_ticks: 30,
+                did_approval: Some(0.05 + i as f32 * 0.001),
+                did_gdp: Some(800.0), did_pollution: Some(0.4),
+                did_unemployment: None, did_legitimacy: None, did_treasury: None,
+                did_income: None, did_wealth: None, did_health: None,
+                did_approval_by_quintile: [None; 5],
+                treatment_post_approval: 0.0, treatment_post_gdp: 0.0,
+            },
+        }).collect();
+
+        let s = ComparativeSummary::from_estimates(&estimates);
+        assert_eq!(s.n_runs, 5);
+
+        // Mean net approval should be ~0.05 (A consistently 0.05 ahead of B).
+        let mean = s.mean_net_approval.expect("mean_net_approval");
+        assert!((mean - 0.05).abs() < 1e-3,
+            "mean_net_approval should be ≈0.05, got {mean:.4}");
+
+        // P5 ≤ mean ≤ P95.
+        let p5  = s.p5_net_approval.unwrap();
+        let p95 = s.p95_net_approval.unwrap();
+        assert!(p5 <= mean && mean <= p95, "p5={p5:.4} ≤ mean={mean:.4} ≤ p95={p95:.4}");
+
+        // Mean net GDP should be 200.0 (A consistently 1000, B consistently 800).
+        let mean_gdp = s.mean_net_gdp.unwrap();
+        assert!((mean_gdp - 200.0).abs() < 1e-3,
+            "mean_net_gdp should be ≈200, got {mean_gdp:.4}");
+
+        // Per-arm summaries should be populated with all 5 runs each.
+        assert_eq!(s.law_a.n_runs, 5, "law_a per-arm summary should have 5 runs");
+        assert_eq!(s.law_b.n_runs, 5, "law_b per-arm summary should have 5 runs");
     }
 
     // ── Statistics helpers unit tests ─────────────────────────────────────────
