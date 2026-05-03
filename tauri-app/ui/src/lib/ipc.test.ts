@@ -213,6 +213,8 @@ describe("getCounterfactualDiff", () => {
     enacted_tick: 30, window_ticks: 30,
     did_approval: 0.02, did_gdp: 500, did_pollution: -0.1,
     did_unemployment: -0.01, did_legitimacy: 0.0, did_treasury: 1000,
+    did_income: 5.0, did_wealth: 200.0, did_health: 0.01,
+    did_approval_by_quintile: [0.01, 0.02, 0.02, 0.03, 0.04],
     treatment_post_approval: 0.65, treatment_post_gdp: 5e6,
   };
 

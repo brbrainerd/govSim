@@ -367,6 +367,10 @@ export interface CausalEstimateDto {
   did_unemployment: number | null;
   did_legitimacy: number | null;
   did_treasury: number | null;
+  did_income: number | null;
+  did_wealth: number | null;
+  did_health: number | null;
+  did_approval_by_quintile: (number | null)[]; // length 5
   treatment_post_approval: number;
   treatment_post_gdp: number;
 }

@@ -813,6 +813,10 @@ pub struct CausalEstimateDto {
     pub did_unemployment:        Option<f32>,
     pub did_legitimacy:          Option<f32>,
     pub did_treasury:            Option<f64>,
+    pub did_income:              Option<f64>,
+    pub did_wealth:              Option<f64>,
+    pub did_health:              Option<f32>,
+    pub did_approval_by_quintile: [Option<f32>; 5],
     pub treatment_post_approval: f32,
     pub treatment_post_gdp:      f64,
 }
@@ -820,16 +824,20 @@ pub struct CausalEstimateDto {
 impl From<CausalEstimate> for CausalEstimateDto {
     fn from(e: CausalEstimate) -> Self {
         Self {
-            enacted_tick:            e.enacted_tick,
-            window_ticks:            e.window_ticks,
-            did_approval:            e.did_approval,
-            did_gdp:                 e.did_gdp,
-            did_pollution:           e.did_pollution,
-            did_unemployment:        e.did_unemployment,
-            did_legitimacy:          e.did_legitimacy,
-            did_treasury:            e.did_treasury,
-            treatment_post_approval: e.treatment_post_approval,
-            treatment_post_gdp:      e.treatment_post_gdp,
+            enacted_tick:             e.enacted_tick,
+            window_ticks:             e.window_ticks,
+            did_approval:             e.did_approval,
+            did_gdp:                  e.did_gdp,
+            did_pollution:            e.did_pollution,
+            did_unemployment:         e.did_unemployment,
+            did_legitimacy:           e.did_legitimacy,
+            did_treasury:             e.did_treasury,
+            did_income:               e.did_income,
+            did_wealth:               e.did_wealth,
+            did_health:               e.did_health,
+            did_approval_by_quintile: e.did_approval_by_quintile,
+            treatment_post_approval:  e.treatment_post_approval,
+            treatment_post_gdp:       e.treatment_post_gdp,
         }
     }
 }
