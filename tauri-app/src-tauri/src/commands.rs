@@ -7,7 +7,7 @@ use simulator_counterfactual::{
     estimate::CausalEstimate,
     monte_carlo::{ComparativeSummary, MonteCarloRunner, MonteCarloSummary},
     pair::CounterfactualPair,
-    triple::CounterfactualTriple,
+    triple::{ComparativeEstimate, CounterfactualTriple},
 };
 use simulator_law::{
     dsl::{parser::parse_program, typecheck::typecheck_program},
@@ -54,6 +54,7 @@ fn electoral_system_str(p: Option<&Polity>) -> String {
 }
 
 /// Build the institutional portion of `CurrentStateDto` from optional resources.
+#[allow(clippy::type_complexity)]
 fn institutional_fields(w: &simulator_core::bevy_ecs::world::World) -> (String, String, f32, String, bool, Option<u32>, f32, bool, f32, f32, f32, f32, f32) {
     let polity   = w.get_resource::<Polity>();
     let judiciary = w.get_resource::<Judiciary>();
@@ -101,9 +102,9 @@ pub async fn load_scenario(
     let out = bundle.scenario_name.clone();
     *state.sim.lock().await = Some(bundle);
     // Cached MC estimates were taken against the previous scenario's snapshot;
-    // they're meaningless under the new sim state. Clear to prevent the CSV
-    // export from returning stale data from a different scenario.
+    // they're meaningless under the new sim state. Clear both caches.
     *state.last_mc.lock().await = None;
+    *state.last_comparative_mc.lock().await = None;
     Ok(out)
 }
 
@@ -1084,7 +1085,13 @@ pub async fn run_comparative_monte_carlo(
 
     let runner = MonteCarloRunner::new(n_runs, window_ticks);
     let estimates = runner.run_comparative(&blob, fork_tick, template_a, template_b, register_all_for_cf);
-    Ok(ComparativeSummary::from_estimates(&estimates).into())
+    let summary = ComparativeSummary::from_estimates(&estimates);
+
+    // Cache raw comparative estimates for CSV export.
+    drop(guard);
+    *state.last_comparative_mc.lock().await = Some(estimates);
+
+    Ok(summary.into())
 }
 
 /// Monte Carlo summary DTO.
@@ -1272,6 +1279,59 @@ pub async fn export_monte_carlo_csv(
         .as_ref()
         .ok_or_else(|| IpcError("no Monte Carlo run to export — call run_monte_carlo first".into()))?;
     Ok(format_estimates_csv(estimates))
+}
+
+/// CSV header for comparative MC export — one row per MC run, both arms side-
+/// by-side plus pre-computed net contrasts.
+const COMPARATIVE_MC_CSV_HEADER: &str =
+    "run_idx,\
+a_did_approval,a_did_gdp,a_did_pollution,a_did_unemployment,a_did_legitimacy,a_did_treasury,\
+a_did_income,a_did_wealth,a_did_health,\
+b_did_approval,b_did_gdp,b_did_pollution,b_did_unemployment,b_did_legitimacy,b_did_treasury,\
+b_did_income,b_did_wealth,b_did_health,\
+net_approval,net_gdp,net_pollution,net_unemployment,net_legitimacy,net_treasury,\
+net_income,net_wealth,net_health";
+
+/// Pure formatter for a slice of `ComparativeEstimate` → CSV string.
+pub fn format_comparative_estimates_csv(estimates: &[ComparativeEstimate]) -> String {
+    fn of32(v: Option<f32>) -> String { v.map(|x| format!("{x:.6}")).unwrap_or_default() }
+    fn of64(v: Option<f64>) -> String { v.map(|x| format!("{x:.6}")).unwrap_or_default() }
+
+    let mut csv = String::with_capacity(
+        COMPARATIVE_MC_CSV_HEADER.len() + estimates.len() * 320,
+    );
+    csv.push_str(COMPARATIVE_MC_CSV_HEADER);
+    csv.push('\n');
+    for (i, e) in estimates.iter().enumerate() {
+        let a = &e.law_a;
+        let b = &e.law_b;
+        csv.push_str(&format!(
+            "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n",
+            i,
+            of32(a.did_approval), of64(a.did_gdp), of64(a.did_pollution),
+            of32(a.did_unemployment), of32(a.did_legitimacy), of64(a.did_treasury),
+            of64(a.did_income), of64(a.did_wealth), of32(a.did_health),
+            of32(b.did_approval), of64(b.did_gdp), of64(b.did_pollution),
+            of32(b.did_unemployment), of32(b.did_legitimacy), of64(b.did_treasury),
+            of64(b.did_income), of64(b.did_wealth), of32(b.did_health),
+            of32(e.net_approval()), of64(e.net_gdp()), of64(e.net_pollution()),
+            of32(e.net_unemployment()), of32(e.net_legitimacy()), of64(e.net_treasury()),
+            of64(e.net_income()), of64(e.net_wealth()), of32(e.net_health()),
+        ));
+    }
+    csv
+}
+
+/// Serialize the most recent `run_comparative_monte_carlo` raw estimates as CSV.
+#[tauri::command]
+pub async fn export_comparative_monte_carlo_csv(
+    state: tauri::State<'_, AppState>,
+) -> IpcResult<String> {
+    let guard = state.last_comparative_mc.lock().await;
+    let estimates = guard.as_ref().ok_or_else(|| {
+        IpcError("no comparative MC run to export — call run_comparative_monte_carlo first".into())
+    })?;
+    Ok(format_comparative_estimates_csv(estimates))
 }
 
 // ---- Citizen distribution ──────────────────────────────────────────────────
@@ -1939,6 +1999,63 @@ mod mc_csv_tests {
         let cells: Vec<&str> = row.split(',').collect();
         assert_eq!(cells[3], "", "did_approval=None should render as empty cell");
         assert_eq!(cells[4], "", "did_gdp=None should render as empty cell");
+    }
+}
+
+/// Column-count guard tests for the comparative MC CSV formatter.
+#[cfg(test)]
+mod comparative_csv_tests {
+    use super::{format_comparative_estimates_csv, COMPARATIVE_MC_CSV_HEADER};
+    use simulator_counterfactual::estimate::CausalEstimate;
+    use simulator_counterfactual::triple::ComparativeEstimate;
+
+    fn sample_causal() -> CausalEstimate {
+        CausalEstimate {
+            enacted_tick: 10, window_ticks: 30,
+            did_approval: Some(0.05), did_gdp: Some(100.0),
+            did_pollution: Some(-0.1), did_unemployment: Some(-0.01),
+            did_legitimacy: Some(0.02), did_treasury: Some(50.0),
+            did_income: Some(5.0), did_wealth: Some(80.0), did_health: Some(0.01),
+            did_approval_by_quintile: [Some(0.01); 5],
+            treatment_post_approval: 0.5, treatment_post_gdp: 1000.0,
+        }
+    }
+
+    fn sample_comparative() -> ComparativeEstimate {
+        ComparativeEstimate { law_a: sample_causal(), law_b: sample_causal() }
+    }
+
+    #[test]
+    fn header_column_count_matches_row_column_count() {
+        let csv = format_comparative_estimates_csv(&[sample_comparative()]);
+        let mut lines = csv.lines();
+        let header_cols = lines.next().unwrap().split(',').count();
+        let row_cols    = lines.next().unwrap().split(',').count();
+        assert_eq!(header_cols, row_cols,
+            "comparative CSV header has {header_cols} cols but row has {row_cols}");
+    }
+
+    #[test]
+    fn empty_input_yields_header_only() {
+        let csv = format_comparative_estimates_csv(&[]);
+        assert_eq!(csv.trim_end(), COMPARATIVE_MC_CSV_HEADER);
+    }
+
+    #[test]
+    fn n_rows_matches_n_estimates() {
+        let estimates: Vec<_> = (0..5).map(|_| sample_comparative()).collect();
+        let count = format_comparative_estimates_csv(&estimates).lines().count();
+        assert_eq!(count, 1 + 5, "expected header + 5 rows, got {count}");
+    }
+
+    #[test]
+    fn run_idx_increments() {
+        let estimates: Vec<_> = (0..3).map(|_| sample_comparative()).collect();
+        let csv = format_comparative_estimates_csv(&estimates);
+        for (i, line) in csv.lines().skip(1).enumerate() {
+            let first = line.split(',').next().unwrap();
+            assert_eq!(first, i.to_string(), "run_idx mismatch at row {i}");
+        }
     }
 }
 

@@ -620,6 +620,11 @@ export async function runComparativeMonteCarlo(
   });
 }
 
+/** Export the most recent comparative MC run as CSV. Throws if no run cached. */
+export async function exportComparativeMonteCarloCsv(): Promise<string> {
+  return invoke<string>("export_comparative_monte_carlo_csv");
+}
+
 // ── Region stats ─────────────────────────────────────────────────────────────
 
 export interface RegionStatsDto {

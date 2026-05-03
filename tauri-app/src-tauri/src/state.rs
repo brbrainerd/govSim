@@ -5,6 +5,7 @@ use tokio::sync::Mutex;
 
 use simulator_core::{CrisisKind, Sim};
 use simulator_counterfactual::estimate::CausalEstimate;
+use simulator_counterfactual::triple::ComparativeEstimate;
 use simulator_law::{
     register_crisis_link_system, register_law_dispatcher, register_legitimacy_system,
 };
@@ -23,11 +24,12 @@ pub struct SimBundle {
 }
 
 pub struct AppState {
-    pub sim:           Mutex<Option<SimBundle>>,
-    pub scenarios_dir: PathBuf,
-    /// Raw estimates from the most recent `run_monte_carlo` call, kept so
-    /// the frontend can request a CSV export without re-running MC.
-    pub last_mc:       Mutex<Option<Vec<CausalEstimate>>>,
+    pub sim:                  Mutex<Option<SimBundle>>,
+    pub scenarios_dir:        PathBuf,
+    /// Raw estimates from the most recent `run_monte_carlo` call.
+    pub last_mc:              Mutex<Option<Vec<CausalEstimate>>>,
+    /// Raw estimates from the most recent `run_comparative_monte_carlo` call.
+    pub last_comparative_mc:  Mutex<Option<Vec<ComparativeEstimate>>>,
 }
 
 impl AppState {
@@ -36,6 +38,7 @@ impl AppState {
             sim: Mutex::new(None),
             scenarios_dir,
             last_mc: Mutex::new(None),
+            last_comparative_mc: Mutex::new(None),
         }
     }
 }

@@ -1,7 +1,8 @@
 <script lang="ts">
   import { sim, ui, navigate, formatMoney, pct, tickToDate } from "$lib/store.svelte";
   import { getLawEffect, runMonteCarlo, exportMonteCarloCsv,
-           compareTwoLaws, runComparativeMonteCarlo, listLaws } from "$lib/ipc";
+           compareTwoLaws, runComparativeMonteCarlo, exportComparativeMonteCarloCsv,
+           listLaws } from "$lib/ipc";
   import type { LawEffectDto, MonteCarloSummaryDto, LawInfo,
                 ComparativeEstimateDto, ComparativeSummaryDto } from "$lib/ipc";
   import { ciBarStyle }                                      from "$lib/chart-utils";
@@ -122,6 +123,23 @@
       URL.revokeObjectURL(url);
     } catch (e) {
       mcError = `CSV export failed: ${e}`;
+    }
+  }
+
+  async function downloadComparativeMcCsv() {
+    try {
+      const csv = await exportComparativeMonteCarloCsv();
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = `cmp_mc_laws${ui.effectLawId}vs${secondLawId}_${nRuns}runs.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      cmpMcError = `CSV export failed: ${e}`;
     }
   }
 
@@ -912,6 +930,9 @@
         If P5 and P95 straddle zero, the contrast is within MC noise — the two
         laws are not reliably distinguishable on that metric.
       </p>
+      <button class="btn-csv" onclick={downloadComparativeMcCsv} style="margin-top:0.5rem">
+        ⬇ CSV
+      </button>
     {/if}
   </div>
   {/if}

@@ -1865,4 +1865,124 @@ mod tests {
             "collective_bargaining should be granted when labor_rights prerequisite is met"
         );
     }
+
+    /// Guard that CONTEXT_VARS.md stays in sync with `make_dispatch_ctx`.
+    ///
+    /// Strategy: call `make_dispatch_ctx` with fully-populated optional resources
+    /// and collect the key set. Parse the markdown table rows from CONTEXT_VARS.md
+    /// and collect the documented key set. Assert equality so:
+    ///   - adding a binding without documenting it → test fails (missing from docs)
+    ///   - removing a binding without updating docs → test fails (docs stale)
+    ///
+    /// The markdown backtick-quoted identifiers (`tick`, `year`, …) are used as
+    /// the canonical source of truth for doc names; the file is loaded via the
+    /// `include_str!` macro so it tracks the file on disk and doesn't require
+    /// any file I/O in the test.
+    #[test]
+    fn context_vars_md_matches_make_dispatch_ctx() {
+        use simulator_core::{
+            CrisisState, Judiciary, LegitimacyDebt, MacroIndicators,
+            PollutionStock, RightsCatalog, RightsLedger, StateCapacity, Treasury,
+        };
+        use std::collections::HashSet;
+
+        // ── 1. Collect keys produced by make_dispatch_ctx ──────────────────
+        let macro_ = MacroIndicators::default();
+        let treasury = Treasury::default();
+        let debt = LegitimacyDebt::default();
+        let rights = RightsLedger::default();
+        let crisis = CrisisState::default();
+        let pollution = PollutionStock::default();
+        let judiciary = Judiciary {
+            independence: 0.5,
+            review_power: true,
+            precedent_weight: 0.3,
+            international_deference: 0.1,
+        };
+        let capacity = StateCapacity {
+            tax_collection_efficiency:   0.9,
+            enforcement_reach:           0.8,
+            enforcement_noise:           0.1,
+            legal_predictability:        0.7,
+            bureaucratic_effectiveness:  0.85,
+            ..Default::default()
+        };
+        let rights_catalog = RightsCatalog::default();
+
+        let ctx = make_dispatch_ctx(
+            0,
+            &macro_,
+            &treasury,
+            &debt,
+            &rights,
+            &crisis,
+            &pollution,
+            Some(&judiciary),
+            Some(&capacity),
+            Some(&rights_catalog),
+        );
+        let code_keys: HashSet<String> = ctx.bindings.keys().cloned().collect();
+
+        // ── 2. Parse documented keys from CONTEXT_VARS.md ─────────────────
+        // Extract all `backtick-quoted` words from table rows (lines starting
+        // with `|`). Filter to only those that appear as binding identifiers,
+        // i.e. consist solely of [a-z_] characters.
+        // These tokens appear backtick-quoted in the markdown but are NOT binding
+        // keys — they're DSL type names, integer literals, or field names from
+        // prose/notes sections that should not be compared against EvalCtx bindings.
+        let non_binding_tokens: HashSet<&str> = [
+            "Int", "Money", "Rate", "Bool",
+            "f64", "i64", "bool",
+            "0", "1", "2", "3", "4",
+            "review_power",
+            "min", "max",
+        ].iter().copied().collect();
+
+        let md = include_str!("../CONTEXT_VARS.md");
+        let mut doc_keys: HashSet<String> = HashSet::new();
+        for line in md.lines() {
+            let trimmed = line.trim();
+            if !trimmed.starts_with('|') { continue; }
+            // Skip header/separator rows
+            if trimmed.contains("---") { continue; }
+            // Only scan the first cell of each table row (the key column).
+            // Table rows look like: | `key` | Type | ... — split on | and
+            // take the second cell (index 1 after leading |).
+            let cells: Vec<&str> = trimmed.splitn(5, '|').collect();
+            // cells[0] = "" (before leading |), cells[1] = key cell
+            let key_cell = cells.get(1).copied().unwrap_or("");
+            let mut rest = key_cell;
+            while let Some(start) = rest.find('`') {
+                let after_open = &rest[start + 1..];
+                if let Some(end) = after_open.find('`') {
+                    let token = &after_open[..end];
+                    // Only include snake_case identifiers (no spaces, pure [a-z_0-9])
+                    // and not in the exclusion list.
+                    if !token.is_empty()
+                        && token.chars().all(|c| c.is_ascii_lowercase() || c == '_' || c.is_ascii_digit())
+                        && !non_binding_tokens.contains(token)
+                    {
+                        doc_keys.insert(token.to_string());
+                    }
+                    rest = &after_open[end + 1..];
+                } else {
+                    break;
+                }
+            }
+        }
+
+        // ── 3. Assert parity ──────────────────────────────────────────────
+        let in_code_not_docs: Vec<_> = code_keys.difference(&doc_keys).collect();
+        let in_docs_not_code: Vec<_> = doc_keys.difference(&code_keys).collect();
+
+        assert!(
+            in_code_not_docs.is_empty() && in_docs_not_code.is_empty(),
+            "\nCONTEXT_VARS.md drift detected!\n\
+             In make_dispatch_ctx but NOT documented: {:?}\n\
+             Documented but NOT in make_dispatch_ctx: {:?}\n\
+             Update CONTEXT_VARS.md or system.rs to resolve.",
+            {let mut v = in_code_not_docs; v.sort(); v},
+            {let mut v = in_docs_not_code; v.sort(); v},
+        );
+    }
 }
