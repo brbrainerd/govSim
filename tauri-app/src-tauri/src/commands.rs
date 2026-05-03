@@ -2057,6 +2057,39 @@ mod comparative_csv_tests {
             assert_eq!(first, i.to_string(), "run_idx mismatch at row {i}");
         }
     }
+
+    /// `None` values in both arms and the derived net columns must all render
+    /// as empty cells (not "null", "NaN", or a float literal) so that pandas
+    /// and Excel treat them as missing rather than string data.
+    ///
+    /// Column layout (0-indexed after run_idx at col 0):
+    ///   cols 1–9:   law_a DiD fields  (approval=1, gdp=2, …, health=9)
+    ///   cols 10–18: law_b DiD fields
+    ///   cols 19–27: net_* fields      (net_approval=19, net_gdp=20, …)
+    #[test]
+    fn none_values_render_as_empty_cells() {
+        let mut e = sample_comparative();
+        // Null out approval on both arms — net_approval should also be empty.
+        e.law_a.did_approval = None;
+        e.law_b.did_approval = None;
+        // Null out gdp on law_b only — net_gdp should be empty too.
+        e.law_b.did_gdp = None;
+
+        let csv = format_comparative_estimates_csv(&[e]);
+        let row  = csv.lines().nth(1).unwrap();
+        let cells: Vec<&str> = row.split(',').collect();
+
+        // law_a.did_approval → col 1
+        assert_eq!(cells[1], "", "law_a.did_approval=None should be empty");
+        // law_b.did_approval → col 10
+        assert_eq!(cells[10], "", "law_b.did_approval=None should be empty");
+        // net_approval (a-b, both None) → col 19
+        assert_eq!(cells[19], "", "net_approval with both arms None should be empty");
+        // law_b.did_gdp → col 11
+        assert_eq!(cells[11], "", "law_b.did_gdp=None should be empty");
+        // net_gdp (law_b None) → col 20
+        assert_eq!(cells[20], "", "net_gdp with law_b None should be empty");
+    }
 }
 
 /// DTO-domain field-set parity tests.
@@ -2134,6 +2167,59 @@ mod dto_parity_tests {
              Domain keys: {:?}\nDTO keys: {:?}\n\
              Add the missing fields to MonteCarloSummaryDto and its From impl.",
             missing.len(), missing, domain_keys, dto_keys);
+    }
+
+    /// Guard for `ComparativeEstimateDto`.
+    ///
+    /// `ComparativeEstimate` has two fields (`law_a`, `law_b`); the DTO adds 10
+    /// pre-computed `net_*` contrasts. We assert:
+    ///   (a) every domain key is present in the DTO (no silent drops), and
+    ///   (b) every expected net key is present in the DTO (no silent metric drops).
+    /// Adding a new net helper to `ComparativeEstimate` without wiring it into
+    /// `compare_two_laws` or the DTO struct will fail (b).
+    #[test]
+    fn comparative_estimate_dto_covers_domain_and_net_fields() {
+        use super::ComparativeEstimateDto;
+
+        let estimate = ComparativeEstimate {
+            law_a: sample_estimate(),
+            law_b: sample_estimate(),
+        };
+        let dto = ComparativeEstimateDto {
+            net_approval:             estimate.net_approval(),
+            net_gdp:                  estimate.net_gdp(),
+            net_pollution:            estimate.net_pollution(),
+            net_unemployment:         estimate.net_unemployment(),
+            net_legitimacy:           estimate.net_legitimacy(),
+            net_treasury:             estimate.net_treasury(),
+            net_income:               estimate.net_income(),
+            net_wealth:               estimate.net_wealth(),
+            net_health:               estimate.net_health(),
+            net_approval_by_quintile: estimate.net_approval_by_quintile(),
+            law_a:                    estimate.law_a.clone().into(),
+            law_b:                    estimate.law_b.clone().into(),
+        };
+
+        let domain_keys = keys_of(&estimate);
+        let dto_keys    = keys_of(&dto);
+
+        // Every domain key must appear in the DTO.
+        let missing: Vec<&String> = domain_keys.difference(&dto_keys).collect();
+        assert!(missing.is_empty(),
+            "ComparativeEstimateDto is missing domain fields: {:?}", missing);
+
+        // All 10 net keys must appear in the DTO — changing a helper name would
+        // break the IPC contract silently without this check.
+        let expected_net_keys = [
+            "net_approval", "net_gdp", "net_pollution",
+            "net_unemployment", "net_legitimacy", "net_treasury",
+            "net_income", "net_wealth", "net_health",
+            "net_approval_by_quintile",
+        ];
+        for key in expected_net_keys {
+            assert!(dto_keys.contains(key),
+                "ComparativeEstimateDto is missing expected net key: {key}");
+        }
     }
 
     /// Same guard for the comparative-MC summary DTO. Covers the new
