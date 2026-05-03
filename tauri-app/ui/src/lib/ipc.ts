@@ -532,11 +532,19 @@ export async function exportMonteCarloCsv(): Promise<string> {
  * directly comparable. Net fields are A − B.
  */
 export interface ComparativeEstimateDto {
-  law_a:         CausalEstimateDto;
-  law_b:         CausalEstimateDto;
-  net_approval:  number | null;
-  net_gdp:       number | null;
-  net_pollution: number | null;
+  law_a:                    CausalEstimateDto;
+  law_b:                    CausalEstimateDto;
+  net_approval:             number | null;
+  net_gdp:                  number | null;
+  net_pollution:            number | null;
+  net_unemployment:         number | null;
+  net_legitimacy:           number | null;
+  net_treasury:             number | null;
+  net_income:               number | null;
+  net_wealth:               number | null;
+  net_health:               number | null;
+  /** Index 0 = bottom quintile */
+  net_approval_by_quintile: (number | null)[];
 }
 
 export async function compareTwoLaws(
@@ -557,21 +565,45 @@ export async function compareTwoLaws(
  * MonteCarloSummary for each treatment law against the shared control.
  */
 export interface ComparativeSummaryDto {
-  n_runs:             number;
-  mean_net_approval:  number | null;
-  std_net_approval:   number | null;
-  p5_net_approval:    number | null;
-  p95_net_approval:   number | null;
-  mean_net_gdp:       number | null;
-  std_net_gdp:        number | null;
-  p5_net_gdp:         number | null;
-  p95_net_gdp:        number | null;
-  mean_net_pollution: number | null;
-  std_net_pollution:  number | null;
-  p5_net_pollution:   number | null;
-  p95_net_pollution:  number | null;
-  law_a:              MonteCarloSummaryDto;
-  law_b:              MonteCarloSummaryDto;
+  n_runs:                number;
+  mean_net_approval:     number | null;
+  std_net_approval:      number | null;
+  p5_net_approval:       number | null;
+  p95_net_approval:      number | null;
+  mean_net_gdp:          number | null;
+  std_net_gdp:           number | null;
+  p5_net_gdp:            number | null;
+  p95_net_gdp:           number | null;
+  mean_net_pollution:    number | null;
+  std_net_pollution:     number | null;
+  p5_net_pollution:      number | null;
+  p95_net_pollution:     number | null;
+  mean_net_unemployment: number | null;
+  std_net_unemployment:  number | null;
+  p5_net_unemployment:   number | null;
+  p95_net_unemployment:  number | null;
+  mean_net_legitimacy:   number | null;
+  std_net_legitimacy:    number | null;
+  p5_net_legitimacy:     number | null;
+  p95_net_legitimacy:    number | null;
+  mean_net_treasury:     number | null;
+  std_net_treasury:      number | null;
+  p5_net_treasury:       number | null;
+  p95_net_treasury:      number | null;
+  mean_net_income:       number | null;
+  std_net_income:        number | null;
+  p5_net_income:         number | null;
+  p95_net_income:        number | null;
+  mean_net_wealth:       number | null;
+  std_net_wealth:        number | null;
+  p5_net_wealth:         number | null;
+  p95_net_wealth:        number | null;
+  mean_net_health:       number | null;
+  std_net_health:        number | null;
+  p5_net_health:         number | null;
+  p95_net_health:        number | null;
+  law_a:                 MonteCarloSummaryDto;
+  law_b:                 MonteCarloSummaryDto;
 }
 
 export async function runComparativeMonteCarlo(

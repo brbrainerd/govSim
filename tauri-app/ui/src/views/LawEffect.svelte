@@ -838,9 +838,15 @@
         </thead>
         <tbody>
           {#each [
-            ["Approval",   cmpResult.law_a.did_approval,   cmpResult.law_b.did_approval,   cmpResult.net_approval,  pct,         true],
-            ["GDP",        cmpResult.law_a.did_gdp,        cmpResult.law_b.did_gdp,        cmpResult.net_gdp,       formatMoney, true],
-            ["Pollution",  cmpResult.law_a.did_pollution,  cmpResult.law_b.did_pollution,  cmpResult.net_pollution, (v: number) => v.toFixed(3) + " PU", false],
+            ["Approval",      cmpResult.law_a.did_approval,      cmpResult.law_b.did_approval,      cmpResult.net_approval,      pct,         true],
+            ["GDP",           cmpResult.law_a.did_gdp,           cmpResult.law_b.did_gdp,           cmpResult.net_gdp,           formatMoney, true],
+            ["Pollution",     cmpResult.law_a.did_pollution,     cmpResult.law_b.did_pollution,     cmpResult.net_pollution,     (v: number) => v.toFixed(3) + " PU", false],
+            ["Unemployment",  cmpResult.law_a.did_unemployment,  cmpResult.law_b.did_unemployment,  cmpResult.net_unemployment,  pct,         false],
+            ["Legitimacy",    cmpResult.law_a.did_legitimacy,    cmpResult.law_b.did_legitimacy,    cmpResult.net_legitimacy,    (v: number) => v.toFixed(3), true],
+            ["Treasury",      cmpResult.law_a.did_treasury,      cmpResult.law_b.did_treasury,      cmpResult.net_treasury,      formatMoney, true],
+            ["Income",        cmpResult.law_a.did_income,        cmpResult.law_b.did_income,        cmpResult.net_income,        formatMoney, true],
+            ["Wealth",        cmpResult.law_a.did_wealth,        cmpResult.law_b.did_wealth,        cmpResult.net_wealth,        formatMoney, true],
+            ["Health",        cmpResult.law_a.did_health,        cmpResult.law_b.did_health,        cmpResult.net_health,        (v: number) => v.toFixed(3), true],
           ] as [label, a, b, net, fmt, positiveGood]}
             <tr>
               <td>{label}</td>
@@ -881,9 +887,15 @@
         </thead>
         <tbody>
           {#each [
-            ["Approval",   cmpMcResult.mean_net_approval,  cmpMcResult.p5_net_approval,  cmpMcResult.p95_net_approval,  pct,         true],
-            ["GDP",        cmpMcResult.mean_net_gdp,       cmpMcResult.p5_net_gdp,       cmpMcResult.p95_net_gdp,       formatMoney, true],
-            ["Pollution",  cmpMcResult.mean_net_pollution, cmpMcResult.p5_net_pollution, cmpMcResult.p95_net_pollution, (v: number) => v.toFixed(3) + " PU", false],
+            ["Approval",     cmpMcResult.mean_net_approval,     cmpMcResult.p5_net_approval,     cmpMcResult.p95_net_approval,     pct,         true],
+            ["GDP",          cmpMcResult.mean_net_gdp,          cmpMcResult.p5_net_gdp,          cmpMcResult.p95_net_gdp,          formatMoney, true],
+            ["Pollution",    cmpMcResult.mean_net_pollution,    cmpMcResult.p5_net_pollution,    cmpMcResult.p95_net_pollution,    (v: number) => v.toFixed(3) + " PU", false],
+            ["Unemployment", cmpMcResult.mean_net_unemployment, cmpMcResult.p5_net_unemployment, cmpMcResult.p95_net_unemployment, pct,         false],
+            ["Legitimacy",   cmpMcResult.mean_net_legitimacy,   cmpMcResult.p5_net_legitimacy,   cmpMcResult.p95_net_legitimacy,   (v: number) => v.toFixed(3), true],
+            ["Treasury",     cmpMcResult.mean_net_treasury,     cmpMcResult.p5_net_treasury,     cmpMcResult.p95_net_treasury,     formatMoney, true],
+            ["Income",       cmpMcResult.mean_net_income,       cmpMcResult.p5_net_income,       cmpMcResult.p95_net_income,       formatMoney, true],
+            ["Wealth",       cmpMcResult.mean_net_wealth,       cmpMcResult.p5_net_wealth,       cmpMcResult.p95_net_wealth,       formatMoney, true],
+            ["Health",       cmpMcResult.mean_net_health,       cmpMcResult.p5_net_health,       cmpMcResult.p95_net_health,       (v: number) => v.toFixed(3), true],
           ] as [label, mean, p5, p95, fmt, positiveGood]}
             <tr>
               <td>{label}</td>

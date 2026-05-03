@@ -304,10 +304,40 @@ pub struct ComparativeSummary {
     pub p5_net_gdp:         Option<f64>,
     pub p95_net_gdp:        Option<f64>,
 
-    pub mean_net_pollution: Option<f64>,
-    pub std_net_pollution:  Option<f64>,
-    pub p5_net_pollution:   Option<f64>,
-    pub p95_net_pollution:  Option<f64>,
+    pub mean_net_pollution:    Option<f64>,
+    pub std_net_pollution:     Option<f64>,
+    pub p5_net_pollution:      Option<f64>,
+    pub p95_net_pollution:     Option<f64>,
+
+    pub mean_net_unemployment: Option<f32>,
+    pub std_net_unemployment:  Option<f32>,
+    pub p5_net_unemployment:   Option<f32>,
+    pub p95_net_unemployment:  Option<f32>,
+
+    pub mean_net_legitimacy:   Option<f32>,
+    pub std_net_legitimacy:    Option<f32>,
+    pub p5_net_legitimacy:     Option<f32>,
+    pub p95_net_legitimacy:    Option<f32>,
+
+    pub mean_net_treasury:     Option<f64>,
+    pub std_net_treasury:      Option<f64>,
+    pub p5_net_treasury:       Option<f64>,
+    pub p95_net_treasury:      Option<f64>,
+
+    pub mean_net_income:       Option<f64>,
+    pub std_net_income:        Option<f64>,
+    pub p5_net_income:         Option<f64>,
+    pub p95_net_income:        Option<f64>,
+
+    pub mean_net_wealth:       Option<f64>,
+    pub std_net_wealth:        Option<f64>,
+    pub p5_net_wealth:         Option<f64>,
+    pub p95_net_wealth:        Option<f64>,
+
+    pub mean_net_health:       Option<f32>,
+    pub std_net_health:        Option<f32>,
+    pub p5_net_health:         Option<f32>,
+    pub p95_net_health:        Option<f32>,
 
     /// Full per-arm summary for law A (DiD vs control across MC runs).
     pub law_a: MonteCarloSummary,
@@ -319,24 +349,60 @@ impl ComparativeSummary {
     pub fn from_estimates(estimates: &[ComparativeEstimate]) -> Self {
         let n_runs = estimates.len();
 
-        let nets_approval:  Vec<f32> = estimates.iter().filter_map(|e| e.net_approval()).collect();
-        let nets_gdp:       Vec<f64> = estimates.iter().filter_map(|e| e.net_gdp()).collect();
-        let nets_pollution: Vec<f64> = estimates.iter().filter_map(|e| e.net_pollution()).collect();
+        let nets_approval:      Vec<f32> = estimates.iter().filter_map(|e| e.net_approval()).collect();
+        let nets_gdp:           Vec<f64> = estimates.iter().filter_map(|e| e.net_gdp()).collect();
+        let nets_pollution:     Vec<f64> = estimates.iter().filter_map(|e| e.net_pollution()).collect();
+        let nets_unemployment:  Vec<f32> = estimates.iter().filter_map(|e| e.net_unemployment()).collect();
+        let nets_legitimacy:    Vec<f32> = estimates.iter().filter_map(|e| e.net_legitimacy()).collect();
+        let nets_treasury:      Vec<f64> = estimates.iter().filter_map(|e| e.net_treasury()).collect();
+        let nets_income:        Vec<f64> = estimates.iter().filter_map(|e| e.net_income()).collect();
+        let nets_wealth:        Vec<f64> = estimates.iter().filter_map(|e| e.net_wealth()).collect();
+        let nets_health:        Vec<f32> = estimates.iter().filter_map(|e| e.net_health()).collect();
 
-        let mean_net_approval  = mean_f32(nets_approval.iter().copied());
-        let std_net_approval   = std_f32(nets_approval.iter().copied());
-        let p5_net_approval    = percentile_f32(nets_approval.iter().copied(), 5);
-        let p95_net_approval   = percentile_f32(nets_approval.iter().copied(), 95);
+        let mean_net_approval      = mean_f32(nets_approval.iter().copied());
+        let std_net_approval       = std_f32(nets_approval.iter().copied());
+        let p5_net_approval        = percentile_f32(nets_approval.iter().copied(), 5);
+        let p95_net_approval       = percentile_f32(nets_approval.iter().copied(), 95);
 
-        let mean_net_gdp       = mean_f64(nets_gdp.iter().copied());
-        let std_net_gdp        = std_f64(nets_gdp.iter().copied());
-        let p5_net_gdp         = percentile_f64(nets_gdp.iter().copied(), 5);
-        let p95_net_gdp        = percentile_f64(nets_gdp.iter().copied(), 95);
+        let mean_net_gdp           = mean_f64(nets_gdp.iter().copied());
+        let std_net_gdp            = std_f64(nets_gdp.iter().copied());
+        let p5_net_gdp             = percentile_f64(nets_gdp.iter().copied(), 5);
+        let p95_net_gdp            = percentile_f64(nets_gdp.iter().copied(), 95);
 
-        let mean_net_pollution = mean_f64(nets_pollution.iter().copied());
-        let std_net_pollution  = std_f64(nets_pollution.iter().copied());
-        let p5_net_pollution   = percentile_f64(nets_pollution.iter().copied(), 5);
-        let p95_net_pollution  = percentile_f64(nets_pollution.iter().copied(), 95);
+        let mean_net_pollution     = mean_f64(nets_pollution.iter().copied());
+        let std_net_pollution      = std_f64(nets_pollution.iter().copied());
+        let p5_net_pollution       = percentile_f64(nets_pollution.iter().copied(), 5);
+        let p95_net_pollution      = percentile_f64(nets_pollution.iter().copied(), 95);
+
+        let mean_net_unemployment  = mean_f32(nets_unemployment.iter().copied());
+        let std_net_unemployment   = std_f32(nets_unemployment.iter().copied());
+        let p5_net_unemployment    = percentile_f32(nets_unemployment.iter().copied(), 5);
+        let p95_net_unemployment   = percentile_f32(nets_unemployment.iter().copied(), 95);
+
+        let mean_net_legitimacy    = mean_f32(nets_legitimacy.iter().copied());
+        let std_net_legitimacy     = std_f32(nets_legitimacy.iter().copied());
+        let p5_net_legitimacy      = percentile_f32(nets_legitimacy.iter().copied(), 5);
+        let p95_net_legitimacy     = percentile_f32(nets_legitimacy.iter().copied(), 95);
+
+        let mean_net_treasury      = mean_f64(nets_treasury.iter().copied());
+        let std_net_treasury       = std_f64(nets_treasury.iter().copied());
+        let p5_net_treasury        = percentile_f64(nets_treasury.iter().copied(), 5);
+        let p95_net_treasury       = percentile_f64(nets_treasury.iter().copied(), 95);
+
+        let mean_net_income        = mean_f64(nets_income.iter().copied());
+        let std_net_income         = std_f64(nets_income.iter().copied());
+        let p5_net_income          = percentile_f64(nets_income.iter().copied(), 5);
+        let p95_net_income         = percentile_f64(nets_income.iter().copied(), 95);
+
+        let mean_net_wealth        = mean_f64(nets_wealth.iter().copied());
+        let std_net_wealth         = std_f64(nets_wealth.iter().copied());
+        let p5_net_wealth          = percentile_f64(nets_wealth.iter().copied(), 5);
+        let p95_net_wealth         = percentile_f64(nets_wealth.iter().copied(), 95);
+
+        let mean_net_health        = mean_f32(nets_health.iter().copied());
+        let std_net_health         = std_f32(nets_health.iter().copied());
+        let p5_net_health          = percentile_f32(nets_health.iter().copied(), 5);
+        let p95_net_health         = percentile_f32(nets_health.iter().copied(), 95);
 
         let law_a_estimates: Vec<CausalEstimate> = estimates.iter().map(|e| e.law_a.clone()).collect();
         let law_b_estimates: Vec<CausalEstimate> = estimates.iter().map(|e| e.law_b.clone()).collect();
@@ -346,6 +412,12 @@ impl ComparativeSummary {
             mean_net_approval, std_net_approval, p5_net_approval, p95_net_approval,
             mean_net_gdp, std_net_gdp, p5_net_gdp, p95_net_gdp,
             mean_net_pollution, std_net_pollution, p5_net_pollution, p95_net_pollution,
+            mean_net_unemployment, std_net_unemployment, p5_net_unemployment, p95_net_unemployment,
+            mean_net_legitimacy, std_net_legitimacy, p5_net_legitimacy, p95_net_legitimacy,
+            mean_net_treasury, std_net_treasury, p5_net_treasury, p95_net_treasury,
+            mean_net_income, std_net_income, p5_net_income, p95_net_income,
+            mean_net_wealth, std_net_wealth, p5_net_wealth, p95_net_wealth,
+            mean_net_health, std_net_health, p5_net_health, p95_net_health,
             law_a: MonteCarloSummary::from_estimates(&law_a_estimates),
             law_b: MonteCarloSummary::from_estimates(&law_b_estimates),
         }

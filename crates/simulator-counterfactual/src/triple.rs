@@ -126,6 +126,43 @@ impl ComparativeEstimate {
     pub fn net_pollution(&self) -> Option<f64> {
         Some(self.law_a.did_pollution? - self.law_b.did_pollution?)
     }
+
+    /// Net unemployment contrast (A − B). Negative = A reduced unemployment more.
+    pub fn net_unemployment(&self) -> Option<f32> {
+        Some(self.law_a.did_unemployment? - self.law_b.did_unemployment?)
+    }
+
+    /// Net legitimacy contrast (A − B).
+    pub fn net_legitimacy(&self) -> Option<f32> {
+        Some(self.law_a.did_legitimacy? - self.law_b.did_legitimacy?)
+    }
+
+    /// Net treasury contrast (A − B).
+    pub fn net_treasury(&self) -> Option<f64> {
+        Some(self.law_a.did_treasury? - self.law_b.did_treasury?)
+    }
+
+    /// Net income contrast (A − B).
+    pub fn net_income(&self) -> Option<f64> {
+        Some(self.law_a.did_income? - self.law_b.did_income?)
+    }
+
+    /// Net wealth contrast (A − B).
+    pub fn net_wealth(&self) -> Option<f64> {
+        Some(self.law_a.did_wealth? - self.law_b.did_wealth?)
+    }
+
+    /// Net health contrast (A − B).
+    pub fn net_health(&self) -> Option<f32> {
+        Some(self.law_a.did_health? - self.law_b.did_health?)
+    }
+
+    /// Per-quintile net approval contrast (A − B). Index 0 = bottom quintile.
+    pub fn net_approval_by_quintile(&self) -> [Option<f32>; 5] {
+        std::array::from_fn(|i| {
+            Some(self.law_a.did_approval_by_quintile[i]? - self.law_b.did_approval_by_quintile[i]?)
+        })
+    }
 }
 
 #[cfg(test)]
