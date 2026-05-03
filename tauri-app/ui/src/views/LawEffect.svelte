@@ -948,23 +948,29 @@
           {/each}
         </tbody>
       </table>
-      {#if cmpMcResult.law_a.mean_did_approval_by_quintile?.some((v: number | null) => v !== null)}
+      {#if cmpMcResult.mean_net_approval_by_quintile?.some((v: number | null) => v !== null)}
         <h4 class="quintile-did-title" style="margin-top:1.25rem; font-size:0.85rem">
-          Mean Net Approval by Income Quintile (A − B across {cmpMcResult.n_runs} runs)
+          Net Approval by Income Quintile (A − B, {cmpMcResult.n_runs} MC runs)
         </h4>
         <table class="quintile-did-table">
-          <thead><tr><th>Quintile</th><th>Mean Law A</th><th>Mean Law B</th><th>Mean Net (A − B)</th></tr></thead>
+          <thead>
+            <tr><th>Quintile</th><th>Mean Net</th><th>P5</th><th>P95</th></tr>
+          </thead>
           <tbody>
             {#each [1,2,3,4,5] as q}
               {@const qi   = q - 1}
-              {@const ma   = cmpMcResult.law_a.mean_did_approval_by_quintile?.[qi] ?? null}
-              {@const mb   = cmpMcResult.law_b.mean_did_approval_by_quintile?.[qi] ?? null}
-              {@const mnet = (ma !== null && mb !== null) ? (ma - mb) : null}
+              {@const mean = cmpMcResult.mean_net_approval_by_quintile[qi]}
+              {@const p5   = cmpMcResult.p5_net_approval_by_quintile[qi]}
+              {@const p95  = cmpMcResult.p95_net_approval_by_quintile[qi]}
+              {@const straddles = p5 !== null && p95 !== null && p5 < 0 && p95 > 0}
               <tr>
                 <td>Q{q} ({["Bottom","Lower","Middle","Upper","Top"][qi]})</td>
-                <td style="color:{ma !== null ? deltaColor(ma, true) : 'var(--muted)'}">{ma !== null ? fmtDelta(ma, pct) : "—"}</td>
-                <td style="color:{mb !== null ? deltaColor(mb, true) : 'var(--muted)'}">{mb !== null ? fmtDelta(mb, pct) : "—"}</td>
-                <td style="color:{mnet !== null ? deltaColor(mnet, true) : 'var(--muted)'}; font-weight:600">{mnet !== null ? fmtDelta(mnet, pct) : "—"}</td>
+                <td style="color:{mean !== null ? deltaColor(mean, true) : 'var(--muted)'}; font-weight:600">
+                  {mean !== null ? fmtDelta(mean, pct) : "—"}
+                  {#if straddles}<span class="overview-note" title="P5/P95 straddle zero"> ≈0</span>{/if}
+                </td>
+                <td class="muted">{p5  !== null ? fmtDelta(p5,  pct) : "—"}</td>
+                <td class="muted">{p95 !== null ? fmtDelta(p95, pct) : "—"}</td>
               </tr>
             {/each}
           </tbody>

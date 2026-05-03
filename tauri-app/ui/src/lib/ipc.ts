@@ -602,6 +602,10 @@ export interface ComparativeSummaryDto {
   std_net_health:        number | null;
   p5_net_health:         number | null;
   p95_net_health:        number | null;
+  /** Per-quintile net approval CI (A − B). Index 0 = bottom quintile. */
+  mean_net_approval_by_quintile: (number | null)[];
+  p5_net_approval_by_quintile:   (number | null)[];
+  p95_net_approval_by_quintile:  (number | null)[];
   law_a:                 MonteCarloSummaryDto;
   law_b:                 MonteCarloSummaryDto;
 }

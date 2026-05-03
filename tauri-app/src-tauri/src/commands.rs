@@ -871,6 +871,10 @@ fn law_template_from_registry(
 pub const ERR_NO_SNAPSHOT: &str =
     "no snapshot saved — call save_sim_snapshot first";
 
+/// Error returned by comparative commands when both law IDs are identical.
+pub const ERR_SAME_LAW: &str =
+    "law_a_id and law_b_id must differ";
+
 /// Single-run counterfactual DiD.
 #[tauri::command]
 pub async fn get_counterfactual_diff(
@@ -931,7 +935,7 @@ pub async fn compare_two_laws(
     window_ticks: u64,
 ) -> IpcResult<ComparativeEstimateDto> {
     if law_a_id == law_b_id {
-        return Err(IpcError("law_a_id and law_b_id must differ".into()));
+        return Err(IpcError(ERR_SAME_LAW.into()));
     }
     let guard = state.sim.lock().await;
     let bundle = guard.as_ref().ok_or_else(IpcError::no_sim)?;
@@ -1010,6 +1014,10 @@ pub struct ComparativeSummaryDto {
     pub std_net_health:        Option<f32>,
     pub p5_net_health:         Option<f32>,
     pub p95_net_health:        Option<f32>,
+    /// Per-quintile net approval CI. Index 0 = bottom quintile.
+    pub mean_net_approval_by_quintile: [Option<f32>; 5],
+    pub p5_net_approval_by_quintile:   [Option<f32>; 5],
+    pub p95_net_approval_by_quintile:  [Option<f32>; 5],
     pub law_a:                 MonteCarloSummaryDto,
     pub law_b:                 MonteCarloSummaryDto,
 }
@@ -1054,6 +1062,9 @@ impl From<ComparativeSummary> for ComparativeSummaryDto {
             std_net_health:        s.std_net_health,
             p5_net_health:         s.p5_net_health,
             p95_net_health:        s.p95_net_health,
+            mean_net_approval_by_quintile: s.mean_net_approval_by_quintile,
+            p5_net_approval_by_quintile:   s.p5_net_approval_by_quintile,
+            p95_net_approval_by_quintile:  s.p95_net_approval_by_quintile,
             law_a:                 s.law_a.into(),
             law_b:                 s.law_b.into(),
         }
@@ -1073,7 +1084,7 @@ pub async fn run_comparative_monte_carlo(
     n_runs:       u32,
 ) -> IpcResult<ComparativeSummaryDto> {
     if law_a_id == law_b_id {
-        return Err(IpcError("law_a_id and law_b_id must differ".into()));
+        return Err(IpcError(ERR_SAME_LAW.into()));
     }
     let guard = state.sim.lock().await;
     let bundle = guard.as_ref().ok_or_else(IpcError::no_sim)?;
@@ -2286,7 +2297,7 @@ mod dto_parity_tests {
 /// work directly against the constants and helper types.
 #[cfg(test)]
 mod precondition_tests {
-    use super::{ERR_NO_SNAPSHOT, IpcError};
+    use super::{ERR_NO_SNAPSHOT, ERR_SAME_LAW, IpcError};
 
     /// The snapshot-missing error message must be present in all four
     /// counterfactual commands. By using the `ERR_NO_SNAPSHOT` constant in
@@ -2317,5 +2328,19 @@ mod precondition_tests {
             "no_sim error should mention load_scenario: {no_sim}");
         assert!(no_snapshot.contains("save_sim_snapshot"),
             "no_snapshot error should mention save_sim_snapshot: {no_snapshot}");
+    }
+
+    /// `ERR_SAME_LAW` guards `compare_two_laws` and `run_comparative_monte_carlo`
+    /// against degenerate inputs. Verify the message is non-empty, distinct from
+    /// the other pre-condition errors, and explains the constraint.
+    #[test]
+    fn err_same_law_is_user_readable() {
+        assert!(!ERR_SAME_LAW.is_empty(), "ERR_SAME_LAW must not be empty");
+        assert!(ERR_SAME_LAW.contains("differ") || ERR_SAME_LAW.contains("same"),
+            "ERR_SAME_LAW should explain that the two IDs must be different: {ERR_SAME_LAW}");
+        assert_ne!(ERR_SAME_LAW, ERR_NO_SNAPSHOT,
+            "ERR_SAME_LAW and ERR_NO_SNAPSHOT must be distinct");
+        assert_ne!(ERR_SAME_LAW, IpcError::no_sim().0,
+            "ERR_SAME_LAW and no_sim error must be distinct");
     }
 }

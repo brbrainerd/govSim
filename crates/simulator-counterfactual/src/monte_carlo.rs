@@ -339,6 +339,12 @@ pub struct ComparativeSummary {
     pub p5_net_health:         Option<f32>,
     pub p95_net_health:        Option<f32>,
 
+    /// Per-quintile net approval contrast (A − B) across MC runs.
+    /// Index 0 = bottom quintile. `None` entries when fewer than 2 runs had data.
+    pub mean_net_approval_by_quintile: [Option<f32>; 5],
+    pub p5_net_approval_by_quintile:   [Option<f32>; 5],
+    pub p95_net_approval_by_quintile:  [Option<f32>; 5],
+
     /// Full per-arm summary for law A (DiD vs control across MC runs).
     pub law_a: MonteCarloSummary,
     /// Full per-arm summary for law B (DiD vs control across MC runs).
@@ -404,6 +410,20 @@ impl ComparativeSummary {
         let p5_net_health          = percentile_f32(nets_health.iter().copied(), 5);
         let p95_net_health         = percentile_f32(nets_health.iter().copied(), 95);
 
+        // Per-quintile net approval: for each quintile collect net values across runs.
+        let mut mean_net_approval_by_quintile = [None; 5];
+        let mut p5_net_approval_by_quintile   = [None; 5];
+        let mut p95_net_approval_by_quintile  = [None; 5];
+        for q in 0..5 {
+            let nets_q: Vec<f32> = estimates
+                .iter()
+                .filter_map(|e| e.net_approval_by_quintile()[q])
+                .collect();
+            mean_net_approval_by_quintile[q] = mean_f32(nets_q.iter().copied());
+            p5_net_approval_by_quintile[q]   = percentile_f32(nets_q.iter().copied(), 5);
+            p95_net_approval_by_quintile[q]  = percentile_f32(nets_q.iter().copied(), 95);
+        }
+
         let law_a_estimates: Vec<CausalEstimate> = estimates.iter().map(|e| e.law_a.clone()).collect();
         let law_b_estimates: Vec<CausalEstimate> = estimates.iter().map(|e| e.law_b.clone()).collect();
 
@@ -418,6 +438,9 @@ impl ComparativeSummary {
             mean_net_income, std_net_income, p5_net_income, p95_net_income,
             mean_net_wealth, std_net_wealth, p5_net_wealth, p95_net_wealth,
             mean_net_health, std_net_health, p5_net_health, p95_net_health,
+            mean_net_approval_by_quintile,
+            p5_net_approval_by_quintile,
+            p95_net_approval_by_quintile,
             law_a: MonteCarloSummary::from_estimates(&law_a_estimates),
             law_b: MonteCarloSummary::from_estimates(&law_b_estimates),
         }
