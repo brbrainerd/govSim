@@ -86,6 +86,15 @@ impl CounterfactualPair {
         let did_health       = compute_did_f32(lew.as_ref(), c_store, enacted_tick, window_ticks,
             |s: &WindowSummary| s.mean_health);
 
+        // Per-quintile approval DiD — reveals heterogeneous effects.
+        let mut did_approval_by_quintile: [Option<f32>; 5] = [None; 5];
+        for (q, slot) in did_approval_by_quintile.iter_mut().enumerate() {
+            *slot = compute_did_f32(
+                lew.as_ref(), c_store, enacted_tick, window_ticks,
+                |s: &WindowSummary| s.mean_approval_by_quintile[q],
+            );
+        }
+
         let treatment_post_approval = lew.as_ref()
             .map(|l| l.treatment_post.mean_approval).unwrap_or(0.0);
         let treatment_post_gdp = lew.as_ref()
@@ -103,6 +112,7 @@ impl CounterfactualPair {
             did_income,
             did_wealth,
             did_health,
+            did_approval_by_quintile,
             treatment_post_approval,
             treatment_post_gdp,
         }

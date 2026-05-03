@@ -132,7 +132,10 @@
       "Bash(git reset *)",
       "Bash(awk '-F[. ]' '{for\\(i=1;i<=NF;i++\\) if\\($i~/^[0-9]+$/ && $\\(i-1\\)==\"passed\"\\) total+=$i} END{print total \" tests passed\"}')",
       "Bash(awk '{sum += $4} END {print sum \" tests passing\"}')",
-      "Bash(awk -F: '$1>312')"
+      "Bash(awk -F: '$1>312')",
+      "Bash(tasklist)",
+      "Bash(/c/Users/Owner/govSim/target/release/deps/long_horizon-b5988a70b3e8510c.exe --ignored --test-threads=1)",
+      "Bash(tee \"C:\\\\Users\\\\Owner\\\\govSim\\\\target\\\\long_horizon_results.txt\")"
     ]
   }
 }

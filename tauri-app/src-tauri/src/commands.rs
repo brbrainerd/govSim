@@ -920,6 +920,9 @@ pub struct MonteCarloSummaryDto {
     pub std_did_health:           Option<f32>,
     pub p5_did_health:            Option<f32>,
     pub p95_did_health:           Option<f32>,
+    pub mean_did_approval_by_quintile: [Option<f32>; 5],
+    pub p5_did_approval_by_quintile:   [Option<f32>; 5],
+    pub p95_did_approval_by_quintile:  [Option<f32>; 5],
 }
 
 impl From<MonteCarloSummary> for MonteCarloSummaryDto {
@@ -962,6 +965,9 @@ impl From<MonteCarloSummary> for MonteCarloSummaryDto {
             std_did_health:        s.std_did_health,
             p5_did_health:         s.p5_did_health,
             p95_did_health:        s.p95_did_health,
+            mean_did_approval_by_quintile: s.mean_did_approval_by_quintile,
+            p5_did_approval_by_quintile:   s.p5_did_approval_by_quintile,
+            p95_did_approval_by_quintile:  s.p95_did_approval_by_quintile,
         }
     }
 }

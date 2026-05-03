@@ -29,6 +29,11 @@ pub struct CausalEstimate {
     /// Mean health change attributable to the law [0, 1 pp].
     pub did_health:       Option<f32>,
 
+    /// Approval DiD per income quintile [Q1=poorest, …, Q5=wealthiest].
+    /// Each entry is `Some(pp)` if the window had data, `None` otherwise.
+    /// Reveals heterogeneous law effects across the income distribution.
+    pub did_approval_by_quintile: [Option<f32>; 5],
+
     // --- Raw treatment-arm means (post window) ---
 
     /// Post-enactment mean approval in the treatment arm.

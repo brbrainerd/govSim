@@ -155,6 +155,12 @@ pub struct MonteCarloSummary {
     pub std_did_health:           Option<f32>,
     pub p5_did_health:            Option<f32>,
     pub p95_did_health:           Option<f32>,
+
+    /// Approval DiD per income quintile [Q1=poorest, …, Q5=wealthiest].
+    /// Mean / P5 / P95 across MC runs. Reveals heterogeneous law effects.
+    pub mean_did_approval_by_quintile: [Option<f32>; 5],
+    pub p5_did_approval_by_quintile:   [Option<f32>; 5],
+    pub p95_did_approval_by_quintile:  [Option<f32>; 5],
 }
 
 impl MonteCarloSummary {
@@ -206,6 +212,19 @@ impl MonteCarloSummary {
         let p5_did_health         = percentile_f32(estimates.iter().filter_map(|e| e.did_health), 5);
         let p95_did_health        = percentile_f32(estimates.iter().filter_map(|e| e.did_health), 95);
 
+        let mut mean_did_approval_by_quintile: [Option<f32>; 5] = [None; 5];
+        let mut p5_did_approval_by_quintile:   [Option<f32>; 5] = [None; 5];
+        let mut p95_did_approval_by_quintile:  [Option<f32>; 5] = [None; 5];
+        for (q, ((mean_slot, p5_slot), p95_slot)) in mean_did_approval_by_quintile.iter_mut()
+            .zip(p5_did_approval_by_quintile.iter_mut())
+            .zip(p95_did_approval_by_quintile.iter_mut())
+            .enumerate()
+        {
+            *mean_slot = mean_f32(estimates.iter().filter_map(|e| e.did_approval_by_quintile[q]));
+            *p5_slot   = percentile_f32(estimates.iter().filter_map(|e| e.did_approval_by_quintile[q]), 5);
+            *p95_slot  = percentile_f32(estimates.iter().filter_map(|e| e.did_approval_by_quintile[q]), 95);
+        }
+
         Self {
             n_runs,
             mean_did_approval, std_did_approval, p5_did_approval, p95_did_approval,
@@ -217,6 +236,9 @@ impl MonteCarloSummary {
             mean_did_income,  std_did_income,  p5_did_income,  p95_did_income,
             mean_did_wealth,  std_did_wealth,  p5_did_wealth,  p95_did_wealth,
             mean_did_health,  std_did_health,  p5_did_health,  p95_did_health,
+            mean_did_approval_by_quintile,
+            p5_did_approval_by_quintile,
+            p95_did_approval_by_quintile,
         }
     }
 }
@@ -362,6 +384,7 @@ mod tests {
             did_income:              None,
             did_wealth:              None,
             did_health:              None,
+            did_approval_by_quintile: [None; 5],
             treatment_post_approval: 0.5,
             treatment_post_gdp:      0.0,
         }).collect();

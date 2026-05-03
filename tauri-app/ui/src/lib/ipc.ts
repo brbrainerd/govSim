@@ -409,6 +409,9 @@ export interface MonteCarloSummaryDto {
   std_did_health:        number | null;
   p5_did_health:         number | null;
   p95_did_health:        number | null;
+  mean_did_approval_by_quintile: (number | null)[]; // length 5
+  p5_did_approval_by_quintile:   (number | null)[];
+  p95_did_approval_by_quintile:  (number | null)[];
 }
 
 /**

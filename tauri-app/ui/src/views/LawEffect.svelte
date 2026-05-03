@@ -649,6 +649,50 @@
       </div>
     </div>
 
+    <!-- Heterogeneous DiD by income quintile -->
+    {#if mcResult.mean_did_approval_by_quintile.some(v => v !== null)}
+    <div class="quintile-did">
+      <h3 class="quintile-did-title">Approval DiD by Income Quintile</h3>
+      <p class="quintile-did-sub">
+        Causal effect on approval, broken out by household income group.
+        A positive value means the law lifted approval among that quintile
+        relative to the no-law counterfactual.
+      </p>
+      <table class="quintile-did-table">
+        <thead>
+          <tr>
+            <th>Quintile</th>
+            <th>Mean DiD</th>
+            <th>P5</th>
+            <th>P95</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each ["Q1 Poorest", "Q2 Lower-mid", "Q3 Middle", "Q4 Upper-mid", "Q5 Wealthiest"] as label, q}
+            <tr>
+              <td>{label}</td>
+              <td style="color:{deltaColor(mcResult.mean_did_approval_by_quintile[q] ?? 0, true)}">
+                {mcResult.mean_did_approval_by_quintile[q] !== null
+                  ? fmtDelta(mcResult.mean_did_approval_by_quintile[q]!, pct)
+                  : "—"}
+              </td>
+              <td class="muted">
+                {mcResult.p5_did_approval_by_quintile[q] !== null
+                  ? fmtDelta(mcResult.p5_did_approval_by_quintile[q]!, pct)
+                  : "—"}
+              </td>
+              <td class="muted">
+                {mcResult.p95_did_approval_by_quintile[q] !== null
+                  ? fmtDelta(mcResult.p95_did_approval_by_quintile[q]!, pct)
+                  : "—"}
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+    {/if}
+
     <p class="mc-note">
       DiD = (treatment_post − treatment_pre) − (control_post − control_pre).
       Each run uses a different post-enactment RNG seed. The snapshot was taken
@@ -828,6 +872,20 @@ h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap:
 .quintile-table tr:last-child td { border-bottom: none; }
 .quintile-table td.pos { color: var(--good); font-weight: 600; }
 .quintile-table td.neg { color: var(--danger); font-weight: 600; }
+
+/* Heterogeneous DiD by quintile */
+.quintile-did { margin: 18px 0 12px; padding: 14px 16px;
+  background: var(--bg-secondary, #1a1a23); border-radius: 6px;
+  border: 1px solid var(--border, rgba(255,255,255,.08)); }
+.quintile-did-title { font-size: 13px; font-weight: 600; margin: 0 0 4px; }
+.quintile-did-sub { font-size: 11.5px; color: var(--muted); margin: 0 0 10px; }
+.quintile-did-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.quintile-did-table th, .quintile-did-table td { padding: 5px 8px; text-align: right; }
+.quintile-did-table th:first-child, .quintile-did-table td:first-child { text-align: left; }
+.quintile-did-table th { color: var(--muted); font-weight: 500;
+  border-bottom: 1px solid var(--border, rgba(255,255,255,.08)); }
+.quintile-did-table tbody tr + tr td { border-top: 1px solid rgba(255,255,255,.04); }
+.quintile-did-table td.muted { color: var(--muted); }
 
 /* Monte Carlo tab */
 .mc-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
