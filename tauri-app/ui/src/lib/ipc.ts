@@ -624,9 +624,15 @@ export async function runComparativeMonteCarlo(
   });
 }
 
-/** Export the most recent comparative MC run as CSV. Throws if no run cached. */
+/** Export the most recent comparative MC run as CSV (one row per run). */
 export async function exportComparativeMonteCarloCsv(): Promise<string> {
   return invoke<string>("export_comparative_monte_carlo_csv");
+}
+
+/** Export the most recent comparative MC run as a single-row aggregate CSV
+ *  with mean/P5/P95 for all net metrics including per-quintile CI bands. */
+export async function exportComparativeMcSummaryCsv(): Promise<string> {
+  return invoke<string>("export_comparative_mc_summary_csv");
 }
 
 // ── Region stats ─────────────────────────────────────────────────────────────

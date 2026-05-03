@@ -1,7 +1,8 @@
 <script lang="ts">
   import { sim, ui, navigate, formatMoney, pct, tickToDate } from "$lib/store.svelte";
   import { getLawEffect, runMonteCarlo, exportMonteCarloCsv,
-           compareTwoLaws, runComparativeMonteCarlo, exportComparativeMonteCarloCsv,
+           compareTwoLaws, runComparativeMonteCarlo,
+           exportComparativeMonteCarloCsv, exportComparativeMcSummaryCsv,
            listLaws } from "$lib/ipc";
   import type { LawEffectDto, MonteCarloSummaryDto, LawInfo,
                 ComparativeEstimateDto, ComparativeSummaryDto } from "$lib/ipc";
@@ -123,6 +124,23 @@
       URL.revokeObjectURL(url);
     } catch (e) {
       mcError = `CSV export failed: ${e}`;
+    }
+  }
+
+  async function downloadComparativeMcSummaryCsv() {
+    try {
+      const csv = await exportComparativeMcSummaryCsv();
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = `cmp_mc_summary_laws${ui.effectLawId}vs${secondLawId}_${nRuns}runs.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      cmpMcError = `CSV export failed: ${e}`;
     }
   }
 
@@ -981,7 +999,10 @@
         laws are not reliably distinguishable on that metric.
       </p>
       <button class="btn-csv" onclick={downloadComparativeMcCsv} style="margin-top:0.5rem">
-        ⬇ CSV
+        ⬇ CSV (per run)
+      </button>
+      <button class="btn-csv" onclick={downloadComparativeMcSummaryCsv} style="margin-top:0.5rem; margin-left:0.5rem">
+        ⬇ CSV (summary)
       </button>
     {/if}
   </div>

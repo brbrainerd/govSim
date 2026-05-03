@@ -652,6 +652,68 @@ mod tests {
         assert_eq!(s.law_b.n_runs, 5, "law_b per-arm summary should have 5 runs");
     }
 
+    /// `ComparativeSummary` must aggregate `mean/p5/p95_net_approval_by_quintile`
+    /// from `net_approval_by_quintile()` across runs. Verify the computed values
+    /// are plausible and that P5 ≤ mean ≤ P95 holds per quintile.
+    #[test]
+    fn comparative_summary_aggregates_quintile_ci_bands() {
+        use crate::triple::ComparativeEstimate;
+
+        // 10 runs: quintile[q] net = (q+1) * 0.01 per run (constant, so mean=p5=p95)
+        // Law A approval_by_quintile[q] = 0.10 + (q+1)*0.01
+        // Law B approval_by_quintile[q] = 0.05
+        // → net[q] = 0.05 + (q+1)*0.01  (≈ 0.06 … 0.10)
+        let estimates: Vec<ComparativeEstimate> = (0..10).map(|_| {
+            let a_q: [Option<f32>; 5] = std::array::from_fn(|q| Some(0.10 + (q + 1) as f32 * 0.01));
+            let b_q: [Option<f32>; 5] = [Some(0.05); 5];
+            ComparativeEstimate {
+                law_a: CausalEstimate {
+                    enacted_tick: 0, window_ticks: 30,
+                    did_approval: Some(0.10), did_gdp: Some(1000.0),
+                    did_pollution: None, did_unemployment: None, did_legitimacy: None,
+                    did_treasury: None, did_income: None, did_wealth: None, did_health: None,
+                    did_approval_by_quintile: a_q,
+                    treatment_post_approval: 0.0, treatment_post_gdp: 0.0,
+                },
+                law_b: CausalEstimate {
+                    enacted_tick: 0, window_ticks: 30,
+                    did_approval: Some(0.05), did_gdp: Some(800.0),
+                    did_pollution: None, did_unemployment: None, did_legitimacy: None,
+                    did_treasury: None, did_income: None, did_wealth: None, did_health: None,
+                    did_approval_by_quintile: b_q,
+                    treatment_post_approval: 0.0, treatment_post_gdp: 0.0,
+                },
+            }
+        }).collect();
+
+        let s = ComparativeSummary::from_estimates(&estimates);
+
+        for q in 0..5usize {
+            let expected_net = 0.05 + (q + 1) as f32 * 0.01; // 0.06 … 0.10
+
+            let mean = s.mean_net_approval_by_quintile[q]
+                .unwrap_or_else(|| panic!("mean_net_approval_by_quintile[{q}] should be Some"));
+            let p5   = s.p5_net_approval_by_quintile[q]
+                .unwrap_or_else(|| panic!("p5_net_approval_by_quintile[{q}] should be Some"));
+            let p95  = s.p95_net_approval_by_quintile[q]
+                .unwrap_or_else(|| panic!("p95_net_approval_by_quintile[{q}] should be Some"));
+
+            assert!((mean - expected_net).abs() < 1e-4,
+                "q{q}: mean_net ≈ {expected_net:.4}, got {mean:.4}");
+            // All 10 runs have the same net value, so P5 ≈ P95 ≈ mean.
+            // Use a small tolerance to tolerate f32 sum/division rounding.
+            let eps = 1e-5_f32;
+            assert!(p5 <= mean + eps && mean <= p95 + eps,
+                "q{q}: p5={p5:.6} ≤ mean={mean:.6} ≤ p95={p95:.6} violated (eps={eps})");
+        }
+
+        // Quintile ordering: bottom quintile net < top quintile net.
+        let q0 = s.mean_net_approval_by_quintile[0].unwrap();
+        let q4 = s.mean_net_approval_by_quintile[4].unwrap();
+        assert!(q0 < q4,
+            "bottom quintile net {q0:.4} should be < top quintile net {q4:.4}");
+    }
+
     // ── Statistics helpers unit tests ─────────────────────────────────────────
 
     #[test]

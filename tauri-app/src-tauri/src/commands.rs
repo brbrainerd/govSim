@@ -843,7 +843,7 @@ impl From<CausalEstimate> for CausalEstimateDto {
     }
 }
 
-fn register_all_for_cf(sim: &mut simulator_core::Sim) {
+pub(crate) fn register_all_for_cf(sim: &mut simulator_core::Sim) {
     register_phase1_systems(sim);
     register_law_dispatcher(sim);
     register_crisis_link_system(sim);
@@ -1365,6 +1365,71 @@ pub async fn export_comparative_monte_carlo_csv(
         IpcError("no comparative MC run to export — call run_comparative_monte_carlo first".into())
     })?;
     Ok(format_comparative_estimates_csv(estimates))
+}
+
+/// CSV header for the comparative MC *summary* export (one aggregate row).
+const COMPARATIVE_MC_SUMMARY_CSV_HEADER: &str =
+    "n_runs,\
+mean_net_approval,p5_net_approval,p95_net_approval,\
+mean_net_gdp,p5_net_gdp,p95_net_gdp,\
+mean_net_pollution,p5_net_pollution,p95_net_pollution,\
+mean_net_unemployment,p5_net_unemployment,p95_net_unemployment,\
+mean_net_legitimacy,p5_net_legitimacy,p95_net_legitimacy,\
+mean_net_treasury,p5_net_treasury,p95_net_treasury,\
+mean_net_income,p5_net_income,p95_net_income,\
+mean_net_wealth,p5_net_wealth,p95_net_wealth,\
+mean_net_health,p5_net_health,p95_net_health,\
+mean_net_approval_q1,p5_net_approval_q1,p95_net_approval_q1,\
+mean_net_approval_q2,p5_net_approval_q2,p95_net_approval_q2,\
+mean_net_approval_q3,p5_net_approval_q3,p95_net_approval_q3,\
+mean_net_approval_q4,p5_net_approval_q4,p95_net_approval_q4,\
+mean_net_approval_q5,p5_net_approval_q5,p95_net_approval_q5";
+
+/// Pure formatter: `ComparativeSummary` → CSV string (header + one data row).
+pub fn format_comparative_summary_csv(s: &ComparativeSummary) -> String {
+    fn of32(v: Option<f32>) -> String { v.map(|x| format!("{x:.6}")).unwrap_or_default() }
+    fn of64(v: Option<f64>) -> String { v.map(|x| format!("{x:.6}")).unwrap_or_default() }
+
+    let mut csv = String::with_capacity(COMPARATIVE_MC_SUMMARY_CSV_HEADER.len() + 400);
+    csv.push_str(COMPARATIVE_MC_SUMMARY_CSV_HEADER);
+    csv.push('\n');
+    csv.push_str(&format!(
+        "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},\
+{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n",
+        s.n_runs,
+        of32(s.mean_net_approval),     of32(s.p5_net_approval),     of32(s.p95_net_approval),
+        of64(s.mean_net_gdp),          of64(s.p5_net_gdp),          of64(s.p95_net_gdp),
+        of64(s.mean_net_pollution),    of64(s.p5_net_pollution),     of64(s.p95_net_pollution),
+        of32(s.mean_net_unemployment), of32(s.p5_net_unemployment),  of32(s.p95_net_unemployment),
+        of32(s.mean_net_legitimacy),   of32(s.p5_net_legitimacy),    of32(s.p95_net_legitimacy),
+        of64(s.mean_net_treasury),     of64(s.p5_net_treasury),      of64(s.p95_net_treasury),
+        of64(s.mean_net_income),       of64(s.p5_net_income),        of64(s.p95_net_income),
+        of64(s.mean_net_wealth),       of64(s.p5_net_wealth),        of64(s.p95_net_wealth),
+        of32(s.mean_net_health),       of32(s.p5_net_health),        of32(s.p95_net_health),
+        // per-quintile CI bands (Q1..Q5)
+        of32(s.mean_net_approval_by_quintile[0]), of32(s.p5_net_approval_by_quintile[0]), of32(s.p95_net_approval_by_quintile[0]),
+        of32(s.mean_net_approval_by_quintile[1]), of32(s.p5_net_approval_by_quintile[1]), of32(s.p95_net_approval_by_quintile[1]),
+        of32(s.mean_net_approval_by_quintile[2]), of32(s.p5_net_approval_by_quintile[2]), of32(s.p95_net_approval_by_quintile[2]),
+        of32(s.mean_net_approval_by_quintile[3]), of32(s.p5_net_approval_by_quintile[3]), of32(s.p95_net_approval_by_quintile[3]),
+        of32(s.mean_net_approval_by_quintile[4]), of32(s.p5_net_approval_by_quintile[4]), of32(s.p95_net_approval_by_quintile[4]),
+    ));
+    csv
+}
+
+/// Serialize the most recent comparative MC run as a single-row aggregate CSV.
+/// Complements `export_comparative_monte_carlo_csv` (per-run rows) by providing
+/// mean/P5/P95 for all net metrics including per-quintile CI bands — suitable
+/// for direct loading into a results table without further aggregation.
+#[tauri::command]
+pub async fn export_comparative_mc_summary_csv(
+    state: tauri::State<'_, AppState>,
+) -> IpcResult<String> {
+    let guard = state.last_comparative_mc.lock().await;
+    let estimates = guard.as_ref().ok_or_else(|| {
+        IpcError("no comparative MC run to export — call run_comparative_monte_carlo first".into())
+    })?;
+    let summary = ComparativeSummary::from_estimates(estimates);
+    Ok(format_comparative_summary_csv(&summary))
 }
 
 // ---- Citizen distribution ──────────────────────────────────────────────────
@@ -2138,6 +2203,67 @@ mod comparative_csv_tests {
     }
 }
 
+/// Column-count guard for the comparative MC *summary* CSV formatter.
+#[cfg(test)]
+mod comparative_summary_csv_tests {
+    use super::{format_comparative_summary_csv, COMPARATIVE_MC_SUMMARY_CSV_HEADER};
+    use simulator_counterfactual::estimate::CausalEstimate;
+    use simulator_counterfactual::monte_carlo::ComparativeSummary;
+    use simulator_counterfactual::triple::ComparativeEstimate;
+
+    fn sample_causal() -> CausalEstimate {
+        CausalEstimate {
+            enacted_tick: 0, window_ticks: 30,
+            did_approval: Some(0.05), did_gdp: Some(100.0),
+            did_pollution: Some(-0.1), did_unemployment: Some(-0.01),
+            did_legitimacy: Some(0.02), did_treasury: Some(50.0),
+            did_income: Some(5.0), did_wealth: Some(80.0), did_health: Some(0.01),
+            did_approval_by_quintile: [Some(0.01); 5],
+            treatment_post_approval: 0.5, treatment_post_gdp: 1000.0,
+        }
+    }
+
+    fn sample_summary() -> ComparativeSummary {
+        let e = ComparativeEstimate { law_a: sample_causal(), law_b: sample_causal() };
+        ComparativeSummary::from_estimates(&[e.clone(), e])
+    }
+
+    #[test]
+    fn header_column_count_matches_row_column_count() {
+        let csv = format_comparative_summary_csv(&sample_summary());
+        let mut lines = csv.lines();
+        let h = lines.next().unwrap().split(',').count();
+        let r = lines.next().unwrap().split(',').count();
+        assert_eq!(h, r,
+            "summary CSV header has {h} cols but row has {r} — column drift");
+    }
+
+    #[test]
+    fn always_exactly_one_data_row() {
+        let csv = format_comparative_summary_csv(&sample_summary());
+        assert_eq!(csv.lines().count(), 2,
+            "summary CSV should have exactly 1 header + 1 data row");
+    }
+
+    #[test]
+    fn header_constant_matches_actual_header() {
+        let csv = format_comparative_summary_csv(&sample_summary());
+        let actual_header = csv.lines().next().unwrap();
+        assert_eq!(actual_header, COMPARATIVE_MC_SUMMARY_CSV_HEADER,
+            "first line of summary CSV must equal COMPARATIVE_MC_SUMMARY_CSV_HEADER");
+    }
+
+    #[test]
+    fn n_runs_is_first_cell() {
+        let e = ComparativeEstimate { law_a: sample_causal(), law_b: sample_causal() };
+        let estimates = vec![e.clone(), e.clone(), e.clone()];
+        let summary   = ComparativeSummary::from_estimates(&estimates);
+        let csv   = format_comparative_summary_csv(&summary);
+        let first = csv.lines().nth(1).unwrap().split(',').next().unwrap();
+        assert_eq!(first, "3", "first cell of data row should be n_runs=3, got {first}");
+    }
+}
+
 /// DTO-domain field-set parity tests.
 ///
 /// Three times this session we added a field to a counterfactual domain type
@@ -2342,5 +2468,87 @@ mod precondition_tests {
             "ERR_SAME_LAW and ERR_NO_SNAPSHOT must be distinct");
         assert_ne!(ERR_SAME_LAW, IpcError::no_sim().0,
             "ERR_SAME_LAW and no_sim error must be distinct");
+    }
+}
+
+/// Smoke tests verifying that `register_all_for_cf` wires all systems needed
+/// for counterfactual forks to produce meaningful metric data. Accidentally
+/// omitting a system from the registration function produces silently wrong
+/// DiD estimates — catching it here at the unit-test level is far cheaper
+/// than debugging bad simulation results in the UI.
+#[cfg(test)]
+mod register_cf_tests {
+    use super::register_all_for_cf;
+    use simulator_core::Sim;
+    use simulator_metrics::MetricStore;
+    use simulator_scenario::{Scenario, PopulationSpec};
+    use simulator_snapshot::{save_snapshot, load_snapshot};
+
+    fn minimal_scenario() -> Scenario {
+        Scenario {
+            name: "cf_smoke".into(),
+            description: String::new(),
+            seed: [42u8; 32],
+            ticks: 50,
+            population: PopulationSpec { citizens: 10, regions: 1, ..Default::default() },
+            initial_rights: None,
+            initial_pollution: None,
+            initial_legitimacy_debt: None,
+            crisis_prob_pct: Some(0),
+            polity: None,
+            state_capacity: None,
+            judiciary: None,
+            initial_rights_catalog: None,
+        }
+    }
+
+    /// Fork a sim via `register_all_for_cf`, step it, and verify the
+    /// `MetricStore` has been populated with at least one tick row.
+    /// This fails if metrics or any dependent system was accidentally removed
+    /// from `register_all_for_cf`.
+    #[test]
+    fn forked_sim_accumulates_metric_rows() {
+        let scenario = minimal_scenario();
+
+        // Build the base sim using the same registration path as production code.
+        let mut base = Sim::new(scenario.seed);
+        register_all_for_cf(&mut base);
+        scenario.spawn_population(&mut base);
+
+        // Warm up for a few ticks then snapshot.
+        for _ in 0..5 { base.step(); }
+        let blob = save_snapshot(&mut base.world).expect("save");
+
+        // Fork via the exact function used by counterfactual commands.
+        let mut forked = Sim::new(scenario.seed);
+        register_all_for_cf(&mut forked);
+        load_snapshot(&mut forked.world, &blob).expect("load");
+
+        // Step the fork and check metrics were recorded.
+        for _ in 0..10 { forked.step(); }
+
+        let store     = forked.world.resource::<MetricStore>();
+        let row_count = store.rows().count();
+        assert!(row_count > 0,
+            "MetricStore should have tick rows after stepping — \
+             check register_all_for_cf includes register_metrics_system");
+    }
+
+    /// The base sim built with `register_all_for_cf` must have citizens after
+    /// `spawn_population`. This verifies the system list doesn't interfere with
+    /// ECS world setup.
+    #[test]
+    fn forked_sim_has_citizens_after_spawn() {
+        use simulator_core::components::Citizen;
+        let scenario = minimal_scenario();
+        let mut sim = Sim::new(scenario.seed);
+        register_all_for_cf(&mut sim);
+        scenario.spawn_population(&mut sim);
+        let count = sim.world
+            .query::<&Citizen>()
+            .iter(&sim.world)
+            .count();
+        assert_eq!(count, 10,
+            "expected 10 citizens after spawn_population, got {count}");
     }
 }
