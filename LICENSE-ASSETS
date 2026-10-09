@@ -1,0 +1,24 @@
+govSim art, writing and data compilation
+Copyright (c) 2026 brbrainerd and govSim contributors
+
+Licensed under the Creative Commons Attribution 4.0 International License
+(CC BY 4.0): https://creativecommons.org/licenses/by/4.0/legalcode
+
+This covers, unless a file says otherwise:
+  - Illustrations and character art (src/ui/art/, any SVG/PNG under src/ or public/)
+  - Player-facing writing: briefings, explainers, myth cards, report copy (src/content/)
+  - The compiled starting dataset and its selection/arrangement (data/)
+  - Design documents (docs/)
+
+Program code is licensed separately under the MIT License (see LICENSE).
+
+Attribution: "govSim contributors, CC BY 4.0", with a link to the project.
+
+Third-party material keeps its own license:
+  - Underlying statistics in data/ come from the public sources cited per field
+    (mostly U.S. government works in the public domain); the citations are part
+    of the dataset and must be kept.
+  - Fonts are under the SIL Open Font License 1.1.
+  - Other bundled dependencies are listed in THIRD_PARTY_NOTICES.md.
+
+The govSim name and logo are not licensed under CC BY 4.0; see TRADEMARKS.md.
