@@ -1,0 +1,651 @@
+{
+  "retrieved": "2026-10-09",
+  "economy": {
+    "gdpNominal": {
+      "value": 32.563,
+      "unit": "$ trillions, seasonally adjusted annual rate",
+      "asOf": "2026-Q2",
+      "source": "BEA, National Income and Product Accounts, Gross Domestic Product (third estimate)",
+      "url": "https://www.bea.gov/data/gdp/gross-domestic-product",
+      "note": "$32,563.0 billion SAAR (FRED series GDP)."
+    },
+    "realGdpGrowth": {
+      "value": 2.2,
+      "unit": "% annualized, quarter over quarter",
+      "asOf": "2026-Q2",
+      "source": "BEA, Real GDP percent change from preceding quarter (third estimate)",
+      "url": "https://www.bea.gov/data/gdp/gross-domestic-product",
+      "note": "FRED series A191RL1Q225SBEA. Q1 2026 was 2.5%."
+    },
+    "unemployment": {
+      "value": 4.2,
+      "unit": "%",
+      "asOf": "2026-09",
+      "source": "BLS, Current Population Survey, unemployment rate (seasonally adjusted)",
+      "url": "https://www.bls.gov/news.release/empsit.nr0.htm",
+      "note": "FRED series UNRATE."
+    },
+    "employmentPopRatio": {
+      "value": 59.2,
+      "unit": "%",
+      "asOf": "2026-09",
+      "source": "BLS, Current Population Survey, employment-population ratio (seasonally adjusted)",
+      "url": "https://www.bls.gov/news.release/empsit.nr0.htm",
+      "note": "FRED series EMRATIO."
+    },
+    "cpiInflation": {
+      "value": 3.4,
+      "unit": "% year over year",
+      "asOf": "2026-08",
+      "source": "BLS, CPI-U all items, U.S. city average, not seasonally adjusted, 12-month change",
+      "url": "https://www.bls.gov/news.release/cpi.nr0.htm",
+      "note": "Computed from CPI-U index 334.980 (Aug 2026) vs 323.976 (Aug 2025) = 3.40%. September 2026 CPI not yet released as of 2026-10-09."
+    },
+    "fedFundsUpper": {
+      "value": 4,
+      "unit": "%",
+      "asOf": "2026-10-08",
+      "source": "Federal Reserve Board, FOMC federal funds target range upper limit",
+      "url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm",
+      "note": "Target range 3.75-4.00% after a 25 bp increase at the 2026-09-17 FOMC meeting (FRED DFEDTARU)."
+    },
+    "tenYearYield": {
+      "value": 5.28,
+      "unit": "%",
+      "asOf": "2026-10-07",
+      "source": "U.S. Treasury / Federal Reserve H.15, 10-year Treasury constant maturity yield",
+      "url": "https://fred.stlouisfed.org/series/DGS10",
+      "note": "Daily value; latest published observation as of retrieval."
+    },
+    "medianHouseholdIncome": {
+      "value": 87460,
+      "unit": "$ (2025 dollars)",
+      "asOf": "2025",
+      "source": "Census Bureau, Income in the United States: 2025 (P60-289), CPS ASEC",
+      "url": "https://www.census.gov/library/publications/2026/demo/p60-289.html",
+      "note": "Released 2026-09-15. Up 2.6% in real terms from $85,210 (2024); margin of error +/- $1,040."
+    },
+    "gini": {
+      "value": 0.49,
+      "unit": "index 0..1 (household money income, pretax)",
+      "asOf": "2025",
+      "source": "Census Bureau, Income in the United States: 2025 (P60-289), Gini index of household income",
+      "url": "https://www.census.gov/library/publications/2026/demo/p60-289.html",
+      "note": "FRED series GINIALLRH. Change from 2024 (0.489) not statistically significant per Census."
+    },
+    "lifeExpectancy": {
+      "value": 79,
+      "unit": "years at birth",
+      "asOf": "2024",
+      "source": "CDC/NCHS, Mortality in the United States, 2024 (Data Brief No. 548), final data",
+      "url": "https://www.cdc.gov/nchs/products/databriefs/db548.htm",
+      "note": "Latest final data; no 2025 provisional life expectancy estimate found as of 2026-10-09."
+    },
+    "population": {
+      "value": 341.78,
+      "unit": "millions",
+      "asOf": "2025-07-01",
+      "source": "Census Bureau, Vintage 2025 national and state population estimates (NST-EST2025)",
+      "url": "https://www2.census.gov/programs-surveys/popest/datasets/2020-2025/state/totals/NST-EST2025-ALLDATA.csv",
+      "note": "Resident population 341,784,857 on July 1, 2025. BEA monthly series (FRED POPTHM) shows about 343.0 million for Aug 2026."
+    }
+  },
+  "fiscal": {
+    "receipts": {
+      "value": 5.4,
+      "unit": "$ trillions",
+      "asOf": "FY2026",
+      "source": "CBO, Monthly Budget Review: September 2026 (estimate)",
+      "url": "https://www.cbo.gov/publication/61985",
+      "note": "CBO estimate published 2026-10-08, reported as $5.4T, up $169B (3%) from FY2025. Value = Treasury FY2025 actual $5.236T + $0.169T. Final Treasury MTS for September 2026 not yet published."
+    },
+    "outlays": {
+      "value": 7.4,
+      "unit": "$ trillions",
+      "asOf": "FY2026",
+      "source": "CBO, Monthly Budget Review: September 2026 (estimate)",
+      "url": "https://www.cbo.gov/publication/61985",
+      "note": "CBO estimate published 2026-10-08, reported as $7.4T, up $386B (6%) from FY2025 ($7.011T actual)."
+    },
+    "deficit": {
+      "value": 1.99,
+      "unit": "$ trillions",
+      "asOf": "FY2026",
+      "source": "CBO, Monthly Budget Review: September 2026 (estimate)",
+      "url": "https://www.cbo.gov/publication/61985",
+      "note": "CBO reports about $2.0T, $218B above FY2025 ($1.775T). Cross-check: Treasury MTS Oct-Aug deficit $1.966T + CBO-estimated September deficit $28B = $1.994T."
+    },
+    "debtHeldByPublicPctGdp": {
+      "value": 101,
+      "unit": "% of GDP",
+      "asOf": "FY2026 (end, projected)",
+      "source": "CBO, The Budget and Economic Outlook: 2026 to 2036 (February 2026 baseline)",
+      "url": "https://www.cbo.gov/publication/62105",
+      "note": "CBO projection for end of FY2026 (99% at end of FY2025). Actual end-FY2026 figure not yet published. Treasury/FRED quarterly measure (FYGFGDQ188S) was 98.7% in 2026-Q1."
+    },
+    "outlaysByCategory": {
+      "defense": {
+        "value": 876.2,
+        "unit": "$ billions (11 months)",
+        "asOf": "FY2026 Oct-Aug",
+        "source": "Treasury MTS Table 9, function 050 National Defense",
+        "url": "https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/",
+        "note": "Treasury Monthly Treasury Statement, fiscal-year-to-date Oct 2025 through Aug 2026 (11 months), net outlays. The final September 2026 MTS (full FY2026) is not yet published as of 2026-10-09 (due mid-October); CBO's Sept 2026 Monthly Budget Review gives only rounded category changes. CBO: full-year defense spending up about $48B (5%)."
+      },
+      "socialSecurity": {
+        "value": 1525.9,
+        "unit": "$ billions (11 months)",
+        "asOf": "FY2026 Oct-Aug",
+        "source": "Treasury MTS Table 9, function 650 Social Security",
+        "url": "https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/",
+        "note": "Treasury Monthly Treasury Statement, fiscal-year-to-date Oct 2025 through Aug 2026 (11 months), net outlays. The final September 2026 MTS (full FY2026) is not yet published as of 2026-10-09 (due mid-October); CBO's Sept 2026 Monthly Budget Review gives only rounded category changes."
+      },
+      "medicare": {
+        "value": 979.3,
+        "unit": "$ billions (11 months)",
+        "asOf": "FY2026 Oct-Aug",
+        "source": "Treasury MTS Table 9, function 570 Medicare (net of offsetting premiums)",
+        "url": "https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/",
+        "note": "Treasury Monthly Treasury Statement, fiscal-year-to-date Oct 2025 through Aug 2026 (11 months), net outlays. The final September 2026 MTS (full FY2026) is not yet published as of 2026-10-09 (due mid-October); CBO's Sept 2026 Monthly Budget Review gives only rounded category changes."
+      },
+      "medicaid": {
+        "value": 655,
+        "unit": "$ billions (11 months)",
+        "asOf": "FY2026 Oct-Aug",
+        "source": "Treasury MTS Table 5, HHS Grants to States for Medicaid",
+        "url": "https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/",
+        "note": "Treasury Monthly Treasury Statement, fiscal-year-to-date Oct 2025 through Aug 2026 (11 months), net outlays. The final September 2026 MTS (full FY2026) is not yet published as of 2026-10-09 (due mid-October); CBO's Sept 2026 Monthly Budget Review gives only rounded category changes. CBO: SS+Medicare+Medicaid combined up $217B (7%) for the full year."
+      },
+      "nondefenseDiscretionary": {
+        "value": null,
+        "unit": "$ billions",
+        "asOf": "FY2026",
+        "source": "CBO (not verified)",
+        "url": "https://www.cbo.gov/publication/62105",
+        "note": "Not published in MTS (budget-concept category). CBO February 2026 baseline dollar tables were not retrievable (cbo.gov blocks automated access). CRS R49408 cites CBO baseline FY2026 total discretionary outlays at 5.9% of GDP and nondefense discretionary budget authority at 2.7% of GDP. Fill from CBO when accessible."
+      },
+      "netInterest": {
+        "value": 1017,
+        "unit": "$ billions (11 months)",
+        "asOf": "FY2026 Oct-Aug",
+        "source": "Treasury MTS Table 9, function 900 Net Interest",
+        "url": "https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/",
+        "note": "Treasury Monthly Treasury Statement, fiscal-year-to-date Oct 2025 through Aug 2026 (11 months), net outlays. The final September 2026 MTS (full FY2026) is not yet published as of 2026-10-09 (due mid-October); CBO's Sept 2026 Monthly Budget Review gives only rounded category changes. CBO: full-year net interest up $115B (11%), widely reported as a record of about $1.1T."
+      }
+    }
+  },
+  "taxes": {
+    "topIncomeRate": {
+      "value": 37,
+      "unit": "%",
+      "asOf": "2026",
+      "source": "IRC §1 individual income tax brackets (rates made permanent by P.L. 119-21, July 2025)",
+      "url": "https://www.irs.gov/filing/federal-income-tax-rates-and-brackets",
+      "note": "Top ordinary rate; applies above $640,600 single / $768,700 joint for 2026 per IRS inflation adjustments."
+    },
+    "corporateRate": {
+      "value": 21,
+      "unit": "%",
+      "asOf": "2026",
+      "source": "IRC §11 corporate income tax rate",
+      "url": "https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title26-section11&num=0&edition=prelim"
+    },
+    "capitalGainsTopRate": {
+      "value": 20,
+      "unit": "%",
+      "asOf": "2026",
+      "source": "IRC §1(h) long-term capital gains maximum rate",
+      "url": "https://www.irs.gov/taxtopics/tc409",
+      "note": "Excludes the 3.8% Net Investment Income Tax (§1411); combined top federal rate 23.8%."
+    },
+    "payrollRate": {
+      "value": 15.3,
+      "unit": "%",
+      "asOf": "2026",
+      "source": "SSA, Social Security and Medicare tax rates (OASDI 12.4% + HI 2.9%, employer + employee)",
+      "url": "https://www.ssa.gov/oact/progdata/taxRates.html",
+      "note": "Excludes 0.9% Additional Medicare Tax on wages above $200k/$250k."
+    },
+    "socialSecurityWageBase": {
+      "value": 184500,
+      "unit": "$",
+      "asOf": "2026",
+      "source": "SSA, Contribution and benefit base for 2026",
+      "url": "https://www.ssa.gov/oact/cola/cbb.html",
+      "note": "Up from $176,100 in 2025."
+    },
+    "effectiveTariffRate": {
+      "value": 11,
+      "unit": "%",
+      "asOf": "2026-08-24",
+      "source": "The Budget Lab at Yale, State of U.S. Tariffs (updated August 24, 2026)",
+      "url": "https://budgetlab.yale.edu/research/state-us-tariffs",
+      "note": "Average statutory (pre-substitution) rate after Section 122 tariffs expired 2026-07-24 and were replaced by Section 301 tariffs; IEEPA tariffs struck down by the Supreme Court in Feb 2026. Budget Lab projects 11.8% by end-2026 under current law. A secondary citation gives 10.9% pre- / 9.0% post-substitution for the same date."
+    }
+  },
+  "society": {
+    "trustInGovernment": {
+      "value": 17,
+      "unit": "% trust federal government just about always or most of the time",
+      "asOf": "2025-09",
+      "source": "Pew Research Center, Public Trust in Government: 1958-2025",
+      "url": "https://www.pewresearch.org/politics/2025/12/04/public-trust-in-government-1958-2025/",
+      "note": "2% just about always + 15% most of the time. Survey fielded Sept 2025; no newer Pew reading found as of 2026-10-09."
+    },
+    "violentCrimeRate": {
+      "value": 327.6,
+      "unit": "offenses per 100,000 inhabitants",
+      "asOf": "2025",
+      "source": "FBI, Uniform Crime Reporting, 2025 Reported Crimes in the Nation",
+      "url": "https://www.fbi.gov/news/press-releases/fbi-releases-2025-reported-crimes-in-the-nation-statistics",
+      "note": "Down from 362.9 in 2024 (about -9.7%), released Aug 2026."
+    }
+  },
+  "politics": {
+    "house": {
+      "value": {
+        "republican": 218,
+        "democrat": 214,
+        "vacant": 2,
+        "independent": 1
+      },
+      "unit": "seats",
+      "asOf": "2026-10-09",
+      "source": "Office of the Clerk, U.S. House of Representatives, party breakdown (119th Congress)",
+      "url": "https://clerk.house.gov/",
+      "note": "218 R + 214 D + 1 I + 2 vacant = 435."
+    },
+    "senate": {
+      "value": {
+        "republican": 53,
+        "democrat": 45,
+        "independent": 2
+      },
+      "unit": "seats",
+      "asOf": "2026-10-09",
+      "source": "U.S. Senate, Party Division (119th Congress)",
+      "url": "https://www.senate.gov/history/partydiv.htm",
+      "note": "Both independents caucus with Democrats."
+    },
+    "supremeCourt": {
+      "value": {
+        "conservative": 6,
+        "liberal": 3
+      },
+      "unit": "justices",
+      "asOf": "2026-10-09",
+      "source": "Supreme Court of the United States, current members; grouped by appointing president's party",
+      "url": "https://www.supremecourt.gov/about/biographies.aspx",
+      "note": "6 appointed by Republican presidents, 3 by Democratic presidents. No vacancy or new confirmation in 2026 found."
+    }
+  },
+  "states": {
+    "asOf": "Population: 2025-07-01 (Census Vintage 2025). Margins: 2024 general election certified results. Electoral votes: 2024-2028 apportionment (2020 Census).",
+    "sources": [
+      "Census Bureau, Vintage 2025 state population estimates (NST-EST2025-ALLDATA): https://www2.census.gov/programs-surveys/popest/datasets/2020-2025/state/totals/NST-EST2025-ALLDATA.csv",
+      "State-certified 2024 presidential results as compiled in Wikipedia \"2024 United States presidential election\" results-by-state table (citing each state's certified canvass and FEC): https://en.wikipedia.org/wiki/2024_United_States_presidential_election#Results_by_state ; margin computed as (R votes - D votes) / total votes x 100",
+      "FEC, Official 2024 Presidential General Election Results: https://www.fec.gov/resources/cms-content/documents/2024presgeresults.xlsx",
+      "Electoral votes: National Archives, Distribution of Electoral Votes 2024-2028: https://www.archives.gov/electoral-college/allocation",
+      "Maine and Nebraska margins are statewide (at-large) results."
+    ],
+    "rows": [
+      {
+        "code": "AK",
+        "name": "Alaska",
+        "electoralVotes": 3,
+        "population": 737270,
+        "margin2024": 13.14
+      },
+      {
+        "code": "AL",
+        "name": "Alabama",
+        "electoralVotes": 9,
+        "population": 5193088,
+        "margin2024": 30.47
+      },
+      {
+        "code": "AR",
+        "name": "Arkansas",
+        "electoralVotes": 6,
+        "population": 3114791,
+        "margin2024": 30.64
+      },
+      {
+        "code": "AZ",
+        "name": "Arizona",
+        "electoralVotes": 11,
+        "population": 7623818,
+        "margin2024": 5.53
+      },
+      {
+        "code": "CA",
+        "name": "California",
+        "electoralVotes": 54,
+        "population": 39355309,
+        "margin2024": -20.13
+      },
+      {
+        "code": "CO",
+        "name": "Colorado",
+        "electoralVotes": 10,
+        "population": 6012561,
+        "margin2024": -10.98
+      },
+      {
+        "code": "CT",
+        "name": "Connecticut",
+        "electoralVotes": 7,
+        "population": 3688496,
+        "margin2024": -14.5
+      },
+      {
+        "code": "DC",
+        "name": "District of Columbia",
+        "electoralVotes": 3,
+        "population": 693645,
+        "margin2024": -83.81
+      },
+      {
+        "code": "DE",
+        "name": "Delaware",
+        "electoralVotes": 3,
+        "population": 1059952,
+        "margin2024": -14.7
+      },
+      {
+        "code": "FL",
+        "name": "Florida",
+        "electoralVotes": 30,
+        "population": 23462518,
+        "margin2024": 13.1
+      },
+      {
+        "code": "GA",
+        "name": "Georgia",
+        "electoralVotes": 16,
+        "population": 11302748,
+        "margin2024": 2.19
+      },
+      {
+        "code": "HI",
+        "name": "Hawaii",
+        "electoralVotes": 4,
+        "population": 1432820,
+        "margin2024": -23.1
+      },
+      {
+        "code": "IA",
+        "name": "Iowa",
+        "electoralVotes": 6,
+        "population": 3238387,
+        "margin2024": 13.21
+      },
+      {
+        "code": "ID",
+        "name": "Idaho",
+        "electoralVotes": 4,
+        "population": 2029733,
+        "margin2024": 36.49
+      },
+      {
+        "code": "IL",
+        "name": "Illinois",
+        "electoralVotes": 19,
+        "population": 12719141,
+        "margin2024": -10.9
+      },
+      {
+        "code": "IN",
+        "name": "Indiana",
+        "electoralVotes": 11,
+        "population": 6973333,
+        "margin2024": 18.96
+      },
+      {
+        "code": "KS",
+        "name": "Kansas",
+        "electoralVotes": 6,
+        "population": 2977220,
+        "margin2024": 16.12
+      },
+      {
+        "code": "KY",
+        "name": "Kentucky",
+        "electoralVotes": 8,
+        "population": 4606864,
+        "margin2024": 30.53
+      },
+      {
+        "code": "LA",
+        "name": "Louisiana",
+        "electoralVotes": 8,
+        "population": 4618189,
+        "margin2024": 22.01
+      },
+      {
+        "code": "MA",
+        "name": "Massachusetts",
+        "electoralVotes": 11,
+        "population": 7154084,
+        "margin2024": -25.2
+      },
+      {
+        "code": "MD",
+        "name": "Maryland",
+        "electoralVotes": 10,
+        "population": 6265347,
+        "margin2024": -28.54
+      },
+      {
+        "code": "ME",
+        "name": "Maine",
+        "electoralVotes": 4,
+        "population": 1414874,
+        "margin2024": -6.94
+      },
+      {
+        "code": "MI",
+        "name": "Michigan",
+        "electoralVotes": 15,
+        "population": 10127884,
+        "margin2024": 1.41
+      },
+      {
+        "code": "MN",
+        "name": "Minnesota",
+        "electoralVotes": 10,
+        "population": 5830405,
+        "margin2024": -4.24
+      },
+      {
+        "code": "MO",
+        "name": "Missouri",
+        "electoralVotes": 10,
+        "population": 6270541,
+        "margin2024": 18.41
+      },
+      {
+        "code": "MS",
+        "name": "Mississippi",
+        "electoralVotes": 6,
+        "population": 2954160,
+        "margin2024": 22.89
+      },
+      {
+        "code": "MT",
+        "name": "Montana",
+        "electoralVotes": 4,
+        "population": 1144694,
+        "margin2024": 19.93
+      },
+      {
+        "code": "NC",
+        "name": "North Carolina",
+        "electoralVotes": 16,
+        "population": 11197968,
+        "margin2024": 3.21
+      },
+      {
+        "code": "ND",
+        "name": "North Dakota",
+        "electoralVotes": 3,
+        "population": 799358,
+        "margin2024": 36.45
+      },
+      {
+        "code": "NE",
+        "name": "Nebraska",
+        "electoralVotes": 5,
+        "population": 2018006,
+        "margin2024": 20.46
+      },
+      {
+        "code": "NH",
+        "name": "New Hampshire",
+        "electoralVotes": 4,
+        "population": 1415342,
+        "margin2024": -2.78
+      },
+      {
+        "code": "NJ",
+        "name": "New Jersey",
+        "electoralVotes": 14,
+        "population": 9548215,
+        "margin2024": -5.91
+      },
+      {
+        "code": "NM",
+        "name": "New Mexico",
+        "electoralVotes": 5,
+        "population": 2125498,
+        "margin2024": -6
+      },
+      {
+        "code": "NV",
+        "name": "Nevada",
+        "electoralVotes": 6,
+        "population": 3282188,
+        "margin2024": 3.1
+      },
+      {
+        "code": "NY",
+        "name": "New York",
+        "electoralVotes": 28,
+        "population": 20002427,
+        "margin2024": -12.59
+      },
+      {
+        "code": "OH",
+        "name": "Ohio",
+        "electoralVotes": 17,
+        "population": 11900510,
+        "margin2024": 11.21
+      },
+      {
+        "code": "OK",
+        "name": "Oklahoma",
+        "electoralVotes": 7,
+        "population": 4123288,
+        "margin2024": 34.26
+      },
+      {
+        "code": "OR",
+        "name": "Oregon",
+        "electoralVotes": 8,
+        "population": 4273586,
+        "margin2024": -14.31
+      },
+      {
+        "code": "PA",
+        "name": "Pennsylvania",
+        "electoralVotes": 19,
+        "population": 13059432,
+        "margin2024": 1.7
+      },
+      {
+        "code": "RI",
+        "name": "Rhode Island",
+        "electoralVotes": 4,
+        "population": 1114521,
+        "margin2024": -13.78
+      },
+      {
+        "code": "SC",
+        "name": "South Carolina",
+        "electoralVotes": 9,
+        "population": 5570274,
+        "margin2024": 17.87
+      },
+      {
+        "code": "SD",
+        "name": "South Dakota",
+        "electoralVotes": 3,
+        "population": 935094,
+        "margin2024": 29.19
+      },
+      {
+        "code": "TN",
+        "name": "Tennessee",
+        "electoralVotes": 11,
+        "population": 7315076,
+        "margin2024": 29.72
+      },
+      {
+        "code": "TX",
+        "name": "Texas",
+        "electoralVotes": 40,
+        "population": 31709821,
+        "margin2024": 13.68
+      },
+      {
+        "code": "UT",
+        "name": "Utah",
+        "electoralVotes": 6,
+        "population": 3538904,
+        "margin2024": 21.58
+      },
+      {
+        "code": "VA",
+        "name": "Virginia",
+        "electoralVotes": 13,
+        "population": 8880107,
+        "margin2024": -5.78
+      },
+      {
+        "code": "VT",
+        "name": "Vermont",
+        "electoralVotes": 3,
+        "population": 644663,
+        "margin2024": -31.51
+      },
+      {
+        "code": "WA",
+        "name": "Washington",
+        "electoralVotes": 12,
+        "population": 8001020,
+        "margin2024": -18.22
+      },
+      {
+        "code": "WI",
+        "name": "Wisconsin",
+        "electoralVotes": 10,
+        "population": 5972787,
+        "margin2024": 0.86
+      },
+      {
+        "code": "WV",
+        "name": "West Virginia",
+        "electoralVotes": 4,
+        "population": 1766147,
+        "margin2024": 41.86
+      },
+      {
+        "code": "WY",
+        "name": "Wyoming",
+        "electoralVotes": 3,
+        "population": 588753,
+        "margin2024": 45.76
+      }
+    ]
+  }
+}

@@ -46,6 +46,17 @@ no teacher tools (E6). Open source (D1).
 - **Hybrid** (Q9): an aggregate quarterly macro core (output gap, Okun, Phillips,
   debt dynamics, tariff pass-through) drives outcomes; a weighted sampled citizen
   population (tagged by state) yields approval, votes, inequality, Electoral College (Q22).
+- **Macro core** (`src/engine/game.ts`, all coefficients named in one `C` table):
+  output gap ← persistence + fiscal impulse (enacted budget changes) − real-rate drag
+  (− debt-crisis drag above 130% debt/GDP); Okun for unemployment; Phillips +
+  expectations + one-off tariff pass-through for inflation; Taylor-rule Fed; debt
+  accumulates deficits + interest drift + term premium; potential growth gains from
+  policy are capped (tanh) and crowded out by debt. Health and inequality move toward
+  policy-set *levels*, never drift forever. **Final score** = ½ index at term end +
+  ½ index after a 10-year legacy projection (no new decisions), vs autopilot.
+- **Balance harness** (`src/engine/balance.test.ts`, 40 seeds × 5 strategies) caught
+  and now guards: max-deficit winning on short-term sugar, debt score floor hiding
+  runaway debt, cumulative health/inequality drift, near-free tariffs.
 - **Fed is independent** (Q18): stylized Taylor rule. President influences it only
   by chair nomination or jawboning (costs credibility, raises inflation expectations).
 - **Congress** (Q16): 4–6 voting blocs per chamber with seats, preferences, relationship.

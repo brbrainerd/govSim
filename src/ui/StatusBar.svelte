@@ -26,7 +26,7 @@
   </div>
   <div class="center">
     <Ribbon text={title} />
-    <div class="score"><span class="star">★</span> <b>+{score.toFixed(1)}</b> better than doing nothing <span class="star">★</span></div>
+    <div class="score"><span class="star">★</span> <b class:worse={score < 0}>{score < 0 ? '−' : '+'}{Math.abs(score).toFixed(1)}</b> {score < 0 ? 'worse' : 'better'} than doing nothing <span class="star">★</span></div>
   </div>
   <div class="time">
     <div class="when">Turn {state.turn} of {TOTAL_TURNS} · {turnLabel(state.turn)}</div>
@@ -46,6 +46,7 @@
   .center { display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .score { font: 400 16px var(--font-body); color: var(--ink); }
   .score b { color: var(--sage); font-family: var(--font-ui); font-size: 18px; }
+  .score b.worse { color: var(--alert); }
   .star { color: var(--ink); font-size: 12px; }
   .when { font: 600 19px var(--font-display); color: var(--ink); }
   .next { display: flex; flex-direction: column; align-items: center; gap: 6px; }

@@ -1,14 +1,22 @@
 <script lang="ts">
+  import { headline } from '../app/indicators';
+  import type { Session } from '../app/session.svelte';
   import type { ScreenId } from '../app/screens';
-  import { briefing, headline, prosperity, suggestions, thisTurn } from '../content/sample';
+  import { prosperity as score } from '../engine/game';
+  import { briefing, suggestions, thisTurn } from '../content/sample';
   import OvalOfficeScene from '../ui/art/OvalOfficeScene.svelte';
   import Rosette from '../ui/art/Rosette.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
-  let { question, go }: { question: string; go: (id: ScreenId) => void } = $props();
+  let { session, question, go }: { session: Session; question: string; go: (id: ScreenId) => void } = $props();
+
+  const tiles = $derived(headline(session.history));
+  const index = $derived(Math.round(session.index));
+  const change = $derived(index - Math.round(score(session.previous).index));
 
   const spark = (t: number[]) => {
-    const pts = t.map((v, i) => `${(i * 100) / (t.length - 1)},${24 - v * 2}`);
+    const lo = Math.min(...t), hi = Math.max(...t), span = hi - lo || 1;
+    const pts = t.map((v, i) => `${t.length > 1 ? (i * 100) / (t.length - 1) : 50},${22 - ((v - lo) / span) * 18}`);
     return { line: `M${pts.join(' L')}`, area: `M0,24 L${pts.join(' L')} L100,24 Z` };
   };
 </script>
@@ -24,9 +32,9 @@
       <div class="tiles">
         <div class="score">
           <Rosette size={96} />
-          <div class="score-text"><b>{prosperity.score}</b><span>/ 100</span><em>up {prosperity.change} ▲</em></div>
+          <div class="score-text"><b>{index}</b><span>/ 100</span><em class:down={change < 0}>{change === 0 ? 'no change' : change > 0 ? `up ${change} ▲` : `down ${-change} ▼`}</em></div>
         </div>
-        {#each headline as t (t.label)}
+        {#each tiles as t (t.label)}
           {@const s = spark(t.trend)}
           <div class="card tile">
             <svg class="spark" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true">
@@ -35,7 +43,7 @@
             </svg>
             <span class="label">{t.label}</span>
             <span class="num">{t.value}</span>
-            <span class="dir" class:good={t.good}>{t.unit ? `${t.unit}, ` : ''}{t.direction} {t.direction === 'up' ? '▲' : '▼'}</span>
+            <span class="dir" class:good={t.good}>{t.unit ? `${t.unit}, ` : ''}{t.direction === 'flat' ? 'no change' : t.direction} {t.direction === 'up' ? '▲' : t.direction === 'down' ? '▼' : ''}</span>
           </div>
         {/each}
       </div>
@@ -74,6 +82,7 @@
   .score-text b { font: 700 46px var(--font-ui); }
   .score-text span { font: 600 18px var(--font-ui); color: var(--ink-soft); }
   .score-text em { font: 600 18px var(--font-ui); font-style: normal; color: var(--sage); margin-top: 4px; }
+  .score-text em.down { color: var(--alert); }
   .tile { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 10px 8px 10px; gap: 2px; }
   .tile .label { font-size: 13px; color: var(--ink); }
   .tile .num { font-size: 32px; }

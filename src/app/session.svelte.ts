@@ -1,6 +1,6 @@
 import { fromPackage, type BudgetDraft, type PackageName } from '../engine/budget';
 import { deals, tally, voteOutcome, type DealId } from '../engine/congress';
-import { endTurn, newGame, type GameState } from '../engine/game';
+import { endTurn, newGame, prosperity, type Decisions, type GameState, type Start } from '../engine/game';
 import type { ScreenId } from './screens';
 
 interface Draft {
@@ -11,31 +11,38 @@ interface Draft {
   vote: { passed: boolean; total: number; cloutBack: number } | null;
 }
 
-const freshDraft = (): Draft => ({
-  budget: fromPackage('Infrastructure push'),
-  pack: 'Infrastructure push',
+/** A new turn's draft starts from the policy already in force. */
+const freshDraft = (policy: BudgetDraft): Draft => ({
+  budget: { ...policy },
+  pack: null,
   sentToCongress: false,
   deals: [],
   vote: null,
 });
 
 /**
- * UI-side session: snapshot history (one per turn), this turn's draft decisions, current screen.
- * Screens only edit the draft; the engine turns drafts into the next snapshot.
- * ponytail: drafts are not yet fed into endTurn; that wiring lands with the macro model.
+ * UI-side session: your snapshot history, an autopilot history on the same seed (design §2),
+ * this turn's draft decisions and the current screen. Screens only edit the draft;
+ * nextTurn turns the draft into Decisions for the pure engine.
  */
 export class Session {
   history = $state.raw<GameState[]>([]);
+  autopilot = $state.raw<GameState[]>([]);
   screen = $state<ScreenId>('oval');
-  draft = $state<Draft>(freshDraft());
-  current = $derived(this.history[this.history.length - 1]!);
+  draft = $state<Draft>(freshDraft(fromPackage('Keep as is')));
 
+  current = $derived(this.history[this.history.length - 1]!);
+  previous = $derived(this.history[this.history.length - 2] ?? this.current);
   spent = $derived(deals.filter((d) => this.draft.deals.includes(d.id)).reduce((n, d) => n + d.cost, 0));
   clout = $derived(this.current.clout - this.spent + (this.draft.vote?.cloutBack ?? 0));
   whip = $derived(tally(this.draft.deals));
+  index = $derived(prosperity(this.current).index);
+  /** Headline: how much better than doing nothing (same seed, same shocks). */
+  vsNothing = $derived(this.index - prosperity(this.autopilot[this.autopilot.length - 1]!).index);
 
-  constructor(seed: number) {
-    this.history = [newGame(seed)];
+  constructor(seed: number, start: Start) {
+    this.history = [newGame(seed, start)];
+    this.autopilot = [newGame(seed, start)];
   }
 
   pickPackage(p: PackageName) {
@@ -63,9 +70,12 @@ export class Session {
   }
 
   nextTurn() {
-    const next = endTurn(this.current);
+    const decisions: Decisions = { clout: this.clout - this.current.clout };
+    if (this.draft.vote?.passed) decisions.budget = $state.snapshot(this.draft.budget);
+    const next = endTurn(this.current, decisions);
     if (next === this.current) return;
     this.history = [...this.history, next];
-    this.draft = freshDraft();
+    this.autopilot = [...this.autopilot, endTurn(this.autopilot[this.autopilot.length - 1]!)];
+    this.draft = freshDraft(next.policy);
   }
 }
