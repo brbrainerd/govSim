@@ -1,0 +1,12 @@
+STYLE BIBLE (must follow exactly; this UI will be rebuilt in HTML/CSS/SVG, so draw only what a browser can render):
+- Look: clean retro Americana civics poster (like reference image 1) but calmer and more spacious, with the clarity and big readable numbers of a modern mobile game.
+- Palette (flat fills only): paper cream #F6EBD3 background, card cream #FFF8EA, navy #1F2F55 (text, frames), brick red #B5402F (alerts, primary buttons), mustard gold #D9A23B (highlights, badges), sky blue #4FA3D9 and sage green #5BAF85 (data series only). No other colours.
+- Texture: ONLY a subtle navy halftone dot pattern used sparingly in headers and backgrounds. No paper grain, no grunge, no painterly shading, no gradients, no glow, no 3D.
+- Lines: 2px navy rules, thin double-rule borders on main panels, corners rounded 10-14px. Shadows: flat offset navy shadow (4px down), no blur.
+- Type: condensed bold slab serif for headings and big numbers (like Rokkitt Bold), clean humanist sans for body text (like Atkinson Hyperlegible). All-caps small labels with letter spacing.
+- Ornament: small five-point stars, ribbon banner ONLY for the screen title, circular rosette badge for the score, rubber-stamp style for the END QUARTER button. Keep ornament minimal.
+- Characters: flat vector pill people exactly like reference image 2: round-topped pill heads, pill bodies, dot eyes, simple line mouths, no outlines, no noses, solid colours from the palette, diverse skin tones.
+- Charts: simple flat SVG-style line, bar and area charts, navy axes, data in sky blue / sage / brick / mustard.
+- Icons: simple 2px stroke line icons in navy inside small cream circles.
+- Layout skeleton for game screens (1280x800 desktop): top bar (approval gauge, political-capital tokens, rosette score badge "+4.2 vs autopilot", date "Q1 2027 - Turn 1/32", END QUARTER stamp button); left vertical rail of file-folder tabs (Situation Room, Economy, Budget & Taxes, Congress, Executive, Map); main content; right "Pending decisions" index cards where relevant.
+- Readable short English labels only. Fictional people only. No real politicians, no presidential seal, no real logos.

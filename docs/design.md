@@ -105,8 +105,15 @@ evil skin. Satire targets the corrupt role, never real people or parties.
 
 ## 7. UI / UX
 
-- **Look**: Infographics-Show-style flat vector everywhere; denser "pro" variants
-  for data screens; evil mode = reskin (A1).
+- **Look** (S1, 2026-10-08): **clean retro Americana civics poster** (direction C)
+  with direction A's clarity: big slab numbers, roomy layout, cartoon stage, pill
+  characters. Flat fills only; one CSS halftone pattern; 2px navy rules, double-rule
+  panel borders, flat offset shadows; ribbon only for screen titles, rosette for the
+  score, stamp for END QUARTER. Everything must be renderable in HTML/CSS/SVG —
+  AI concept art is a target, never a shipped asset. Evil mode = token reskin
+  (ink/aged gold/oxblood). Denser "pro" variants for data screens (A1).
+- **Type**: Rokkitt (condensed slab, headings + numbers) + Atkinson Hyperlegible
+  (body); both OFL via self-hosted woff2.
 - **Screens** (G2): Situation Room (hub, End Quarter), Economy, Budget & Taxes,
   Congress, Executive (EOs, Fed, courts, bully pulpit), Map (state approval, EC
   projection), Crisis modal, Election night / End of term, New Game.
@@ -122,6 +129,72 @@ evil skin. Satire targets the corrupt role, never real people or parties.
 - **Accessibility** (G10, A6): keyboard nav, colour-blind-safe charts, no
   colour-only meaning, WCAG AA, table fallback per chart, `prefers-reduced-motion`
   + in-game calm mode.
+
+### 7a. Plain language (UX-1)
+
+UI says the plain thing; the real civics term appears in a tooltip ("Real term:
+political capital") so players learn it without being blocked by it. Labels live
+in `src/content/text/` (§10).
+
+| Instead of | Say |
+|---|---|
+| Situation Room | Oval Office |
+| Executive | Your Powers |
+| Map | Voters |
+| Political capital | Clout |
+| +4.2 vs autopilot | +4.2 better than doing nothing |
+| End Quarter | Next turn (3 months pass) |
+| Whip count 203/218 | 203 of 218 votes |
+| Bloc | Group (Progressives, Moderates…) |
+| % of baseline | vs. this year |
+| Nondefense discretionary | Other agencies |
+| Revenue vs outlays | Money in vs money out |
+| CBO-style estimate | Expert forecast |
+| Jawbone the Fed | Pressure the Fed |
+| Bully pulpit | Give a speech |
+| Median household income | Typical family income |
+| Employment-to-population | People working |
+| Debt / GDP | Debt (share of economy) |
+| Gini | Inequality |
+| Myth lever | "Myth?" ticket on the thing people believe |
+
+Rules: ≤ 6 words per label; numbers carry a unit, an arrow **and** a word
+(up/down); one primary action per screen; no chart that isn't game state.
+
+### 7b. Player journey — less tedium (UX-2)
+
+- **A turn is three beats:** Read (one briefing card, skippable) → Decide → Next turn.
+- **Advisor plays:** each turn the Chief of Staff offers 2–3 one-click suggestions
+  that open the right screen pre-filled. Ignorable.
+- **Packages over sliders:** budget and bills start from templates ("Tax cut",
+  "Infrastructure push"); sliders are for fine-tuning.
+- **Auto-whip:** Congress shows the cheapest path to passing ("3 deals, 40 clout").
+- **Fast-forward:** "Skip to next event" auto-advances quiet turns; stops on any
+  crisis, deadline or vote.
+- **Unlock as you go (year 1):** Budget turn 1, Congress turn 2, Powers turn 3,
+  Voters turn 4. Experienced players can unlock all at New Game.
+- **Free drafting:** every decision is editable until Next turn; no confirm dialogs.
+- **Two clicks max** from Oval Office to any action; last screen remembered;
+  keyboard shortcuts from the screen registry.
+- News batches into the briefing; no mid-turn toast spam.
+
+### 7c. Reward & punishment (UX-3)
+
+- **Reward often, small, immediately:** bill passes (seats flip, confetti, clout
+  refund), indicator goals hit (inflation back to 2%, jobless < 4%) → badges in the
+  history log, first visit to a myth card (+1 clout for curiosity).
+- **Turn report card:** every indicator with arrow + one-line *why* ("Prices fell:
+  the Fed raised rates; your tariff cut helped a little").
+- **Punish fairly:** every cost is shown before you commit (Expert forecast); big
+  threats are telegraphed ≥ 1 turn ahead (debt-stress meter, deadline countdowns).
+  Hidden effects are only voter/behaviour reactions, revealed after in "What you
+  didn't see coming".
+- **Recoverable by default:** a failed vote refunds half the clout; losing the
+  midterms makes Congress harder, not game over; low approval enables rally events
+  (no death spirals).
+- **Hard fails are rare and earned:** debt crisis (ignored warnings), removal
+  (abuse of power), losing reelection. Each ends with a "Why this happened" card
+  and "Retry from this turn's start".
 
 ## 8. Architecture
 
@@ -161,6 +234,7 @@ Policy: MIT / ISC / Apache-2.0 / CC0 code and assets; CC BY art with credit.
 | Build | `vite` / `@sveltejs/vite-plugin-svelte` | 8.3.4 / 7.3.1 | MIT | Plain Vite; SvelteKit 3 (1 wk old) unneeded for a no-SEO static game (D4) |
 | Charts | `layerchart` | 2.6.0 | MIT | Svelte-5-native; pin exactly — breaking changes in minors (D5) |
 | Map | `us-atlas` (`states-albers-10m`) + `topojson-client` | 3.0.1 / 3.1.0 | ISC | Pre-projected 29 KB gz SVG paths (D6) |
+| Fonts | Rokkitt, Atkinson Hyperlegible (self-hosted woff2) | — | OFL-1.1 | Slab display + legible body (S1) |
 | Icons | `@lucide/svelte` | 1.53.x | ISC | Tree-shakable, Svelte-5-native (D7) |
 | Motion | Svelte built-ins (`Tween`, `Spring`, transitions, `flip`) | — | — | Zero-dep; add `motion` only if layout animation needed (D7) |
 | Test | `vitest`, `@playwright/test` | latest at scaffold | MIT / Apache-2.0 | Engine + visual tests |
@@ -172,7 +246,27 @@ GSAP (non-OSI license), Freepik/Storyset (attribution + redistribution terms),
 ECharts (size), Theatre.js (abandoned), Remotion/Motion Canvas (video tools),
 python-lottie (AGPL).
 
-## 10. Process
+## 10. Single sources of truth (maintainability)
+
+Every visual or navigational fact lives in exactly one typed file; everything else
+is derived. CI fails on drift.
+
+| Concern | SSOT | Derived from it | Drift check |
+|---|---|---|---|
+| Colours, type, spacing, radii, shadows, motion durations/easings, halftone | `src/design/tokens.ts` (typed object; themes `day`, `night`, `evil` override a base) | CSS custom properties injected at `:root[data-theme]`; LayerChart series colours; SVG rig palette; design-canvas `tokens.json` export | Lint: no hex/px literals in `.svelte` / rig files outside `tokens.ts`; WCAG contrast test per theme pair |
+| Screens & menus | `src/app/screens.ts`: `{ id, label, icon, component, milestone, hotkey, inNav }[]` | Folder-tab rail, command palette, hash routing, keyboard shortcuts, "locked until M2" states, screenshot test list | Test: every screen has an approved baseline screenshot; no nav link outside the registry |
+| Actions / levers / EOs / myth levers | `src/content/*.ts` data tables (id, label, cost, effects, citation) | Budget sliders, EO cards, myth cards, CBO estimator inputs, debrief | Test: every lever has an engine effect + citation; myth cards balanced by tag (E4, E7) |
+| Characters | `src/art/parts/*.svg` (part library) + `src/art/cast.ts` (character = parts + palette token refs + rig) | All character renders, expressions, crowds | Visual pipeline (§8): contact sheets, motion metrics, pose baselines |
+| Icons | One set: `@lucide/svelte`, wrapped by `<Icon name>` whose `name` is a union type from `src/design/icons.ts` | All icons | Type error on unknown icon |
+| Raster/vector assets (map topology, any image) | `src/assets/manifest.ts`: `{ id, path, license, source, credit, alt }` | `<Asset id>` component, credits screen, licence report | Build fails if an asset is referenced but not in the manifest, or has no licence |
+| Copy & civics claims | `src/content/text/*.ts` with `{ text, citation? }` | All UI strings, explainers, briefings | Unsourced civic claim fails CI (E7) |
+
+Components consume only tokens, registry entries and manifest ids — never literals.
+A reskin (evil mode) or a new screen is a data change, not a hunt through components.
+Concept art is never bundled; its generator scripts + style bible live in `docs/concepts/`
+(images live on the design canvas) so the set can be regenerated consistently.
+
+## 11. Process
 
 1. This doc approved.
 2. Tag `rust-final`; remove Rust + Tauri from `master` (after listing what goes).
@@ -187,3 +281,5 @@ Approvals are logged below.
 | Date | Item | Status |
 |---|---|---|
 | 2026-10-08 | Design decisions Q1–Q32, G1–G11, D1–D8, E1–E7, A1–A6 | Agreed in session |
+| 2026-10-08 | Low-fi wireframes, 9 screens — layout approved ("feel like a game") | Approved |
+| 2026-10-08 | S1 visual direction: C (Americana) + best of A | Chosen; hi-fi pending |
