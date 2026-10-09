@@ -1,6 +1,7 @@
 import { mount } from 'svelte';
-import '@fontsource/rokkitt/600.css';
-import '@fontsource/rokkitt/800.css';
+import '@fontsource/arvo/700.css';
+import '@fontsource/barlow-condensed/600.css';
+import '@fontsource/barlow-condensed/700.css';
 import '@fontsource/atkinson-hyperlegible/400.css';
 import '@fontsource/atkinson-hyperlegible/700.css';
 import './design/global.css';

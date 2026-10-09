@@ -8,12 +8,18 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/arvo':
+        specifier: 5.3.0
+        version: 5.3.0
       '@fontsource/atkinson-hyperlegible':
         specifier: 5.3.0
         version: 5.3.0
-      '@fontsource/rokkitt':
+      '@fontsource/barlow-condensed':
         specifier: 5.3.0
         version: 5.3.0
+      '@lucide/svelte':
+        specifier: 1.54.0
+        version: 1.54.0(svelte@5.57.2)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: 7.3.1
@@ -42,11 +48,14 @@ importers:
 
 packages:
 
+  '@fontsource/arvo@5.3.0':
+    resolution: {integrity: sha512-BV8Exol50MVqbu3CfLYt7YKP150FnXb5lRpVxQ0es33nUdZ3Ma0wO2F1klXv5ROY9p4vZGH27O4lnD0fYLjdww==}
+
   '@fontsource/atkinson-hyperlegible@5.3.0':
     resolution: {integrity: sha512-Sp8Ve8+rQmENY2Lv02VH7sLpntzTTvnncnJMTbRE7DX6TLxGraN4ykZfzaUWIoCFmaomwkvNiqmlPkrKBuDoSA==}
 
-  '@fontsource/rokkitt@5.3.0':
-    resolution: {integrity: sha512-47OPlVKvxhemOXptrKz9Xut09T/9Ftxy4reEuAdACr28elze7l1Prk5ipbqtK3dD5FgnAlPmb4HzgspSE8LyhA==}
+  '@fontsource/barlow-condensed@5.3.0':
+    resolution: {integrity: sha512-RA7MmIx0v3eQ6Gcf74qLVLOwLB0GpPOzx+eU9iG/AmCnSJGcIWYeU8y6CEMGZ210MGwGg5CZhzLkkvyZdTTk1g==}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -63,6 +72,11 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@lucide/svelte@1.54.0':
+    resolution: {integrity: sha512-PbUrcmVPU71zmcs1Kc5RlgF83SsBsSNC+MeuttAHMmvPMuoIJfyDPjit5kpAJxJwsmN2Pk1Bx75AwZxP8vkDvw==}
+    peerDependencies:
+      svelte: ^5
 
   '@oxc-project/types@0.153.0':
     resolution: {integrity: sha512-jSNrRIyvPVLL5E1z/tS5zLAprosGz/FuI1PWwEOz59j3E4TTTzSpqKb/RDGqJhhW0QHYISGXxq582wGx6T11Tw==}
@@ -550,9 +564,11 @@ packages:
 
 snapshots:
 
+  '@fontsource/arvo@5.3.0': {}
+
   '@fontsource/atkinson-hyperlegible@5.3.0': {}
 
-  '@fontsource/rokkitt@5.3.0': {}
+  '@fontsource/barlow-condensed@5.3.0': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
@@ -572,6 +588,10 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
+
+  '@lucide/svelte@1.54.0(svelte@5.57.2)':
+    dependencies:
+      svelte: 5.57.2
 
   '@oxc-project/types@0.153.0': {}
 

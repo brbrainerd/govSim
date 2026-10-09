@@ -1,32 +1,35 @@
 <script lang="ts">
   import { Session } from './app/session.svelte';
   import { screenById } from './app/screens';
+  import { prosperity } from './content/sample';
+  import OvalOffice from './screens/OvalOffice.svelte';
+  import ScreenLayout from './ui/ScreenLayout.svelte';
   import StatusBar from './ui/StatusBar.svelte';
   import Rail from './ui/Rail.svelte';
 
   const session = new Session(Date.now() | 0);
   const screen = $derived(screenById(session.screen));
+  const go = (id: typeof session.screen) => (session.screen = id);
 </script>
 
 <div class="app halftone">
-  <StatusBar state={session.current} title={screen.label} onNextTurn={() => session.nextTurn()} />
+  <StatusBar state={session.current} title={screen.label} score={prosperity.vsNothing} onNextTurn={() => session.nextTurn()} />
   <div class="zones">
-    <Rail turn={session.current.turn} current={session.screen} onSelect={(id) => (session.screen = id)} />
-    <main>
-      <h2 class="h question">{screen.question}</h2>
-      <div class="panel placeholder">{screen.label}: coming in M1</div>
-    </main>
-    <aside class="panel next-step">
-      <div class="label">What it means</div>
-    </aside>
+    <Rail turn={session.current.turn} current={session.screen} onSelect={go} />
+    {#if screen.id === 'oval'}
+      <OvalOffice question={screen.question} {go} />
+    {:else}
+      <ScreenLayout question={screen.question}>
+        {#snippet main()}<div class="card placeholder">{screen.label}: coming in M1</div>{/snippet}
+        {#snippet next()}<div class="card placeholder-side"><span class="label">What it means</span></div>{/snippet}
+      </ScreenLayout>
+    {/if}
   </div>
 </div>
 
 <style>
   .app { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
-  .zones { display: grid; grid-template-columns: 190px minmax(0, 1fr) 290px; gap: 18px; padding: 8px 22px 22px; }
-  main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-  .question { font-size: 26px; }
+  .zones { display: grid; grid-template-columns: 220px minmax(0, 1fr) 260px; gap: 22px; padding: 10px 24px 24px; }
   .placeholder { flex-grow: 1; display: grid; place-items: center; min-height: 320px; color: var(--ink-soft); }
-  .next-step { padding: 12px 14px; align-self: start; }
+  .placeholder-side { padding: 16px; }
 </style>
