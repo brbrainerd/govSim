@@ -196,6 +196,26 @@ Rules: ≤ 6 words per label; numbers carry a unit, an arrow **and** a word
   (abuse of power), losing reelection. Each ends with a "Why this happened" card
   and "Retry from this turn's start".
 
+### 7d. Layout grammar (UX-4)
+
+Every screen uses the same four zones, so position alone tells you what a thing is.
+
+| Zone | Where | Holds | Never holds |
+|---|---|---|---|
+| **Status** | top bar, identical everywhere | left: *your resources* (Approval, Clout) · centre: screen title ribbon + score · right: time + global **Next turn** | screen-specific controls |
+| **Where** | left rail | tabs in fixed order, grouped: **Home** (Oval Office) · **See** (Economy, Voters) · **Act** (Budget, Congress, Your Powers) | actions |
+| **What** | main area | one plain-language question as headline ("How should we tax and spend?") → the screen's one main object (stage, chart grid, sliders, seats, map) → bottom-left **Learn** strip (How it works · Myth? ticket) | buttons that commit |
+| **Next step** | right column, fixed width | top: *what it means* (forecast / why) · middle: *options* · bottom: the screen's **one primary stamp** (Send to Congress, Call the vote, Sign order). On See screens the bottom is a link to the Act screen that fixes it | charts |
+
+Overlays (crisis, report, myth, election night) reuse the split: left = *what
+happened*, right = *what you can do* + primary stamp bottom-right.
+
+**Card roles (one look each):** Info = cream, double rule · Option = cream +
+small navy button · Primary = red stamp, max one per screen · Learn = dashed
+ticket · Alert = red ribbon. **Colour roles:** navy structure/text · red commit &
+danger · gold selected, changed, reward · sage good · sky neutral data.
+Spacing on an 8 px grid; zone gutters 24 px; cards inside a zone share one width.
+
 ## 8. Architecture
 
 - **Rewrite** as a static TypeScript web app; Rust sim archived via tag `rust-final` (Q8, Q13).
@@ -282,4 +302,5 @@ Approvals are logged below.
 |---|---|---|
 | 2026-10-08 | Design decisions Q1–Q32, G1–G11, D1–D8, E1–E7, A1–A6 | Agreed in session |
 | 2026-10-08 | Low-fi wireframes, 9 screens — layout approved ("feel like a game") | Approved |
-| 2026-10-08 | S1 visual direction: C (Americana) + best of A | Chosen; hi-fi pending |
+| 2026-10-08 | S1 visual direction: C (Americana) + best of A | Chosen |
+| 2026-10-08 | UX-4 layout grammar; all 12 surfaces regenerated against it | Pending review |
