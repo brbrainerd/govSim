@@ -13,10 +13,10 @@ export type GroupId = (typeof groups)[number]['id'];
 export const screens = [
   { id: 'oval', label: 'Oval Office', icon: 'star', group: 'home', unlockTurn: 1, question: 'What needs you this turn?' },
   { id: 'economy', label: 'Economy', icon: 'trend', group: 'see', unlockTurn: 1, question: 'How is the economy doing?' },
-  { id: 'voters', label: 'Voters', icon: 'users', group: 'see', unlockTurn: 4, question: 'Who supports you?' },
+  { id: 'voters', label: 'Voters', icon: 'users', group: 'see', unlockTurn: 3, question: 'Who supports you?' },
   { id: 'budget', label: 'Budget', icon: 'money', group: 'act', unlockTurn: 1, question: 'How should we tax and spend?' },
-  { id: 'congress', label: 'Congress', icon: 'capitol', group: 'act', unlockTurn: 2, question: 'Can we pass it?' },
-  { id: 'powers', label: 'Your Powers', icon: 'pen', group: 'act', unlockTurn: 3, question: 'What can you do without Congress?' },
+  { id: 'congress', label: 'Congress', icon: 'capitol', group: 'act', unlockTurn: 1, question: 'Can we pass the bill?' },
+  { id: 'powers', label: 'Your Powers', icon: 'pen', group: 'act', unlockTurn: 2, question: 'What can you do without Congress?' },
 ] as const satisfies readonly { id: string; label: string; icon: IconName; group: GroupId; unlockTurn: number; question: string }[];
 
 export type Screen = (typeof screens)[number];

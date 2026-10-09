@@ -2,6 +2,8 @@
   import { Session } from './app/session.svelte';
   import { screenById } from './app/screens';
   import { prosperity } from './content/sample';
+  import Budget from './screens/Budget.svelte';
+  import Congress from './screens/Congress.svelte';
   import OvalOffice from './screens/OvalOffice.svelte';
   import ScreenLayout from './ui/ScreenLayout.svelte';
   import StatusBar from './ui/StatusBar.svelte';
@@ -13,11 +15,15 @@
 </script>
 
 <div class="app halftone">
-  <StatusBar state={session.current} title={screen.label} score={prosperity.vsNothing} onNextTurn={() => session.nextTurn()} />
+  <StatusBar state={session.current} clout={session.clout} title={screen.label} score={prosperity.vsNothing} onNextTurn={() => session.nextTurn()} />
   <div class="zones">
     <Rail turn={session.current.turn} current={session.screen} onSelect={go} />
     {#if screen.id === 'oval'}
       <OvalOffice question={screen.question} {go} />
+    {:else if screen.id === 'budget'}
+      <Budget {session} question={screen.question} {go} />
+    {:else if screen.id === 'congress'}
+      <Congress {session} question={screen.question} {go} />
     {:else}
       <ScreenLayout question={screen.question}>
         {#snippet main()}<div class="card placeholder">{screen.label}: coming in M1</div>{/snippet}

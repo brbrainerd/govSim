@@ -171,8 +171,8 @@ Rules: ≤ 6 words per label; numbers carry a unit, an arrow **and** a word
 - **Auto-whip:** Congress shows the cheapest path to passing ("3 deals, 40 clout").
 - **Fast-forward:** "Skip to next event" auto-advances quiet turns; stops on any
   crisis, deadline or vote.
-- **Unlock as you go (year 1):** Budget turn 1, Congress turn 2, Powers turn 3,
-  Voters turn 4. Experienced players can unlock all at New Game.
+- **Unlock as you go (year 1):** Budget + Congress turn 1 (one loop), Your Powers turn 2,
+  Voters turn 3. Experienced players can unlock all at New Game.
 - **Free drafting:** every decision is editable until Next turn; no confirm dialogs.
 - **Two clicks max** from Oval Office to any action; last screen remembered;
   keyboard shortcuts from the screen registry.

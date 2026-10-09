@@ -3,7 +3,7 @@
   import CoinStack from './art/CoinStack.svelte';
   import Ribbon from './art/Ribbon.svelte';
 
-  let { state, title, score, onNextTurn }: { state: GameState; title: string; score: number; onNextTurn: () => void } = $props();
+  let { state, clout, title, score, onNextTurn }: { state: GameState; clout: number; title: string; score: number; onNextTurn: () => void } = $props();
   const circ = 2 * Math.PI * 19;
 </script>
 
@@ -21,7 +21,7 @@
     </div>
     <div class="stat" title="Real term: political capital">
       <CoinStack />
-      <div><div class="label">Clout</div><div class="num">{state.clout}</div></div>
+      <div><div class="label">Clout</div><div class="num" aria-live="polite">{clout}</div></div>
     </div>
   </div>
   <div class="center">
