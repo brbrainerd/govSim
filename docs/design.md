@@ -257,7 +257,8 @@ Policy: MIT / ISC / Apache-2.0 / CC0 code and assets; CC BY art with credit.
 | Fonts | Rokkitt, Atkinson Hyperlegible (self-hosted woff2) | — | OFL-1.1 | Slab display + legible body (S1) |
 | Icons | `@lucide/svelte` | 1.53.x | ISC | Tree-shakable, Svelte-5-native (D7) |
 | Motion | Svelte built-ins (`Tween`, `Spring`, transitions, `flip`) | — | — | Zero-dep; add `motion` only if layout animation needed (D7) |
-| Test | `vitest`, `@playwright/test` | latest at scaffold | MIT / Apache-2.0 | Engine + visual tests |
+| Test | `vitest` (+ `@playwright/test` when visual tests land) | 5.0.3 | MIT | Engine + registry + token-drift tests |
+| Types | `typescript`, `svelte-check`, `@types/node` | 6.0.3 / 4.7.6 / 24.19.1 | Apache-2.0 / MIT / MIT | TS pinned to 6: svelte-check 4.7 does not support TS 7 yet |
 | Visual tooling (dev) | `sharp`, `pixelmatch` | 0.35.5 / 8.0.0 | Apache-2.0 / ISC | Contact sheets, motion metrics |
 
 **Rejected**: Phaser 4 / PixiJS (game-loop weight vs DOM-first UI, D2), Rive
