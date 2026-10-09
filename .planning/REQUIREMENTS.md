@@ -110,11 +110,65 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| FND-01 | Phase 1 | Pending |
+| FND-02 | Phase 1 | Pending |
+| FND-03 | Phase 1 | Pending |
+| FND-04 | Phase 1 | Pending |
+| FND-05 | Phase 1 | Pending |
+| FND-06 | Phase 1 | Pending |
+| FND-07 | Phase 1 | Pending |
+| FND-08 | Phase 1 | Pending |
+| OBS-01 | Phase 2 | Pending |
+| OBS-02 | Phase 2 | Pending |
+| OBS-03 | Phase 2 | Pending |
+| OBS-04 | Phase 2 | Pending |
+| OBS-05 | Phase 2 | Pending |
+| OBS-06 | Phase 2 | Pending |
+| OBS-07 | Phase 2 | Pending |
+| OBS-08 | Phase 2 | Pending |
+| RPT-01 | Phase 3 | Pending |
+| RPT-02 | Phase 3 | Pending |
+| RPT-03 | Phase 8 | Pending |
+| RPT-04 | Phase 4 | Pending |
+| ECO-01 | Phase 3 | Pending |
+| ECO-02 | Phase 3 | Pending |
+| EVT-01 | Phase 4 | Pending |
+| EVT-02 | Phase 4 | Pending |
+| EVT-03 | Phase 4 | Pending |
+| EVT-04 | Phase 4 | Pending |
+| EVT-05 | Phase 4 | Pending |
+| EVT-06 | Phase 4 | Pending |
+| EVT-07 | Phase 4 | Pending |
+| PWR-01 | Phase 5 | Pending |
+| PWR-02 | Phase 5 | Pending |
+| PWR-03 | Phase 5 | Pending |
+| PWR-04 | Phase 5 | Pending |
+| PWR-05 | Phase 5 | Pending |
+| PWR-06 | Phase 5 | Pending |
+| PWR-07 | Phase 5 | Pending |
+| VOT-01 | Phase 6 | Pending |
+| VOT-02 | Phase 6 | Pending |
+| VOT-03 | Phase 6 | Pending |
+| VOT-04 | Phase 6 | Pending |
+| VOT-05 | Phase 6 | Pending |
+| VOT-06 | Phase 6 | Pending |
+| ELC-01 | Phase 7 | Pending |
+| ELC-02 | Phase 7 | Pending |
+| ELC-03 | Phase 7 | Pending |
+| ELC-04 | Phase 7 | Pending |
+| ELC-05 | Phase 7 | Pending |
+| REL-01 | Phase 1 | Pending |
+| REL-02 | Phase 8 | Pending |
+| REL-03 | Phase 8 | Pending |
+| REL-04 | Phase 8 | Pending |
+| REL-05 | Phase 2 | Pending |
+| REL-06 | Phase 2 | Pending |
 
 **Coverage:**
 - v0.2 requirements: 53 total
-- Mapped to phases: 0 (roadmap pending)
+- Mapped to phases: 53
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-10-09*
-*Last updated: 2026-10-09 after research and scoping*
+*Last updated: 2026-10-09 after roadmap creation*
