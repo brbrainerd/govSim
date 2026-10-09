@@ -1,50 +1,11 @@
+# Placeholder until the TypeScript scaffold lands (see docs/design.md §8).
 name: CI
-
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-
-env:
-  CARGO_TERM_COLOR: always
-  RUSTFLAGS: "-D warnings"
-
 jobs:
-  check:
-    name: ${{ matrix.os }} / check & test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-22.04, windows-2022, macos-14]
+  noop:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.95.0
-        with:
-          components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
-      - name: rustfmt
-        run: cargo fmt --all -- --check
-      - name: clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
-      - name: test
-        run: cargo test --workspace
-      - name: hello-world tick
-        run: cargo run -p simulator-cli -- run --scenario scenarios/hello.yaml --ticks 100
-      - name: determinism (smoke_100k × 100 ticks)
-        run: cargo run -p simulator-cli -- determinism --scenario scenarios/smoke_100k.yaml --ticks 100
-      - name: ig2 schema round-trip
-        run: cargo run -p simulator-cli -- law-compile --schema
-      - name: ig2 fixture validation (Python)
-        run: python3 data/grammars/ig2_types.py scenarios/income_tax_2026.ig2.json scenarios/housing_benefit_2026.ig2.json scenarios/stimulus_2026.ig2.json
-      - name: replay round-trip (smoke_100)
-        run: cargo run -p simulator-cli -- replay --scenario scenarios/smoke_100.yaml --ticks 720 --snapshot-at 360
-      - name: xtask llm detect
-        run: cargo run -p xtask -- llm detect
-
-  deny:
-    name: cargo-deny
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: EmbarkStudios/cargo-deny-action@v2
+      - run: echo "No build yet"
