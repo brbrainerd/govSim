@@ -1,0 +1,1 @@
+{"content":"MDN: Safari proactively deletes script-created storage (localStorage, IDB) for origins with no user interaction in last 7 days of browser use; localStorage ~5 MiB per origin, QuotaExceededError; navigator.storage.persist() opt-in.","source":"web","provider":"webfetch","confidence":"HIGH","fetched_at":"2026-10-09T09:37:17.829Z","ttl":86400000,"kind":"web"}
