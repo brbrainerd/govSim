@@ -33,7 +33,7 @@
   })();
 
   const whip = $derived(session.whip);
-  const vote = $derived(session.draft.vote);
+  const vote = $derived(session.vote);
   const seatFill = (idx: number) => {
     const gi = wedges.findIndex((w) => idx >= w.start && idx < w.end);
     const g = groups[gi]!;
@@ -97,7 +97,7 @@
       {@const done = session.draft.deals.includes(d.id)}
       <div class="card deal">
         <div><b>{d.title}</b><span>{d.detail}</span></div>
-        <button class="btn" disabled={done || !!vote || session.clout < d.cost} onclick={() => session.makeDeal(d.id)}>{done ? 'Done' : `${d.cost} clout`}</button>
+        <button class="btn" disabled={done || !session.canDeal(d.id)} onclick={() => session.makeDeal(d.id)}>{done ? 'Done' : `${d.cost} clout`}</button>
       </div>
     {/each}
     <div class="spacer"></div>

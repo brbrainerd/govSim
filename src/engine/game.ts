@@ -2,6 +2,7 @@
 // Stylized quarterly macro model (Q3: real start, stylized dynamics). Coefficients are hand-set
 // round numbers chosen for plausible direction and size, not estimates; every one is named here.
 import { baseline, estimate, taxLevers, type BudgetDraft } from './budget';
+import { resolveBill, type Decisions } from './decisions';
 import { clamp, tanhPade } from './detmath';
 import { normal } from './rng';
 
@@ -50,16 +51,19 @@ export interface GameState {
   readonly policy: BudgetDraft; // enacted budget levers
   readonly econ: Econ;
   readonly start: Start;
-  readonly report: Report; // what happened last turn (plan 01-05 adds log, 01-06 adds trace)
+  readonly report: Report; // what happened last turn (plan 01-06 adds trace)
 }
 
-/** Raw outside shocks of the last step, in standard deviations. Never depends on decisions. */
-export interface Report { readonly luck: { gap: number; infl: number; appr: number } }
+/** One thing that happened last turn (a bill passed, failed or was rejected). */
+export interface LogEntry { kind: string; id: string; detail?: string; amount?: number }
 
-export interface Decisions {
-  budget?: BudgetDraft; // a budget that passed Congress this turn
-  clout?: number; // clout spent (−) or won back (+) this turn
+/** `luck`: raw outside shocks of the last step, in standard deviations, never dependent on decisions. */
+export interface Report {
+  readonly luck: { gap: number; infl: number; appr: number };
+  readonly log: readonly LogEntry[];
 }
+
+export type { Decisions } from './decisions';
 
 // ---- coefficients -------------------------------------------------------------------------
 const C = {
@@ -98,7 +102,7 @@ export function newGame(seed: number, start: Start): GameState {
     clout: 120,
     policy: baseline(),
     start,
-    report: { luck: { gap: 0, infl: 0, appr: 0 } },
+    report: { luck: { gap: 0, infl: 0, appr: 0 }, log: [] },
     econ: {
       gap: 0,
       growth: start.potential,
@@ -129,7 +133,10 @@ function step(state: GameState, decisions: Decisions): GameState {
   const zInfl = normal(state.seed, 'macro', state.turn, 'infl');
   const zAppr = normal(state.seed, 'macro', state.turn, 'appr');
 
-  const policy = decisions.budget ?? state.policy;
+  // The engine charges clout from the raw bill; the Session previews with the same function.
+  const r = decisions.bill ? resolveBill(state.clout, decisions.bill) : null;
+  const enacted = r && r.valid && r.passed ? r : null;
+  const policy = enacted ? enacted.budget : state.policy;
   const before = estimate(state.policy), after = estimate(policy);
   const fiscalImpulse = ((after.deficitBn - before.deficitBn) / 10 / (e.gdp * 1000)) * 100; // % GDP per year
   const tariffChange = tariffOf(policy) - tariffOf(state.policy);
@@ -154,7 +161,7 @@ function step(state: GameState, decisions: Decisions): GameState {
   const deficit = (s.deficitPct / 100) * gdp + after.deficitBn / 10 / 1000 + interestDrift; // $tn/yr
   const debt = e.debt + deficit / 4;
 
-  const realIncome = e.realIncome * (1 + (0.8 * growth) / 400) + (decisions.budget ? (after.familyMonthly - before.familyMonthly) * 12 : 0);
+  const realIncome = e.realIncome * (1 + (0.8 * growth) / 400) + (enacted ? (after.familyMonthly - before.familyMonthly) * 12 : 0);
   const spendDev = (k: string) => (policy[k] ?? 100) - 100;
   // Level effects: indicators move toward a policy-dependent target instead of drifting forever.
   const quarters = state.turn; // quarters since the start, incl. legacy projection
@@ -170,13 +177,16 @@ function step(state: GameState, decisions: Decisions): GameState {
   const approval = Math.round(clamp(state.approval + C.approvalPull * (approvalTarget - state.approval) + C.shockApproval * zAppr, 5, 95));
   const trust = clamp(e.trust + 0.1 * (s.trust + 0.4 * (approval - 50) - e.trust), 5, 80);
 
+  const log: LogEntry[] = [];
+  if (r) log.push(r.valid ? { kind: 'bill', id: r.passed ? 'passed' : 'failed', amount: r.whip.total } : { kind: 'bill', id: 'rejected', detail: 'unaffordable' });
+
   return {
     ...state,
     turn: state.turn + 1,
     approval,
-    clout: Math.max(0, state.clout + (decisions.clout ?? 0) + Math.round(approval / 10)),
+    clout: Math.max(0, state.clout + (r ? r.cloutDelta : 0) + Math.round(approval / 10)),
     policy,
-    report: { luck: { gap: zGap, infl: zInfl, appr: zAppr } },
+    report: { luck: { gap: zGap, infl: zInfl, appr: zAppr }, log },
     econ: {
       gap, growth, unemployment, empPop: s.empPop - C.empPerU * (unemployment - s.unemployment),
       inflation, expected, fedRate, gdp, debt, realIncome, gini, lifeExp, trust, crime,

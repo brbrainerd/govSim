@@ -19,5 +19,6 @@ export const START: Start = {
   crime: 360,
 };
 
-// The single place tests turn a budget into this turn's decisions (plan 01-05 changes only this body).
-export const enact = (budget: BudgetDraft): Decisions => ({ budget });
+// The single place tests turn a budget into this turn's decisions. All three deals reach 230 of 218
+// votes for 45 clout, so enacted budgets really pass the House (the starting clout is 120).
+export const enact = (budget: BudgetDraft): Decisions => ({ bill: { budget, deals: ['mod', 'cen', 'spc'] } });

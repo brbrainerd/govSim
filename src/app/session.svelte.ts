@@ -1,6 +1,7 @@
 import { fromPackage, type BudgetDraft, type PackageName } from '../engine/budget';
-import { deals, tally, voteOutcome, type DealId } from '../engine/congress';
-import { endTurn, newGame, prosperity, type Decisions, type GameState, type Start } from '../engine/game';
+import { tally, type DealId } from '../engine/congress';
+import { cloutCost, resolveBill, type Decisions } from '../engine/decisions';
+import { endTurn, newGame, prosperity, type GameState, type Start } from '../engine/game';
 import type { PartyId } from '../content/parties';
 import type { ScreenId } from './screens';
 
@@ -14,7 +15,7 @@ interface Draft {
   pack: PackageName | null;
   sentToCongress: boolean;
   deals: DealId[];
-  vote: { passed: boolean; total: number; cloutBack: number } | null;
+  voteCalled: boolean;
 }
 
 /** A new turn's draft starts from the policy already in force. */
@@ -23,7 +24,7 @@ const freshDraft = (policy: BudgetDraft): Draft => ({
   pack: null,
   sentToCongress: false,
   deals: [],
-  vote: null,
+  voteCalled: false,
 });
 
 /**
@@ -39,9 +40,21 @@ export class Session {
 
   current = $derived(this.history[this.history.length - 1]!);
   previous = $derived(this.history[this.history.length - 2] ?? this.current);
-  spent = $derived(deals.filter((d) => this.draft.deals.includes(d.id)).reduce((n, d) => n + d.cost, 0));
-  clout = $derived(this.current.clout - this.spent + (this.draft.vote?.cloutBack ?? 0));
-  whip = $derived(tally(this.draft.deals));
+  /** The raw choices the engine will receive. Deals made without calling the vote are voted at Next turn (A8). */
+  bill = $derived(
+    this.draft.voteCalled || this.draft.deals.length
+      ? { budget: $state.snapshot(this.draft.budget), deals: $state.snapshot(this.draft.deals) }
+      : null,
+  );
+  /** Preview and engine charge with the same function (FND-05). */
+  preview = $derived(this.bill ? resolveBill(this.current.clout, this.bill) : null);
+  clout = $derived(this.current.clout + (this.preview?.cloutDelta ?? 0));
+  whip = $derived(this.preview?.whip ?? tally([]));
+  vote = $derived(
+    this.draft.voteCalled && this.preview
+      ? { total: this.preview.whip.total, passed: this.preview.passed, cloutBack: this.preview.cloutBack }
+      : null,
+  );
   index = $derived(prosperity(this.current).index);
   /** Headline: how much better than doing nothing (same seed, same shocks). */
   vsNothing = $derived(this.index - prosperity(this.autopilot[this.autopilot.length - 1]!).index);
@@ -63,21 +76,21 @@ export class Session {
     this.draft.sentToCongress = false;
   }
 
+  /** Affordability uses the engine's cost function against the clout you started the turn with. */
+  canDeal(id: DealId) {
+    return !this.draft.voteCalled && !this.draft.deals.includes(id) && cloutCost([...this.draft.deals, id]) <= this.current.clout;
+  }
+
   makeDeal(id: DealId) {
-    const d = deals.find((x) => x.id === id)!;
-    if (this.draft.vote || this.draft.deals.includes(id) || this.clout < d.cost) return;
-    this.draft.deals.push(id);
+    if (this.canDeal(id)) this.draft.deals.push(id);
   }
 
   callVote() {
-    if (this.draft.vote) return;
-    const total = this.whip.total;
-    this.draft.vote = { total, ...voteOutcome(total, this.spent) };
+    this.draft.voteCalled = true;
   }
 
   nextTurn() {
-    const decisions: Decisions = { clout: this.clout - this.current.clout };
-    if (this.draft.vote?.passed) decisions.budget = $state.snapshot(this.draft.budget);
+    const decisions: Decisions = this.bill ? { bill: this.bill } : {};
     const next = endTurn(this.current, decisions);
     if (next === this.current) return;
     this.history = [...this.history, next];
