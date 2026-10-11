@@ -5,16 +5,16 @@ milestone_name: Playable First Term
 current_phase: 1
 current_phase_name: Engine foundations
 status: executing
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-10-11T05:56:56.422Z"
+stopped_at: Completed 01-05-PLAN.md
+last_updated: "2026-10-11T06:00:17.581Z"
 last_activity: 2026-10-10
 last_activity_desc: Phase 1 execution started
-state_head: 82e3b26f6cbabe2c6d6031d9adb854a3c5daee12
+state_head: 53474b80cedc8c1aedc78a075de895aa08c8ef13
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 7
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-10-09)
 ## Current Position
 
 Phase: 1 (Engine foundations) — EXECUTING
-Plan: 4 of 7
+Plan: 5 of 7
 Status: Ready to execute
 Last activity: 2026-10-10 — Phase 1 execution started
 
@@ -62,6 +62,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 1 P01 | 8min | 3 tasks | 12 files |
 | Phase 1 P02 | 6min | 3 tasks | 10 files |
 | Phase 1 P03 | 3 min | 3 tasks | 5 files |
+| Phase 01 P05 | 6 min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Recent decisions affecting current work:
 - [Phase 1]: 01-02: no party preselected at New Game; real calendar quarter is tooltip-only (D1)
 - [Phase 1]: 01-03: only taylorInfl, taylorGap, inflTarget and okun are citations; every other coefficient is judgement — Sources were opened this session; CBO pages returned 403 and the Yale and FOMC calendar pages did not state the figures, so those entries stay judgement with the source flagged not confirmed
 - [Phase 1]: 01-03: Taylor 1993 cited via the author's Stanford PDF, not the DOI — The DOI resolves to an Elsevier redirect page that shows no paper content
+- [Phase 1]: 01-05: Deals made without Call the vote are voted and charged at Next turn (A8); enact() sends all three deals so budgets pass the House
+- [Phase 1]: 01-05: Decisions is { bill?: { budget, deals } } with no clout field; resolveBill is shared by engine step and Session preview
 
 ### Pending Todos
 
@@ -103,6 +106,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-11T05:56:56.410Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-10-11T06:00:17.568Z
+Stopped at: Completed 01-05-PLAN.md
 Resume file: None
