@@ -5,16 +5,16 @@ milestone_name: Playable First Term
 current_phase: 1
 current_phase_name: Engine foundations
 status: executing
-stopped_at: Roadmap created; ready for `/gsd-plan-phase 1`
-last_updated: "2026-10-11T05:29:43.549Z"
-last_activity: 2026-10-09
-last_activity_desc: Roadmap created for v0.2 (8 phases, 53/53 requirements mapped)
-state_head: 89dbd011453ac4cdc44363d0db65a0a165cf29ed
+stopped_at: Completed 01-01-PLAN.md
+last_updated: "2026-10-11T05:48:19.478Z"
+last_activity: 2026-10-10
+last_activity_desc: Phase 1 execution started
+state_head: 99647a643f60c23ce337c41eb77ddece3ebf64ac
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 7
-  completed_plans: 0
+  completed_plans: 1
 ---
 
 # Project State
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-09)
 
 **Core value:** A player can make real presidential tradeoffs against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
-**Current focus:** Phase 1 - Engine foundations
+**Current focus:** Phase 1 — Engine foundations
 
 ## Current Position
 
-Phase: 1 (Engine foundations) — READY TO EXECUTE
-Plan: 0 of TBD in current phase
+Phase: 1 (Engine foundations) — EXECUTING
+Plan: 2 of 7
 Status: Ready to execute
-Last activity: 2026-10-09 — Roadmap created for v0.2 (8 phases, 53/53 requirements mapped)
+Last activity: 2026-10-10 — Phase 1 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -55,6 +55,11 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 1 P01 | 8min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -67,6 +72,8 @@ Recent decisions affecting current work:
 - [Roadmap]: Deploy pipeline (REL-05/06) lands in Phase 2 with CI and CSP, so every later phase ships to the private subdomain on green
 - [Roadmap]: Phase 1 builds a scheduled-modifier mechanism so Phases 4 and 5 can run in parallel
 - [Roadmap]: Badges (RPT-03) deferred to Phase 8 so milestones can span every mechanic
+- [Phase 1]: 01-01: keyed RNG address (seed, stream, turn, key) replaces the GameState.rng cursor; STREAM ids and gap/infl/appr keys are the replay contract
+- [Phase 1]: 01-01: scanner ignores a banned identifier only as the name of a property access, so Date.now() is caught
 
 ### Pending Todos
 
@@ -90,6 +97,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-09
-Stopped at: Roadmap created; ready for `/gsd-plan-phase 1`
+Last session: 2026-10-11T05:48:16.682Z
+Stopped at: Completed 01-01-PLAN.md
 Resume file: None

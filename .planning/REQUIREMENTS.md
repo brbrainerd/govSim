@@ -9,8 +9,8 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 
 ### Engine foundations
 
-- [ ] **FND-01**: A player who makes no decisions faces exactly the same outside crises and shocks as autopilot on the same seed, whatever else they do (keyed RNG streams; GR-01/02)
-- [ ] **FND-02**: A saved game replays to identical results in Chromium, WebKit and Firefox (no transcendental `Math` in the engine; GR-32)
+- [x] **FND-01**: A player who makes no decisions faces exactly the same outside crises and shocks as autopilot on the same seed, whatever else they do (keyed RNG streams; GR-01/02)
+- [x] **FND-02**: A saved game replays to identical results in Chromium, WebKit and Firefox (no transcendental `Math` in the engine; GR-32)
 - [ ] **FND-03**: Player sees turns as "Year N · Season" of their term, with the real-world date in a tooltip; midterms fall in Year 2 Fall, reelection in Year 4 Fall
 - [ ] **FND-04**: Every indicator change is explained by named causes that add up exactly to the change, including a "luck" line (engine trace; GR-05)
 - [ ] **FND-05**: Clout costs are charged by the engine from the player's raw choices, so the preview and the result always match
@@ -110,8 +110,8 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FND-01 | Phase 1 | Pending |
-| FND-02 | Phase 1 | Pending |
+| FND-01 | Phase 1 | Complete |
+| FND-02 | Phase 1 | Complete |
 | FND-03 | Phase 1 | Pending |
 | FND-04 | Phase 1 | Pending |
 | FND-05 | Phase 1 | Pending |
@@ -165,6 +165,7 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 | REL-06 | Phase 2 | Pending |
 
 **Coverage:**
+
 - v0.2 requirements: 53 total
 - Mapped to phases: 53
 - Unmapped: 0
