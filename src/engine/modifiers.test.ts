@@ -4,8 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { conservationErrors } from '../testing/conservation';
 import { START } from './fixture';
 import { mod, withMods } from '../testing/mods';
-import { endTurn, newGame, type GameState } from './game';
-import { activeAt, RESOLVERS, type Channel, type Modifier } from './modifiers';
+import { endTurn, newGame, type GameState, type StepOptions } from './game';
+import { activeAt, RESOLVERS, type Channel, type Resolver, type Scheduled } from './modifiers';
+import { draw } from './rng';
 import type { TraceKey } from './trace';
 
 /** The trace key each channel lands on (growth for potential, debtPct for debtBn, fedRate for fedTarget). */
@@ -71,5 +72,51 @@ describe('modifiers', () => {
 
   it('ships with no resolvers registered in Phase 1', () => {
     expect(RESOLVERS).toEqual({});
+  });
+});
+
+describe('scheduled items', () => {
+  const item: Scheduled = { id: 's1', kind: 'test', due: 5, data: {} };
+  const addApproval: Resolver = ({ turn, item: i }) => ({
+    add: [mod({ channel: 'approval', source: 'event:test', amount: 2, from: turn, until: turn + 2 })],
+    log: [{ kind: 'test', id: i.id }],
+  });
+  const at3 = (extra: Partial<GameState> = {}): GameState => { let s = newGame(8, START); while (s.turn < 3) s = endTurn(s); return { ...s, ...extra }; };
+
+  it('resolves in the step starting at the due turn, never earlier, and leaves state.scheduled', () => {
+    const opts: StepOptions = { resolvers: { test: addApproval } };
+    let s = at3({ scheduled: [item] });
+    for (const turn of [3, 4, 5, 6]) {
+      const next = endTurn(s, {}, opts);
+      expect(termOf(next, 'approval', 'event:test') !== undefined, `step at ${turn}`).toBe(turn >= 5);
+      expect(next.report.log.some((l) => l.kind === 'test')).toBe(turn === 5);
+      expect(next.scheduled).toEqual(turn >= 5 ? [] : [item]);
+      expect(conservationErrors(s, next)).toEqual([]);
+      s = next;
+    }
+  });
+
+  it('endGroups stops the whole group from the resolving step on', () => {
+    const end: Resolver = () => ({ endGroups: ['eo:x'] });
+    let s = at3({ scheduled: [item], modifiers: [mod({ channel: 'gap', source: 'eo:x', group: 'eo:x', tag: 'eo' }), mod({ id: 'b', channel: 'gap', source: 'eo:x', group: 'eo:x', tag: 'eo' })] });
+    for (const turn of [3, 4, 5, 6]) {
+      s = endTurn(s, {}, { resolvers: { test: end } });
+      expect(termOf(s, 'gap', 'eo:x') !== undefined, `step at ${turn}`).toBe(turn < 5);
+    }
+    expect(s.modifiers.every((m) => m.until === 4)).toBe(true);
+  });
+
+  it('never changes report.luck, and keyed draws replay identically', () => {
+    const coin: Resolver = ({ seed, turn, item: i }) => ({ add: draw(seed, 'court', turn, i.id) < 0.5 ? [mod({ channel: 'gap', source: 'event:coin' })] : [] });
+    const opts = { resolvers: { test: coin } };
+    const run = (scheduled: Scheduled[]) => { let s = at3({ scheduled }); const out = [s]; while (s.turn < 12) out.push((s = endTurn(s, {}, opts))); return out; };
+    const [a, b, none] = [run([item]), run([item]), run([])];
+    expect(a).toEqual(b);
+    expect(a.map((s) => s.report.luck)).toEqual(none.map((s) => s.report.luck));
+  });
+
+  it('throws naming an unknown kind (also not an inherited property)', () => {
+    expect(() => endTurn(at3({ scheduled: [{ ...item, due: 3, kind: 'nope' }] }), {}, { resolvers: {} })).toThrow(/nope/);
+    expect(() => endTurn(at3({ scheduled: [{ ...item, due: 3, kind: 'constructor' }] }), {}, { resolvers: {} })).toThrow(/constructor/);
   });
 });

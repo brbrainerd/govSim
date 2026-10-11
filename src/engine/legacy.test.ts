@@ -31,3 +31,13 @@ describe('legacy projection', () => {
     });
   });
 });
+
+describe('legacy projection and scheduled items', () => {
+  it('never resolves pending items', () => {
+    const boom = () => { throw new Error('resolver called in legacy'); };
+    const s = { ...newGame(4, START), scheduled: [{ id: 'p', kind: 'test', due: 5, data: {} }] };
+    expect(legacy(s).econ).toEqual(legacy(newGame(4, START)).econ);
+    expect(() => step(s, {}, { legacy: true, resolvers: { test: boom } })).not.toThrow();
+    expect(legacy(s).scheduled).toEqual(s.scheduled);
+  });
+});
