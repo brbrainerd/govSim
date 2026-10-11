@@ -1,6 +1,8 @@
 // House vote model (design.md §3 Congress, UX-2 auto-whip, UX-3 rewards).
 // ponytail: fixed groups and three deals for one bill; the bloc model replaces this in M1.
 
+import { RULES } from './coefficients';
+
 export const HOUSE_SEATS = 435;
 export const TO_PASS = 218;
 
@@ -35,5 +37,5 @@ export function tally(done: readonly DealId[]) {
 /** Reward/punish rule (UX-3): pass → +10 clout; fail → half the clout spent comes back. */
 export function voteOutcome(total: number, spent: number) {
   const passed = total >= TO_PASS;
-  return { passed, cloutBack: passed ? 10 : Math.floor(spent / 2) };
+  return { passed, cloutBack: passed ? RULES.voteReward.value : Math.floor(spent / RULES.refundDivisor.value) };
 }

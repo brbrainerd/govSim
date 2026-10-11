@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { fromData, us } from '../data/us';
+import { spendLevers, taxLevers } from './budget';
 import { C, COEFF, LIMITS, problems, RULES, SCORE, type Coeff, type Limit } from './coefficients';
+import { voteOutcome } from './congress';
 
 const good: Coeff = {
   value: 1, unit: 'pts', basis: 'judgement', range: [0, 2], note: 'plausible',
@@ -70,5 +72,21 @@ describe('COEFF', () => {
   it('potential growth comes from the registry into the starting data', () => {
     expect(C.potentialGrowth).toBe(1.8);
     expect(fromData(us).potential).toBe(C.potentialGrowth);
+  });
+});
+
+describe('budget levers', () => {
+  it('every lever states a valid basis and a note', () => {
+    const levers = [...taxLevers, ...spendLevers];
+    expect(levers).toHaveLength(11);
+    for (const l of levers) {
+      expect(['citation', 'judgement'], l.id).toContain(l.basis);
+      expect(l.note.trim(), l.id).not.toBe('');
+    }
+  });
+
+  it('vote outcome reads its reward and refund from RULES', () => {
+    expect(voteOutcome(220, 35)).toEqual({ passed: true, cloutBack: 10 });
+    expect(voteOutcome(210, 35)).toEqual({ passed: false, cloutBack: 17 });
   });
 });
