@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fromData, us } from '../data/us';
-import { C, COEFF, problems, type Coeff, type Limit } from './coefficients';
+import { C, COEFF, LIMITS, problems, RULES, SCORE, type Coeff, type Limit } from './coefficients';
 
 const good: Coeff = {
   value: 1, unit: 'pts', basis: 'judgement', range: [0, 2], note: 'plausible',
@@ -31,10 +31,41 @@ describe('registry validator', () => {
   });
 });
 
-describe('COEFF', () => {
-  it('every entry is valid', () => {
-    for (const [name, entry] of Object.entries(COEFF)) expect(problems(name, entry), name).toEqual([]);
+// Names and values game.ts uses today (22 existing, then the inline literals); plan 01-06 swaps it onto the registry.
+const GAME_VALUES: Record<string, number> = {
+  gapPersistence: 0.85, fiscalMultiplier: 0.6, rateDrag: 0.15, neutralReal: 1.0, okun: 0.5, empPerU: 0.6, phillips: 0.15,
+  expectPull: 0.25, expectAdapt: 0.1, tariffPass: 0.1, taylorInfl: 0.5, taylorGap: 0.5, fedSmooth: 0.4, potentialMax: 0.25,
+  crowdOut: 0.012, crisisAt: 130, termPremium: 0.02, approvalPull: 0.35, honeymoon: 8, shockGap: 0.3, shockInfl: 0.12, shockApproval: 1.0,
+  inflTarget: 2, fedStep: 0.25, debtStressGap: 0.4, debtStressUnit: 10, fedPassThrough: 0.5, stressPremium: 1.5, incomeGrowthShare: 0.8,
+  lifeTrend: 0.01, lifeSpending: 0.015, lifeAdjust: 0.1, giniIncomeTax: 0.0015, giniMedicaid: 0.0005, giniAdjust: 0.05,
+  crimeJobs: 0.004, crimeTrend: 0.001, honeymoonQuarters: 4, approvalNeutral: 50, approvalJobs: 2.5, approvalPrices: 2,
+  approvalPriceFloor: 2.5, approvalGrowth: 1.5, trustAdjust: 0.1, trustApproval: 0.4, cloutPerApproval: 10,
+};
+
+describe('registry tables', () => {
+  it('every entry in all four tables is valid', () => {
+    for (const table of [COEFF, LIMITS, SCORE, RULES] as Record<string, Coeff | Limit>[])
+      for (const [name, entry] of Object.entries(table)) expect(problems(name, entry), name).toEqual([]);
   });
+
+  it('COEFF carries every name game.ts uses, with identical values', () => {
+    for (const [name, value] of Object.entries(GAME_VALUES)) expect(C[name as keyof typeof C], name).toBe(value);
+  });
+
+  it('score weights sum to 1 and the limits and rules are present', () => {
+    const w = [SCORE.incomeWeight, SCORE.employmentWeight, SCORE.inflationWeight, SCORE.debtWeight, SCORE.lifeExpWeight, SCORE.inequalityWeight, SCORE.securityWeight, SCORE.trustWeight];
+    expect(Math.abs(w.reduce((a, c) => a + c.value, 0) - 1)).toBeLessThan(1e-12);
+    expect(Object.keys(LIMITS).sort()).toEqual(['approval', 'fedRate', 'gini', 'inflation', 'score', 'trust', 'unemployment']);
+    expect(Object.keys(RULES).sort()).toEqual(['refundDivisor', 'startApproval', 'startClout', 'voteReward']);
+  });
+
+  it('every source link is https', () => {
+    for (const table of [COEFF, LIMITS, SCORE, RULES] as Record<string, Coeff | Limit>[])
+      for (const e of Object.values(table)) for (const s of e.sources ?? []) expect(s.url.startsWith('https://')).toBe(true);
+  });
+});
+
+describe('COEFF', () => {
 
   it('potential growth comes from the registry into the starting data', () => {
     expect(C.potentialGrowth).toBe(1.8);
