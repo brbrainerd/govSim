@@ -7,3 +7,4 @@ export const BUDGET_WINDOW_YEARS = 10; // budget lever costs are 10-year totals
 export const MONTHS_PER_YEAR = 12;
 export const TOTAL_TURNS = 32;
 export const LEGACY_QUARTERS = 40;
+export const FOREVER = 1_000_000; // finite "never ends" turn: Infinity does not survive JSON

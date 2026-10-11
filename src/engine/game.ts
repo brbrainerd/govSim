@@ -5,6 +5,7 @@ import { baseline, estimate, spendLevers, taxLevers, type BudgetDraft } from './
 import { C, LIMITS, RULES, SCORE } from './coefficients';
 import { resolveBill, type Decisions } from './decisions';
 import { clamp, tanhPade } from './detmath';
+import { activeAt, RESOLVERS, type Modifier, type Scheduled, type Resolver } from './modifiers';
 import { normal } from './rng';
 import { prosperity } from './score';
 import { Ledger, type Term, type TraceKey } from './trace';
@@ -57,6 +58,8 @@ export interface GameState {
   readonly econ: Econ;
   readonly start: Start;
   readonly report: Report; // what happened last turn
+  readonly modifiers: readonly Modifier[]; // lasting effects (events, orders, laws)
+  readonly scheduled: readonly Scheduled[]; // delayed effects waiting for their turn
 }
 
 /** One thing that happened last turn (a bill passed, failed or was rejected). */
@@ -87,6 +90,8 @@ export function newGame(seed: number, start: Start): GameState {
     policy: baseline(),
     start,
     report: { luck: { gap: 0, infl: 0, appr: 0 }, log: [], trace: {} },
+    modifiers: [],
+    scheduled: [],
     econ: {
       gap: 0,
       growth: start.potential,
@@ -106,16 +111,42 @@ export function newGame(seed: number, start: Start): GameState {
   };
 }
 
-export function endTurn(state: GameState, decisions: Decisions = {}): GameState {
-  return state.turn >= TOTAL_TURNS ? state : step(state, decisions);
+export interface StepOptions {
+  legacy?: boolean; // the 10-year projection: no resolvers, no executive orders (FND-06, D5)
+  resolvers?: Record<string, Resolver>; // tests inject stubs; defaults to RESOLVERS
+}
+
+export function endTurn(state: GameState, decisions: Decisions = {}, opts: StepOptions = {}): GameState {
+  return state.turn >= TOTAL_TURNS ? state : step(state, decisions, opts);
 }
 
 /**
  * One quarter of the model, uncapped (also used for the legacy projection). Every indicator is
  * `before + a Ledger of named terms` (FND-04); clamps and rounding are recorded as bounded residuals.
  */
-export function step(state: GameState, decisions: Decisions): GameState {
+export function step(state: GameState, decisions: Decisions, opts: StepOptions = {}): GameState {
   const s = state.start, e = state.econ;
+  const legacyRun = opts.legacy === true;
+
+  // Due scheduled items resolve first so what they add or end acts in this same step. Keyed draws inside
+  // resolvers make the order irrelevant; an unknown kind fails loudly (T-1-13).
+  let modifiers: readonly Modifier[] = state.modifiers;
+  let scheduled: readonly Scheduled[] = state.scheduled;
+  const log: LogEntry[] = [];
+  if (!legacyRun) {
+    const registry = opts.resolvers ?? RESOLVERS;
+    for (const item of state.scheduled.filter((i) => i.due === state.turn)) {
+      if (!Object.hasOwn(registry, item.kind)) throw new Error(`unknown scheduled kind "${item.kind}" (item ${item.id})`);
+      const out = registry[item.kind]!({ seed: state.seed, turn: state.turn, state, item });
+      const ended = new Set(out.endGroups);
+      modifiers = [...modifiers.map((m) => (ended.has(m.group) ? { ...m, until: state.turn - 1 } : m)), ...(out.add ?? [])];
+      log.push(...(out.log ?? []));
+    }
+    scheduled = state.scheduled.filter((i) => i.due !== state.turn);
+  }
+  const active = activeAt(modifiers, state.turn, legacyRun);
+  const mods = (channel: Modifier['channel']) => active.filter((m) => m.channel === channel);
+
   const zGap = normal(state.seed, 'macro', state.turn, 'gap');
   const zInfl = normal(state.seed, 'macro', state.turn, 'infl');
   const zAppr = normal(state.seed, 'macro', state.turn, 'appr');
@@ -137,6 +168,7 @@ export function step(state: GameState, decisions: Decisions): GameState {
   g.add('debt:stress', -C.debtStressGap * stress);
   g.add('fed:drag', -C.rateDrag * (e.fedRate - e.inflation - C.neutralReal));
   g.add('luck', C.shockGap * zGap);
+  for (const m of mods('gap')) g.add(m.source, m.amount);
   const gap = e.gap + g.sum;
 
   // Growth is a level: potential plus the annualized change in the gap.
@@ -144,6 +176,7 @@ export function step(state: GameState, decisions: Decisions): GameState {
   gr.add('potential:base', s.potential);
   gr.add('potential:policy', C.potentialMax * tanhPade(after.growth));
   gr.add('potential:crowding', -C.crowdOut * Math.max(0, debtPctNow - s.debtPct));
+  for (const m of mods('potential')) gr.add(m.source, m.amount);
   for (const t of g.scaled(QUARTERS_PER_YEAR).terms) gr.add(t.source, t.amount);
   const growth = gr.sum;
 
@@ -158,9 +191,11 @@ export function step(state: GameState, decisions: Decisions): GameState {
   inf.add('demand', C.phillips * gap);
   inf.add('tariffs', C.tariffPass * tariffChange);
   inf.add('luck', C.shockInfl * zInfl);
+  for (const m of mods('inflation')) inf.add(m.source, m.amount);
   const inflation = inf.clamp(e.inflation + inf.sum, ...LIMITS.inflation.bounds);
   const ex = new Ledger();
   ex.add('prices', C.expectAdapt * (inflation - e.expected));
+  for (const m of mods('expected')) ex.add(m.source, m.amount);
   const expected = e.expected + ex.sum;
 
   // Policy rate: round to the step first, then clamp (as before).
@@ -168,6 +203,7 @@ export function step(state: GameState, decisions: Decisions): GameState {
   fed.add('fed:neutral', C.fedSmooth * (C.neutralReal + inflation - e.fedRate));
   fed.add('fed:inflationGap', C.fedSmooth * C.taylorInfl * (inflation - C.inflTarget));
   fed.add('fed:outputGap', C.fedSmooth * C.taylorGap * gap);
+  for (const m of mods('fedTarget')) fed.add(m.source, C.fedSmooth * m.amount);
   const fedRate = fed.clamp(fed.round(e.fedRate + fed.sum, C.fedStep), ...LIMITS.fedRate.bounds);
 
   const gdp = e.gdp * (1 + (growth + inflation) / (QUARTERS_PER_YEAR * PERCENT));
@@ -175,7 +211,8 @@ export function step(state: GameState, decisions: Decisions): GameState {
   const interestDrift = (borrowingCost * e.debt) / PERCENT; // $tn/yr above the starting interest bill
   const budgetDeficit = after.deficitBn / BUDGET_WINDOW_YEARS / BN_PER_TN; // $tn/yr
   const deficit = (s.deficitPct / PERCENT) * gdp + budgetDeficit + interestDrift; // $tn/yr
-  const debt = e.debt + deficit / QUARTERS_PER_YEAR;
+  const debtMods = mods('debtBn');
+  const debt = e.debt + deficit / QUARTERS_PER_YEAR + debtMods.reduce((n, m) => n + m.amount / BN_PER_TN, 0);
 
   // Debt/GDP is traced instead of $ debt: the score and the UI read the ratio.
   const perQuarter = PERCENT / (QUARTERS_PER_YEAR * gdp); // debt/GDP pts per $tn/yr of deficit for one quarter
@@ -184,6 +221,7 @@ export function step(state: GameState, decisions: Decisions): GameState {
   dp.add('deficit:budget', budgetDeficit * perQuarter);
   dp.add('deficit:interest', interestDrift * perQuarter);
   dp.add('gdp:growth', PERCENT * e.debt * (1 / gdp - 1 / e.gdp)); // a bigger economy dilutes the old debt
+  for (const m of debtMods) dp.add(m.source, (m.amount / BN_PER_TN / gdp) * PERCENT);
 
   const inc = new Ledger();
   inc.add('growth', (e.realIncome * (C.incomeGrowthShare * growth)) / (QUARTERS_PER_YEAR * PERCENT));
@@ -216,21 +254,23 @@ export function step(state: GameState, decisions: Decisions): GameState {
   ap.add('approval:prices', -C.approvalPull * C.approvalPrices * Math.max(0, inflation - C.approvalPriceFloor));
   ap.add('approval:growth', C.approvalPull * C.approvalGrowth * (growth - s.potential));
   ap.add('luck', C.shockApproval * zAppr);
+  for (const m of mods('approval')) ap.add(m.source, m.amount);
   const approval = ap.round(ap.clamp(state.approval + ap.sum, ...LIMITS.approval.bounds), 1);
   const tr = new Ledger();
   tr.add('trust:reversion', C.trustAdjust * (s.trust - e.trust));
   tr.add('trust:approval', C.trustAdjust * C.trustApproval * (approval - C.approvalNeutral));
+  for (const m of mods('trust')) tr.add(m.source, m.amount);
   const trust = tr.clamp(e.trust + tr.sum, ...LIMITS.trust.bounds);
 
   const cl = new Ledger();
   cl.add('clout:income', Math.round(approval / C.cloutPerApproval));
+  for (const m of mods('clout')) cl.add(m.source, m.amount);
   if (r?.valid) {
     cl.add('clout:deals', -r.spent);
     cl.add(r.passed ? 'clout:reward' : 'clout:refund', r.cloutBack);
   }
   const clout = cl.clamp(state.clout + cl.sum, 0, Infinity);
 
-  const log: LogEntry[] = [];
   if (r) log.push(r.valid ? { kind: 'bill', id: r.passed ? 'passed' : 'failed', amount: r.whip.total } : { kind: 'bill', id: 'rejected', detail: 'unaffordable' });
 
   return {
@@ -239,6 +279,8 @@ export function step(state: GameState, decisions: Decisions): GameState {
     approval,
     clout,
     policy,
+    modifiers,
+    scheduled,
     report: {
       luck: { gap: zGap, infl: zInfl, appr: zAppr },
       log,
@@ -256,7 +298,7 @@ export function step(state: GameState, decisions: Decisions): GameState {
 /** The country 10 years after you leave, if nobody changes your policies (design.md §2). */
 export function legacy(state: GameState): GameState {
   let s = state;
-  for (let i = 0; i < LEGACY_QUARTERS; i++) s = step(s, {});
+  for (let i = 0; i < LEGACY_QUARTERS; i++) s = step(s, {}, { legacy: true });
   return s;
 }
 
