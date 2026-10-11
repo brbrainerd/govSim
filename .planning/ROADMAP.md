@@ -48,14 +48,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. In every turn of every tested seed, each indicator change equals the sum of its named trace terms (including luck and explicit clamp/rounding residuals); the clout preview equals the clout the engine charges from raw choices; every model coefficient has a citation or "judgement" tag plus an allowed range, and an unregistered coefficient fails a test (GR-05, GR-22)
   5. The player picks a party at New Game and sees turns as "Year N · Season" (turn 8 = Year 2 Fall, turn 16 = Year 4 Fall) with the real date in a tooltip; swapping the party changes only labels, not engine output; the 10-year legacy projection runs with no events and without executive-order effects
 
-**Plans**: 2/7 plans executed
+**Plans**: 3/7 plans executed
 
 Plans:
 **Wave 1**
 
 - [x] 01-01-PLAN.md — Wave 1: keyed RNG, arithmetic-only math, purity scan, stable hash, replay fixture, characterization snapshot (FND-01, FND-02)
 - [x] 01-02-PLAN.md — Wave 1: New Game party pick (party-blind engine) and "Year N · Season" calendar with real-date tooltip (FND-08, FND-03)
-- [ ] 01-03-PLAN.md — Wave 1: coefficient registry with citation/judgement, ranges and checked sources (FND-07)
+- [x] 01-03-PLAN.md — Wave 1: coefficient registry with citation/judgement, ranges and checked sources (FND-07)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -199,7 +199,7 @@ Phases execute in numeric order: 1 → 2 → 3 → (4 ∥ 5) → 6 → 7 → 8. 
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Engine foundations | 2/7 | In Progress|  |
+| 1. Engine foundations | 3/7 | In Progress|  |
 | 2. Saves, guardrails & continuous deploy | 0/TBD | Not started | - |
 | 3. Turn report & Economy | 0/TBD | Not started | - |
 | 4. Events & crises | 0/TBD | Not started | - |

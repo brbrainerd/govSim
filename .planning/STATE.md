@@ -5,16 +5,16 @@ milestone_name: Playable First Term
 current_phase: 1
 current_phase_name: Engine foundations
 status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-10-11T05:50:22.379Z"
+stopped_at: Completed 01-03-PLAN.md
+last_updated: "2026-10-11T05:56:56.422Z"
 last_activity: 2026-10-10
 last_activity_desc: Phase 1 execution started
-state_head: e1c1e4e671fa3ddc2003f76129c23646b8336a77
+state_head: 82e3b26f6cbabe2c6d6031d9adb854a3c5daee12
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 7
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-10-09)
 ## Current Position
 
 Phase: 1 (Engine foundations) — EXECUTING
-Plan: 3 of 7
+Plan: 4 of 7
 Status: Ready to execute
 Last activity: 2026-10-10 — Phase 1 execution started
 
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 |------|----------|-------|-------|
 | Phase 1 P01 | 8min | 3 tasks | 12 files |
 | Phase 1 P02 | 6min | 3 tasks | 10 files |
+| Phase 1 P03 | 3 min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,8 @@ Recent decisions affecting current work:
 - [Phase 1]: 01-01: scanner ignores a banned identifier only as the name of a property access, so Date.now() is caught
 - [Phase 1]: 01-02: party lives in Session.options only; engine stays party-blind by absence (D4)
 - [Phase 1]: 01-02: no party preselected at New Game; real calendar quarter is tooltip-only (D1)
+- [Phase 1]: 01-03: only taylorInfl, taylorGap, inflTarget and okun are citations; every other coefficient is judgement — Sources were opened this session; CBO pages returned 403 and the Yale and FOMC calendar pages did not state the figures, so those entries stay judgement with the source flagged not confirmed
+- [Phase 1]: 01-03: Taylor 1993 cited via the author's Stanford PDF, not the DOI — The DOI resolves to an Elsevier redirect page that shows no paper content
 
 ### Pending Todos
 
@@ -100,6 +103,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-11T05:50:22.367Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-10-11T05:56:56.410Z
+Stopped at: Completed 01-03-PLAN.md
 Resume file: None
