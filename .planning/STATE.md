@@ -5,16 +5,16 @@ milestone_name: Playable First Term
 current_phase: 1
 current_phase_name: Engine foundations
 status: executing
-stopped_at: Completed 01-04-PLAN.md
-last_updated: "2026-10-11T06:01:54.003Z"
+stopped_at: Completed 01-06-PLAN.md
+last_updated: "2026-10-11T06:08:25.630Z"
 last_activity: 2026-10-10
 last_activity_desc: Phase 1 execution started
-state_head: 5e1edab6d12a9907806b46f6e00573162e0d2b11
+state_head: 45cf64b3cd3318840db993576ba7893be8f3abe3
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-10-09)
 ## Current Position
 
 Phase: 1 (Engine foundations) — EXECUTING
-Plan: 6 of 7
+Plan: 7 of 7
 Status: Ready to execute
 Last activity: 2026-10-10 — Phase 1 execution started
 
@@ -64,6 +64,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 1 P03 | 3 min | 3 tasks | 5 files |
 | Phase 01 P05 | 6 min | 2 tasks | 8 files |
 | Phase 01 P04 | 10min | 3 tasks | 3 files |
+| Phase 01 P06 | 14 min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 1]: 01-05: Deals made without Call the vote are voted and charged at Next turn (A8); enact() sends all three deals so budgets pass the House
 - [Phase 1]: 01-05: Decisions is { bill?: { budget, deals } } with no clout field; resolveBill is shared by engine step and Session preview
 - [Phase 1]: 01-04: @playwright/test 1.64.0 approved by user 2026-10-10, exact pin, dev-only, --ignore-scripts
+- [Phase 1]: 01-06: conservationErrors tolerance scales with magnitude above 1 (ulp exceeds 1e-9 on collapsed legacy incomes near -6e7)
+- [Phase 1]: 01-06: lever bases come from the lever tables (leverBase/leverDev), not literals 22/100; settleTo records floating-point carry as clamp (~1e-16), Phase 3 should hide sub-threshold residuals
 
 ### Pending Todos
 
@@ -108,6 +111,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-11T06:01:53.990Z
-Stopped at: Completed 01-04-PLAN.md
+Last session: 2026-10-11T06:08:25.618Z
+Stopped at: Completed 01-06-PLAN.md
 Resume file: None
