@@ -40,18 +40,20 @@ created: "2026-10-09"
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 1-01-xx | 01 | 1 | FND-01 | — | Keyed draws are stateless; luck independent of decisions | unit | `pnpm exec vitest run src/engine/rng.test.ts` | ❌ W0 | ⬜ pending |
-| 1-01-xx | 01 | 1 | FND-02 | T-1-04 | No `Math.random`/`Date`/transcendental `Math` in engine | unit | `pnpm exec vitest run src/engine/purity.test.ts` | ❌ W0 | ⬜ pending |
-| 1-01-xx | 01 | 1 | FND-02 | — | Recorded input log replays to same hash chain | unit | `pnpm exec vitest run src/engine/determinism.test.ts` | ❌ W0 | ⬜ pending |
-| 1-01-xx | 01 | 1 | FND-02 | — | Node == Chromium == Firefox == WebKit (min + unmin) | e2e script | `pnpm determinism` | ❌ W0 | ⬜ pending |
-| 1-02-xx | 02 | 1 | FND-03 | — | "Year N · Season" labels; Fall at 8/16/24/32 | unit | `pnpm exec vitest run src/engine/calendar.test.ts` | ❌ W0 | ⬜ pending |
-| 1-02-xx | 02 | 1 | FND-08 | — | Engine party-blind; D vs R histories equal | unit | `pnpm exec vitest run src/engine/party.test.ts src/app/session.test.ts` | ❌ W0 | ⬜ pending |
-| 1-03-xx | 03 | 1 | FND-07 | — | Every coefficient has citation/judgement + range | unit | `pnpm exec vitest run src/engine/coefficients.test.ts` | ❌ W0 | ⬜ pending |
-| 1-04-xx | 04 | 2 | FND-05 | T-1-01, T-1-02 | Engine recomputes cost from raw bill; tampered bills rejected | unit | `pnpm exec vitest run src/engine/decisions.test.ts` | ❌ W0 | ⬜ pending |
-| 1-05-xx | 05 | 3 | FND-04 | T-1-03 | Every delta = sum of named terms incl. residuals; luck log shared | unit | `pnpm exec vitest run src/engine/trace.test.ts src/engine/shocks.test.ts` | ❌ W0 | ⬜ pending |
-| 1-05-xx | 05 | 3 | FND-07 | — | No unregistered numeric literal in `step()` | unit | `pnpm exec vitest run src/engine/coefficients.test.ts` | ❌ W0 | ⬜ pending |
-| 1-06-xx | 06 | 4 | FND-06 | — | Legacy ignores events/EO modifiers; delayed modifiers arrive on time | unit | `pnpm exec vitest run src/engine/modifiers.test.ts src/engine/legacy.test.ts` | ❌ W0 | ⬜ pending |
-| 1-07-xx | 07 | 5 | all | — | Balance harness, full suite, determinism sign-off | unit + e2e | `pnpm test && pnpm check && pnpm build && pnpm determinism` | ✅ (balance) | ⬜ pending |
+| 1-01-01 | 01 | 1 | FND-01 | — | Keyed draws; luck log identical for autopilot, no-decision and 3 strategies over 200 seeds | unit | `pnpm exec vitest run src/engine/shocks.test.ts` | ❌ W0 | ⬜ pending |
+| 1-01-02 | 01 | 1 | FND-02 | T-1-04 | No banned `Math`/`**`/`Date`/globals in engine (self-tested scanner); RNG known answers + stats | unit | `pnpm exec vitest run src/engine/purity.test.ts src/engine/rng.test.ts` | ❌ W0 | ⬜ pending |
+| 1-01-03 | 01 | 1 | FND-02 | T-1-05 | Recorded input log replays to same hash chain after JSON round trip; characterization snapshot | unit | `pnpm exec vitest run src/engine/determinism.test.ts` | ❌ W0 | ⬜ pending |
+| 1-02-01 | 02 | 1 | FND-08 | — | New Game requires a party; Session stores it in options only | build + manual | `pnpm check && pnpm build && pnpm exec vitest run` | ✅ | ⬜ pending |
+| 1-02-02 | 02 | 1 | FND-08 | T-1-07 | Engine party-blind; D vs R histories equal | unit | `pnpm exec vitest run src/engine/party.test.ts src/app/session.test.ts` | ❌ W0 | ⬜ pending |
+| 1-02-03 | 02 | 1 | FND-03 | — | "Year N · Season" labels; Fall at 8/16/24/32; real-quarter tooltip text | unit | `pnpm exec vitest run src/engine/calendar.test.ts` | ❌ W0 | ⬜ pending |
+| 1-03-01..03 | 03 | 1 | FND-07 | T-1-09, T-1-10 | Every coefficient has citation/judgement + range; validator self-test; levers + RULES | unit | `pnpm exec vitest run src/engine/coefficients.test.ts` | ❌ W0 | ⬜ pending |
+| 1-04-02 | 04 | 2 | FND-02 | T-1-SC | Node == Chromium == Firefox == WebKit (min + unmin) | e2e script | `timeout 300s pnpm determinism` | ❌ W0 | ⬜ pending |
+| 1-04-03 | 04 | 2 | REL-01 | — | License set present; notices production-only | script | `node scripts/notices.mjs --check` | ✅ | ⬜ pending |
+| 1-05-01..02 | 05 | 2 | FND-05 | T-1-01, T-1-02 | Engine recomputes cost from raw bill; preview == charge; tampered bills rejected | unit | `pnpm exec vitest run src/engine/decisions.test.ts src/app/session.test.ts` | ❌ W0 | ⬜ pending |
+| 1-06-01..02 | 06 | 3 | FND-04, FND-01 | T-1-03 | Every delta = sum of named terms incl. luck and bounded residuals; legacy path too | unit | `pnpm exec vitest run src/engine/trace.test.ts` | ❌ W0 | ⬜ pending |
+| 1-06-03 | 06 | 3 | FND-07 | T-1-12 | No unregistered numeric literal in engine (AST literal scan) | unit | `pnpm exec vitest run src/engine/coefficients.test.ts` | ❌ W0 | ⬜ pending |
+| 1-07-01..02 | 07 | 4 | FND-06, FND-01 | T-1-13 | Legacy drops EO modifiers and resolvers, keeps events and shocks; delayed modifiers arrive on time | unit | `pnpm exec vitest run src/engine/modifiers.test.ts src/engine/legacy.test.ts` | ❌ W0 | ⬜ pending |
+| 1-07-03 | 07 | 4 | all | — | Full suite + cross-browser sign-off of every input type | unit + e2e | `pnpm test && pnpm check && pnpm build && pnpm determinism && node scripts/notices.mjs --check` | ✅ (balance) | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky* — task IDs are finalised by the planner.
 
@@ -62,7 +64,7 @@ created: "2026-10-09"
 - [ ] `src/testing/scan.ts` — AST scan helper (self-tested), used by purity and literal-scan tests
 - [ ] New test files listed above
 - [ ] `@playwright/test@1.64.0` exact-pinned dev dep + browsers (behind a human-verify checkpoint; fallback 1.63.0)
-- [ ] `src/engine/characterization.test.ts` — tolerance table captured at end of P01, guards P04–P06, deleted in P07
+- [ ] Characterization block in `src/engine/determinism.test.ts` — 6-significant-digit inline snapshot captured in plan 01-01, guards plans 01-05 to 01-07, kept until Phase 2 golden replays (OBS-02) replace it
 
 ---
 
