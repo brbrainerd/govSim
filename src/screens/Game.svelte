@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Session } from '../app/session.svelte';
   import { screenById } from '../app/screens';
+  import { PARTIES } from '../content/parties';
   import Budget from './Budget.svelte';
   import Congress from './Congress.svelte';
   import OvalOffice from './OvalOffice.svelte';
@@ -14,7 +15,7 @@
 </script>
 
 <div class="app halftone">
-  <StatusBar state={session.current} clout={session.clout} title={screen.label} score={session.vsNothing} onNextTurn={() => session.nextTurn()} />
+  <StatusBar state={session.current} clout={session.clout} title={screen.label} score={session.vsNothing} party={PARTIES.find((p) => p.id === session.options.party)!.name} onNextTurn={() => session.nextTurn()} />
   <div class="zones">
     <Rail turn={session.current.turn} current={session.screen} onSelect={go} />
     {#if screen.id === 'oval'}

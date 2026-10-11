@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { TOTAL_TURNS, turnLabel, type GameState } from '../engine/game';
+  import { realQuarterLabel, termLabel } from '../engine/calendar';
+  import { TOTAL_TURNS, type GameState } from '../engine/game';
   import CoinStack from './art/CoinStack.svelte';
   import Ribbon from './art/Ribbon.svelte';
 
-  let { state, clout, title, score, onNextTurn }: { state: GameState; clout: number; title: string; score: number; onNextTurn: () => void } = $props();
+  let { state, clout, title, score, party, onNextTurn }: { state: GameState; clout: number; title: string; score: number; party: string; onNextTurn: () => void } = $props();
   const circ = 2 * Math.PI * 19;
 </script>
 
@@ -29,7 +30,10 @@
     <div class="score"><span class="star">★</span> <b class:worse={score < 0}>{score < 0 ? '−' : '+'}{Math.abs(score).toFixed(1)}</b> {score < 0 ? 'worse' : 'better'} than doing nothing <span class="star">★</span></div>
   </div>
   <div class="time">
-    <div class="when">Turn {state.turn} of {TOTAL_TURNS} · {turnLabel(state.turn)}</div>
+    <div class="when-wrap">
+      <div class="label">{party}</div>
+      <div class="when" title="Real calendar: {realQuarterLabel(state.turn)}. Your term is fictional and off-cycle.">Turn {state.turn} of {TOTAL_TURNS} · {termLabel(state.turn)}</div>
+    </div>
     <div class="next">
       <button class="stamp" onclick={onNextTurn} disabled={state.turn >= TOTAL_TURNS}>Next turn</button>
       <span>3 months pass</span>
@@ -48,6 +52,7 @@
   .score b { color: var(--sage); font-family: var(--font-ui); font-size: 18px; }
   .score b.worse { color: var(--alert); }
   .star { color: var(--ink); font-size: 12px; }
+  .when-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
   .when { font: 600 19px var(--font-display); color: var(--ink); }
   .next { display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .next span { font: 400 14px var(--font-body); color: var(--ink-soft); }
