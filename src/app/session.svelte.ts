@@ -1,7 +1,13 @@
 import { fromPackage, type BudgetDraft, type PackageName } from '../engine/budget';
 import { deals, tally, voteOutcome, type DealId } from '../engine/congress';
 import { endTurn, newGame, prosperity, type Decisions, type GameState, type Start } from '../engine/game';
+import type { PartyId } from '../content/parties';
 import type { ScreenId } from './screens';
+
+/** Choices made at New Game. Kept beside the engine state, never inside it (D4). */
+export interface GameOptions {
+  party: PartyId;
+}
 
 interface Draft {
   budget: BudgetDraft;
@@ -40,7 +46,7 @@ export class Session {
   /** Headline: how much better than doing nothing (same seed, same shocks). */
   vsNothing = $derived(this.index - prosperity(this.autopilot[this.autopilot.length - 1]!).index);
 
-  constructor(seed: number, start: Start) {
+  constructor(seed: number, start: Start, readonly options: GameOptions) {
     this.history = [newGame(seed, start)];
     this.autopilot = [newGame(seed, start)];
   }
