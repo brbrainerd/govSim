@@ -2,6 +2,8 @@
 // Stylized quarterly macro model (Q3: real start, stylized dynamics). Coefficients are hand-set
 // round numbers chosen for plausible direction and size, not estimates; every one is named here.
 import { baseline, estimate, taxLevers, type BudgetDraft } from './budget';
+import { clamp, tanhPade } from './detmath';
+import { normal } from './rng';
 
 export const TOTAL_TURNS = 32;
 
@@ -42,14 +44,17 @@ export interface Econ {
 
 export interface GameState {
   readonly seed: number;
-  readonly rng: number;
   readonly turn: number; // 1-based
   readonly approval: number;
   readonly clout: number;
   readonly policy: BudgetDraft; // enacted budget levers
   readonly econ: Econ;
   readonly start: Start;
+  readonly report: Report; // what happened last turn (plan 01-05 adds log, 01-06 adds trace)
 }
+
+/** Raw outside shocks of the last step, in standard deviations. Never depends on decisions. */
+export interface Report { readonly luck: { gap: number; infl: number; appr: number } }
 
 export interface Decisions {
   budget?: BudgetDraft; // a budget that passed Congress this turn
@@ -82,41 +87,18 @@ const C = {
   shockApproval: 1.0,
 } as const;
 
-// ---- randomness ---------------------------------------------------------------------------
-/** mulberry32: returns [value in 0..1, next state]. */
-export function nextRandom(state: number): [number, number] {
-  const s = (state + 0x6d2b79f5) | 0;
-  let t = Math.imul(s ^ (s >>> 15), 1 | s);
-  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-  return [((t ^ (t >>> 14)) >>> 0) / 4294967296, s];
-}
-
-/** n standard-normal draws (Box–Muller) and the advanced rng state. */
-function normals(rng: number, n: number): [number[], number] {
-  const out: number[] = [];
-  while (out.length < n) {
-    let u1: number, u2: number;
-    [u1, rng] = nextRandom(rng);
-    [u2, rng] = nextRandom(rng);
-    const r = Math.sqrt(-2 * Math.log(Math.max(u1, 1e-12)));
-    out.push(r * Math.cos(2 * Math.PI * u2), r * Math.sin(2 * Math.PI * u2));
-  }
-  return [out.slice(0, n), rng];
-}
-
-const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));
 const tariffOf = (p: BudgetDraft) => p.tar ?? taxLevers.find((l) => l.id === 'tar')!.base;
 
 // ---- lifecycle ----------------------------------------------------------------------------
 export function newGame(seed: number, start: Start): GameState {
   return {
     seed,
-    rng: seed | 0,
     turn: 1,
     approval: 52,
     clout: 120,
     policy: baseline(),
     start,
+    report: { luck: { gap: 0, infl: 0, appr: 0 } },
     econ: {
       gap: 0,
       growth: start.potential,
@@ -143,14 +125,16 @@ export function endTurn(state: GameState, decisions: Decisions = {}): GameState 
 /** One quarter of the model, uncapped (also used for the legacy projection). */
 function step(state: GameState, decisions: Decisions): GameState {
   const s = state.start, e = state.econ;
-  const [[zGap, zInfl, zAppr], rng] = normals(state.rng, 3) as [[number, number, number], number];
+  const zGap = normal(state.seed, 'macro', state.turn, 'gap');
+  const zInfl = normal(state.seed, 'macro', state.turn, 'infl');
+  const zAppr = normal(state.seed, 'macro', state.turn, 'appr');
 
   const policy = decisions.budget ?? state.policy;
   const before = estimate(state.policy), after = estimate(policy);
   const fiscalImpulse = ((after.deficitBn - before.deficitBn) / 10 / (e.gdp * 1000)) * 100; // % GDP per year
   const tariffChange = tariffOf(policy) - tariffOf(state.policy);
   const debtPctNow = (e.debt / e.gdp) * 100;
-  const potential = s.potential + C.potentialMax * Math.tanh(after.growth) - C.crowdOut * Math.max(0, debtPctNow - s.debtPct);
+  const potential = s.potential + C.potentialMax * tanhPade(after.growth) - C.crowdOut * Math.max(0, debtPctNow - s.debtPct);
 
   const realRate = e.fedRate - e.inflation;
   const gap = C.gapPersistence * e.gap + C.fiscalMultiplier * fiscalImpulse - 0.4 * Math.max(0, (debtPctNow - C.crisisAt) / 10)
@@ -188,11 +172,11 @@ function step(state: GameState, decisions: Decisions): GameState {
 
   return {
     ...state,
-    rng,
     turn: state.turn + 1,
     approval,
     clout: Math.max(0, state.clout + (decisions.clout ?? 0) + Math.round(approval / 10)),
     policy,
+    report: { luck: { gap: zGap, infl: zInfl, appr: zAppr } },
     econ: {
       gap, growth, unemployment, empPop: s.empPop - C.empPerU * (unemployment - s.unemployment),
       inflation, expected, fedRate, gdp, debt, realIncome, gini, lifeExp, trust, crime,

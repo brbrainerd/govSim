@@ -1,4 +1,5 @@
-import type { Start } from './game';
+import type { BudgetDraft } from './budget';
+import type { Decisions, Start } from './game';
 
 // Round-number test fixture shaped like the real start; tests must not depend on live data.
 export const START: Start = {
@@ -17,3 +18,6 @@ export const START: Start = {
   trust: 22,
   crime: 360,
 };
+
+// The single place tests turn a budget into this turn's decisions (plan 01-05 changes only this body).
+export const enact = (budget: BudgetDraft): Decisions => ({ budget });
