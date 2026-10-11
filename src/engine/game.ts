@@ -1,15 +1,17 @@
 // Pure, deterministic engine core (design.md §3, §8). No UI imports.
 // Stylized quarterly macro model (Q3: real start, stylized dynamics). Coefficients are hand-set
-// round numbers chosen for plausible direction and size, not estimates; every one is named here.
+// round numbers chosen for plausible direction and size, not estimates; every one lives in coefficients.ts.
 import { baseline, estimate, spendLevers, taxLevers, type BudgetDraft } from './budget';
-import { C, LIMITS } from './coefficients';
+import { C, LIMITS, RULES, SCORE } from './coefficients';
 import { resolveBill, type Decisions } from './decisions';
 import { clamp, tanhPade } from './detmath';
 import { normal } from './rng';
+import { prosperity } from './score';
 import { Ledger, type Term, type TraceKey } from './trace';
-import { BN_PER_TN, BUDGET_WINDOW_YEARS, MONTHS_PER_YEAR, PERCENT, QUARTERS_PER_YEAR } from './units';
+import { BN_PER_TN, BUDGET_WINDOW_YEARS, LEGACY_QUARTERS, MONTHS_PER_YEAR, PERCENT, QUARTERS_PER_YEAR, TOTAL_TURNS } from './units';
 
-export const TOTAL_TURNS = 32;
+export { prosperity } from './score';
+export { LEGACY_QUARTERS, TOTAL_TURNS };
 
 /** Real-world starting values (from data/us-2026.json via fromData). */
 export interface Start {
@@ -80,8 +82,8 @@ export function newGame(seed: number, start: Start): GameState {
   return {
     seed,
     turn: 1,
-    approval: 52,
-    clout: 120,
+    approval: RULES.startApproval.value,
+    clout: RULES.startClout.value,
     policy: baseline(),
     start,
     report: { luck: { gap: 0, infl: 0, appr: 0 }, log: [], trace: {} },
@@ -94,7 +96,7 @@ export function newGame(seed: number, start: Start): GameState {
       expected: start.inflation,
       fedRate: start.fedRate,
       gdp: start.gdp,
-      debt: (start.debtPct / 100) * start.gdp,
+      debt: (start.debtPct / PERCENT) * start.gdp,
       realIncome: start.medianIncome,
       gini: start.gini,
       lifeExp: start.lifeExp,
@@ -251,26 +253,6 @@ export function step(state: GameState, decisions: Decisions): GameState {
 }
 
 // ---- scoring ------------------------------------------------------------------------------
-/** Prosperity index components (design.md §2): 50 = where you started, 0..100. */
-export function prosperity(state: GameState) {
-  const s = state.start, e = state.econ;
-  const score = (x: number) => clamp(x, 0, 100);
-  const parts = {
-    income: { w: 0.25, v: score(50 + (e.realIncome / s.medianIncome - 1) * 250) },
-    employment: { w: 0.15, v: score(50 + (e.empPop - s.empPop) * 16) },
-    inflation: { w: 0.1, v: score(100 - 20 * Math.abs(e.inflation - 2)) },
-    debt: { w: 0.15, v: score(50 - ((e.debt / e.gdp) * 100 - s.debtPct) * 1.25) },
-    lifeExp: { w: 0.1, v: score(50 + (e.lifeExp - s.lifeExp) * 50) },
-    inequality: { w: 0.1, v: score(50 - (e.gini - s.gini) * 2500) },
-    security: { w: 0.1, v: score(50 - (e.crime / s.crime - 1) * 500) },
-    trust: { w: 0.05, v: score(50 + (e.trust - s.trust) * 5) },
-  };
-  const index = Object.values(parts).reduce((a, p) => a + p.w * p.v, 0);
-  return { index, parts };
-}
-
-export const LEGACY_QUARTERS = 40;
-
 /** The country 10 years after you leave, if nobody changes your policies (design.md §2). */
 export function legacy(state: GameState): GameState {
   let s = state;
@@ -281,5 +263,5 @@ export function legacy(state: GameState): GameState {
 /** Final score: half how you leave the country, half how it holds up a decade later. */
 export function finalScore(state: GameState) {
   const now = prosperity(state).index, later = prosperity(legacy(state)).index;
-  return { now, later, total: (now + later) / 2 };
+  return { now, later, total: SCORE.nowWeight.value * now + (1 - SCORE.nowWeight.value) * later };
 }

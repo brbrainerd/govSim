@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { endTurn, newGame, prosperity, TOTAL_TURNS, type GameState } from './game';
+import { SCORE } from './coefficients';
+import { endTurn, finalScore, newGame, prosperity, TOTAL_TURNS, type GameState } from './game';
 import { START } from './fixture';
 
 const play = (seed: number) => {
@@ -27,5 +28,10 @@ describe('engine', () => {
   it('scores the start at 50 on every outcome except inflation distance', () => {
     const { parts } = prosperity(newGame(1, START));
     for (const [k, p] of Object.entries(parts)) if (k !== 'inflation') expect(p.v).toBeCloseTo(50, 5);
+  });
+
+  it('weights the final score by the registry: now against ten years on', () => {
+    const f = finalScore(play(3).at(-1)!);
+    expect(f.total).toBe(SCORE.nowWeight.value * f.now + (1 - SCORE.nowWeight.value) * f.later);
   });
 });

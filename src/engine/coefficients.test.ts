@@ -1,5 +1,8 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { fromData, us } from '../data/us';
+import { scan } from '../testing/scan';
 import { spendLevers, taxLevers } from './budget';
 import { C, COEFF, LIMITS, problems, RULES, SCORE, type Coeff, type Limit } from './coefficients';
 import { voteOutcome } from './congress';
@@ -88,5 +91,26 @@ describe('budget levers', () => {
   it('vote outcome reads its reward and refund from RULES', () => {
     expect(voteOutcome(220, 35)).toEqual({ passed: true, cloutBack: 10 });
     expect(voteOutcome(210, 35)).toEqual({ passed: false, cloutBack: 17 });
+  });
+});
+
+// FND-07 / T-1-12: the engine reads every model number from the registry. Never widen this list to
+// make the scan pass: register the number in coefficients.ts instead.
+describe('literal scan', () => {
+  const EXEMPT = new Set(['coefficients.ts', 'units.ts', 'rng.ts', 'hash.ts', 'detmath.ts', 'budget.ts', 'congress.ts', 'calendar.ts', 'fixture.ts', 'replayFixture.ts']);
+  const dir = 'src/engine';
+  const files = readdirSync(dir).filter((f) => f.endsWith('.ts') && !f.endsWith('.test.ts'));
+
+  it('can fail: a bare coefficient is reported', () => {
+    expect(scan('x.ts', 'const k = 0.4 * y').literals).toHaveLength(1);
+  });
+
+  it('scans the engine files that hold the model', () => {
+    for (const f of ['game.ts', 'score.ts', 'trace.ts', 'decisions.ts']) expect(files.filter((x) => !EXEMPT.has(x))).toContain(f);
+  });
+
+  it('finds no numeric literal other than 0 or 1 outside the exempt files', () => {
+    const literals = files.filter((f) => !EXEMPT.has(f)).flatMap((f) => scan(join(dir, f), readFileSync(join(dir, f), 'utf8')).literals);
+    expect(literals).toEqual([]);
   });
 });
