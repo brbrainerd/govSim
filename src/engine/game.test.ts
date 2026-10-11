@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { endTurn, newGame, prosperity, TOTAL_TURNS, turnLabel, type GameState } from './game';
+import { endTurn, newGame, prosperity, TOTAL_TURNS, type GameState } from './game';
 import { START } from './fixture';
 
 const play = (seed: number) => {
@@ -27,11 +27,5 @@ describe('engine', () => {
   it('scores the start at 50 on every outcome except inflation distance', () => {
     const { parts } = prosperity(newGame(1, START));
     for (const [k, p] of Object.entries(parts)) if (k !== 'inflation') expect(p.v).toBeCloseTo(50, 5);
-  });
-
-  it('starts in the present and labels quarters', () => {
-    expect(turnLabel(1)).toBe('Fall 2026');
-    expect(turnLabel(2)).toBe('Winter 2027');
-    expect(turnLabel(32)).toBe('Summer 2034');
   });
 });

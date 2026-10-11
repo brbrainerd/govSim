@@ -227,13 +227,3 @@ export function finalScore(state: GameState) {
   const now = prosperity(state).index, later = prosperity(legacy(state)).index;
   return { now, later, total: (now + later) / 2 };
 }
-
-// ---- labels -------------------------------------------------------------------------------
-const SEASONS = ['Winter', 'Spring', 'Summer', 'Fall'] as const;
-const START_QUARTER = 2026 * 4 + 3; // Q4 2026: the game starts in the present (design Q19)
-
-/** Season + year for a 1-based turn; quarters run Winter, Spring, Summer, Fall. */
-export function turnLabel(turn: number): string {
-  const q = START_QUARTER + turn - 1;
-  return `${SEASONS[q % 4]} ${Math.floor(q / 4)}`;
-}
