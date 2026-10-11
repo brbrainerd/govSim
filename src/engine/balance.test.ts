@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { fromPackage, type BudgetDraft } from './budget';
 import { endTurn, finalScore, newGame, TOTAL_TURNS, type GameState } from './game';
-import { START } from './fixture';
+import { enact, START } from './fixture';
 
 const strategies: Record<string, BudgetDraft | null> = {
   autopilot: null,
@@ -14,7 +14,7 @@ const strategies: Record<string, BudgetDraft | null> = {
 
 function run(seed: number, budget: BudgetDraft | null): GameState[] {
   const out = [newGame(seed, START)];
-  for (let t = 1; t < TOTAL_TURNS; t++) out.push(endTurn(out[t - 1]!, t === 1 && budget ? { budget } : {}));
+  for (let t = 1; t < TOTAL_TURNS; t++) out.push(endTurn(out[t - 1]!, t === 1 && budget ? enact(budget) : {}));
   return out;
 }
 
