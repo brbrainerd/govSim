@@ -5,16 +5,16 @@ milestone_name: Playable First Term
 current_phase: 1
 current_phase_name: Engine foundations
 status: executing
-stopped_at: Completed 01-05-PLAN.md
-last_updated: "2026-10-11T06:00:17.581Z"
+stopped_at: Completed 01-04-PLAN.md
+last_updated: "2026-10-11T06:01:54.003Z"
 last_activity: 2026-10-10
 last_activity_desc: Phase 1 execution started
-state_head: 53474b80cedc8c1aedc78a075de895aa08c8ef13
+state_head: 5e1edab6d12a9907806b46f6e00573162e0d2b11
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 7
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-10-09)
 ## Current Position
 
 Phase: 1 (Engine foundations) — EXECUTING
-Plan: 5 of 7
+Plan: 6 of 7
 Status: Ready to execute
 Last activity: 2026-10-10 — Phase 1 execution started
 
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 1 P02 | 6min | 3 tasks | 10 files |
 | Phase 1 P03 | 3 min | 3 tasks | 5 files |
 | Phase 01 P05 | 6 min | 2 tasks | 8 files |
+| Phase 01 P04 | 10min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,7 @@ Recent decisions affecting current work:
 - [Phase 1]: 01-03: Taylor 1993 cited via the author's Stanford PDF, not the DOI — The DOI resolves to an Elsevier redirect page that shows no paper content
 - [Phase 1]: 01-05: Deals made without Call the vote are voted and charged at Next turn (A8); enact() sends all three deals so budgets pass the House
 - [Phase 1]: 01-05: Decisions is { bill?: { budget, deals } } with no clout field; resolveBill is shared by engine step and Session preview
+- [Phase 1]: 01-04: @playwright/test 1.64.0 approved by user 2026-10-10, exact pin, dev-only, --ignore-scripts
 
 ### Pending Todos
 
@@ -106,6 +108,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-11T06:00:17.568Z
-Stopped at: Completed 01-05-PLAN.md
+Last session: 2026-10-11T06:01:53.990Z
+Stopped at: Completed 01-04-PLAN.md
 Resume file: None

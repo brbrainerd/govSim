@@ -77,7 +77,7 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 
 ### Release & distribution
 
-- [ ] **REL-01**: Repo has LICENSE (MIT), LICENSE-ASSETS (CC BY 4.0), TRADEMARKS.md, CONTRIBUTING.md with DCO, and generated third-party notices
+- [x] **REL-01**: Repo has LICENSE (MIT), LICENSE-ASSETS (CC BY 4.0), TRADEMARKS.md, CONTRIBUTING.md with DCO, and generated third-party notices
 - [ ] **REL-02**: Player can open an About / Privacy / Credits screen; PRIVACY.md states that nothing is collected and what server logs exist
 - [ ] **REL-03**: Player can copy a share-your-run code that replays their game for someone else
 - [ ] **REL-04**: Player can copy a "report a problem" bundle (local error log + run code) after seeing its contents; nothing is sent automatically
@@ -157,7 +157,7 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 | ELC-03 | Phase 7 | Pending |
 | ELC-04 | Phase 7 | Pending |
 | ELC-05 | Phase 7 | Pending |
-| REL-01 | Phase 1 | Pending |
+| REL-01 | Phase 1 | Complete |
 | REL-02 | Phase 8 | Pending |
 | REL-03 | Phase 8 | Pending |
 | REL-04 | Phase 8 | Pending |
