@@ -2,9 +2,11 @@
 // Stylized quarterly macro model (Q3: real start, stylized dynamics). Coefficients are hand-set
 // round numbers chosen for plausible direction and size, not estimates; every one is named here.
 import { baseline, estimate, taxLevers, type BudgetDraft } from './budget';
+import { C } from './coefficients';
 import { resolveBill, type Decisions } from './decisions';
 import { clamp, tanhPade } from './detmath';
 import { normal } from './rng';
+import { Ledger, type Term, type TraceKey } from './trace';
 
 export const TOTAL_TURNS = 32;
 
@@ -51,7 +53,7 @@ export interface GameState {
   readonly policy: BudgetDraft; // enacted budget levers
   readonly econ: Econ;
   readonly start: Start;
-  readonly report: Report; // what happened last turn (plan 01-06 adds trace)
+  readonly report: Report; // what happened last turn
 }
 
 /** One thing that happened last turn (a bill passed, failed or was rejected). */
@@ -61,35 +63,11 @@ export interface LogEntry { kind: string; id: string; detail?: string; amount?: 
 export interface Report {
   readonly luck: { gap: number; infl: number; appr: number };
   readonly log: readonly LogEntry[];
+  /** Named terms behind each indicator's change this turn (FND-04); empty before the first step. */
+  readonly trace: Partial<Record<TraceKey, readonly Term[]>>;
 }
 
 export type { Decisions } from './decisions';
-
-// ---- coefficients -------------------------------------------------------------------------
-const C = {
-  gapPersistence: 0.85,
-  fiscalMultiplier: 0.6, // gap change per 1% of GDP of extra deficit
-  rateDrag: 0.15, // gap change per 1pt of real rate above neutral
-  neutralReal: 1.0,
-  okun: 0.5, // unemployment pts per 1% gap
-  empPerU: 0.6, // employment-pop ratio pts per unemployment pt
-  phillips: 0.15,
-  expectPull: 0.25,
-  expectAdapt: 0.1,
-  tariffPass: 0.1, // inflation pts per tariff pt (one-off, on change)
-  taylorInfl: 0.5,
-  taylorGap: 0.5,
-  fedSmooth: 0.4,
-  potentialMax: 0.25, // max potential-growth gain from policy (diminishing returns, tanh)
-  crowdOut: 0.012, // potential growth pts lost per 1pt of debt/GDP above start
-  crisisAt: 130, // debt/GDP % where bond markets start to revolt (design Q27)
-  termPremium: 0.02, // extra interest pts per 1pt of debt/GDP above start
-  approvalPull: 0.35,
-  honeymoon: 8,
-  shockGap: 0.3,
-  shockInfl: 0.12,
-  shockApproval: 1.0,
-} as const;
 
 const tariffOf = (p: BudgetDraft) => p.tar ?? taxLevers.find((l) => l.id === 'tar')!.base;
 
@@ -102,7 +80,7 @@ export function newGame(seed: number, start: Start): GameState {
     clout: 120,
     policy: baseline(),
     start,
-    report: { luck: { gap: 0, infl: 0, appr: 0 }, log: [] },
+    report: { luck: { gap: 0, infl: 0, appr: 0 }, log: [], trace: {} },
     econ: {
       gap: 0,
       growth: start.potential,
@@ -127,7 +105,7 @@ export function endTurn(state: GameState, decisions: Decisions = {}): GameState 
 }
 
 /** One quarter of the model, uncapped (also used for the legacy projection). */
-function step(state: GameState, decisions: Decisions): GameState {
+export function step(state: GameState, decisions: Decisions): GameState {
   const s = state.start, e = state.econ;
   const zGap = normal(state.seed, 'macro', state.turn, 'gap');
   const zInfl = normal(state.seed, 'macro', state.turn, 'infl');
@@ -144,8 +122,13 @@ function step(state: GameState, decisions: Decisions): GameState {
   const potential = s.potential + C.potentialMax * tanhPade(after.growth) - C.crowdOut * Math.max(0, debtPctNow - s.debtPct);
 
   const realRate = e.fedRate - e.inflation;
-  const gap = C.gapPersistence * e.gap + C.fiscalMultiplier * fiscalImpulse - 0.4 * Math.max(0, (debtPctNow - C.crisisAt) / 10)
-    - C.rateDrag * (realRate - C.neutralReal) + C.shockGap * zGap;
+  const g = new Ledger();
+  g.add('momentum', (C.gapPersistence - 1) * e.gap);
+  g.add('budget', C.fiscalMultiplier * fiscalImpulse);
+  g.add('debt:stress', -C.debtStressGap * Math.max(0, (debtPctNow - C.crisisAt) / C.debtStressUnit));
+  g.add('fed:drag', -C.rateDrag * (realRate - C.neutralReal));
+  g.add('luck', C.shockGap * zGap);
+  const gap = e.gap + g.sum;
   const growth = potential + 4 * (gap - e.gap);
   const unemployment = clamp(s.unemployment - C.okun * gap, 2.5, 15);
   const inflation = clamp(e.inflation + C.expectPull * (e.expected - e.inflation) + C.phillips * gap
@@ -186,7 +169,7 @@ function step(state: GameState, decisions: Decisions): GameState {
     approval,
     clout: Math.max(0, state.clout + (r ? r.cloutDelta : 0) + Math.round(approval / 10)),
     policy,
-    report: { luck: { gap: zGap, infl: zInfl, appr: zAppr }, log },
+    report: { luck: { gap: zGap, infl: zInfl, appr: zAppr }, log, trace: { gap: g.terms } },
     econ: {
       gap, growth, unemployment, empPop: s.empPop - C.empPerU * (unemployment - s.unemployment),
       inflation, expected, fedRate, gdp, debt, realIncome, gini, lifeExp, trust, crime,
