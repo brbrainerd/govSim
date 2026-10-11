@@ -570,3 +570,20 @@ describe('characterization', () => {
     `);
   });
 });
+
+describe('fixture coverage (FND-02)', () => {
+  const play = (name: string) => {
+    const log = LOGS.find((l) => l.name === name)!;
+    let s = log.setup ? log.setup(newGame(log.seed, START)) : newGame(log.seed, START);
+    const out = [s];
+    for (let t = 1; t < TOTAL_TURNS; t++) out.push((s = endTurn(s, log.inputs[t], { resolvers: log.resolvers })));
+    return out;
+  };
+  const logs = (name: string) => play(name).flatMap((s) => s.report.log);
+  it('has a failing, an unaffordable and a resolved-by-keyed-draw case', () => {
+    expect(logs('failing-bill')).toContainEqual(expect.objectContaining({ kind: 'bill', id: 'failed' }));
+    expect(logs('unaffordable-bill')).toContainEqual(expect.objectContaining({ kind: 'bill', id: 'rejected' }));
+    expect(logs('modifiers').filter((l) => l.kind === 'ruling')).toHaveLength(1);
+    expect(play('modifiers').at(-1)!.scheduled).toEqual([]);
+  });
+});
