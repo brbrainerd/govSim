@@ -1,3 +1,4 @@
+import { C } from '../engine/coefficients';
 import type { Start } from '../engine/game';
 import raw from '../../data/us-2026.json';
 import type { Sourced, USData } from './schema';
@@ -10,16 +11,13 @@ function num(field: string, s: Sourced): number {
   return s.value;
 }
 
-// ponytail: potential growth is a model assumption (CBO long-run ~1.8–2%), not a data field.
-const POTENTIAL_GROWTH = 1.8;
-
 /** Map the sourced data file onto the engine's starting values. */
 export function fromData(d: USData): Start {
   const e = d.economy, f = d.fiscal;
   const gdp = num('economy.gdpNominal', e.gdpNominal);
   return {
     gdp,
-    potential: POTENTIAL_GROWTH,
+    potential: C.potentialGrowth,
     unemployment: num('economy.unemployment', e.unemployment),
     empPop: num('economy.employmentPopRatio', e.employmentPopRatio),
     inflation: num('economy.cpiInflation', e.cpiInflation),
