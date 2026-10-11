@@ -5,16 +5,16 @@ milestone_name: Playable First Term
 current_phase: 1
 current_phase_name: Engine foundations
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-10-11T05:48:19.478Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-10-11T05:50:22.379Z"
 last_activity: 2026-10-10
 last_activity_desc: Phase 1 execution started
-state_head: 99647a643f60c23ce337c41eb77ddece3ebf64ac
+state_head: e1c1e4e671fa3ddc2003f76129c23646b8336a77
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 7
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-10-09)
 ## Current Position
 
 Phase: 1 (Engine foundations) — EXECUTING
-Plan: 2 of 7
+Plan: 3 of 7
 Status: Ready to execute
 Last activity: 2026-10-10 — Phase 1 execution started
 
@@ -60,6 +60,7 @@ Progress: [░░░░░░░░░░] 0%
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 1 P01 | 8min | 3 tasks | 12 files |
+| Phase 1 P02 | 6min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,8 @@ Recent decisions affecting current work:
 - [Roadmap]: Badges (RPT-03) deferred to Phase 8 so milestones can span every mechanic
 - [Phase 1]: 01-01: keyed RNG address (seed, stream, turn, key) replaces the GameState.rng cursor; STREAM ids and gap/infl/appr keys are the replay contract
 - [Phase 1]: 01-01: scanner ignores a banned identifier only as the name of a property access, so Date.now() is caught
+- [Phase 1]: 01-02: party lives in Session.options only; engine stays party-blind by absence (D4)
+- [Phase 1]: 01-02: no party preselected at New Game; real calendar quarter is tooltip-only (D1)
 
 ### Pending Todos
 
@@ -97,6 +100,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-11T05:48:16.682Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-10-11T05:50:22.367Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None

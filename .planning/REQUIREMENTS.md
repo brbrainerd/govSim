@@ -11,12 +11,12 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 
 - [x] **FND-01**: A player who makes no decisions faces exactly the same outside crises and shocks as autopilot on the same seed, whatever else they do (keyed RNG streams; GR-01/02)
 - [x] **FND-02**: A saved game replays to identical results in Chromium, WebKit and Firefox (no transcendental `Math` in the engine; GR-32)
-- [ ] **FND-03**: Player sees turns as "Year N · Season" of their term, with the real-world date in a tooltip; midterms fall in Year 2 Fall, reelection in Year 4 Fall
+- [x] **FND-03**: Player sees turns as "Year N · Season" of their term, with the real-world date in a tooltip; midterms fall in Year 2 Fall, reelection in Year 4 Fall
 - [ ] **FND-04**: Every indicator change is explained by named causes that add up exactly to the change, including a "luck" line (engine trace; GR-05)
 - [ ] **FND-05**: Clout costs are charged by the engine from the player's raw choices, so the preview and the result always match
 - [ ] **FND-06**: The 10-year legacy projection runs with no new events, and executive orders do not carry into it
 - [ ] **FND-07**: Every model coefficient has a citation or an explicit "judgement" tag and an allowed range (GR-22)
-- [ ] **FND-08**: Player picks a party at New Game; the engine stays party-blind
+- [x] **FND-08**: Player picks a party at New Game; the engine stays party-blind
 
 ### Saves & enforced guardrails
 
@@ -112,12 +112,12 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 |-------------|-------|--------|
 | FND-01 | Phase 1 | Complete |
 | FND-02 | Phase 1 | Complete |
-| FND-03 | Phase 1 | Pending |
+| FND-03 | Phase 1 | Complete |
 | FND-04 | Phase 1 | Pending |
 | FND-05 | Phase 1 | Pending |
 | FND-06 | Phase 1 | Pending |
 | FND-07 | Phase 1 | Pending |
-| FND-08 | Phase 1 | Pending |
+| FND-08 | Phase 1 | Complete |
 | OBS-01 | Phase 2 | Pending |
 | OBS-02 | Phase 2 | Pending |
 | OBS-03 | Phase 2 | Pending |
