@@ -21,7 +21,11 @@ export const VALUE: Record<TraceKey, (s: GameState) => number> = {
   clout: (s) => s.clout,
 };
 
-/** One readable message per traced key whose terms do not add up; [] when the step conserves. */
+/**
+ * One readable message per traced key whose terms do not add up; [] when the step conserves.
+ * `tol` is absolute for values up to 1 and relative beyond that: floating-point error grows with the
+ * magnitude (a collapsed legacy projection reaches incomes near -6e7, where one ulp is 7e-9).
+ */
 export function conservationErrors(before: GameState, after: GameState, tol = 1e-9): string[] {
   const errors: string[] = [];
   for (const key of TRACE_KEYS) {
@@ -30,7 +34,8 @@ export function conservationErrors(before: GameState, after: GameState, tol = 1e
     const sum = terms.reduce((a, t) => a + t.amount, 0);
     const level = LEVEL_KEYS.has(key);
     const want = level ? VALUE[key](after) : VALUE[key](after) - VALUE[key](before);
-    if (!(Math.abs(sum - want) <= tol)) {
+    const scale = Math.max(1, Math.abs(VALUE[key](before)), Math.abs(VALUE[key](after)));
+    if (!(Math.abs(sum - want) <= tol * scale)) {
       errors.push(`turn ${before.turn} ${key}: terms sum to ${sum} but the ${level ? 'value' : 'change'} is ${want} (${terms.map((t) => `${t.source} ${t.amount}`).join(', ')})`);
     }
   }

@@ -3,9 +3,10 @@
 import { describe, expect, it } from 'vitest';
 import { conservationErrors } from '../testing/conservation';
 import { fromPackage, type BudgetDraft } from './budget';
-import { C } from './coefficients';
+import { C, LIMITS } from './coefficients';
 import { enact, START } from './fixture';
 import { endTurn, newGame, step, TOTAL_TURNS, type Decisions, type GameState } from './game';
+import { isKnownSource, TRACE_KEYS, type TraceKey } from './trace';
 
 const maxDeficit: BudgetDraft = { ...fromPackage('Tax cut'), def: 120, ssm: 110, mcd: 120, rds: 130, rnd: 130, oth: 120 };
 /** `first` is the turn-1 Decisions; null is autopilot, 'empty' is {} every turn. */
@@ -54,5 +55,60 @@ describe('trace', () => {
       const want = C.shockGap * next.report.luck.gap;
       expect(luck?.amount ?? 0, where).toBeCloseTo(want, 12);
     });
+  });
+
+  it('records every one of the 15 keys on every step', () => {
+    sweep((_prev, next, where) => expect(Object.keys(next.report.trace).sort(), where).toEqual([...TRACE_KEYS].sort()));
+  });
+
+  it('records inflation and approval luck as the coefficient times the recorded shock', () => {
+    sweep((_prev, next, where) => {
+      const amount = (key: TraceKey) => next.report.trace[key]!.find((t) => t.source === 'luck')?.amount ?? 0;
+      expect(amount('inflation'), where).toBeCloseTo(C.shockInfl * next.report.luck.infl, 12);
+      expect(amount('approval'), where).toBeCloseTo(C.shockApproval * next.report.luck.appr, 12);
+    });
+  });
+
+  it('carries the gap luck into growth, unemployment and empPop by their equations', () => {
+    sweep((_prev, next, where) => {
+      const luck = (key: TraceKey) => next.report.trace[key]!.find((t) => t.source === 'luck')?.amount ?? 0;
+      const g = C.shockGap * next.report.luck.gap;
+      expect(luck('growth'), where).toBeCloseTo(4 * g, 12);
+      expect(luck('unemployment'), where).toBeCloseTo(-C.okun * g, 12);
+      expect(luck('empPop'), where).toBeCloseTo(C.okun * C.empPerU * g, 12);
+    });
+  });
+
+  it('uses only named sources, with bounded clamp and rounding residuals', () => {
+    const near = (a: number, b: number) => Math.abs(a - b) <= 1e-9;
+    const onBound = (v: number, [lo, hi]: readonly [number, number]) => near(v, lo) || near(v, hi);
+    const bounds: Partial<Record<TraceKey, readonly [number, number]>> = {
+      unemployment: LIMITS.unemployment.bounds, inflation: LIMITS.inflation.bounds, fedRate: LIMITS.fedRate.bounds,
+      gini: LIMITS.gini.bounds, approval: LIMITS.approval.bounds, trust: LIMITS.trust.bounds,
+    };
+    const quantum: Partial<Record<TraceKey, number>> = { fedRate: 0.125, approval: 0.5 };
+    const value = (s: GameState, key: TraceKey) => ({
+      unemployment: s.econ.unemployment, inflation: s.econ.inflation, fedRate: s.econ.fedRate, gini: s.econ.gini,
+      approval: s.approval, trust: s.econ.trust, clout: s.clout,
+    })[key as 'unemployment'];
+    const bad: string[] = [];
+    sweep((prev, next, where) => {
+      for (const key of TRACE_KEYS) {
+        for (const term of next.report.trace[key]!) {
+          const at = `${where} ${key} ${term.source} ${term.amount}`;
+          if (['residual', 'other', 'misc'].includes(term.source)) bad.push(`${at}: catch-all source`);
+          if (!isKnownSource(term.source)) bad.push(`${at}: unknown source`);
+          if (term.source === 'clamp' && Math.abs(term.amount) > 1e-9) {
+            // empPop is clamped by the unemployment bound; clout floors at 0; other keys have no clamp.
+            const [k, b] = key === 'empPop' ? (['unemployment', LIMITS.unemployment.bounds] as const)
+              : key === 'clout' ? (['clout', [0, Infinity]] as const) : ([key, bounds[key]] as const);
+            if (!b) bad.push(`${at}: key has no bound`);
+            else if (!onBound(value(prev, k as TraceKey)!, b) && !onBound(value(next, k as TraceKey)!, b)) bad.push(`${at}: away from a bound`);
+          }
+          if (term.source === 'rounding' && !(Math.abs(term.amount) <= (quantum[key] ?? -1) + 1e-12)) bad.push(`${at}: rounding beyond half a step`);
+        }
+      }
+    });
+    expect(bad.slice(0, 10)).toEqual([]);
   });
 });

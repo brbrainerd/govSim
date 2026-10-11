@@ -1,12 +1,13 @@
 // Pure, deterministic engine core (design.md §3, §8). No UI imports.
 // Stylized quarterly macro model (Q3: real start, stylized dynamics). Coefficients are hand-set
 // round numbers chosen for plausible direction and size, not estimates; every one is named here.
-import { baseline, estimate, taxLevers, type BudgetDraft } from './budget';
-import { C } from './coefficients';
+import { baseline, estimate, spendLevers, taxLevers, type BudgetDraft } from './budget';
+import { C, LIMITS } from './coefficients';
 import { resolveBill, type Decisions } from './decisions';
 import { clamp, tanhPade } from './detmath';
 import { normal } from './rng';
 import { Ledger, type Term, type TraceKey } from './trace';
+import { BN_PER_TN, BUDGET_WINDOW_YEARS, MONTHS_PER_YEAR, PERCENT, QUARTERS_PER_YEAR } from './units';
 
 export const TOTAL_TURNS = 32;
 
@@ -69,7 +70,10 @@ export interface Report {
 
 export type { Decisions } from './decisions';
 
-const tariffOf = (p: BudgetDraft) => p.tar ?? taxLevers.find((l) => l.id === 'tar')!.base;
+const leverBase = (id: string) => [...taxLevers, ...spendLevers].find((l) => l.id === id)!.base;
+const tariffOf = (p: BudgetDraft) => p.tar ?? leverBase('tar');
+/** How far a lever sits from its base (a missing lever counts as the base). */
+const leverDev = (p: BudgetDraft, id: string) => (p[id] ?? leverBase(id)) - leverBase(id);
 
 // ---- lifecycle ----------------------------------------------------------------------------
 export function newGame(seed: number, start: Start): GameState {
@@ -104,7 +108,10 @@ export function endTurn(state: GameState, decisions: Decisions = {}): GameState 
   return state.turn >= TOTAL_TURNS ? state : step(state, decisions);
 }
 
-/** One quarter of the model, uncapped (also used for the legacy projection). */
+/**
+ * One quarter of the model, uncapped (also used for the legacy projection). Every indicator is
+ * `before + a Ledger of named terms` (FND-04); clamps and rounding are recorded as bounded residuals.
+ */
 export function step(state: GameState, decisions: Decisions): GameState {
   const s = state.start, e = state.econ;
   const zGap = normal(state.seed, 'macro', state.turn, 'gap');
@@ -116,49 +123,110 @@ export function step(state: GameState, decisions: Decisions): GameState {
   const enacted = r && r.valid && r.passed ? r : null;
   const policy = enacted ? enacted.budget : state.policy;
   const before = estimate(state.policy), after = estimate(policy);
-  const fiscalImpulse = ((after.deficitBn - before.deficitBn) / 10 / (e.gdp * 1000)) * 100; // % GDP per year
+  const fiscalImpulse = ((after.deficitBn - before.deficitBn) / BUDGET_WINDOW_YEARS / (e.gdp * BN_PER_TN)) * PERCENT; // % GDP per year
   const tariffChange = tariffOf(policy) - tariffOf(state.policy);
-  const debtPctNow = (e.debt / e.gdp) * 100;
-  const potential = s.potential + C.potentialMax * tanhPade(after.growth) - C.crowdOut * Math.max(0, debtPctNow - s.debtPct);
+  const debtPctNow = (e.debt / e.gdp) * PERCENT;
+  const stress = Math.max(0, debtPctNow - C.crisisAt) / C.debtStressUnit; // debt crisis: bond-market stress
 
-  const realRate = e.fedRate - e.inflation;
+  // Output gap: the one ledger growth, unemployment and employment reuse.
   const g = new Ledger();
   g.add('momentum', (C.gapPersistence - 1) * e.gap);
   g.add('budget', C.fiscalMultiplier * fiscalImpulse);
-  g.add('debt:stress', -C.debtStressGap * Math.max(0, (debtPctNow - C.crisisAt) / C.debtStressUnit));
-  g.add('fed:drag', -C.rateDrag * (realRate - C.neutralReal));
+  g.add('debt:stress', -C.debtStressGap * stress);
+  g.add('fed:drag', -C.rateDrag * (e.fedRate - e.inflation - C.neutralReal));
   g.add('luck', C.shockGap * zGap);
   const gap = e.gap + g.sum;
-  const growth = potential + 4 * (gap - e.gap);
-  const unemployment = clamp(s.unemployment - C.okun * gap, 2.5, 15);
-  const inflation = clamp(e.inflation + C.expectPull * (e.expected - e.inflation) + C.phillips * gap
-    + C.tariffPass * tariffChange + C.shockInfl * zInfl, -2, 15);
-  const expected = (1 - C.expectAdapt) * e.expected + C.expectAdapt * inflation;
-  const target = C.neutralReal + inflation + C.taylorInfl * (inflation - 2) + C.taylorGap * gap;
-  const fedRate = clamp(Math.round((e.fedRate + C.fedSmooth * (target - e.fedRate)) * 4) / 4, 0, 10);
 
-  const gdp = e.gdp * (1 + (growth + inflation) / 400);
-  const stress = Math.max(0, debtPctNow - C.crisisAt) / 10; // debt crisis: bond-market stress
-  const borrowingCost = (fedRate - s.fedRate) * 0.5 + C.termPremium * Math.max(0, debtPctNow - s.debtPct) + 1.5 * stress;
-  const interestDrift = (borrowingCost * e.debt) / 100; // $tn/yr above the starting interest bill
-  const deficit = (s.deficitPct / 100) * gdp + after.deficitBn / 10 / 1000 + interestDrift; // $tn/yr
-  const debt = e.debt + deficit / 4;
+  // Growth is a level: potential plus the annualized change in the gap.
+  const gr = new Ledger();
+  gr.add('potential:base', s.potential);
+  gr.add('potential:policy', C.potentialMax * tanhPade(after.growth));
+  gr.add('potential:crowding', -C.crowdOut * Math.max(0, debtPctNow - s.debtPct));
+  for (const t of g.scaled(QUARTERS_PER_YEAR).terms) gr.add(t.source, t.amount);
+  const growth = gr.sum;
 
-  const realIncome = e.realIncome * (1 + (0.8 * growth) / 400) + (enacted ? (after.familyMonthly - before.familyMonthly) * 12 : 0);
-  const spendDev = (k: string) => (policy[k] ?? 100) - 100;
+  // Unemployment and employment are level-defined; settleTo carries any clamp or noise as `clamp`.
+  const un = g.scaled(-C.okun);
+  const unemployment = un.settleTo(e.unemployment, clamp(s.unemployment - C.okun * gap, ...LIMITS.unemployment.bounds));
+  const em = un.scaled(-C.empPerU);
+  const empPop = em.settleTo(e.empPop, s.empPop - C.empPerU * (unemployment - s.unemployment));
+
+  const inf = new Ledger();
+  inf.add('expectations', C.expectPull * (e.expected - e.inflation));
+  inf.add('demand', C.phillips * gap);
+  inf.add('tariffs', C.tariffPass * tariffChange);
+  inf.add('luck', C.shockInfl * zInfl);
+  const inflation = inf.clamp(e.inflation + inf.sum, ...LIMITS.inflation.bounds);
+  const ex = new Ledger();
+  ex.add('prices', C.expectAdapt * (inflation - e.expected));
+  const expected = e.expected + ex.sum;
+
+  // Policy rate: round to the step first, then clamp (as before).
+  const fed = new Ledger();
+  fed.add('fed:neutral', C.fedSmooth * (C.neutralReal + inflation - e.fedRate));
+  fed.add('fed:inflationGap', C.fedSmooth * C.taylorInfl * (inflation - C.inflTarget));
+  fed.add('fed:outputGap', C.fedSmooth * C.taylorGap * gap);
+  const fedRate = fed.clamp(fed.round(e.fedRate + fed.sum, C.fedStep), ...LIMITS.fedRate.bounds);
+
+  const gdp = e.gdp * (1 + (growth + inflation) / (QUARTERS_PER_YEAR * PERCENT));
+  const borrowingCost = (fedRate - s.fedRate) * C.fedPassThrough + C.termPremium * Math.max(0, debtPctNow - s.debtPct) + C.stressPremium * stress;
+  const interestDrift = (borrowingCost * e.debt) / PERCENT; // $tn/yr above the starting interest bill
+  const budgetDeficit = after.deficitBn / BUDGET_WINDOW_YEARS / BN_PER_TN; // $tn/yr
+  const deficit = (s.deficitPct / PERCENT) * gdp + budgetDeficit + interestDrift; // $tn/yr
+  const debt = e.debt + deficit / QUARTERS_PER_YEAR;
+
+  // Debt/GDP is traced instead of $ debt: the score and the UI read the ratio.
+  const perQuarter = PERCENT / (QUARTERS_PER_YEAR * gdp); // debt/GDP pts per $tn/yr of deficit for one quarter
+  const dp = new Ledger();
+  dp.add('deficit:base', s.deficitPct / QUARTERS_PER_YEAR);
+  dp.add('deficit:budget', budgetDeficit * perQuarter);
+  dp.add('deficit:interest', interestDrift * perQuarter);
+  dp.add('gdp:growth', PERCENT * e.debt * (1 / gdp - 1 / e.gdp)); // a bigger economy dilutes the old debt
+
+  const inc = new Ledger();
+  inc.add('growth', (e.realIncome * (C.incomeGrowthShare * growth)) / (QUARTERS_PER_YEAR * PERCENT));
+  if (enacted) inc.add('budget:family', (after.familyMonthly - before.familyMonthly) * MONTHS_PER_YEAR);
+  const realIncome = e.realIncome + inc.sum;
+
   // Level effects: indicators move toward a policy-dependent target instead of drifting forever.
-  const quarters = state.turn; // quarters since the start, incl. legacy projection
-  const lifeTarget = s.lifeExp + 0.01 * quarters + 0.015 * (spendDev('mcd') + spendDev('ssm'));
-  const lifeExp = e.lifeExp + 0.1 * (lifeTarget - e.lifeExp);
-  const giniTarget = s.gini - 0.0015 * ((policy.inc ?? 22) - 22) - 0.0005 * spendDev('mcd');
-  const gini = clamp(e.gini + 0.05 * (giniTarget - e.gini), 0.3, 0.6);
-  const crime = e.crime * (1 + 0.004 * (unemployment - s.unemployment) - 0.001);
+  // The life expectancy trend grows with state.turn, the quarters since the start (incl. the legacy projection).
+  const lf = new Ledger();
+  lf.add('health:trend', C.lifeAdjust * C.lifeTrend * state.turn);
+  lf.add('health:spending', C.lifeAdjust * C.lifeSpending * (leverDev(policy, 'mcd') + leverDev(policy, 'ssm')));
+  lf.add('health:reversion', C.lifeAdjust * (s.lifeExp - e.lifeExp));
+  const lifeExp = e.lifeExp + lf.sum;
+  const gn = new Ledger();
+  gn.add('tax:income', -C.giniAdjust * C.giniIncomeTax * leverDev(policy, 'inc'));
+  gn.add('spend:medicaid', -C.giniAdjust * C.giniMedicaid * leverDev(policy, 'mcd'));
+  gn.add('gini:reversion', C.giniAdjust * (s.gini - e.gini));
+  const gini = gn.clamp(e.gini + gn.sum, ...LIMITS.gini.bounds);
+  const cr = new Ledger();
+  cr.add('crime:jobs', e.crime * C.crimeJobs * (unemployment - s.unemployment));
+  cr.add('crime:trend', -e.crime * C.crimeTrend);
+  const crime = e.crime + cr.sum;
 
-  const honeymoon = Math.max(0, C.honeymoon * (1 - (state.turn - 1) / 4));
-  const approvalTarget = 50 + honeymoon - 2.5 * (unemployment - s.unemployment)
-    - 2 * Math.max(0, inflation - 2.5) + 1.5 * (growth - s.potential);
-  const approval = Math.round(clamp(state.approval + C.approvalPull * (approvalTarget - state.approval) + C.shockApproval * zAppr, 5, 95));
-  const trust = clamp(e.trust + 0.1 * (s.trust + 0.4 * (approval - 50) - e.trust), 5, 80);
+  // Approval moves toward a target built from jobs, prices and growth; clamp first, then round.
+  const honeymoon = Math.max(0, C.honeymoon * (1 - (state.turn - 1) / C.honeymoonQuarters));
+  const ap = new Ledger();
+  ap.add('approval:reversion', C.approvalPull * (C.approvalNeutral - state.approval));
+  ap.add('approval:honeymoon', C.approvalPull * honeymoon);
+  ap.add('approval:jobs', -C.approvalPull * C.approvalJobs * (unemployment - s.unemployment));
+  ap.add('approval:prices', -C.approvalPull * C.approvalPrices * Math.max(0, inflation - C.approvalPriceFloor));
+  ap.add('approval:growth', C.approvalPull * C.approvalGrowth * (growth - s.potential));
+  ap.add('luck', C.shockApproval * zAppr);
+  const approval = ap.round(ap.clamp(state.approval + ap.sum, ...LIMITS.approval.bounds), 1);
+  const tr = new Ledger();
+  tr.add('trust:reversion', C.trustAdjust * (s.trust - e.trust));
+  tr.add('trust:approval', C.trustAdjust * C.trustApproval * (approval - C.approvalNeutral));
+  const trust = tr.clamp(e.trust + tr.sum, ...LIMITS.trust.bounds);
+
+  const cl = new Ledger();
+  cl.add('clout:income', Math.round(approval / C.cloutPerApproval));
+  if (r?.valid) {
+    cl.add('clout:deals', -r.spent);
+    cl.add(r.passed ? 'clout:reward' : 'clout:refund', r.cloutBack);
+  }
+  const clout = cl.clamp(state.clout + cl.sum, 0, Infinity);
 
   const log: LogEntry[] = [];
   if (r) log.push(r.valid ? { kind: 'bill', id: r.passed ? 'passed' : 'failed', amount: r.whip.total } : { kind: 'bill', id: 'rejected', detail: 'unaffordable' });
@@ -167,13 +235,18 @@ export function step(state: GameState, decisions: Decisions): GameState {
     ...state,
     turn: state.turn + 1,
     approval,
-    clout: Math.max(0, state.clout + (r ? r.cloutDelta : 0) + Math.round(approval / 10)),
+    clout,
     policy,
-    report: { luck: { gap: zGap, infl: zInfl, appr: zAppr }, log, trace: { gap: g.terms } },
-    econ: {
-      gap, growth, unemployment, empPop: s.empPop - C.empPerU * (unemployment - s.unemployment),
-      inflation, expected, fedRate, gdp, debt, realIncome, gini, lifeExp, trust, crime,
+    report: {
+      luck: { gap: zGap, infl: zInfl, appr: zAppr },
+      log,
+      trace: {
+        gap: g.terms, growth: gr.terms, unemployment: un.terms, inflation: inf.terms, expected: ex.terms, fedRate: fed.terms,
+        debtPct: dp.terms, income: inc.terms, empPop: em.terms, lifeExp: lf.terms, gini: gn.terms, crime: cr.terms,
+        trust: tr.terms, approval: ap.terms, clout: cl.terms,
+      },
     },
+    econ: { gap, growth, unemployment, empPop, inflation, expected, fedRate, gdp, debt, realIncome, gini, lifeExp, trust, crime },
   };
 }
 
