@@ -4,17 +4,17 @@ milestone: v0.2
 milestone_name: Playable First Term
 current_phase: 1
 current_phase_name: Engine foundations
-status: executing
-stopped_at: Completed 01-06-PLAN.md
-last_updated: "2026-10-11T06:08:25.630Z"
+status: verifying
+stopped_at: Completed 01-07-PLAN.md
+last_updated: "2026-10-11T06:12:10.377Z"
 last_activity: 2026-10-10
 last_activity_desc: Phase 1 execution started
-state_head: 45cf64b3cd3318840db993576ba7893be8f3abe3
+state_head: e977f3fd9713d624b09fca15a5b9d9253219b7df
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-10-09)
 
 Phase: 1 (Engine foundations) — EXECUTING
 Plan: 7 of 7
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-10-10 — Phase 1 execution started
 
 Progress: [░░░░░░░░░░] 0%
@@ -65,6 +65,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P05 | 6 min | 2 tasks | 8 files |
 | Phase 01 P04 | 10min | 3 tasks | 3 files |
 | Phase 01 P06 | 14 min | 3 tasks | 8 files |
+| Phase 01 P07 | 12min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,7 @@ Recent decisions affecting current work:
 - [Phase 1]: 01-04: @playwright/test 1.64.0 approved by user 2026-10-10, exact pin, dev-only, --ignore-scripts
 - [Phase 1]: 01-06: conservationErrors tolerance scales with magnitude above 1 (ulp exceeds 1e-9 on collapsed legacy incomes near -6e7)
 - [Phase 1]: 01-06: lever bases come from the lever tables (leverBase/leverDev), not literals 22/100; settleTo records floating-point carry as clamp (~1e-16), Phase 3 should hide sub-threshold residuals
+- [Phase 1]: 01-07: modifiers fold into channel ledgers under their source name; scheduled items resolve at due===turn via Object.hasOwn registry; legacy drops eo and skips resolvers
 
 ### Pending Todos
 
@@ -111,6 +113,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-11T06:08:25.618Z
-Stopped at: Completed 01-06-PLAN.md
+Last session: 2026-10-11T06:12:10.361Z
+Stopped at: Completed 01-07-PLAN.md
 Resume file: None
