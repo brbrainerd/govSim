@@ -64,17 +64,19 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 - **Phase 1 (Engine foundations): executed, reviewed, all review findings fixed.**
 - **Phase 2 (Saves, guardrails & continuous deploy): executed, all 6 plans completed and verified.**
 - **Phase 3 (Turn report & Economy): executed, all 5 plans completed and verified.**
-- **Gates:** `pnpm test` 148 passing (25 files) · `pnpm test:e2e` 5 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
+- **Phase 4 (Events & crises): executed, all 5 plans completed and verified.**
+- **Gates:** `pnpm test` 164 passing (28 files) · `pnpm test:e2e` 5 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok.
-- **Built in Phase 3:**
-  - Unified projected scoring function `scoreVsAutopilot` on top bar and end screen showing Now/Later breakdown; GR-04 balance tests passing 100% sign match and negative headline before turn 16 (RPT-02, D11, GR-04).
-  - Attribution engine (`src/app/attribution.ts`) and plain-language copy dictionary (`src/content/text/why.ts`) mapping all engine trace keys to reading grade <= 9.0 and sentences <= 20 words with 100% drift test coverage (RPT-01, GR-06, GR-07, OBS-05).
-  - Accessible modal dialog shell (`src/ui/Overlay.svelte`) conforming to WAI-ARIA modal dialog pattern with keyboard focus trap and Escape handler (OBS-07).
-  - Turn report card (`src/ui/TurnReport.svelte`) matching target `g-report.png` with 10 indicator rows, direction badges, luck narrative, and vs-autopilot comparison (RPT-01).
-  - Responsive comparative SVG line chart component (`src/ui/art/MiniChart.svelte`) with zero-based axes, solid vs dashed lines, collision-avoiding labels, and `.sr-only` accessible table fallback (ECO-01, OBS-07).
-  - Full Economy screen (`src/screens/Economy.svelte`) matching target `g-economy.png` with 2x2 macro chart grid (Growth, Jobs, Prices, Debt), top 3 macroeconomic movers, Taylor-rule Fed explainer, and expandable "All 8 Scores" modal dialog (ECO-01, ECO-02).
-  - Sourced electoral dataset (`data/electoral-2024.json`, `src/data/electoral.ts`, `src/data/electoral.test.ts`) with certified 2024 ME/NE split district canvasses, 119th Congress House delegations across 50 states (220 R, 215 D), and per-state economic exposures (farm, manufacturing, energy) from BEA GDP-by-industry for VOT-06 (VOT-06, GR-13, GR-15).
-  - Playwright E2E test suites (`tests/a11y.spec.ts` and `tests/visual.spec.ts`) auditing Economy screen, scores modal, and turn report across 1376×768 and 1280×720 viewports (0 serious/critical a11y violations, zero page scroll).
+- **Built in Phase 4:**
+  - Keyed exogenous crisis schedule (`src/engine/director.ts`, `src/engine/crises.ts`) independent of player choices across 500 seeds with strict pacing rules (0 in turns 1-2, first turn 3-5, 4-9 per term, no 3 consecutive, 10-60% archetype distribution) (EVT-01, GR-01, GR-02, GR-08).
+  - Endogenous condition-triggered crises (`unrest`, `sovereign_debt`, `financial_panic`) flagged with "Autopilot didn't face this" (EVT-03).
+  - Crisis decision drafting in `Session` applied at `Next turn` (GR-38), autopilot fallback selection, non-domination verified across all archetypes, and balance calibration maintained (+2.383 points) (EVT-02, GR-09, GR-10, GR-12).
+  - Accessible `CrisisModal.svelte` with Americana vector news broadcast scene (`ReporterScene.svelte`), red "BREAKING" banner, clout pills, and "DECIDE" stamp button matching `g-crisis.png` (EVT-02, OBS-07).
+  - Statutory and legislative deadlines (`src/engine/deadlines.ts`) telegraphing >= 2 turn countdowns for shutdown and debt ceiling deadlines in Congress with countdown pills and action cards (EVT-04).
+  - Strictly qualitative seasonal and economic risk bands (Low/Elevated/High, 0 percentages) (EVT-05).
+  - Dynamic Oval Office briefing (`src/content/briefing.ts`) permanently replacing placeholder `sample.ts` with context-aware speech bubble, thisTurn card, and dynamic suggestions (EVT-07).
+  - Disaster response approval rally (`disaster_rally`) and unforeseen consequences report (`extractUnforeseenRipples`) in Turn Report (EVT-06, RPT-04).
+  - Playwright visual audit across 1376x768 and 1280x720 viewports capturing screenshots of all screens, deadline banners, and modals with zero outer scroll (OBS-07).
 
 ### Open debts (do not lose these)
 

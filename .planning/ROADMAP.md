@@ -148,19 +148,19 @@ Plans:
   4. The player sees qualitative risk bands ahead of time (hurricane season, debt stress, outbreak abroad) with no percentages, and handling a disaster well shows a temporary approval rally in the report card
   5. The Oval Office briefing and suggestions come from the turn's real events (sample text is gone), and the report card names 1-2 effects the player didn't see coming, with their causes
 
-**Plans**: 0/5 plans executed
+**Plans**: 5/5 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 04-01-PLAN.md — Wave 1: Crisis catalog, keyed director & engine state integration (EVT-01, EVT-03, GR-01, GR-02, GR-08)
-- [ ] 04-02-PLAN.md — Wave 1: Crisis decisions, clout costs, autopilot choices & balance calibration (EVT-02, GR-09, GR-10, GR-12, GR-38)
+- [x] 04-01-PLAN.md — Wave 1: Crisis catalog, keyed director & engine state integration (EVT-01, EVT-03, GR-01, GR-02, GR-08)
+- [x] 04-02-PLAN.md — Wave 1: Crisis decisions, clout costs, autopilot choices & balance calibration (EVT-02, GR-09, GR-10, GR-12, GR-38)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 04-03-PLAN.md — Wave 2: Crisis modal dialog (`CrisisModal.svelte`) & reporter scene art matching `g-crisis.png` (EVT-02, OBS-07)
-- [ ] 04-04-PLAN.md — Wave 2: Congress deadlines, countdown indicators & qualitative risk bands (EVT-04, EVT-05)
-- [ ] 04-05-PLAN.md — Wave 2: Oval Office real events briefing & turn report unforeseen effects (EVT-06, EVT-07, RPT-04)
+- [x] 04-03-PLAN.md — Wave 2: Crisis modal dialog (`CrisisModal.svelte`) & reporter scene art matching `g-crisis.png` (EVT-02, OBS-07)
+- [x] 04-04-PLAN.md — Wave 2: Congress deadlines, countdown indicators & qualitative risk bands (EVT-04, EVT-05)
+- [x] 04-05-PLAN.md — Wave 2: Oval Office real events briefing & turn report unforeseen effects (EVT-06, EVT-07, RPT-04)
 **UI hint**: yes
 **Research flag**: Yes. Verify the current debt-limit headroom and X-date after the 2025 reconciliation increase (a standoff may not fall within the term); calibrate crisis base rates (NBER recession frequency is from training knowledge); pacing numbers are starting values for the harness. **Parallel**: runs alongside Phase 5 (both depend only on Phase 3; delayed effects use Phase 1's scheduled modifiers). Both touch `engine/game.ts`, so merge one before rebasing the other.
 

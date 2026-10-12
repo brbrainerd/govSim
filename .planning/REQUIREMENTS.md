@@ -34,19 +34,19 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 - [x] **RPT-01**: After each turn the player sees a report card: 8 indicators plus approval and clout, each with value, unit, arrow, word and top cause, plus luck and "vs doing nothing"
 - [x] **RPT-02**: The headline score everywhere is the projected final score (same function as the end screen), with "Now" and "In 10 years" underneath
 - [ ] **RPT-03**: Player earns about 12 badges for reaching real policy milestones
-- [ ] **RPT-04**: The report card names 1–2 effects the player didn't see coming, with their causes
+- [x] **RPT-04**: The report card names 1–2 effects the player didn't see coming, with their causes
 - [x] **ECO-01**: Economy screen charts you vs doing nothing for growth, jobs, prices and debt plus all 8 scores, each with a table fallback
 - [x] **ECO-02**: Economy screen shows the Fed rate with a plain explanation of why the Fed moved and a "why it's happening" panel from the engine trace
 
 ### Events & crises
 
-- [ ] **EVT-01**: Outside crises (disasters, recession, oil shock, pandemic, court vacancy) are scheduled from the seed, identical for autopilot, and paced: none in turns 1–2, at most one per turn, with cooldowns
-- [ ] **EVT-02**: A crisis opens a modal with 2–3 options plus "do nothing", each with its cost shown; the choice takes effect at Next turn; autopilot takes a stated default
-- [ ] **EVT-03**: Crises the player causes (financial shock, unrest, debt crisis) arise from conditions and are labelled "autopilot didn't face this"
-- [ ] **EVT-04**: Shutdown and debt-ceiling deadlines show a countdown of at least 2 turns and are resolved through Congress
-- [ ] **EVT-05**: Player sees qualitative risk bands ahead of time (hurricane season, debt stress, outbreak abroad)
-- [ ] **EVT-06**: Handling a disaster well gives a temporary rally in approval
-- [ ] **EVT-07**: The Oval Office briefing and suggestions come from the turn's real events, not sample text
+- [x] **EVT-01**: Outside crises (disasters, recession, oil shock, pandemic, court vacancy) are scheduled from the seed, identical for autopilot, and paced: none in turns 1–2, at most one per turn, with cooldowns
+- [x] **EVT-02**: A crisis opens a modal with 2–3 options plus "do nothing", each with its cost shown; the choice takes effect at Next turn; autopilot takes a stated default
+- [x] **EVT-03**: Crises the player causes (financial shock, unrest, debt crisis) arise from conditions and are labelled "autopilot didn't face this"
+- [x] **EVT-04**: Shutdown and debt-ceiling deadlines show a countdown of at least 2 turns and are resolved through Congress
+- [x] **EVT-05**: Player sees qualitative risk bands ahead of time (hurricane season, debt stress, outbreak abroad)
+- [x] **EVT-06**: Handling a disaster well gives a temporary rally in approval
+- [x] **EVT-07**: The Oval Office briefing and suggestions come from the turn's real events, not sample text
 
 ### Your Powers
 
