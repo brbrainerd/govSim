@@ -86,14 +86,14 @@ Plans:
   4. On the deployed site, the CSP allows network access only to its own origin and the R2 asset host, a Playwright egress test records zero other requests, and a source scan finds no telemetry
   5. Pushing a green commit to the default branch builds a Docker image (static app + `/api/health`) on GitHub-hosted runners, publishes it to GHCR by SHA, and auto-promotes it to Coolify on Hetzner after CI is green; a failed health check rolls back to the previous SHA; large assets load from Cloudflare R2 and the site is reachable only on its private subdomain
 
-**Plans**: 2/6 plans executed
+**Plans**: 3/6 plans executed
 
 Plans:
 **Wave 1**
 
 - [x] 02-01-PLAN.md — Wave 1: save serialization, trust boundary, autosave/resume, golden replays (OBS-01, OBS-02)
 - [x] 02-02-PLAN.md — Wave 1: fast-check property testing and engine invariants (OBS-03)
-- [ ] 02-03-PLAN.md — Wave 1: zero-telemetry, strict build-time CSP, egress Playwright test (OBS-04)
+- [x] 02-03-PLAN.md — Wave 1: zero-telemetry, strict build-time CSP, egress Playwright test (OBS-04)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 

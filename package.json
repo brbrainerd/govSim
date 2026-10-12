@@ -10,6 +10,7 @@
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run",
     "test:property": "vitest run src/engine/invariants.property.test.ts",
+    "test:e2e": "playwright test",
     "notices": "node scripts/notices.mjs",
     "determinism": "node scripts/determinism.mjs",
     "guard": "node scripts/guard.ts"

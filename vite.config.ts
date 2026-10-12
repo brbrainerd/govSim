@@ -1,5 +1,17 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 
-// Relative base so the static build works on GitHub Pages project paths.
-export default defineConfig({ plugins: [svelte()], base: './' });
+// Relative base so the static build works on GitHub Pages or custom host paths.
+export default defineConfig({
+  plugins: [svelte()],
+  base: './',
+  test: {
+    include: ['src/**/*.test.ts'],
+  },
+  preview: {
+    headers: {
+      'Content-Security-Policy':
+        "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.r2.cloudflarestorage.com;",
+    },
+  },
+});
