@@ -269,6 +269,7 @@ Policy: MIT / ISC / Apache-2.0 / CC0 code and assets; CC BY art with credit.
 | Icons | `@lucide/svelte` | 1.53.x | ISC | Tree-shakable, Svelte-5-native (D7) |
 | Motion | Svelte built-ins (`Tween`, `Spring`, transitions, `flip`) | — | — | Zero-dep; add `motion` only if layout animation needed (D7) |
 | Test | `vitest` (+ `@playwright/test` when visual tests land) | 5.0.3 | MIT | Engine + registry + token-drift tests |
+| Property testing | `fast-check` | 4.10.2 | MIT | Invariant and fuzz testing over randomized seeds and decisions (OBS-03, D6) |
 | Types | `typescript`, `svelte-check`, `@types/node` | 6.0.3 / 4.7.6 / 24.19.1 | Apache-2.0 / MIT / MIT | TS pinned to 6: svelte-check 4.7 does not support TS 7 yet |
 | Visual tooling (dev) | `sharp`, `pixelmatch` | 0.35.5 / 8.0.0 | Apache-2.0 / ISC | Contact sheets, motion metrics |
 
