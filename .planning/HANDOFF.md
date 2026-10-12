@@ -75,7 +75,7 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
   non-plain objects; modifier sources must match their tag; packages apply on top of the policy
   in force; a budget sent to Congress is voted at Next turn; actions are no-ops after turn 32;
   Congress text from data; CI runs `pnpm determinism`; median income clamped by `LIMITS.income`;
-  status bar tooltips work with the keyboard; `scripts/guard.mjs` added.
+  status bar tooltips work with the keyboard; `scripts/guard.ts` added.
 
 ### Open debts (do not lose these)
 
@@ -118,6 +118,8 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
   license`, then one line of justification in `docs/design.md` §9. Stdlib/platform first.
 - Allowed licenses: MIT, ISC, Apache-2.0, BSD, CC0, OFL (fonts), CC BY (art). `@axe-core/playwright`
   (MPL-2.0) is an approved dev-only exception (D6).
+- **TypeScript only:** new scripts are `.ts`, run with `node file.ts` (native type stripping);
+  never add `.js`/`.mjs`. Explicit return types, lean interfaces.
 - TypeScript stays **6.x** (`svelte-check` 4.7 does not support TS 7).
 - If pnpm's minimum-release-age blocks a version, ask the user; do not add exclusions.
 
@@ -222,17 +224,16 @@ GSD 1.14 is installed for Antigravity:
 - **CLI:** `G=~/.gemini/antigravity-ide/gsd-core/bin/gsd-tools.cjs` then `node $G query …`.
 - **Workflows/templates (plain Markdown you can read):** `~/.gemini/antigravity-ide/gsd-core/{workflows,templates,references}/`.
 
-### 6.1 Known install problem — fix before the first skill run
+### 6.1 Install fix (applied 2026-10-12)
 62 of the skills `@`-include `~/.gemini/antigravity/gsd-core/…`, which **does not exist**; the
-files live in `~/.gemini/antigravity-ide/gsd-core/`. With the include missing, a skill runs with
-no workflow and the model improvises. **Ask the user** to approve this one-line fix (it changes
-their tool config, so don't do it unasked):
+files live in `~/.gemini/antigravity-ide/gsd-core/`. The user applied this symlink on 2026-10-12;
+if `ls ~/.gemini/antigravity/gsd-core/workflows` ever fails, ask them to re-run it:
 
 ```bash
 ln -s ../antigravity-ide/gsd-core ~/.gemini/antigravity/gsd-core
 ```
 
-If they decline: whenever a skill names `@~/.gemini/antigravity/gsd-core/workflows/X.md`, open
+Fallback if it is missing: whenever a skill names `@~/.gemini/antigravity/gsd-core/workflows/X.md`, open
 `~/.gemini/antigravity-ide/gsd-core/workflows/X.md` yourself and follow it step by step.
 
 ### 6.2 Settings for this project
@@ -371,7 +372,7 @@ existing art components in `src/ui/art/`. Regenerating concept art costs money �
 ## 9. Stop and ask the user (never decide these yourself)
 
 - Any `git push`, merge to `master`, PR, branch rename, deploy, or Coolify/Hetzner/Cloudflare change.
-- The `~/.gemini/antigravity/gsd-core` symlink fix (§6.1) or any other change outside this repo.
+- Any change outside this repo (tool config, `~/.gemini`, other repos).
 - Deploy setup (Phase 2): (a) rename `master` → `main` or deploy from `master`? (b) Is the Coolify
   API reachable over HTTPS from GitHub-hosted runners, or use a deploy webhook? (c) Which
   subdomain, and is "private" unlisted or Cloudflare Access? (d) Vendor `coolify-deploy-kit`
