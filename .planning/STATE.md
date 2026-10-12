@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v0.2
 milestone_name: Playable First Term
-current_phase: 2
-current_phase_name: Saves, guardrails & continuous deploy
-status: executing
-stopped_at: Phase 2 planned (6 plans across 3 waves), ready to execute Wave 1
-last_updated: "2026-10-12T18:25:00.000Z"
+current_phase: 3
+current_phase_name: Turn report & Economy
+status: ready_to_plan
+stopped_at: Phase 2 complete (all 6 plans executed, all gates and tests green)
+last_updated: "2026-10-12T18:55:00.000Z"
 last_activity: 2026-10-12
-last_activity_desc: Phase 2 planning complete (02-01 to 02-06)
-state_head: 23532d71ec91a826477d6118471cffc9ea9eb83c
+last_activity_desc: Phase 2 complete (saves, property tests, CSP, content gates, balance report, axe a11y, keyboard nav, visual baselines, Docker, CD workflows)
+state_head: e259466
 progress:
   total_phases: 8
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 13
-  completed_plans: 7
-  percent: 13
+  completed_plans: 13
+  percent: 25
 ---
 
 # Project State

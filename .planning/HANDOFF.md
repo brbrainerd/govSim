@@ -61,27 +61,21 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 
 **As of 2026-10-12, branch `game-pivot`** (not pushed; GitHub default branch is `master`; `git log -5` for the latest commits).
 
-- **Phase 1 (Engine foundations): executed, reviewed, all review findings fixed**, awaiting the
-  2 human UAT checks (§7.1). Phases 2–8 not started.
-- **Gates:** `pnpm test` 108 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
-  `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok.
-- **Built:** pure deterministic engine (`src/engine/`: keyed RNG, arithmetic-only math, trace
-  ledgers, coefficient registry, raw-input decisions, modifiers + scheduled effects, legacy
-  projection, scoring, term calendar). App: New Game (party pick) → Game (status bar + Home/See/Act
-  rail). Real screens: **Oval Office, Budget, Congress**. Economy, Voters, Your Powers are
-  placeholders. Learn links and myth tickets are visibly disabled until their phase builds them.
-- **Fixed on 2026-10-12** (01-REVIEW WR-01…09, IN-01…07): malformed decisions rejected not
-  thrown; scheduled items resolve in (due, id) order and overdue items throw; `stableHash` refuses
-  non-plain objects; modifier sources must match their tag; packages apply on top of the policy
-  in force; a budget sent to Congress is voted at Next turn; actions are no-ops after turn 32;
-  Congress text from data; CI runs `pnpm determinism`; median income clamped by `LIMITS.income`;
-  status bar tooltips work with the keyboard; `scripts/guard.ts` added.
+- **Phase 1 (Engine foundations): executed, reviewed, all review findings fixed.**
+- **Phase 2 (Saves, guardrails & continuous deploy): executed, all 6 plans completed and verified.**
+- **Gates:** `pnpm test` 131 passing (21 files) · `pnpm test:e2e` 5 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
+  `pnpm determinism` 8/8 OK · notices ok (23 packages) · `pnpm guard` ok · `docker build` ok (`/api/health` 200).
+- **Built in Phase 2:**
+  - Save file serialization, trust boundary parsing, input log replay, `localStorage` autosave/resume, and 6 permanent golden replays across 32 turns (OBS-01, OBS-02).
+  - `fast-check` property tests verifying arithmetic invariants, non-NaN/non-Infinity, `LIMITS` clamping, trace conservation, and determinism across 1,000 games (OBS-03).
+  - Strict build-time CSP (meta & preview headers) with Cloudflare R2 connect allowlist, zero-telemetry static scanner, and Playwright egress test recording 0 unauthorized requests (OBS-04).
+  - Content readability gates enforcing Flesch-Kincaid <= 9.0 and sentences <= 20 words for multi-word copy, politician deny-list, strict party name allowlist (`src/content/parties.ts`), and committed `balance-report.json` with Sensible play beating Autopilot by +2.308 index points across 100 seeds (OBS-05, OBS-06).
+  - Playwright E2E tests: `@axe-core/playwright` accessibility audit with 0 serious/critical violations across New Game, Oval Office, Budget, and Congress screens (with `sage-dark` token added for WCAG AA contrast); 100% keyboard-only turn navigation test; screenshot baselines across viewports (1376×768, 1280×720) with zero page scrolling and fully visible action buttons (OBS-07).
+  - Multi-stage `Dockerfile` with Caddy serving static SPA and `/api/health` responding `200 {"ok":true}`, vendored TypeScript Coolify deployment/verification scripts in `scripts/ci/`, `.github/workflows/ci.yml` running all quality gates, and `.github/workflows/deploy.yml` publishing to GHCR and Coolify (OBS-08, REL-05, REL-06).
 
 ### Open debts (do not lose these)
 
-1. **Balance headroom.** Sensible play beats doing nothing by ~0.5 index points; OBS-06 wants
-   2–10. Tune in **Phase 2** and log every change in the committed balance report. Do not tune
-   by changing scoring weights (§9).
+1. **Balance headroom (RESOLVED in Phase 2).** Sensible play beats doing nothing by +2.308 index points across 100 seeds, committed in `balance-report.json` with all budget levers verified sensitive (OBS-06, GR-28, GR-35, GR-36).
 2. **Citations.** Only 4 coefficients are verified citations (Taylor ×2, inflation target, Okun).
    CBO/Yale sources are tagged `judgement` with "Not confirmed". A human must open them before
    Phase 3 shows source links to players. **Never invent a citation or URL.**

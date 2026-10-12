@@ -86,7 +86,7 @@ Plans:
   4. On the deployed site, the CSP allows network access only to its own origin and the R2 asset host, a Playwright egress test records zero other requests, and a source scan finds no telemetry
   5. Pushing a green commit to the default branch builds a Docker image (static app + `/api/health`) on GitHub-hosted runners, publishes it to GHCR by SHA, and auto-promotes it to Coolify on Hetzner after CI is green; a failed health check rolls back to the previous SHA; large assets load from Cloudflare R2 and the site is reachable only on its private subdomain
 
-**Plans**: 3/6 plans executed
+**Plans**: 6/6 plans executed
 
 Plans:
 **Wave 1**
@@ -97,12 +97,12 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 02-04-PLAN.md — Wave 2: content readability gates, party/person deny-list, committed balance report & headroom (OBS-05, OBS-06)
-- [ ] 02-05-PLAN.md — Wave 2: axe accessibility audit, keyboard-only turn, viewport fitting & screenshots (OBS-07)
+- [x] 02-04-PLAN.md — Wave 2: content readability gates, party/person deny-list, committed balance report & headroom (OBS-05, OBS-06)
+- [x] 02-05-PLAN.md — Wave 2: axe accessibility audit, keyboard-only turn, viewport fitting & screenshots (OBS-07)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 02-06-PLAN.md — Wave 3: Dockerfile with /api/health, GHCR publishing, Coolify deploy scripts and GitHub Actions workflows (OBS-08, REL-05, REL-06)
+- [x] 02-06-PLAN.md — Wave 3: Dockerfile with /api/health, GHCR publishing, Coolify deploy scripts and GitHub Actions workflows (OBS-08, REL-05, REL-06)
 **UI hint**: yes
 **Research flag**: Partial. Test patterns are standard (STACK.md). The deploy needs a check: the gigme workflows run on self-hosted runners with `COOLIFY_INSECURE_HTTP`, so GitHub-hosted runners need the Coolify API reachable over HTTPS from the internet (or a Coolify deploy webhook), and `coolify-deploy-kit` must be fetchable from a public runner (public repo or vendored scripts). Decide how "private subdomain" is enforced (unlisted vs Cloudflare Access).
 **Why deploy lives here**: REL-05 promotes only "after CI is green", so it needs OBS-08's required checks, and OBS-04's CSP must name the R2 host from REL-06, so all three are one change. Landing it now means Phases 3-8 each ship to the private subdomain for playtesting on every merge, and deploy problems surface on a 3-screen app rather than at release.

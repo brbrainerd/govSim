@@ -20,14 +20,14 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 
 ### Saves & enforced guardrails
 
-- [ ] **OBS-01**: Game autosaves every turn and resumes after reload; player can export and import a save file that is validated before use
-- [ ] **OBS-02**: Replaying any save reproduces the same game exactly (golden replays in CI)
-- [ ] **OBS-03**: Property tests over random seeds and decision sequences hold the engine invariants (no NaN, ranges, determinism)
-- [ ] **OBS-04**: The production site makes no network requests beyond its own origin and asset host, proven by CSP, an end-to-end egress test and a source scan; no telemetry
-- [ ] **OBS-05**: All player-facing text passes content gates: reading grade ≤ 9, sentences ≤ 20 words, jargon only as a "real term", no party or real-person names, citations on civic claims
-- [ ] **OBS-06**: A committed balance report changes only with an explanation; sensible play beats doing nothing by 2–10 index points and every lever moves the score
-- [ ] **OBS-07**: Every screen and overlay passes axe accessibility checks, is playable keyboard-only and has a screenshot baseline
-- [ ] **OBS-08**: CI runs check / unit / build / e2e jobs with bundle and performance budgets, a license allowlist and exact pins, as required checks on main
+- [x] **OBS-01**: Game autosaves every turn and resumes after reload; player can export and import a save file that is validated before use
+- [x] **OBS-02**: Replaying any save reproduces the same game exactly (golden replays in CI)
+- [x] **OBS-03**: Property tests over random seeds and decision sequences hold the engine invariants (no NaN, ranges, determinism)
+- [x] **OBS-04**: The production site makes no network requests beyond its own origin and asset host, proven by CSP, an end-to-end egress test and a source scan; no telemetry
+- [x] **OBS-05**: All player-facing text passes content gates: reading grade ≤ 9, sentences ≤ 20 words, jargon only as a "real term", no party or real-person names, citations on civic claims
+- [x] **OBS-06**: A committed balance report changes only with an explanation; sensible play beats doing nothing by 2–10 index points and every lever moves the score
+- [x] **OBS-07**: Every screen and overlay passes axe accessibility checks, is playable keyboard-only and has a screenshot baseline
+- [x] **OBS-08**: CI runs check / unit / build / e2e jobs with bundle and performance budgets, a license allowlist and exact pins, as required checks on main
 
 ### Turn report & Economy
 
@@ -81,8 +81,8 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 - [ ] **REL-02**: Player can open an About / Privacy / Credits screen; PRIVACY.md states that nothing is collected and what server logs exist
 - [ ] **REL-03**: Player can copy a share-your-run code that replays their game for someone else
 - [ ] **REL-04**: Player can copy a "report a problem" bundle (local error log + run code) after seeing its contents; nothing is sent automatically
-- [ ] **REL-05**: Pushing to main builds a Docker image (static app + `/api/health`) to GHCR and, after CI is green, auto-promotes it to Coolify on Hetzner by SHA with health verification and rollback
-- [ ] **REL-06**: Large assets are served from Cloudflare R2 and allowed by the CSP; the site lives on a private subdomain until a public link is shared
+- [x] **REL-05**: Pushing to main builds a Docker image (static app + `/api/health`) to GHCR and, after CI is green, auto-promotes it to Coolify on Hetzner by SHA with health verification and rollback
+- [x] **REL-06**: Large assets are served from Cloudflare R2 and allowed by the CSP; the site lives on a private subdomain until a public link is shared
 
 ## Future Requirements
 
@@ -118,14 +118,14 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 | FND-06 | Phase 1 | Complete |
 | FND-07 | Phase 1 | Complete |
 | FND-08 | Phase 1 | Complete |
-| OBS-01 | Phase 2 | Pending |
-| OBS-02 | Phase 2 | Pending |
-| OBS-03 | Phase 2 | Pending |
-| OBS-04 | Phase 2 | Pending |
-| OBS-05 | Phase 2 | Pending |
-| OBS-06 | Phase 2 | Pending |
-| OBS-07 | Phase 2 | Pending |
-| OBS-08 | Phase 2 | Pending |
+| OBS-01 | Phase 2 | Complete |
+| OBS-02 | Phase 2 | Complete |
+| OBS-03 | Phase 2 | Complete |
+| OBS-04 | Phase 2 | Complete |
+| OBS-05 | Phase 2 | Complete |
+| OBS-06 | Phase 2 | Complete |
+| OBS-07 | Phase 2 | Complete |
+| OBS-08 | Phase 2 | Complete |
 | RPT-01 | Phase 3 | Pending |
 | RPT-02 | Phase 3 | Pending |
 | RPT-03 | Phase 8 | Pending |
@@ -161,8 +161,8 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 | REL-02 | Phase 8 | Pending |
 | REL-03 | Phase 8 | Pending |
 | REL-04 | Phase 8 | Pending |
-| REL-05 | Phase 2 | Pending |
-| REL-06 | Phase 2 | Pending |
+| REL-05 | Phase 2 | Complete |
+| REL-06 | Phase 2 | Complete |
 
 **Coverage:**
 
