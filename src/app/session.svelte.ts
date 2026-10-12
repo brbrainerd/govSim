@@ -1,6 +1,6 @@
 import { fromPackage, packages, type BudgetDraft, type PackageName } from '../engine/budget';
 import { tally, type DealId } from '../engine/congress';
-import { cloutCost, resolveBill, type Decisions } from '../engine/decisions';
+import { autopilotDecisions, cloutCost, resolveBill, type CrisisDecision, type Decisions } from '../engine/decisions';
 import { endTurn, newGame, prosperity, scoreVsAutopilot, TOTAL_TURNS, type GameState, type ScoreBreakdown, type Start } from '../engine/game';
 import type { PartyId } from '../content/parties';
 import { storeAutosave, type SaveFile } from './save';
@@ -17,6 +17,7 @@ interface Draft {
   sentToCongress: boolean;
   deals: DealId[];
   voteCalled: boolean;
+  crisisChoice: CrisisDecision | null;
 }
 
 /** A new turn's draft starts from the policy already in force. */
@@ -26,6 +27,7 @@ const freshDraft = (policy: BudgetDraft): Draft => ({
   sentToCongress: false,
   deals: [],
   voteCalled: false,
+  crisisChoice: null,
 });
 
 /**
@@ -51,7 +53,12 @@ export class Session {
   );
   /** Preview and engine charge with the same function (FND-05). */
   preview = $derived(this.bill ? resolveBill(this.current.clout, this.bill) : null);
-  clout = $derived(this.current.clout + (this.preview?.cloutDelta ?? 0));
+  crisisCost = $derived(
+    this.draft.crisisChoice && this.current.activeCrisis
+      ? (this.current.activeCrisis.options.find((o) => o.id === this.draft.crisisChoice!.optionId)?.cloutCost ?? 0)
+      : 0,
+  );
+  clout = $derived(this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost);
   whip = $derived(this.preview?.whip ?? tally([]));
   vote = $derived(
     this.draft.voteCalled && this.preview
@@ -78,7 +85,8 @@ export class Session {
     for (const input of save.inputs) {
       const next = endTurn(s.current, input);
       s.history = [...s.history, next];
-      s.autopilot = [...s.autopilot, endTurn(s.autopilot[s.autopilot.length - 1]!)];
+      const autoLast = s.autopilot[s.autopilot.length - 1]!;
+      s.autopilot = [...s.autopilot, endTurn(autoLast, autopilotDecisions(autoLast))];
       s.inputs = [...s.inputs, input];
       s.draft = freshDraft(next.policy);
     }
@@ -118,13 +126,28 @@ export class Session {
     if (!this.over) this.draft.voteCalled = true;
   }
 
+  selectCrisisOption(crisisId: string, optionId: string) {
+    if (this.over) return;
+    const crisis = this.current.activeCrisis;
+    if (!crisis || crisis.crisisId !== crisisId) return;
+    const opt = crisis.options.find((o) => o.id === optionId);
+    if (!opt) return;
+    if (opt.cloutCost > this.current.clout) return;
+    this.draft.crisisChoice = { crisisId, optionId };
+  }
+
   nextTurn() {
-    const decisions: Decisions = this.bill ? { bill: this.bill } : {};
+    const decisions: Decisions = {};
+    if (this.bill) decisions.bill = this.bill;
+    if (this.draft.crisisChoice) {
+      decisions.crisis = $state.snapshot(this.draft.crisisChoice);
+    }
     const next = endTurn(this.current, decisions);
     if (next === this.current) return;
     this.inputs = [...this.inputs, decisions];
     this.history = [...this.history, next];
-    this.autopilot = [...this.autopilot, endTurn(this.autopilot[this.autopilot.length - 1]!)];
+    const autoLast = this.autopilot[this.autopilot.length - 1]!;
+    this.autopilot = [...this.autopilot, endTurn(autoLast, autopilotDecisions(autoLast))];
     this.draft = freshDraft(next.policy);
     this.showingReport = true;
     storeAutosave(this);

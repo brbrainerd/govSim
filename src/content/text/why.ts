@@ -42,6 +42,7 @@ export const WHY_COPY: Record<string, string> = {
   'approval:growth': 'Reaction to economic growth',
   'clout:income': 'Political capital from approval',
   'clout:deals': 'Deals negotiated in Congress',
+  'clout:crisis': 'Clout spent on crises',
   'clout:reward': 'Passed legislation reward',
   'clout:refund': 'Failed bill clout refund',
 };

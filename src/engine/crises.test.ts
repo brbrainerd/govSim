@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { START } from './fixture';
 import { endTurn, newGame, TOTAL_TURNS } from './game';
 import { getExogenousSchedule } from './director';
-import { EXOGENOUS_CRISES } from './crises';
+import { CRISIS_CATALOG, EXOGENOUS_CRISES, type CrisisOption } from './crises';
 
 describe('crises director (EVT-01, EVT-03, GR-01, GR-02, GR-08)', () => {
   it('GR-01 & GR-02: player with no decisions matches autopilot crisis schedule across 200 seeds', () => {
@@ -101,5 +101,49 @@ describe('crises director (EVT-01, EVT-03, GR-01, GR-02, GR-08)', () => {
     const s1 = getExogenousSchedule(42);
     const s2 = getExogenousSchedule(42);
     expect(Array.from(s1.entries())).toEqual(Array.from(s2.entries()));
+  });
+
+  it('GR-09: crisis options have valid structure and no option Pareto-dominates another', () => {
+    for (const crisis of CRISIS_CATALOG) {
+      expect(crisis.options.length).toBeGreaterThanOrEqual(3);
+      const autopilotOptions = crisis.options.filter((o) => o.autopilot);
+      expect(autopilotOptions).toHaveLength(1);
+
+      // Verify at least one status quo/zero-cost option
+      const freeOptions = crisis.options.filter((o) => o.cloutCost === 0);
+      expect(freeOptions.length).toBeGreaterThanOrEqual(1);
+
+      // Helper to evaluate channel impact (positive is good, negative is bad)
+      const getEffect = (opt: CrisisOption, channel: string): number => {
+        const eff = opt.effects.find((e) => e.channel === channel);
+        if (!eff) return 0;
+        // For inflation and debtBn, higher numbers are worse
+        if (channel === 'inflation' || channel === 'debtBn') return -eff.amount;
+        return eff.amount;
+      };
+
+      const allChannels = Array.from(
+        new Set(crisis.options.flatMap((o) => o.effects.map((e) => e.channel))),
+      );
+
+      // Pairwise non-domination check
+      for (const a of crisis.options) {
+        for (const b of crisis.options) {
+          if (a.id === b.id) continue;
+
+          const cheaperOrEqual = a.cloutCost <= b.cloutCost;
+          const channelsAtLeastAsGood = allChannels.every((ch) => getEffect(a, ch) >= getEffect(b, ch));
+          const strictlyBetter =
+            a.cloutCost < b.cloutCost ||
+            allChannels.some((ch) => getEffect(a, ch) > getEffect(b, ch));
+
+          const aDominatesB = cheaperOrEqual && channelsAtLeastAsGood && strictlyBetter;
+          expect(
+            aDominatesB,
+            `In crisis ${crisis.id}, option ${a.id} must not Pareto-dominate option ${b.id}`,
+          ).toBe(false);
+        }
+      }
+    }
   });
 });

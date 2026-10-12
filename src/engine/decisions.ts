@@ -5,10 +5,31 @@
 
 import { spendLevers, taxLevers, type BudgetDraft } from './budget';
 import { deals as DEALS, tally, voteOutcome, type DealId } from './congress';
+import { getCrisis } from './crises';
+import type { Modifier, Scheduled } from './modifiers';
 
 export interface Bill { budget: BudgetDraft; deals: DealId[] }
+
+export interface CrisisDecision {
+  crisisId: string;
+  optionId: string;
+}
+
 /** Phases 4/5 add keys here (crisis, orders, fed, speech). There is deliberately no clout field. */
-export interface Decisions { bill?: Bill }
+export interface Decisions {
+  bill?: Bill;
+  crisis?: CrisisDecision;
+}
+
+export interface CrisisChoiceResult {
+  valid: boolean;
+  reason?: 'unaffordable' | 'invalid';
+  crisisId: string;
+  optionId: string;
+  cloutCost: number;
+  modifiers: readonly Modifier[];
+  scheduled: readonly Scheduled[];
+}
 
 export interface BillResult {
   valid: boolean;
@@ -63,3 +84,70 @@ export function resolveBill(clout: number, bill: unknown): BillResult {
   const { passed, cloutBack } = voteOutcome(whip.total, spent);
   return { valid: true, budget, deals: ids, spent, whip, passed, cloutBack, cloutDelta: cloutBack - spent };
 }
+
+export function resolveCrisisChoice(
+  clout: number,
+  crisisId: unknown,
+  optionId: unknown,
+  turn: number,
+): CrisisChoiceResult {
+  const rejected = (reason: 'unaffordable' | 'invalid'): CrisisChoiceResult => ({
+    valid: false,
+    reason,
+    crisisId: typeof crisisId === 'string' ? crisisId : '',
+    optionId: typeof optionId === 'string' ? optionId : '',
+    cloutCost: 0,
+    modifiers: [],
+    scheduled: [],
+  });
+
+  if (typeof crisisId !== 'string' || typeof optionId !== 'string') return rejected('invalid');
+  const def = getCrisis(crisisId);
+  if (!def) return rejected('invalid');
+  const opt = def.options.find((o) => o.id === optionId);
+  if (!opt) return rejected('invalid');
+  if (opt.cloutCost > clout) return rejected('unaffordable');
+
+  const modifiers: Modifier[] = opt.effects.map((eff) => ({
+    id: `event:${crisisId}:${optionId}#${eff.channel}#t${turn}`,
+    group: `event:${crisisId}`,
+    source: `event:${crisisId}`,
+    channel: eff.channel,
+    amount: eff.amount,
+    from: turn,
+    until: turn,
+    tag: 'event',
+  }));
+
+  const scheduled: Scheduled[] = [];
+  if (opt.scheduledKind) {
+    const quarters = typeof opt.scheduledData?.quarters === 'number' ? opt.scheduledData.quarters : 1;
+    scheduled.push({
+      id: `event:${crisisId}:scheduled#t${turn + 1}`,
+      kind: opt.scheduledKind,
+      due: turn + quarters,
+      data: opt.scheduledData ?? {},
+    });
+  }
+
+  return {
+    valid: true,
+    crisisId,
+    optionId,
+    cloutCost: opt.cloutCost,
+    modifiers,
+    scheduled,
+  };
+}
+
+export function autopilotDecisions(state: {
+  readonly activeCrisis: {
+    readonly crisisId: string;
+    readonly options: readonly { readonly id: string; readonly autopilot?: boolean }[];
+  } | null;
+}): Decisions {
+  if (!state.activeCrisis) return {};
+  const opt = state.activeCrisis.options.find((o) => o.autopilot);
+  return opt ? { crisis: { crisisId: state.activeCrisis.crisisId, optionId: opt.id } } : {};
+}
+

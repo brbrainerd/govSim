@@ -70,8 +70,8 @@ describe('modifiers', () => {
     expect(activeAt(ms, 5, true).map((m) => m.source)).toEqual(['event:b']);
   });
 
-  it('ships with no resolvers registered in Phase 1', () => {
-    expect(RESOLVERS).toEqual({});
+  it('registers Phase 4 resolvers', () => {
+    expect(Object.keys(RESOLVERS)).toEqual(['disaster_rally']);
   });
 });
 

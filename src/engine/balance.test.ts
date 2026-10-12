@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import committedReport from '../../balance-report.json';
 import { baseline, spendLevers, taxLevers, type BudgetDraft } from './budget';
+import { autopilotDecisions, type Decisions } from './decisions';
 import { enact, START } from './fixture';
 import { endTurn, finalScore, newGame, projectedScore, scoreVsAutopilot, TOTAL_TURNS, type GameState } from './game';
 
@@ -130,5 +131,84 @@ describe('balance', () => {
     }
     const negRate = negBefore16Count / seeds.length;
     expect(negRate).toBeGreaterThanOrEqual(0.8);
+  });
+
+  it('verifies crisis balance calibration (GR-10, GR-12)', () => {
+    const seeds100 = Array.from({ length: 100 }, (_, i) => i + 1);
+
+    function pickSensibleCrisisOption(state: GameState): Decisions {
+      if (!state.activeCrisis) return {};
+      const crisis = state.activeCrisis;
+      const affordable = crisis.options.filter((o) => o.cloutCost <= state.clout);
+      const active = affordable.filter((o) => o.cloutCost > 0 && o.cloutCost <= 25);
+      const choice = active[0] ?? affordable[0];
+      return choice ? { crisis: { crisisId: crisis.crisisId, optionId: choice.id } } : {};
+    }
+
+    function runSensibleWithCrises(seed: number): GameState {
+      let s = newGame(seed, START);
+      for (let t = 1; t < TOTAL_TURNS; t++) {
+        const dec: Decisions = t === 1 ? enact(strategies.sensible!) : {};
+        if (s.activeCrisis) {
+          const cDec = pickSensibleCrisisOption(s);
+          if (cDec.crisis) dec.crisis = cDec.crisis;
+        }
+        s = endTurn(s, dec);
+      }
+      return s;
+    }
+
+    function runAutopilotWithCrises(seed: number): GameState {
+      let s = newGame(seed, START);
+      for (let t = 1; t < TOTAL_TURNS; t++) {
+        s = endTurn(s, autopilotDecisions(s));
+      }
+      return s;
+    }
+
+    function runBadWithCrises(seed: number, budget: BudgetDraft): GameState {
+      let s = newGame(seed, START);
+      for (let t = 1; t < TOTAL_TURNS; t++) {
+        const dec: Decisions = t === 1 ? enact(budget) : autopilotDecisions(s);
+        s = endTurn(s, dec);
+      }
+      return s;
+    }
+
+    let sensibleWins = 0;
+    const diffs: number[] = [];
+    const autoTotals: number[] = [];
+    const maxDefTotals: number[] = [];
+    const tariffTotals: number[] = [];
+
+    for (const seed of seeds100) {
+      const sensibleState = runSensibleWithCrises(seed);
+      const autoState = runAutopilotWithCrises(seed);
+      const maxDefState = runBadWithCrises(seed, strategies.maxDeficit!);
+      const tariffState = runBadWithCrises(seed, strategies.tariffEverything!);
+
+      const sensScore = finalScore(sensibleState).total;
+      const autoScore = finalScore(autoState).total;
+      const maxDefScore = finalScore(maxDefState).total;
+      const tariffScore = finalScore(tariffState).total;
+
+      const diff = sensScore - autoScore;
+      diffs.push(diff);
+      if (diff > 0) sensibleWins++;
+
+      autoTotals.push(autoScore);
+      maxDefTotals.push(maxDefScore);
+      tariffTotals.push(tariffScore);
+    }
+
+    const meanDiff = mean(diffs);
+    expect(meanDiff).toBeGreaterThanOrEqual(2.0);
+    expect(meanDiff).toBeLessThanOrEqual(10.0);
+
+    const winRate = sensibleWins / seeds100.length;
+    expect(winRate).toBeGreaterThanOrEqual(0.75);
+
+    expect(mean(autoTotals)).toBeGreaterThan(mean(maxDefTotals));
+    expect(mean(autoTotals)).toBeGreaterThan(mean(tariffTotals));
   });
 });

@@ -3,7 +3,7 @@
 // round numbers chosen for plausible direction and size, not estimates; every one lives in coefficients.ts.
 import { baseline, estimate, spendLevers, taxLevers, type BudgetDraft } from './budget';
 import { C, LIMITS, RULES, SCORE } from './coefficients';
-import { resolveBill, type Decisions } from './decisions';
+import { resolveBill, resolveCrisisChoice, type Decisions } from './decisions';
 import { clamp, tanhPade } from './detmath';
 import { activeAt, RESOLVERS, type Modifier, type Scheduled, type Resolver } from './modifiers';
 import { normal } from './rng';
@@ -151,6 +151,27 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     }
     scheduled = state.scheduled.filter((i) => i.due !== state.turn);
   }
+
+  // Crisis choice resolution (Phase 4, EVT-02, GR-38)
+  const rawCrisis: unknown = decisions !== null && typeof decisions === 'object' ? decisions.crisis : undefined;
+  const cRes = !legacyRun && rawCrisis !== undefined && typeof rawCrisis === 'object' && rawCrisis !== null
+    ? resolveCrisisChoice(
+        state.clout,
+        (rawCrisis as { crisisId?: unknown }).crisisId,
+        (rawCrisis as { optionId?: unknown }).optionId,
+        state.turn,
+      )
+    : null;
+  if (cRes) {
+    if (cRes.valid) {
+      modifiers = [...modifiers, ...cRes.modifiers];
+      scheduled = [...scheduled, ...cRes.scheduled];
+      log.push({ kind: 'crisis', id: cRes.crisisId, detail: cRes.optionId, amount: cRes.cloutCost });
+    } else {
+      log.push({ kind: 'crisis', id: 'rejected', detail: cRes.reason });
+    }
+  }
+
   const active = activeAt(modifiers, state.turn, legacyRun);
   for (const m of active) {
     if (!m.source.startsWith(`${m.tag}:`) || !isKnownSource(m.source)) throw new Error(`modifier ${m.id} has source "${m.source}", which must start with "${m.tag}:"`);
@@ -279,6 +300,9 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (r?.valid) {
     cl.add('clout:deals', -r.spent);
     cl.add(r.passed ? 'clout:reward' : 'clout:refund', r.cloutBack);
+  }
+  if (cRes?.valid && cRes.cloutCost > 0) {
+    cl.add('clout:crisis', -cRes.cloutCost);
   }
   const clout = cl.clamp(state.clout + cl.sum, 0, Infinity);
 

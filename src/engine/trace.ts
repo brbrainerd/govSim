@@ -100,6 +100,7 @@ export const SOURCES: Record<string, { kind: string }> = {
   'approval:growth': { kind: 'structure' },
   'clout:income': { kind: 'structure' },
   'clout:deals': { kind: 'policy' },
+  'clout:crisis': { kind: 'policy' },
   'clout:reward': { kind: 'policy' },
   'clout:refund': { kind: 'policy' },
 };

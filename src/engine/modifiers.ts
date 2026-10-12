@@ -22,8 +22,14 @@ export interface Scheduled { id: string; kind: string; due: number; data: Record
 export interface ResolverResult { add?: Modifier[]; endGroups?: string[]; log?: LogEntry[] }
 export type Resolver = (ctx: { seed: number; turn: number; state: GameState; item: Scheduled }) => ResolverResult;
 
-/** Empty in Phase 1; Phases 4 and 5 register their own kinds. */
-export const RESOLVERS: Record<string, Resolver> = {};
+const disasterRallyResolver: Resolver = () => ({
+  log: [{ kind: 'event', id: 'disaster_rally_ended', detail: 'Public approval rally from emergency disaster response has subsided.' }],
+});
+
+/** Registry of resolvers for scheduled delayed effects (EVT-06, RPT-04). */
+export const RESOLVERS: Record<string, Resolver> = {
+  disaster_rally: disasterRallyResolver,
+};
 
 /** The modifiers acting in the step that starts at `turn`; executive orders do not carry into the legacy projection (D5). */
 export const activeAt = (mods: readonly Modifier[], turn: number, legacy: boolean): Modifier[] =>
