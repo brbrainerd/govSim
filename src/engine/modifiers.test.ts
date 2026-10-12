@@ -70,8 +70,8 @@ describe('modifiers', () => {
     expect(activeAt(ms, 5, true).map((m) => m.source)).toEqual(['event:b']);
   });
 
-  it('registers Phase 4 resolvers', () => {
-    expect(Object.keys(RESOLVERS)).toEqual(['disaster_rally']);
+  it('registers Phase 4 and Phase 5 resolvers', () => {
+    expect(Object.keys(RESOLVERS)).toEqual(['disaster_rally', 'court_ruling']);
   });
 });
 

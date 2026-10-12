@@ -101,8 +101,10 @@ export const SOURCES: Record<string, { kind: string }> = {
   'clout:income': { kind: 'structure' },
   'clout:deals': { kind: 'policy' },
   'clout:crisis': { kind: 'policy' },
+  'clout:powers': { kind: 'policy' },
   'clout:reward': { kind: 'policy' },
   'clout:refund': { kind: 'policy' },
+  'fed:credibility': { kind: 'fed' },
 };
 /** Open families added by later phases (events, executive orders, laws). */
 export const SOURCE_PREFIXES = ['event:', 'eo:', 'law:'] as const;

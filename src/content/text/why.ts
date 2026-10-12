@@ -43,8 +43,10 @@ export const WHY_COPY: Record<string, string> = {
   'clout:income': 'Political capital from approval',
   'clout:deals': 'Deals negotiated in Congress',
   'clout:crisis': 'Clout spent on crises',
+  'clout:powers': 'Executive powers and actions',
   'clout:reward': 'Passed legislation reward',
   'clout:refund': 'Failed bill clout refund',
+  'fed:credibility': 'Loss of central bank trust',
 };
 
 /** Plain-language description of an engine trace source key (GR-06). */

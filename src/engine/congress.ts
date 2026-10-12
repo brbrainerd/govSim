@@ -6,6 +6,14 @@ import { RULES } from './coefficients';
 export const HOUSE_SEATS = 435;
 export const TO_PASS = 218;
 
+export const SENATE_SEATS = 100;
+export const SENATE_CONFIRMATION_THRESHOLD = 51;
+export const SENATE_CONFIRMATION = {
+  centrist: 68,
+  hawk: 54,
+  dove: 47,
+} as const;
+
 export const groups = [
   { id: 'pro', name: 'Progressives', seats: 95, yes: 95, color: 'sky', wants: 'Bigger, greener' },
   { id: 'mod', name: 'Moderates', seats: 100, yes: 80, color: 'sage', wants: 'Money for home' },

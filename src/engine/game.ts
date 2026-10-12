@@ -6,6 +6,7 @@ import { C, LIMITS, RULES, SCORE } from './coefficients';
 import { resolveBill, resolveCrisisChoice, type Decisions } from './decisions';
 import { clamp, tanhPade } from './detmath';
 import { activeAt, RESOLVERS, type Modifier, type Scheduled, type Resolver } from './modifiers';
+import { resolvePowerDecisions } from './powers';
 import { normal } from './rng';
 import { prosperity, type ScoreBreakdown } from './score';
 import { isKnownSource, Ledger, type Term, type TraceKey } from './trace';
@@ -142,6 +143,9 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   // so a reordered save replays identically. An unknown kind or an overdue item fails loudly (T-1-13).
   let modifiers: readonly Modifier[] = state.modifiers;
   let scheduled: readonly Scheduled[] = state.scheduled;
+  let activeOrders: readonly string[] = state.activeOrders;
+  let viewedMyths: readonly string[] = state.viewedMyths;
+  let speechCountInWindow: number = state.speechCountInWindow;
   const log: LogEntry[] = [];
   if (!legacyRun) {
     const registry = opts.resolvers ?? RESOLVERS;
@@ -153,6 +157,14 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
       const out = registry[item.kind]!({ seed: state.seed, turn: state.turn, state, item });
       const ended = new Set(out.endGroups);
       modifiers = [...modifiers.map((m) => (ended.has(m.group) ? { ...m, until: state.turn - 1 } : m)), ...(out.add ?? [])];
+      if (out.endGroups?.length) {
+        for (const g of out.endGroups) {
+          if (g.startsWith('eo:')) {
+            const eoId = g.replace(/^eo:/, '');
+            activeOrders = activeOrders.filter((id) => id !== eoId);
+          }
+        }
+      }
       log.push(...(out.log ?? []));
     }
     scheduled = state.scheduled.filter((i) => i.due !== state.turn);
@@ -176,6 +188,28 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     } else {
       log.push({ kind: 'crisis', id: 'rejected', detail: cRes.reason });
     }
+  }
+
+  // Executive powers resolution (Phase 5, PWR-01..PWR-07)
+  const rawPowers: unknown = decisions !== null && typeof decisions === 'object' ? decisions.powers : undefined;
+  const pRes = !legacyRun && rawPowers !== undefined ? resolvePowerDecisions(state, rawPowers) : null;
+  if (pRes) {
+    if (pRes.valid) {
+      if (pRes.endGroups.length > 0) {
+        const ended = new Set(pRes.endGroups);
+        modifiers = modifiers.map((m) => (ended.has(m.group) ? { ...m, until: state.turn - 1 } : m));
+      }
+      modifiers = [...modifiers, ...pRes.modifiers];
+      scheduled = [...scheduled, ...pRes.scheduled];
+      activeOrders = pRes.activeOrders;
+      viewedMyths = pRes.viewedMyths;
+      speechCountInWindow = pRes.speechCountInWindow;
+      log.push(...pRes.log);
+    } else {
+      log.push({ kind: 'powers', id: 'rejected', detail: pRes.reason });
+    }
+  } else if (!legacyRun) {
+    speechCountInWindow = Math.max(0, speechCountInWindow - 1);
   }
 
   const active = activeAt(modifiers, state.turn, legacyRun);
@@ -310,6 +344,10 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (cRes?.valid && cRes.cloutCost > 0) {
     cl.add('clout:crisis', -cRes.cloutCost);
   }
+  if (pRes?.valid) {
+    if (pRes.cloutSpent > 0) cl.add('clout:powers', -pRes.cloutSpent);
+    if (pRes.cloutGained > 0) cl.add('clout:powers', pRes.cloutGained);
+  }
   const clout = cl.clamp(state.clout + cl.sum, 0, C.cloutCap);
 
   if (r) log.push(r.valid ? { kind: 'bill', id: r.passed ? 'passed' : 'failed', amount: r.whip.total } : { kind: 'bill', id: 'rejected', detail: r.reason });
@@ -324,6 +362,9 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     policy,
     modifiers,
     scheduled,
+    activeOrders,
+    viewedMyths,
+    speechCountInWindow,
     econ: nextEcon,
     activeCrisis: state.activeCrisis,
     report: {

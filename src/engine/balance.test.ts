@@ -211,4 +211,31 @@ describe('balance', () => {
     expect(mean(autoTotals)).toBeGreaterThan(mean(maxDefTotals));
     expect(mean(autoTotals)).toBeGreaterThan(mean(tariffTotals));
   });
+
+  it('confirms speech spamming and clout hoarding do not beat sensible play (GR-10, GR-11)', () => {
+    const sensibleScores: number[] = [];
+    const speechSpamScores: number[] = [];
+    const hoardingScores: number[] = [];
+
+    for (const sd of seeds) {
+      const sensFinal = run(sd, strategies.sensible!).at(-1)!;
+      sensibleScores.push(finalScore(sensFinal).total);
+
+      let sSpam = newGame(sd, START);
+      for (let t = 1; t < TOTAL_TURNS; t++) {
+        sSpam = endTurn(sSpam, { powers: { speech: { audience: 'general' } } });
+      }
+      speechSpamScores.push(finalScore(sSpam).total);
+
+      const hoardFinal = run(sd, null).at(-1)!;
+      hoardingScores.push(finalScore(hoardFinal).total);
+    }
+
+    const sensMean = mean(sensibleScores);
+    const speechMean = mean(speechSpamScores);
+    const hoardMean = mean(hoardingScores);
+
+    expect(sensMean).toBeGreaterThan(speechMean);
+    expect(sensMean).toBeGreaterThan(hoardMean);
+  });
 });

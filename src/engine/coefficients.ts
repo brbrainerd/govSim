@@ -422,6 +422,50 @@ export const COEFF = {
     value: 5, unit: 'clout pts', basis: 'judgement', range: [2, 10],
     note: 'One-time political capital reward for reading a civics myth card.',
   },
+  speechDiminishingFactor: {
+    value: 0.5, unit: 'factor', basis: 'judgement', range: [0.2, 0.8],
+    note: 'Diminishing returns rate for presidential speeches.',
+  },
+  speechBusinessGapBoost: {
+    value: 0.1, unit: '% output gap', basis: 'judgement', range: [0.05, 0.3],
+    note: 'Output gap lift from presidential address to business leaders.',
+  },
+  courtUpholdLow: {
+    value: 0.8, unit: 'probability', basis: 'judgement', range: [0.6, 0.95],
+    note: 'Chance Supreme Court upholds a low-risk executive order.',
+  },
+  courtUpholdModerate: {
+    value: 0.5, unit: 'probability', basis: 'judgement', range: [0.3, 0.7],
+    note: 'Chance Supreme Court upholds a moderate-risk executive order.',
+  },
+  courtUpholdHigh: {
+    value: 0.25, unit: 'probability', basis: 'judgement', range: [0.1, 0.4],
+    note: 'Chance Supreme Court upholds a high-risk executive order.',
+  },
+  courtStrikeCloutPenalty: {
+    value: 5, unit: 'clout pts', basis: 'judgement', range: [2, 15],
+    note: 'Clout penalty when an executive order is struck down by the Supreme Court.',
+  },
+  courtReviewDelayTurns: {
+    value: 2, unit: 'turns', basis: 'judgement', range: [1, 4],
+    note: 'Quarters until Supreme Court ruling on challenged order.',
+  },
+  fedPressureCost: {
+    value: 15, unit: 'clout pts', basis: 'judgement', range: [5, 30],
+    note: 'Political capital cost to publicly pressure the Federal Reserve.',
+  },
+  fedPressureLingeringTurns: {
+    value: 3, unit: 'turns', basis: 'judgement', range: [1, 6],
+    note: 'Quarters inflation expectations remain elevated after Fed pressure.',
+  },
+  fedChairHawkInflationCut: {
+    value: 0.2, unit: '% inflation', basis: 'judgement', range: [0.1, 0.4],
+    note: 'Inflation reduction from appointing a hawk Fed chair.',
+  },
+  fedChairDoveGapBoost: {
+    value: 0.15, unit: '% output gap', basis: 'judgement', range: [0.05, 0.3],
+    note: 'Output gap expansion from appointing a dove Fed chair.',
+  },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------

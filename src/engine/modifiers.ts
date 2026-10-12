@@ -3,6 +3,7 @@
 // Every random outcome inside a resolver must use a keyed draw such as draw(seed, 'court', turn, item.id),
 // never sequential randomness, so adding or resolving an item cannot move any other draw (FND-01).
 import type { GameState, LogEntry } from './game';
+import { resolveCourtRuling } from './powers';
 
 /** Where a modifier lands: gap/inflation/expected/approval/trust/clout on their indicator, potential on growth, debtBn on debtPct, fedTarget on fedRate. */
 export type Channel = 'gap' | 'inflation' | 'expected' | 'approval' | 'trust' | 'potential' | 'debtBn' | 'clout' | 'fedTarget';
@@ -26,9 +27,10 @@ const disasterRallyResolver: Resolver = () => ({
   log: [{ kind: 'event', id: 'disaster_rally_ended', detail: 'Public approval rally from emergency disaster response has subsided.' }],
 });
 
-/** Registry of resolvers for scheduled delayed effects (EVT-06, RPT-04). */
+/** Registry of resolvers for scheduled delayed effects (EVT-06, RPT-04, PWR-02). */
 export const RESOLVERS: Record<string, Resolver> = {
   disaster_rally: disasterRallyResolver,
+  court_ruling: resolveCourtRuling,
 };
 
 /** The modifiers acting in the step that starts at `turn`; executive orders do not carry into the legacy projection (D5). */
