@@ -1,7 +1,7 @@
-import { fromPackage, type BudgetDraft, type PackageName } from '../engine/budget';
+import { fromPackage, packages, type BudgetDraft, type PackageName } from '../engine/budget';
 import { tally, type DealId } from '../engine/congress';
 import { cloutCost, resolveBill, type Decisions } from '../engine/decisions';
-import { endTurn, newGame, prosperity, type GameState, type Start } from '../engine/game';
+import { endTurn, newGame, prosperity, TOTAL_TURNS, type GameState, type Start } from '../engine/game';
 import type { PartyId } from '../content/parties';
 import type { ScreenId } from './screens';
 
@@ -40,9 +40,9 @@ export class Session {
 
   current = $derived(this.history[this.history.length - 1]!);
   previous = $derived(this.history[this.history.length - 2] ?? this.current);
-  /** The raw choices the engine will receive. Deals made without calling the vote are voted at Next turn (A8). */
+  /** The raw choices the engine will receive. A bill sent to Congress, or with deals, is voted at Next turn (A8). */
   bill = $derived(
-    this.draft.voteCalled || this.draft.deals.length
+    this.draft.voteCalled || this.draft.sentToCongress || this.draft.deals.length
       ? { budget: $state.snapshot(this.draft.budget), deals: $state.snapshot(this.draft.deals) }
       : null,
   );
@@ -58,19 +58,24 @@ export class Session {
   index = $derived(prosperity(this.current).index);
   /** Headline: how much better than doing nothing (same seed, same shocks). */
   vsNothing = $derived(this.index - prosperity(this.autopilot[this.autopilot.length - 1]!).index);
+  /** The term has ended: every action is a no-op and the UI shows the term as over. */
+  over = $derived(this.current.turn >= TOTAL_TURNS);
 
   constructor(seed: number, start: Start, readonly options: GameOptions) {
     this.history = [newGame(seed, start)];
     this.autopilot = [newGame(seed, start)];
   }
 
+  /** A package changes only its own levers; "Keep as is" keeps the policy in force. */
   pickPackage(p: PackageName) {
-    this.draft.budget = fromPackage(p);
+    if (this.over) return;
+    this.draft.budget = { ...this.current.policy, ...packages[p] };
     this.draft.pack = p;
     this.draft.sentToCongress = false;
   }
 
   setLever(id: string, value: number) {
+    if (this.over) return;
     this.draft.budget[id] = value;
     this.draft.pack = null;
     this.draft.sentToCongress = false;
@@ -78,15 +83,19 @@ export class Session {
 
   /** Affordability uses the engine's cost function against the clout you started the turn with. */
   canDeal(id: DealId) {
-    return !this.draft.voteCalled && !this.draft.deals.includes(id) && cloutCost([...this.draft.deals, id]) <= this.current.clout;
+    return !this.over && !this.draft.voteCalled && !this.draft.deals.includes(id) && cloutCost([...this.draft.deals, id]) <= this.current.clout;
   }
 
   makeDeal(id: DealId) {
     if (this.canDeal(id)) this.draft.deals.push(id);
   }
 
+  sendToCongress() {
+    if (!this.over) this.draft.sentToCongress = true;
+  }
+
   callVote() {
-    this.draft.voteCalled = true;
+    if (!this.over) this.draft.voteCalled = true;
   }
 
   nextTurn() {

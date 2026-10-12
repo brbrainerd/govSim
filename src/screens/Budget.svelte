@@ -28,7 +28,7 @@
         <span class="val">{valueText(l, v, isTax)}</span>
         <div class="track" style:--fill="{pct(l, v)}%">
           <span class="tick" style:left="{pct(l, l.base)}%"></span>
-          <input id={l.id} type="range" min={l.min} max={l.max} step={l.step} value={v}
+          <input id={l.id} type="range" disabled={session.over} min={l.min} max={l.max} step={l.step} value={v}
             aria-valuetext={valueText(l, v, isTax)}
             oninput={(e) => session.setLever(l.id, +e.currentTarget.value)} />
         </div>
@@ -41,7 +41,7 @@
   {#snippet main()}
     <div class="packs" role="group" aria-label="Start from a package">
       {#each packNames as p (p)}
-        <button class="pack" aria-pressed={session.draft.pack === p} onclick={() => session.pickPackage(p)}>{p}</button>
+        <button class="pack" aria-pressed={session.draft.pack === p} disabled={session.over} onclick={() => session.pickPackage(p)}>{p}</button>
       {/each}
     </div>
     <div class="cols">
@@ -50,8 +50,8 @@
     </div>
   {/snippet}
   {#snippet learn()}
-    <a href="#learn">How a budget becomes law</a>
-    <button class="ticket">Myth? Cut foreign aid to balance it</button>
+    <button class="link" disabled title="Coming soon">How a budget becomes law</button>
+    <button class="ticket" disabled title="Coming soon">Myth? Cut foreign aid to balance it</button>
   {/snippet}
   {#snippet next()}
     <div class="card info" aria-live="polite">
@@ -73,7 +73,7 @@
     {#if session.draft.sentToCongress}
       <button class="btn sent" onclick={() => go('congress')}>Sent! Open Congress →</button>
     {:else}
-      <button class="stamp" onclick={() => (session.draft.sentToCongress = true)}>Send to Congress</button>
+      <button class="stamp" disabled={session.over} onclick={() => session.sendToCongress()}>Send to Congress</button>
     {/if}
   {/snippet}
 </ScreenLayout>

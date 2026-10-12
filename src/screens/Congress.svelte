@@ -1,13 +1,12 @@
 <script lang="ts">
   import { ThumbsDown, ThumbsUp } from '@lucide/svelte';
   import type { Session } from '../app/session.svelte';
-  import type { ScreenId } from '../app/screens';
   import { deals, groups, HOUSE_SEATS, TO_PASS } from '../engine/congress';
   import Character, { type Look } from '../ui/art/Character.svelte';
   import { arcPoint, HEMI, hemicycle } from '../ui/art/hemicycle';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
-  let { session, question }: { session: Session; question: string; go: (id: ScreenId) => void } = $props();
+  let { session, question }: { session: Session; question: string } = $props();
 
   const seats = hemicycle(HOUSE_SEATS);
   const looks: Look[] = [
@@ -44,7 +43,7 @@
 <ScreenLayout {question}>
   {#snippet main()}
     <div class="card chamber">
-      <div class="bill"><span class="label">This turn's bill</span><b>Infrastructure Push</b></div>
+      <div class="bill"><span class="label">This turn's bill</span><b>{session.draft.pack ?? 'Your budget'}</b></div>
       <div class="arc">
         <svg viewBox="0 0 {HEMI.w} {HEMI.h}" role="img" aria-label="House: {whip.total} of {HOUSE_SEATS} seats voting yes; {TO_PASS} needed.">
           {#each seats as s, i (i)}
@@ -61,7 +60,7 @@
             <svg width="46" height="72" viewBox="0 0 120 190" aria-hidden="true"><Character look={looks[i]!} delay={i * 0.7} /></svg>
             <span class="chip" style:background="var(--{g.color})" class:dark={g.color === 'ink' || g.color === 'alert'}>{g.name}</span>
             <span class="mood">
-              {#if share > 0.6}<ThumbsUp size={18} aria-label="mostly yes" />{:else if share < 0.3}<ThumbsDown size={18} aria-label="mostly no" />{:else}<b aria-label="undecided">?</b>{/if}
+              {#if share > 0.6}<ThumbsUp size={18} role="img" aria-label="mostly yes" />{:else if share < 0.3}<ThumbsDown size={18} role="img" aria-label="mostly no" />{:else}<b role="img" aria-label="undecided">?</b>{/if}
             </span>
           </div>
         {/each}
@@ -77,15 +76,17 @@
     </div>
   {/snippet}
   {#snippet learn()}
-    <a href="#learn">Senate: 60 votes, or 51 for budget bills</a>
-    <button class="ticket">Myth? The President writes the laws</button>
+    <button class="link" disabled title="Coming soon">Senate: 60 votes, or 51 for budget bills</button>
+    <button class="ticket" disabled title="Coming soon">Myth? The President writes the laws</button>
   {/snippet}
   {#snippet next()}
     <div class="card info" aria-live="polite">
       <span class="label">What it means</span>
-      {#if vote}
+      {#if session.over}
+        <b>Your term is over</b><span class="line">Congress has gone home.</span>
+      {:else if vote}
         <b class={vote.passed ? 'good' : 'bad'}>{vote.passed ? `Passed ${vote.total}–${HOUSE_SEATS - vote.total}!` : `Failed ${vote.total}–${HOUSE_SEATS - vote.total}`}</b>
-        <span class="line">{vote.passed ? 'Roads get built. +10 clout for the win.' : `Half your clout comes back (+${vote.cloutBack}). Try a deal first next time.`}</span>
+        <span class="line">{vote.passed ? `Your budget becomes law. +${vote.cloutBack} clout for the win.` : `You get ${vote.cloutBack} clout back. Try a deal first next time.`}</span>
       {:else if whip.short > 0}
         <b class="bad">{whip.short} votes short</b><span class="line">Make a deal or two, then call the vote.</span>
       {:else}
@@ -101,7 +102,7 @@
       </div>
     {/each}
     <div class="spacer"></div>
-    {#if !vote}<button class="stamp" onclick={() => session.callVote()}>Call the vote</button>{/if}
+    {#if !vote}<button class="stamp" disabled={session.over} onclick={() => session.callVote()}>Call the vote</button>{/if}
   {/snippet}
 </ScreenLayout>
 

@@ -23,7 +23,7 @@
     {:else if screen.id === 'budget'}
       <Budget {session} question={screen.question} {go} />
     {:else if screen.id === 'congress'}
-      <Congress {session} question={screen.question} {go} />
+      <Congress {session} question={screen.question} />
     {:else}
       <ScreenLayout question={screen.question}>
         {#snippet main()}<div class="card placeholder">{screen.label}: coming in M1</div>{/snippet}

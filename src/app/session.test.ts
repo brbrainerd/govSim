@@ -62,3 +62,35 @@ describe('Session preview equals the engine charge (FND-05)', () => {
     expect(s.canDeal('cen')).toBe(false);
   });
 });
+
+describe('review fixes (01-REVIEW WR-02, WR-03, WR-06)', () => {
+  it('"Keep as is" keeps the policy in force; a package changes only its own levers', () => {
+    const s = new Session(7, START, { party: 'D' });
+    s.pickPackage('Infrastructure push');
+    s.makeDeal('mod'); s.makeDeal('cen'); s.makeDeal('spc');
+    s.callVote();
+    s.nextTurn();
+    const enacted = s.current.policy;
+    s.pickPackage('Keep as is');
+    expect(s.draft.budget).toEqual(enacted);
+    s.pickPackage('Tax cut');
+    expect(s.draft.budget.rds).toBe(enacted.rds);
+  });
+
+  it('a budget sent to Congress with no deals is still voted at Next turn', () => {
+    const s = new Session(7, START, { party: 'D' });
+    s.pickPackage('Tax cut');
+    s.sendToCongress();
+    expect(s.bill).not.toBeNull();
+  });
+
+  it('every action is a no-op once the term is over', () => {
+    const s = new Session(7, START, { party: 'D' });
+    for (let i = 1; i < TOTAL_TURNS; i++) s.nextTurn();
+    expect(s.over).toBe(true);
+    const before = JSON.parse(JSON.stringify(s.draft));
+    s.pickPackage('Tax cut'); s.setLever('inc', 30); s.makeDeal('mod'); s.sendToCongress(); s.callVote();
+    expect(JSON.parse(JSON.stringify(s.draft))).toEqual(before);
+    expect(s.clout).toBe(s.current.clout);
+  });
+});

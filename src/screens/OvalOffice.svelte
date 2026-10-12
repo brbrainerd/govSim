@@ -50,8 +50,8 @@
     </div>
   {/snippet}
   {#snippet learn()}
-    <a href="#learn">How it works</a>
-    <button class="ticket">Myth? Can you lower gas prices</button>
+    <button class="link" disabled title="Coming soon">How it works</button>
+    <button class="ticket" disabled title="Coming soon">Myth? Can you lower gas prices</button>
   {/snippet}
   {#snippet next()}
     <div class="card info"><span class="label">This turn</span><b>{thisTurn.title}</b><span>{thisTurn.detail}</span></div>

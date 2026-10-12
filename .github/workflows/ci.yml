@@ -17,3 +17,17 @@ jobs:
       - run: pnpm check
       - run: pnpm test
       - run: pnpm build
+  # Cross-browser replay proof (FND-02): the same input log must hash identically in all three engines.
+  determinism:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - run: pnpm determinism
+      - run: node scripts/notices.mjs --check
