@@ -93,6 +93,12 @@ test.describe('viewport fitting and visual baselines (OBS-07)', () => {
       await continueBtn.click();
       await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
 
+      // Verify Congress deadline banner on Turn 2 (EVT-04)
+      await page.locator('.tab:has-text("Congress")').click();
+      await expect(page.locator('.deadline-banner')).toBeVisible();
+      await assertNoOuterScroll('Congress Deadline');
+      await page.screenshot({ path: `.playwright-screenshots/congress-deadline-${vp.width}x${vp.height}.png` });
+
       // 7. Crisis Modal (advance turns until crisis fires on turn 3, 4, or 5)
       while (!(await page.locator('.breaking-ribbon').isVisible())) {
         await page.locator('button.stamp:has-text("Next turn")').click();

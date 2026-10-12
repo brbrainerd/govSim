@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { attributeTerms, extractTurnAttributions, formatValueWithUnit } from './attribution';
+import { attributeTerms, extractTurnAttributions, extractUnforeseenRipples, formatValueWithUnit } from './attribution';
 import { baseline } from '../engine/budget';
 import { enact, START } from '../engine/fixture';
 import { endTurn, newGame } from '../engine/game';
@@ -51,4 +51,43 @@ describe('attribution', () => {
       expect(ind.topCauseText).toBeTruthy();
     }
   });
+
+  it('extracts 1-2 unforeseen ripples and names disaster rally (RPT-04, EVT-06)', () => {
+    const s1 = newGame(1, START);
+    const s2 = endTurn(s1);
+
+    const ripples = extractUnforeseenRipples(s2, s1);
+    expect(ripples.length).toBeGreaterThanOrEqual(1);
+    expect(ripples.length).toBeLessThanOrEqual(2);
+
+    for (const r of ripples) {
+      expect(r.title).toBeTruthy();
+      expect(r.description).toBeTruthy();
+      expect(r.cause).toBeTruthy();
+      expect(r.description.split(/\s+/).length).toBeLessThanOrEqual(20);
+    }
+
+    // When disaster response is in log
+    const sDisaster = {
+      ...s2,
+      report: {
+        ...s2.report,
+        log: [{ kind: 'crisis', id: 'gulf_hurricane', detail: 'emergency', amount: 5 }],
+      },
+    };
+    const disasterRipples = extractUnforeseenRipples(sDisaster, s1);
+    expect(disasterRipples.some((r) => r.title.includes('Disaster response'))).toBe(true);
+
+    // When disaster rally ended is in log
+    const sRallyEnded = {
+      ...s2,
+      report: {
+        ...s2.report,
+        log: [{ kind: 'event', id: 'disaster_rally_ended', detail: 'Subsided' }],
+      },
+    };
+    const rallyEndedRipples = extractUnforeseenRipples(sRallyEnded, s1);
+    expect(rallyEndedRipples.some((r) => r.title.includes('rally subsided'))).toBe(true);
+  });
 });
+

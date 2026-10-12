@@ -50,8 +50,8 @@ function collectFiles(dir: string): string[] {
 
 describe('content and readability gates (OBS-05, GR-24, GR-25)', () => {
   it('content strings in src/content/ have reading grade <= 9.0 and sentences <= 20 words', async () => {
-    const sampleMod = await import('../content/sample');
-    const strings = extractStrings(sampleMod);
+    const partiesMod = await import('../content/parties');
+    const strings = extractStrings(partiesMod);
 
     for (const str of strings) {
       // Split into sentences

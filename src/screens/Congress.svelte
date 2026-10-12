@@ -45,24 +45,24 @@
 
 <ScreenLayout {question}>
   {#snippet main()}
-    <div class="card chamber">
-      {#if deadlines.length > 0}
-        <div class="deadline-banner" role="alert" aria-label="Impending legislative deadlines">
-          {#each deadlines as d (d.type)}
-            <div class="deadline-item" class:critical={d.critical}>
-              <div class="deadline-header">
-                <span class="deadline-pill" class:critical={d.critical}>
-                  {d.critical ? 'CRITICAL DEADLINE' : 'DEADLINE COUNTDOWN'}
-                </span>
-                <span class="deadline-title">
-                  {d.title}: <b>{d.turnsRemaining} {d.turnsRemaining === 1 ? 'turn' : 'turns'} remaining</b>
-                </span>
-              </div>
-              <span class="deadline-desc">{d.description}</span>
+    {#if deadlines.length > 0}
+      <div class="deadline-banner" role="alert" aria-label="Impending legislative deadlines">
+        {#each deadlines as d (d.type)}
+          <div class="deadline-item" class:critical={d.critical}>
+            <div class="deadline-header">
+              <span class="deadline-pill" class:critical={d.critical}>
+                {d.critical ? 'CRITICAL DEADLINE' : 'DEADLINE COUNTDOWN'}
+              </span>
+              <span class="deadline-title">
+                {d.title}: <b>{d.turnsRemaining} {d.turnsRemaining === 1 ? 'turn' : 'turns'} remaining</b>
+              </span>
             </div>
-          {/each}
-        </div>
-      {/if}
+            <span class="deadline-desc">{d.description}</span>
+          </div>
+        {/each}
+      </div>
+    {/if}
+    <div class="card chamber">
       <div class="bill"><span class="label">This turn's bill</span><b>{session.draft.pack ?? 'Your budget'}</b></div>
       <div class="arc">
         <svg viewBox="0 0 {HEMI.w} {HEMI.h}" role="img" aria-label="House: {whip.total} of {HOUSE_SEATS} seats voting yes; {TO_PASS} needed.">
@@ -148,7 +148,7 @@
   .deadline-action-card b { font-family: var(--font-display); font-size: var(--text-sm); color: var(--alert); }
   .bill { display: flex; align-items: baseline; gap: 10px; }
   .bill b { font: 700 clamp(16px, 1.3vw, 20px) var(--font-display); }
-  .arc { margin: clamp(8px, 1.5vh, 24px) auto clamp(2px, 0.5vh, 6px); position: relative; aspect-ratio: 640 / 340; align-self: center; width: min(100%, 640px); max-height: clamp(160px, 30vh, 300px); }
+  .arc { margin: clamp(24px, 4vh, 36px) auto clamp(2px, 0.5vh, 6px); position: relative; aspect-ratio: 640 / 340; align-self: center; width: min(100%, 640px); max-height: clamp(150px, 28vh, 280px); }
   .arc > svg { width: 100%; height: 100%; display: block; }
   .seat { transition: opacity .5s ease; }
   .count { font: 700 clamp(28px, 3vw, 40px) var(--font-ui); fill: var(--ink); }

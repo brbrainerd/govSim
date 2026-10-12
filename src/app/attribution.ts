@@ -196,3 +196,104 @@ export function extractTurnAttributions(current: GameState, previous: GameState)
     clout,
   };
 }
+
+export interface UnforeseenRipple {
+  readonly title: string;
+  readonly description: string;
+  readonly cause: string;
+}
+
+/**
+ * Extracts 1-2 surprise effects or delayed event consequences the player didn't foresee (RPT-04, EVT-06).
+ */
+export function extractUnforeseenRipples(
+  current: GameState,
+  previous: GameState,
+): UnforeseenRipple[] {
+  const ripples: UnforeseenRipple[] = [];
+  const log = current.report.log;
+
+  // 1. Disaster rally subsided
+  if (log.some((l) => l.kind === 'event' && l.id === 'disaster_rally_ended')) {
+    ripples.push({
+      title: 'Approval rally subsided',
+      description: 'The public rally following your disaster response has faded back to baseline.',
+      cause: 'Disaster response fading',
+    });
+  }
+
+  // 2. Disaster response rally triggered
+  if (log.some((l) => l.kind === 'crisis' && (l.detail === 'emergency' || l.detail === 'reconstruction'))) {
+    ripples.push({
+      title: 'Disaster response approval rally',
+      description: 'Swift emergency relief bolstered public morale across affected communities.',
+      cause: 'Emergency disaster aid',
+    });
+  }
+
+  // 3. Oil shock reserve release
+  if (log.some((l) => l.kind === 'crisis' && l.id === 'oil_shock' && l.detail === 'reserve')) {
+    ripples.push({
+      title: 'Strategic fuel buffer',
+      description: 'Emergency fuel releases protected supply chains from broader price spikes.',
+      cause: 'Oil reserve release',
+    });
+  }
+
+  // 4. Cyber attack disruption
+  if (log.some((l) => l.kind === 'crisis' && l.id === 'cyber_grid')) {
+    ripples.push({
+      title: 'Supply chain friction',
+      description: 'Targeted logistics delays created unexpected drag on quarterly shipments.',
+      cause: 'Power grid disruptions',
+    });
+  }
+
+  // 5. High debt crowding
+  if (ripples.length < 2 && current.econ.debt / current.econ.gdp >= 1.20) {
+    ripples.push({
+      title: 'Rising debt service costs',
+      description: 'Higher sovereign debt has begun crowding out private capital investment.',
+      cause: 'High debt burden',
+    });
+  }
+
+  // 6. Inflation shock
+  if (ripples.length < 2 && current.econ.inflation - previous.econ.inflation >= 0.25) {
+    ripples.push({
+      title: 'Inflationary pressure',
+      description: 'Higher consumer price momentum is resisting Federal Reserve policy.',
+      cause: 'Supply chain costs',
+    });
+  }
+
+  // 7. Unemployment shift
+  if (ripples.length < 2 && current.econ.unemployment - previous.econ.unemployment <= -0.15) {
+    ripples.push({
+      title: 'Tightening labor market',
+      description: 'Lower unemployment increased worker bargaining power for wages.',
+      cause: 'Labor demand',
+    });
+  }
+
+  // 8. Early term honeymoon default fallback
+  if (ripples.length < 2 && current.turn <= 2) {
+    ripples.push({
+      title: 'Early presidential honeymoon',
+      description: 'Voters grant early patience while your legislative program takes shape.',
+      cause: 'Inaugural goodwill',
+    });
+  }
+
+  // 9. Natural drift baseline fallback if still under 1
+  if (ripples.length === 0) {
+    ripples.push({
+      title: 'Quiet economic momentum',
+      description: 'Underlying productivity gains cushioned the quarter against unexpected shocks.',
+      cause: 'Structural productivity',
+    });
+  }
+
+  return ripples.slice(0, 2);
+}
+

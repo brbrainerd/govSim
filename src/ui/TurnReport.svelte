@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Session } from '../app/session.svelte';
-  import { extractTurnAttributions } from '../app/attribution';
+  import { extractTurnAttributions, extractUnforeseenRipples } from '../app/attribution';
   import { formatLuckText } from '../content/text/why';
   import { termLabel } from '../engine/calendar';
   import Rosette from './art/Rosette.svelte';
@@ -8,6 +8,7 @@
   let { session, onClose }: { session: Session; onClose: () => void } = $props();
 
   const attributions = $derived(extractTurnAttributions(session.current, session.previous));
+  const ripples = $derived(extractUnforeseenRipples(session.current, session.previous));
   const luckText = $derived(formatLuckText(session.current.report.luck));
   const scoreDiff = $derived(Math.round(session.score.total * 10) / 10);
   const nowDiff = $derived(Math.round(session.score.now * 10) / 10);
@@ -60,7 +61,7 @@
     <!-- Right Column: Rosette & Context -->
     <div class="side-col">
       <div class="rosette-box">
-        <Rosette size={90} />
+        <Rosette size={76} />
         <div class="rosette-label">Quarter Completed</div>
       </div>
 
@@ -68,6 +69,18 @@
         <span class="label">Luck this quarter</span>
         <p class="luck-desc">{luckText}</p>
       </div>
+
+      {#if ripples.length > 0}
+        <div class="info-card ripple-box">
+          <span class="label">Unforeseen consequence</span>
+          {#each ripples as r (r.title)}
+            <div class="ripple-item">
+              <span class="ripple-title"><b>{r.title}</b> <em class="ripple-cause">({r.cause})</em></span>
+              <p class="ripple-desc">{r.description}</p>
+            </div>
+          {/each}
+        </div>
+      {/if}
 
       <div class="info-card score-box">
         <span class="label">Vs doing nothing</span>
@@ -210,7 +223,36 @@
   .side-col {
     display: flex;
     flex-direction: column;
-    gap: clamp(8px, 1.2vh, 14px);
+    gap: clamp(6px, 1vh, 12px);
+    max-height: clamp(340px, 58vh, 520px);
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .ripple-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ripple-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ripple-title {
+    font: 700 clamp(11px, 0.9vw, 13px) var(--font-display);
+    color: var(--ink);
+  }
+  .ripple-cause {
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(10px, 0.8vw, 11px);
+    color: var(--ink-soft);
+  }
+  .ripple-desc {
+    margin: 0;
+    font: 400 clamp(11px, 0.85vw, 12px)/1.3 var(--font-body);
+    color: var(--ink-soft);
   }
 
   .rosette-box {

@@ -3,7 +3,7 @@
   import type { Session } from '../app/session.svelte';
   import type { ScreenId } from '../app/screens';
   import { prosperity as score } from '../engine/game';
-  import { briefing, suggestions, thisTurn } from '../content/sample';
+  import { generateBriefing } from '../content/briefing';
   import OvalOfficeScene from '../ui/art/OvalOfficeScene.svelte';
   import Rosette from '../ui/art/Rosette.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
@@ -13,6 +13,7 @@
   const tiles = $derived(headline(session.history));
   const index = $derived(Math.round(session.index));
   const change = $derived(index - Math.round(score(session.previous).index));
+  const briefingInfo = $derived(generateBriefing(session));
 
   const spark = (t: number[]) => {
     const lo = Math.min(...t), hi = Math.max(...t), span = hi - lo || 1;
@@ -25,7 +26,7 @@
   {#snippet main()}
     <div class="card stage">
       <div class="scene"><OvalOfficeScene /></div>
-      <div class="bubble" role="status">{briefing}</div>
+      <div class="bubble" role="status">{briefingInfo.bubble}</div>
     </div>
     <div class="doing">
       <div class="doing-head"><h3>How America is doing</h3><a href="#economy" onclick={(e) => { e.preventDefault(); go('economy'); }}>See all 8</a></div>
@@ -54,8 +55,8 @@
     <button class="ticket" disabled title="Coming soon">Myth? Can you lower gas prices</button>
   {/snippet}
   {#snippet next()}
-    <div class="card info"><span class="label">This turn</span><b>{thisTurn.title}</b><span>{thisTurn.detail}</span></div>
-    {#each suggestions as s (s.title)}
+    <div class="card info"><span class="label">This turn</span><b>{briefingInfo.thisTurn.title}</b><span>{briefingInfo.thisTurn.detail}</span></div>
+    {#each briefingInfo.suggestions as s (s.title)}
       <div class="card option">
         <b>{s.title}</b>
         <button class="btn" onclick={() => s.target && go(s.target)}>{s.cta}</button>
