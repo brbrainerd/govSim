@@ -59,7 +59,7 @@ describe('modifiers', () => {
   });
 
   it('survives JSON with an until of FOREVER', () => {
-    const s = endTurn(withMods(2, [mod({ channel: 'gap', source: 'law:z' })]));
+    const s = endTurn(withMods(2, [mod({ channel: 'gap', source: 'law:z', tag: 'law' })]));
     expect(JSON.parse(JSON.stringify(s))).toEqual(s);
   });
 
@@ -118,5 +118,26 @@ describe('scheduled items', () => {
   it('throws naming an unknown kind (also not an inherited property)', () => {
     expect(() => endTurn(at3({ scheduled: [{ ...item, due: 3, kind: 'nope' }] }), {}, { resolvers: {} })).toThrow(/nope/);
     expect(() => endTurn(at3({ scheduled: [{ ...item, due: 3, kind: 'constructor' }] }), {}, { resolvers: {} })).toThrow(/constructor/);
+  });
+});
+
+describe('review fixes (01-REVIEW WR-04, WR-09)', () => {
+  const at3 = (extra: Partial<GameState> = {}): GameState => { let s = newGame(8, START); while (s.turn < 3) s = endTurn(s); return { ...s, ...extra }; };
+
+  it('resolves due items in id order whatever their array order', () => {
+    const order: string[] = [];
+    const rec: Resolver = ({ item: i }) => { order.push(i.id); return {}; };
+    const a: Scheduled = { id: 'a', kind: 'rec', due: 3, data: {} }, b: Scheduled = { ...a, id: 'b' };
+    endTurn(at3({ scheduled: [b, a] }), {}, { resolvers: { rec } });
+    expect(order).toEqual(['a', 'b']);
+  });
+
+  it('throws on an overdue item instead of stranding it', () => {
+    expect(() => endTurn(at3({ scheduled: [{ id: 'late', kind: 'rec', due: 2, data: {} }] }), {}, { resolvers: { rec: () => ({}) } })).toThrow(/late/);
+  });
+
+  it('rejects a modifier whose source is reserved or does not match its tag', () => {
+    for (const source of ['luck', 'clamp', 'budget', 'eo:x'])
+      expect(() => endTurn(withMods(1, [mod({ channel: 'gap', source })])), source).toThrow(/must start with "event:"/);
   });
 });

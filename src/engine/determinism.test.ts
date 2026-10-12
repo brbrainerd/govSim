@@ -34,9 +34,8 @@ describe('replay', () => {
   });
 });
 
-// Temporary behaviour guard for plans 01-05 to 01-07: never regenerate with -u to make a refactor
-// pass (a diff is a behaviour change to investigate). Phase 2 golden replays replace it.
-// Clout is excluded: plan 01-05 legitimately changes clout accounting for bills.
+// Behaviour guard until Phase 2 golden replays replace it: never regenerate with -u to make a refactor
+// pass (a diff is a behaviour change to investigate). Clout is excluded: bills change clout accounting.
 describe('characterization', () => {
   const sig = (v: number) => Number(v.toPrecision(6));
   it('snapshots econ and approval for seeds 1-5 under autopilot and the Infrastructure push', () => {
@@ -585,5 +584,12 @@ describe('fixture coverage (FND-02)', () => {
     expect(logs('unaffordable-bill')).toContainEqual(expect.objectContaining({ kind: 'bill', id: 'rejected' }));
     expect(logs('modifiers').filter((l) => l.kind === 'ruling')).toHaveLength(1);
     expect(play('modifiers').at(-1)!.scheduled).toEqual([]);
+  });
+});
+
+describe('stableHash input guard (WR-05)', () => {
+  it('rejects non-plain objects instead of hashing them as {}', () => {
+    for (const v of [new Map([[1, 2]]), new Set([1]), new Date(0), { a: new Map() }]) expect(() => stableHash(v)).toThrow(/non-plain/);
+    expect(stableHash(Object.create(null))).toBe(stableHash({}));
   });
 });

@@ -2,7 +2,7 @@
 // Only `clamp` and `rounding` may be residuals, each bounded by the guards in trace.test.ts. There is
 // deliberately no catch-all source (no `residual`, `other`, `misc`) that could absorb a modelling error.
 
-export interface Term { source: string; amount: number }
+export interface Term { readonly source: string; readonly amount: number }
 
 export const TRACE_KEYS = [
   'gap', 'growth', 'unemployment', 'inflation', 'expected', 'fedRate', 'debtPct', 'income',
@@ -18,8 +18,8 @@ export class Ledger {
 
   add(source: string, amount: number): void {
     if (amount === 0) return;
-    const t = this.terms.find((x) => x.source === source);
-    if (t) t.amount += amount; else this.terms.push({ source, amount });
+    const i = this.terms.findIndex((x) => x.source === source);
+    if (i >= 0) this.terms[i] = { source, amount: this.terms[i]!.amount + amount }; else this.terms.push({ source, amount });
   }
 
   get sum(): number {

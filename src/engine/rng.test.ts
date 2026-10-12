@@ -71,3 +71,12 @@ describe('detmath', () => {
     expect(tanhPade(-3.5)).toBe(-1);
   });
 });
+
+describe('rng input guard (IN-03)', () => {
+  it('rejects non-integer seeds, turns and numeric keys', () => {
+    expect(() => cell(1.5, 'macro', 1)).toThrow(/non-integer/);
+    expect(() => cell(1, 'macro', 1.5)).toThrow(/non-integer/);
+    expect(() => cell(1, 'macro', 1, 0.5)).toThrow(/non-integer/);
+    expect(() => cell(1, 'macro', 1, 'k')).not.toThrow();
+  });
+});

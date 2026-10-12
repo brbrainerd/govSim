@@ -27,6 +27,8 @@ export function stableHash(value: unknown): string {
           word(6); word(v.length);
           return v.forEach((x, i) => walk(x, `${path}[${i}]`));
         }
+        const proto: unknown = Object.getPrototypeOf(v);
+        if (proto !== Object.prototype && proto !== null) throw new Error(`stableHash: non-plain object at ${path || '<root>'}`);
         const o = v as Record<string, unknown>;
         const keys = Object.keys(o).filter((k) => o[k] !== undefined).sort();
         word(7); word(keys.length);

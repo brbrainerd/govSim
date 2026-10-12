@@ -24,7 +24,7 @@ export const VALUE: Record<TraceKey, (s: GameState) => number> = {
 /**
  * One readable message per traced key whose terms do not add up; [] when the step conserves.
  * `tol` is absolute for values up to 1 and relative beyond that: floating-point error grows with the
- * magnitude (a collapsed legacy projection reaches incomes near -6e7, where one ulp is 7e-9).
+ * magnitude (median income is in dollars, up to LIMITS.income times the start).
  */
 export function conservationErrors(before: GameState, after: GameState, tol = 1e-9): string[] {
   const errors: string[] = [];

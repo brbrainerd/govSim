@@ -8,7 +8,7 @@ import { clamp, tanhPade } from './detmath';
 import { activeAt, RESOLVERS, type Modifier, type Scheduled, type Resolver } from './modifiers';
 import { normal } from './rng';
 import { prosperity } from './score';
-import { Ledger, type Term, type TraceKey } from './trace';
+import { isKnownSource, Ledger, type Term, type TraceKey } from './trace';
 import { BN_PER_TN, BUDGET_WINDOW_YEARS, LEGACY_QUARTERS, MONTHS_PER_YEAR, PERCENT, QUARTERS_PER_YEAR, TOTAL_TURNS } from './units';
 
 export { prosperity } from './score';
@@ -128,14 +128,17 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const s = state.start, e = state.econ;
   const legacyRun = opts.legacy === true;
 
-  // Due scheduled items resolve first so what they add or end acts in this same step. Keyed draws inside
-  // resolvers make the order irrelevant; an unknown kind fails loudly (T-1-13).
+  // Due scheduled items resolve first so what they add or end acts in this same step, in (due, id) order
+  // so a reordered save replays identically. An unknown kind or an overdue item fails loudly (T-1-13).
   let modifiers: readonly Modifier[] = state.modifiers;
   let scheduled: readonly Scheduled[] = state.scheduled;
   const log: LogEntry[] = [];
   if (!legacyRun) {
     const registry = opts.resolvers ?? RESOLVERS;
-    for (const item of state.scheduled.filter((i) => i.due === state.turn)) {
+    const overdue = state.scheduled.find((i) => i.due < state.turn);
+    if (overdue) throw new Error(`scheduled item ${overdue.id} was due on turn ${overdue.due}, now turn ${state.turn}`);
+    const due = state.scheduled.filter((i) => i.due === state.turn).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    for (const item of due) {
       if (!Object.hasOwn(registry, item.kind)) throw new Error(`unknown scheduled kind "${item.kind}" (item ${item.id})`);
       const out = registry[item.kind]!({ seed: state.seed, turn: state.turn, state, item });
       const ended = new Set(out.endGroups);
@@ -145,6 +148,9 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     scheduled = state.scheduled.filter((i) => i.due !== state.turn);
   }
   const active = activeAt(modifiers, state.turn, legacyRun);
+  for (const m of active) {
+    if (!m.source.startsWith(`${m.tag}:`) || !isKnownSource(m.source)) throw new Error(`modifier ${m.id} has source "${m.source}", which must start with "${m.tag}:"`);
+  }
   const mods = (channel: Modifier['channel']) => active.filter((m) => m.channel === channel);
 
   const zGap = normal(state.seed, 'macro', state.turn, 'gap');
@@ -152,7 +158,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const zAppr = normal(state.seed, 'macro', state.turn, 'appr');
 
   // The engine charges clout from the raw bill; the Session previews with the same function.
-  const r = decisions.bill ? resolveBill(state.clout, decisions.bill) : null;
+  const raw: unknown = decisions !== null && typeof decisions === 'object' ? decisions.bill : undefined;
+  const r = raw === undefined ? null : resolveBill(state.clout, raw);
   const enacted = r && r.valid && r.passed ? r : null;
   const policy = enacted ? enacted.budget : state.policy;
   const before = estimate(state.policy), after = estimate(policy);
@@ -226,7 +233,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const inc = new Ledger();
   inc.add('growth', (e.realIncome * (C.incomeGrowthShare * growth)) / (QUARTERS_PER_YEAR * PERCENT));
   if (enacted) inc.add('budget:family', (after.familyMonthly - before.familyMonthly) * MONTHS_PER_YEAR);
-  const realIncome = e.realIncome + inc.sum;
+  const realIncome = inc.clamp(e.realIncome + inc.sum, s.medianIncome * LIMITS.income.bounds[0], s.medianIncome * LIMITS.income.bounds[1]);
 
   // Level effects: indicators move toward a policy-dependent target instead of drifting forever.
   // The life expectancy trend grows with state.turn, the quarters since the start (incl. the legacy projection).
@@ -255,7 +262,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   ap.add('approval:growth', C.approvalPull * C.approvalGrowth * (growth - s.potential));
   ap.add('luck', C.shockApproval * zAppr);
   for (const m of mods('approval')) ap.add(m.source, m.amount);
-  const approval = ap.round(ap.clamp(state.approval + ap.sum, ...LIMITS.approval.bounds), 1);
+  const approval = ap.round(ap.clamp(state.approval + ap.sum, ...LIMITS.approval.bounds), RULES.approvalStep.value);
   const tr = new Ledger();
   tr.add('trust:reversion', C.trustAdjust * (s.trust - e.trust));
   tr.add('trust:approval', C.trustAdjust * C.trustApproval * (approval - C.approvalNeutral));
@@ -271,7 +278,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   }
   const clout = cl.clamp(state.clout + cl.sum, 0, Infinity);
 
-  if (r) log.push(r.valid ? { kind: 'bill', id: r.passed ? 'passed' : 'failed', amount: r.whip.total } : { kind: 'bill', id: 'rejected', detail: 'unaffordable' });
+  if (r) log.push(r.valid ? { kind: 'bill', id: r.passed ? 'passed' : 'failed', amount: r.whip.total } : { kind: 'bill', id: 'rejected', detail: r.reason });
 
   return {
     ...state,

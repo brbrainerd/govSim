@@ -270,6 +270,7 @@ export const LIMITS = {
   fedRate: { bounds: [0, 10], unit: '% policy rate', basis: 'judgement', note: 'Zero lower bound; 10% is above any recent peak.' },
   gini: { bounds: [0.3, 0.6], unit: 'Gini index', basis: 'judgement', note: 'Wide enough for any plausible US path; hand-set.' },
   approval: { bounds: [5, 95], unit: '% approval', basis: 'judgement', note: 'No leader is loved or hated by everyone.' },
+  income: { bounds: [0.25, 4], unit: 'multiple of starting median income', basis: 'judgement', note: 'Keeps a collapsed economy finite: median income never falls below a quarter or rises above four times its start.' },
   trust: { bounds: [5, 80], unit: '% trust in government', basis: 'judgement', note: 'Wide enough for any plausible path; hand-set.' },
   score: { bounds: [0, 100], unit: 'index pts', basis: 'judgement', note: 'Each score component is capped to the 0 to 100 index scale.' },
 } as const satisfies Record<string, Limit>;
@@ -302,6 +303,7 @@ export const RULES = {
   startClout: { value: 120, unit: 'clout', basis: 'judgement', range: [60, 200], note: 'Enough for a few deals in the first year, not enough to buy every vote.' },
   voteReward: { value: 10, unit: 'clout', basis: 'judgement', range: [5, 20], note: 'A passed bill earns a modest reward (UX-3).' },
   refundDivisor: { value: 2, unit: 'divisor of clout spent', basis: 'judgement', range: [1, 4], note: 'A failed bill returns half the clout you spent, so trying is not ruinous (UX-3).' },
+  approvalStep: { value: 1, unit: '% approval', basis: 'judgement', range: [0.1, 1], note: 'Approval moves in whole points, the way polls report it.' },
 } as const satisfies Record<string, Coeff>;
 
 /** The values view the engine reads. */

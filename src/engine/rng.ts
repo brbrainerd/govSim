@@ -16,8 +16,12 @@ export function keyHash(key: string | number): number {   // FNV-1a over UTF-16 
   return h | 0;
 }
 
-export const cell = (seed: number, stream: Stream, turn: number, key: string | number = 0): number =>
-  absorb(absorb(absorb(absorb(0x2545f491, seed | 0), STREAM[stream]), turn), keyHash(key));
+/** Seed, turn and numeric keys must be integers: `|0` would silently merge 1.5 with 1 (IN-03). */
+export const cell = (seed: number, stream: Stream, turn: number, key: string | number = 0): number => {
+  if (!Number.isInteger(seed) || !Number.isInteger(turn) || (typeof key === 'number' && !Number.isInteger(key)))
+    throw new Error(`rng: non-integer seed, turn or key (${seed}, ${turn}, ${key})`);
+  return absorb(absorb(absorb(absorb(0x2545f491, seed | 0), STREAM[stream]), turn), keyHash(key));
+};
 
 export const uniformAt = (c: number, k: number): number => (mix(absorb(c, k)) >>> 0) / 4294967296; // [0, 1)
 

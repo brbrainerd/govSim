@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SCORE } from './coefficients';
+import { LIMITS, SCORE } from './coefficients';
 import { endTurn, finalScore, newGame, prosperity, TOTAL_TURNS, type GameState } from './game';
 import { START } from './fixture';
 
@@ -33,5 +33,13 @@ describe('engine', () => {
   it('weights the final score by the registry: now against ten years on', () => {
     const f = finalScore(play(3).at(-1)!);
     expect(f.total).toBe(SCORE.nowWeight.value * f.now + (1 - SCORE.nowWeight.value) * f.later);
+  });
+});
+
+describe('income floor', () => {
+  it('keeps median income within LIMITS.income of the start even when the economy collapses', () => {
+    let s: GameState = { ...newGame(1, START), econ: { ...newGame(1, START).econ, gap: -500 } };
+    for (let i = 0; i < 8; i++) s = endTurn(s);
+    expect(s.econ.realIncome).toBeGreaterThanOrEqual(START.medianIncome * LIMITS.income.bounds[0] - 1e-9);
   });
 });

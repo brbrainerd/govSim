@@ -11,6 +11,8 @@ describe('scanner self-test', () => {
     expect(hits('x ** 2')).toBe(1);
     expect(hits('const d = Date.now()')).toBe(1);
     expect(hits("import x from '../app/session'")).toBe(1);
+    expect(hits('const M = Math; M.log(x)')).toBe(1);
+    expect(hits('f(Math)')).toBe(1);
   });
   it('ignores what is allowed', () => {
     expect(hits('Math.max(a, b)')).toBe(0);

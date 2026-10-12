@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { conservationErrors } from '../testing/conservation';
 import { fromPackage, type BudgetDraft } from './budget';
-import { C, LIMITS } from './coefficients';
+import { C, LIMITS, RULES } from './coefficients';
 import { enact, START } from './fixture';
 import { endTurn, newGame, step, TOTAL_TURNS, type Decisions, type GameState } from './game';
 import { isKnownSource, TRACE_KEYS, type TraceKey } from './trace';
@@ -85,11 +85,12 @@ describe('trace', () => {
     const bounds: Partial<Record<TraceKey, readonly [number, number]>> = {
       unemployment: LIMITS.unemployment.bounds, inflation: LIMITS.inflation.bounds, fedRate: LIMITS.fedRate.bounds,
       gini: LIMITS.gini.bounds, approval: LIMITS.approval.bounds, trust: LIMITS.trust.bounds,
+      income: [START.medianIncome * LIMITS.income.bounds[0], START.medianIncome * LIMITS.income.bounds[1]],
     };
-    const quantum: Partial<Record<TraceKey, number>> = { fedRate: 0.125, approval: 0.5 };
+    const quantum: Partial<Record<TraceKey, number>> = { fedRate: C.fedStep / 2, approval: RULES.approvalStep.value / 2 };
     const value = (s: GameState, key: TraceKey) => ({
       unemployment: s.econ.unemployment, inflation: s.econ.inflation, fedRate: s.econ.fedRate, gini: s.econ.gini,
-      approval: s.approval, trust: s.econ.trust, clout: s.clout,
+      approval: s.approval, trust: s.econ.trust, clout: s.clout, income: s.econ.realIncome,
     })[key as 'unemployment'];
     const bad: string[] = [];
     sweep((prev, next, where) => {

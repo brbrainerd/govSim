@@ -12,6 +12,8 @@ export function scan(file: string, text: string) {
   const visit = (n: ts.Node): void => {
     if (ts.isPropertyAccessExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === 'Math' && !ALLOWED_MATH.has(n.name.text)) hits.push(`${at(n)} Math.${n.name.text}`);
     if (ts.isElementAccessExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === 'Math') hits.push(`${at(n)} Math[...]`);
+    // `const M = Math` or `f(Math)` would hide every later call from the two checks above (IN-01).
+    if (ts.isIdentifier(n) && n.text === 'Math' && !((ts.isPropertyAccessExpression(n.parent) || ts.isElementAccessExpression(n.parent)) && n.parent.expression === n) && !(ts.isPropertyAccessExpression(n.parent) && n.parent.name === n)) hits.push(`${at(n)} Math alias`);
     if (ts.isBinaryExpression(n) && (n.operatorToken.kind === ts.SyntaxKind.AsteriskAsteriskToken || n.operatorToken.kind === ts.SyntaxKind.AsteriskAsteriskEqualsToken)) hits.push(`${at(n)} **`);
     if (ts.isIdentifier(n) && BANNED_IDS.has(n.text) && !(ts.isPropertyAccessExpression(n.parent) && n.parent.name === n)) hits.push(`${at(n)} ${n.text}`);
     if (ts.isImportDeclaration(n) && /(^|\/)(svelte|app|ui|screens)(\/|$)/.test((n.moduleSpecifier as ts.StringLiteral).text)) hits.push(`${at(n)} import ${(n.moduleSpecifier as ts.StringLiteral).text}`);

@@ -91,3 +91,22 @@ describe('tampered bills never mint clout or corrupt policy', () => {
     expect(decisions).toEqual(frozen);
   });
 });
+
+describe('malformed decisions are rejected, never thrown on (01-REVIEW WR-01)', () => {
+  it('handles non-object budgets, non-array deals and non-object bills', () => {
+    for (const bill of [null, 5, 'x', [], { budget: null, deals: 5 }, { budget: [], deals: [] }, { budget: {}, deals: 'mod' }]) {
+      const r = resolveBill(120, bill);
+      expect(r.valid, JSON.stringify(bill)).toBe(false);
+      expect(r.reason).toBe('invalid');
+      const next = endTurn(at(120), { bill } as never);
+      expect(next.policy).toEqual(at(120).policy);
+      expect(next.report.log).toEqual([{ kind: 'bill', id: 'rejected', detail: 'invalid' }]);
+    }
+    expect(sanitizeBudget(null)).toEqual(sanitizeBudget({}));
+    expect(knownDeals('mod')).toEqual([]);
+  });
+
+  it('treats null or non-object decisions as no decisions', () => {
+    for (const d of [null, 7, 'x']) expect(endTurn(at(120), d as never)).toEqual(endTurn(at(120), {}));
+  });
+});
