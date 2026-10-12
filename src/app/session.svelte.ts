@@ -3,6 +3,9 @@ import { tally, type DealId } from '../engine/congress';
 import { autopilotDecisions, cloutCost, resolveBill, type CrisisDecision, type Decisions } from '../engine/decisions';
 import { endTurn, newGame, prosperity, scoreVsAutopilot, TOTAL_TURNS, type GameState, type ScoreBreakdown, type Start } from '../engine/game';
 import type { PartyId } from '../content/parties';
+import { getOrder } from '../content/orders';
+import { C } from '../engine/coefficients';
+import { speechCost, type PowerDecisions } from '../engine/powers';
 import { storeAutosave, type SaveFile } from './save';
 import type { ScreenId } from './screens';
 
@@ -18,6 +21,11 @@ interface Draft {
   deals: DealId[];
   voteCalled: boolean;
   crisisChoice: CrisisDecision | null;
+  signedOrders: string[];
+  revokedOrders: string[];
+  fedPressure: boolean;
+  speechAudience: 'general' | 'congress' | 'business' | null;
+  viewMyth: string | null;
 }
 
 /** A new turn's draft starts from the policy already in force. */
@@ -28,6 +36,11 @@ const freshDraft = (policy: BudgetDraft): Draft => ({
   deals: [],
   voteCalled: false,
   crisisChoice: null,
+  signedOrders: [],
+  revokedOrders: [],
+  fedPressure: false,
+  speechAudience: null,
+  viewMyth: null,
 });
 
 /**
@@ -58,7 +71,31 @@ export class Session {
       ? (this.current.activeCrisis.options.find((o) => o.id === this.draft.crisisChoice!.optionId)?.cloutCost ?? 0)
       : 0,
   );
-  clout = $derived(this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost);
+  powerCost = $derived.by(() => {
+    let cost = 0;
+    for (const id of this.draft.signedOrders) {
+      cost += getOrder(id)?.cloutCost ?? 0;
+    }
+    if (this.draft.fedPressure) cost += C.fedPressureCost;
+    if (this.draft.speechAudience) cost += speechCost(this.current.speechCountInWindow);
+    return cost;
+  });
+  clout = $derived(this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost);
+  powers = $derived<PowerDecisions | null>(
+    this.draft.signedOrders.length > 0 ||
+    this.draft.revokedOrders.length > 0 ||
+    this.draft.fedPressure ||
+    this.draft.speechAudience !== null ||
+    this.draft.viewMyth !== null
+      ? {
+          ...(this.draft.signedOrders.length > 0 ? { signOrders: $state.snapshot(this.draft.signedOrders) } : {}),
+          ...(this.draft.revokedOrders.length > 0 ? { revokeOrders: $state.snapshot(this.draft.revokedOrders) } : {}),
+          ...(this.draft.fedPressure ? { pressureFed: true } : {}),
+          ...(this.draft.speechAudience ? { speech: { audience: this.draft.speechAudience } } : {}),
+          ...(this.draft.viewMyth ? { viewMyth: this.draft.viewMyth } : {}),
+        }
+      : null,
+  );
   whip = $derived(this.preview?.whip ?? tally([]));
   vote = $derived(
     this.draft.voteCalled && this.preview
@@ -136,11 +173,48 @@ export class Session {
     this.draft.crisisChoice = { crisisId, optionId };
   }
 
+  toggleSignOrder(orderId: string) {
+    if (this.over) return;
+    if (this.current.activeOrders.includes(orderId)) {
+      if (this.draft.revokedOrders.includes(orderId)) {
+        this.draft.revokedOrders = this.draft.revokedOrders.filter((id) => id !== orderId);
+      } else {
+        this.draft.revokedOrders = [...this.draft.revokedOrders, orderId];
+      }
+    } else {
+      if (this.draft.signedOrders.includes(orderId)) {
+        this.draft.signedOrders = this.draft.signedOrders.filter((id) => id !== orderId);
+      } else {
+        this.draft.signedOrders = [...this.draft.signedOrders, orderId];
+      }
+    }
+  }
+
+  setFedPressure(val: boolean) {
+    if (this.over) return;
+    this.draft.fedPressure = val;
+  }
+
+  setSpeech(audience: 'general' | 'congress' | 'business' | null) {
+    if (this.over) return;
+    this.draft.speechAudience = audience;
+  }
+
+  viewMythCard(id: string) {
+    if (this.over) return;
+    if (!this.current.viewedMyths.includes(id)) {
+      this.draft.viewMyth = id;
+    }
+  }
+
   nextTurn() {
     const decisions: Decisions = {};
     if (this.bill) decisions.bill = this.bill;
     if (this.draft.crisisChoice) {
       decisions.crisis = $state.snapshot(this.draft.crisisChoice);
+    }
+    if (this.powers) {
+      decisions.powers = $state.snapshot(this.powers);
     }
     const next = endTurn(this.current, decisions);
     if (next === this.current) return;

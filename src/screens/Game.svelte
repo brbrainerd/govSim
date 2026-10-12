@@ -7,6 +7,7 @@
   import Congress from './Congress.svelte';
   import Economy from './Economy.svelte';
   import OvalOffice from './OvalOffice.svelte';
+  import Powers from './Powers.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import StatusBar from '../ui/StatusBar.svelte';
   import Rail from '../ui/Rail.svelte';
@@ -44,6 +45,8 @@
       <Budget {session} question={screen.question} {go} />
     {:else if screen.id === 'congress'}
       <Congress {session} question={screen.question} />
+    {:else if screen.id === 'powers'}
+      <Powers {session} question={screen.question} {go} />
     {:else}
       <ScreenLayout question={screen.question}>
         {#snippet main()}<div class="card placeholder">{screen.label}: coming in M1</div>{/snippet}
