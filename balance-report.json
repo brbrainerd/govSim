@@ -1,0 +1,86 @@
+{
+  "version": "0.2",
+  "seeds": 100,
+  "strategies": {
+    "autopilot": {
+      "meanScore": 64.901,
+      "nowScore": 61.776,
+      "laterScore": 68.025,
+      "diffVsAutopilot": 0,
+      "quantiles": {
+        "min": 63.225,
+        "p25": 64.529,
+        "median": 64.931,
+        "p75": 65.257,
+        "max": 66.943
+      },
+      "indicators": {
+        "unemployment": 4.41,
+        "inflation": 2.47,
+        "debtPct": 109.2,
+        "realIncome": 93446,
+        "approval": 49.2
+      }
+    },
+    "sensible": {
+      "meanScore": 67.209,
+      "nowScore": 63.529,
+      "laterScore": 70.89,
+      "diffVsAutopilot": 2.308,
+      "quantiles": {
+        "min": 65.612,
+        "p25": 66.896,
+        "median": 67.256,
+        "p75": 67.578,
+        "max": 69.228
+      },
+      "indicators": {
+        "unemployment": 4.4,
+        "inflation": 2.42,
+        "debtPct": 103.09,
+        "realIncome": 93467,
+        "approval": 49.7
+      }
+    },
+    "maxDeficit": {
+      "meanScore": 44.876,
+      "nowScore": 26.94,
+      "laterScore": 62.813,
+      "diffVsAutopilot": -20.024,
+      "quantiles": {
+        "min": 42.278,
+        "p25": 44.364,
+        "median": 44.969,
+        "p75": 45.563,
+        "max": 46.76
+      },
+      "indicators": {
+        "unemployment": 14.97,
+        "inflation": -2,
+        "debtPct": 347.77,
+        "realIncome": 83104,
+        "approval": 7.2
+      }
+    },
+    "maxAusterity": {
+      "meanScore": 69.712,
+      "nowScore": 62.587,
+      "laterScore": 76.836,
+      "diffVsAutopilot": 4.811,
+      "quantiles": {
+        "min": 67.326,
+        "p25": 69.18,
+        "median": 69.784,
+        "p75": 70.313,
+        "max": 71.796
+      },
+      "indicators": {
+        "unemployment": 4.29,
+        "inflation": 1.88,
+        "debtPct": 61.74,
+        "realIncome": 84187,
+        "approval": 49.6
+      }
+    }
+  }
+}
