@@ -119,19 +119,19 @@ Plans:
   3. The Economy screen charts you vs doing nothing for growth, jobs, prices and debt plus all 8 scores, on zero-based axes, each with a table fallback, and the chart library loads only with that screen (bundle budget holds)
   4. The Economy screen shows the Fed rate with a plain explanation of why the Fed moved (from its rule's trace terms) and a "why it's happening" panel built from the engine trace
 
-**Plans**: 0/5 plans executed
+**Plans**: 5/5 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 03-01-PLAN.md — Wave 1: Score unification (RPT-02, D11, GR-04)
-- [ ] 03-02-PLAN.md — Wave 1: Trace attribution engine & copy dictionary (RPT-01, GR-06, GR-07, OBS-05)
+- [x] 03-01-PLAN.md — Wave 1: Score unification (RPT-02, D11, GR-04)
+- [x] 03-02-PLAN.md — Wave 1: Trace attribution engine & copy dictionary (RPT-01, GR-06, GR-07, OBS-05)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 03-03-PLAN.md — Wave 2: Reusable Overlay and Turn Report card component (RPT-01, OBS-07)
-- [ ] 03-04-PLAN.md — Wave 2: Economy screen with comparative charts, Fed explainer, and table fallback (ECO-01, ECO-02, OBS-07)
-- [ ] 03-05-PLAN.md — Wave 2: Parallel data sourcing preparation for VOT-06
+- [x] 03-03-PLAN.md — Wave 2: Reusable Overlay and Turn Report card component (RPT-01, OBS-07)
+- [x] 03-04-PLAN.md — Wave 2: Economy screen with comparative charts, Fed explainer, and table fallback (ECO-01, ECO-02, OBS-07)
+- [x] 03-05-PLAN.md — Wave 2: Parallel data sourcing preparation for VOT-06
 **UI hint**: yes
 **Research flag**: No (LayerChart + trace-to-copy is specified; use Context7 for the LayerChart API at implementation). **Parallel work**: start VOT-06 data sourcing (ME/NE district canvasses, per-state House delegations, per-state exposure) now; it is the long pole for Phase 6.
 

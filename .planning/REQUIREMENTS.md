@@ -31,12 +31,12 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 
 ### Turn report & Economy
 
-- [ ] **RPT-01**: After each turn the player sees a report card: 8 indicators plus approval and clout, each with value, unit, arrow, word and top cause, plus luck and "vs doing nothing"
-- [ ] **RPT-02**: The headline score everywhere is the projected final score (same function as the end screen), with "Now" and "In 10 years" underneath
+- [x] **RPT-01**: After each turn the player sees a report card: 8 indicators plus approval and clout, each with value, unit, arrow, word and top cause, plus luck and "vs doing nothing"
+- [x] **RPT-02**: The headline score everywhere is the projected final score (same function as the end screen), with "Now" and "In 10 years" underneath
 - [ ] **RPT-03**: Player earns about 12 badges for reaching real policy milestones
 - [ ] **RPT-04**: The report card names 1–2 effects the player didn't see coming, with their causes
-- [ ] **ECO-01**: Economy screen charts you vs doing nothing for growth, jobs, prices and debt plus all 8 scores, each with a table fallback
-- [ ] **ECO-02**: Economy screen shows the Fed rate with a plain explanation of why the Fed moved and a "why it's happening" panel from the engine trace
+- [x] **ECO-01**: Economy screen charts you vs doing nothing for growth, jobs, prices and debt plus all 8 scores, each with a table fallback
+- [x] **ECO-02**: Economy screen shows the Fed rate with a plain explanation of why the Fed moved and a "why it's happening" panel from the engine trace
 
 ### Events & crises
 

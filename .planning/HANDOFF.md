@@ -63,15 +63,18 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 
 - **Phase 1 (Engine foundations): executed, reviewed, all review findings fixed.**
 - **Phase 2 (Saves, guardrails & continuous deploy): executed, all 6 plans completed and verified.**
-- **Gates:** `pnpm test` 131 passing (21 files) · `pnpm test:e2e` 5 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
-  `pnpm determinism` 8/8 OK · notices ok (23 packages) · `pnpm guard` ok · `docker build` ok (`/api/health` 200).
-- **Built in Phase 2:**
-  - Save file serialization, trust boundary parsing, input log replay, `localStorage` autosave/resume, and 6 permanent golden replays across 32 turns (OBS-01, OBS-02).
-  - `fast-check` property tests verifying arithmetic invariants, non-NaN/non-Infinity, `LIMITS` clamping, trace conservation, and determinism across 1,000 games (OBS-03).
-  - Strict build-time CSP (meta & preview headers) with Cloudflare R2 connect allowlist, zero-telemetry static scanner, and Playwright egress test recording 0 unauthorized requests (OBS-04).
-  - Content readability gates enforcing Flesch-Kincaid <= 9.0 and sentences <= 20 words for multi-word copy, politician deny-list, strict party name allowlist (`src/content/parties.ts`), and committed `balance-report.json` with Sensible play beating Autopilot by +2.308 index points across 100 seeds (OBS-05, OBS-06).
-  - Playwright E2E tests: `@axe-core/playwright` accessibility audit with 0 serious/critical violations across New Game, Oval Office, Budget, and Congress screens (with `sage-dark` token added for WCAG AA contrast); 100% keyboard-only turn navigation test; screenshot baselines across viewports (1376×768, 1280×720) with zero page scrolling and fully visible action buttons (OBS-07).
-  - Multi-stage `Dockerfile` with Caddy serving static SPA and `/api/health` responding `200 {"ok":true}`, vendored TypeScript Coolify deployment/verification scripts in `scripts/ci/`, `.github/workflows/ci.yml` running all quality gates, and `.github/workflows/deploy.yml` publishing to GHCR and Coolify (OBS-08, REL-05, REL-06).
+- **Phase 3 (Turn report & Economy): executed, all 5 plans completed and verified.**
+- **Gates:** `pnpm test` 148 passing (25 files) · `pnpm test:e2e` 5 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
+  `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok.
+- **Built in Phase 3:**
+  - Unified projected scoring function `scoreVsAutopilot` on top bar and end screen showing Now/Later breakdown; GR-04 balance tests passing 100% sign match and negative headline before turn 16 (RPT-02, D11, GR-04).
+  - Attribution engine (`src/app/attribution.ts`) and plain-language copy dictionary (`src/content/text/why.ts`) mapping all engine trace keys to reading grade <= 9.0 and sentences <= 20 words with 100% drift test coverage (RPT-01, GR-06, GR-07, OBS-05).
+  - Accessible modal dialog shell (`src/ui/Overlay.svelte`) conforming to WAI-ARIA modal dialog pattern with keyboard focus trap and Escape handler (OBS-07).
+  - Turn report card (`src/ui/TurnReport.svelte`) matching target `g-report.png` with 10 indicator rows, direction badges, luck narrative, and vs-autopilot comparison (RPT-01).
+  - Responsive comparative SVG line chart component (`src/ui/art/MiniChart.svelte`) with zero-based axes, solid vs dashed lines, collision-avoiding labels, and `.sr-only` accessible table fallback (ECO-01, OBS-07).
+  - Full Economy screen (`src/screens/Economy.svelte`) matching target `g-economy.png` with 2x2 macro chart grid (Growth, Jobs, Prices, Debt), top 3 macroeconomic movers, Taylor-rule Fed explainer, and expandable "All 8 Scores" modal dialog (ECO-01, ECO-02).
+  - Sourced electoral dataset (`data/electoral-2024.json`, `src/data/electoral.ts`, `src/data/electoral.test.ts`) with certified 2024 ME/NE split district canvasses, 119th Congress House delegations across 50 states (220 R, 215 D), and per-state economic exposures (farm, manufacturing, energy) from BEA GDP-by-industry for VOT-06 (VOT-06, GR-13, GR-15).
+  - Playwright E2E test suites (`tests/a11y.spec.ts` and `tests/visual.spec.ts`) auditing Economy screen, scores modal, and turn report across 1376×768 and 1280×720 viewports (0 serious/critical a11y violations, zero page scroll).
 
 ### Open debts (do not lose these)
 
@@ -83,9 +86,9 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
    actuals; debt/GDP is a CBO projection. The 2026 midterms are **Nov 3 2026**; House/Senate
    counts need a refresh when the 120th Congress is seated (Jan 2027). Ask before refreshing.
 4. **Budget sliders** mark "changed" against the 2026 baseline, not the policy in force. Fine
-   while only one bill can pass; revisit in Phase 3 when the turn report explains changes.
-5. **Tooltips** are CSS-only (hover + keyboard focus). Escape-to-dismiss (WCAG 1.4.13) arrives
-   with the shared overlay/tooltip component in Phase 3.
+   while only one bill can pass; revisit when multi-bill budgeting arrives.
+5. **Tooltips & Modals (RESOLVED in Phase 3).** Accessible modal shell with Escape-to-dismiss and focus trapping built in `Overlay.svelte`.
+
 
 ---
 
