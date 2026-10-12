@@ -25,3 +25,10 @@ export function prosperity(state: GameState) {
   const index = Object.values(parts).reduce((a, p) => a + p.w * p.v, 0);
   return { index, parts };
 }
+
+export interface ScoreBreakdown {
+  now: number;
+  later: number;
+  total: number;
+}
+

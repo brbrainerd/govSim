@@ -1,13 +1,16 @@
 <script lang="ts">
   import { realQuarterLabel, termLabel } from '../engine/calendar';
-  import { TOTAL_TURNS, type GameState } from '../engine/game';
+  import { TOTAL_TURNS, type GameState, type ScoreBreakdown } from '../engine/game';
   import CoinStack from './art/CoinStack.svelte';
   import Ribbon from './art/Ribbon.svelte';
 
-  let { state, clout, title, score, party, onNextTurn }: { state: GameState; clout: number; title: string; score: number; party: string; onNextTurn: () => void } = $props();
+  let { state, clout, title, score, party, onNextTurn }: { state: GameState; clout: number; title: string; score: number | ScoreBreakdown; party: string; onNextTurn: () => void } = $props();
   const circ = 2 * Math.PI * 19;
+  const totalScore = $derived(typeof score === 'number' ? score : score.total);
+  const nowScore = $derived(typeof score === 'number' ? null : Math.round(score.now * 10) / 10);
+  const laterScore = $derived(typeof score === 'number' ? null : Math.round(score.later * 10) / 10);
   // Round before choosing the sign so -0.04 shows as +0.0, never "−0.0 worse" (IN-04).
-  const shown = $derived(Math.round(score * 10) / 10);
+  const shown = $derived(Math.round(totalScore * 10) / 10);
 </script>
 
 <header class="bar">
@@ -32,6 +35,13 @@
   <div class="center">
     <Ribbon text={title} />
     <div class="score"><span class="star">★</span> <b class:worse={shown < 0}>{shown < 0 ? '−' : '+'}{Math.abs(shown).toFixed(1)}</b> {shown < 0 ? 'worse' : 'better'} than doing nothing <span class="star">★</span></div>
+    {#if nowScore !== null && laterScore !== null}
+      <div class="score-sub">
+        <span>Now: <b>{nowScore >= 0 ? '+' : '−'}{Math.abs(nowScore).toFixed(1)}</b></span>
+        <span class="sep">·</span>
+        <span>In 10 years: <b>{laterScore >= 0 ? '+' : '−'}{Math.abs(laterScore).toFixed(1)}</b></span>
+      </div>
+    {/if}
   </div>
   <div class="time">
     <div class="when-wrap">
@@ -58,6 +68,9 @@
   .score b { color: var(--sage); font-family: var(--font-ui); font-size: clamp(15px, 1.2vw, 18px); }
   .score b.worse { color: var(--alert); }
   .star { color: var(--ink); font-size: 12px; }
+  .score-sub { font: 400 clamp(11px, 0.85vw, 13px) var(--font-body); color: var(--ink-soft); display: flex; align-items: center; gap: 6px; }
+  .score-sub b { font-family: var(--font-ui); color: var(--ink); font-weight: 600; }
+  .sep { opacity: 0.5; }
   /* Tooltips open on hover and on keyboard focus (WCAG 1.4.13), unlike title attributes. */
   .tip { position: relative; border-radius: var(--r-sm); background: none; border: 0; padding: 0; color: inherit; text-align: inherit; cursor: help; }
   .tip .label, .tip .num { display: block; }

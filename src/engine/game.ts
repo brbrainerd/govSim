@@ -7,11 +7,11 @@ import { resolveBill, type Decisions } from './decisions';
 import { clamp, tanhPade } from './detmath';
 import { activeAt, RESOLVERS, type Modifier, type Scheduled, type Resolver } from './modifiers';
 import { normal } from './rng';
-import { prosperity } from './score';
+import { prosperity, type ScoreBreakdown } from './score';
 import { isKnownSource, Ledger, type Term, type TraceKey } from './trace';
 import { BN_PER_TN, BUDGET_WINDOW_YEARS, LEGACY_QUARTERS, MONTHS_PER_YEAR, PERCENT, QUARTERS_PER_YEAR, TOTAL_TURNS } from './units';
 
-export { prosperity } from './score';
+export { prosperity, type ScoreBreakdown } from './score';
 export { LEGACY_QUARTERS, TOTAL_TURNS };
 
 /** Real-world starting values (from data/us-2026.json via fromData). */
@@ -310,7 +310,22 @@ export function legacy(state: GameState): GameState {
 }
 
 /** Final score: half how you leave the country, half how it holds up a decade later. */
-export function finalScore(state: GameState) {
+export function finalScore(state: GameState): ScoreBreakdown {
   const now = prosperity(state).index, later = prosperity(legacy(state)).index;
   return { now, later, total: SCORE.nowWeight.value * now + (1 - SCORE.nowWeight.value) * later };
 }
+
+/** The headline score evaluates projected final score using the same formula (D11, GR-04). */
+export const projectedScore = finalScore;
+
+/** Difference against autopilot across overall total, term-end (now) and legacy (later). */
+export function scoreVsAutopilot(state: GameState, autopilotState: GameState): ScoreBreakdown {
+  const p = finalScore(state);
+  const a = finalScore(autopilotState);
+  return {
+    total: p.total - a.total,
+    now: p.now - a.now,
+    later: p.later - a.later,
+  };
+}
+

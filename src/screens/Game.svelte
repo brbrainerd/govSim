@@ -16,7 +16,7 @@
 </script>
 
 <div class="app halftone">
-  <StatusBar state={session.current} clout={session.clout} title={screen.label} score={session.vsNothing} party={PARTIES.find((p) => p.id === session.options.party)!.name} onNextTurn={() => session.nextTurn()} />
+  <StatusBar state={session.current} clout={session.clout} title={screen.label} score={session.score} party={PARTIES.find((p) => p.id === session.options.party)!.name} onNextTurn={() => session.nextTurn()} />
   <div class="zones">
     <Rail
       turn={session.current.turn}

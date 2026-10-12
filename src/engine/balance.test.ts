@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import committedReport from '../../balance-report.json';
 import { baseline, spendLevers, taxLevers, type BudgetDraft } from './budget';
 import { enact, START } from './fixture';
-import { endTurn, finalScore, newGame, TOTAL_TURNS, type GameState } from './game';
+import { endTurn, finalScore, newGame, projectedScore, scoreVsAutopilot, TOTAL_TURNS, type GameState } from './game';
 
 const base = baseline();
 const strategies: Record<string, BudgetDraft | null> = {
@@ -81,5 +81,54 @@ describe('balance', () => {
       const maxDistFromAuto = Math.max(Math.abs(minMean - autoMean), Math.abs(maxMean - autoMean));
       expect(Math.max(swing, maxDistFromAuto)).toBeGreaterThanOrEqual(0.3);
     }
+  });
+
+  it('unifies top bar and end-screen scoring and satisfies GR-04 calibration', () => {
+    // 1. One exported function defines the comparison (GR-04)
+    expect(projectedScore).toBe(finalScore);
+
+    // 2. Over benchmark strategies, headline score sign matches final score sign in >= 95% at turn 16
+    let totalChecks = 0;
+    let signMatches = 0;
+    for (const stratName of ['sensible', 'maxDeficit', 'maxAusterity', 'tariffEverything']) {
+      for (const sd of seeds) {
+        const full = run(sd, strategies[stratName]!);
+        const auto = run(sd, strategies['autopilot']!);
+        const s16 = full[15]!;
+        const auto16 = auto[15]!;
+        const headline16 = scoreVsAutopilot(s16, auto16).total;
+
+        const s32 = full.at(-1)!;
+        const auto32 = auto.at(-1)!;
+        const finalDiff = finalScore(s32).total - finalScore(auto32).total;
+
+        totalChecks++;
+        const s16Sign = Math.sign(Math.round(headline16 * 10) / 10);
+        const finalSign = Math.sign(Math.round(finalDiff * 10) / 10);
+        if (s16Sign === finalSign || s16Sign === 0 || finalSign === 0) {
+          signMatches++;
+        }
+      }
+    }
+    const matchRate = signMatches / totalChecks;
+    expect(matchRate).toBeGreaterThanOrEqual(0.95);
+
+    // 3. maxDeficit must show a negative headline before turn 16 in at least 80% of seeds
+    let negBefore16Count = 0;
+    for (const sd of seeds) {
+      const full = run(sd, strategies['maxDeficit']!);
+      const auto = run(sd, strategies['autopilot']!);
+      let showedNegative = false;
+      for (let t = 1; t < 16; t++) {
+        const diff = scoreVsAutopilot(full[t]!, auto[t]!).total;
+        if (diff < -0.05) {
+          showedNegative = true;
+          break;
+        }
+      }
+      if (showedNegative) negBefore16Count++;
+    }
+    const negRate = negBefore16Count / seeds.length;
+    expect(negRate).toBeGreaterThanOrEqual(0.8);
   });
 });

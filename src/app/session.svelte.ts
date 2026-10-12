@@ -1,7 +1,7 @@
 import { fromPackage, packages, type BudgetDraft, type PackageName } from '../engine/budget';
 import { tally, type DealId } from '../engine/congress';
 import { cloutCost, resolveBill, type Decisions } from '../engine/decisions';
-import { endTurn, newGame, prosperity, TOTAL_TURNS, type GameState, type Start } from '../engine/game';
+import { endTurn, newGame, prosperity, scoreVsAutopilot, TOTAL_TURNS, type GameState, type ScoreBreakdown, type Start } from '../engine/game';
 import type { PartyId } from '../content/parties';
 import { storeAutosave, type SaveFile } from './save';
 import type { ScreenId } from './screens';
@@ -58,8 +58,10 @@ export class Session {
       : null,
   );
   index = $derived(prosperity(this.current).index);
+  /** Unified projected score vs autopilot (D11, GR-04). */
+  score = $derived(scoreVsAutopilot(this.current, this.autopilot[this.autopilot.length - 1]!));
   /** Headline: how much better than doing nothing (same seed, same shocks). */
-  vsNothing = $derived(this.index - prosperity(this.autopilot[this.autopilot.length - 1]!).index);
+  vsNothing = $derived(this.score.total);
   /** The term has ended: every action is a no-op and the UI shows the term as over. */
   over = $derived(this.current.turn >= TOTAL_TURNS);
 
