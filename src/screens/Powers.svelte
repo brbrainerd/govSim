@@ -236,7 +236,7 @@
             onclick={() =>
               session.setSpeech(session.draft.speechAudience === 'general' ? null : 'general')}
           >
-            General Public (+{currentSpeechGain}% appr)
+            General Public (+{currentSpeechGain.toFixed(1)}% appr)
           </button>
           <button
             class="speech-btn"
@@ -419,24 +419,22 @@
     padding: 2px 6px;
     border-radius: 4px;
     letter-spacing: 0.05em;
+    color: var(--ink);
   }
 
   .risk-low {
     background: var(--sage-tint);
-    color: var(--sage-dark);
-    border: 1px solid var(--sage);
+    border: 1.5px solid var(--sage-dark);
   }
 
   .risk-moderate {
     background: var(--paper);
-    color: var(--gold-dark);
-    border: 1px solid var(--gold);
+    border: 1.5px solid var(--gold-dark);
   }
 
   .risk-high {
     background: var(--alert-tint);
-    color: var(--alert-dark);
-    border: 1px solid var(--alert);
+    border: 1.5px solid var(--alert);
   }
 
   .status-badge {

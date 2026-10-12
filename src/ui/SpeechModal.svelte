@@ -12,9 +12,12 @@
     onClose: () => void;
   } = $props();
 
-  let selectedAudience = $state<'general' | 'congress' | 'business'>(
-    session.draft.speechAudience ?? 'general',
-  );
+  let selectedAudience = $state<'general' | 'congress' | 'business'>('general');
+  $effect(() => {
+    if (session.draft.speechAudience) {
+      selectedAudience = session.draft.speechAudience;
+    }
+  });
 
   const cost = $derived(speechCost(session.current.speechCountInWindow));
   const approvalBoost = $derived(speechApprovalGain(session.current.speechCountInWindow));
@@ -77,7 +80,7 @@
         <div class="card-body">
           <div class="card-title-row">
             <span class="aud-name">General Public</span>
-            <span class="boost-badge">+{approvalBoost}% approval</span>
+            <span class="boost-badge">+{approvalBoost.toFixed(1)}% approval</span>
           </div>
           <p class="aud-desc">Prime-time televised address rallying everyday voters to your platform.</p>
         </div>
@@ -295,8 +298,8 @@
     font-weight: 700;
     text-transform: uppercase;
     background: var(--sage-tint);
-    color: var(--sage-dark);
-    border: 1px solid var(--sage);
+    color: var(--ink);
+    border: 1.5px solid var(--sage-dark);
     border-radius: 4px;
     padding: 2px 8px;
   }

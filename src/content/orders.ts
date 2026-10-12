@@ -88,7 +88,7 @@ export const ORDERS_CATALOG: readonly ExecutiveOrder[] = [
   },
   {
     id: 'eo_federal_lands',
-    name: 'Energy permits on federal lands',
+    name: 'Energy permits on public lands',
     description: 'Speeds up permits for oil and gas on public lands.',
     legalBasis: 'Mineral Leasing Act, 30 U.S.C. § 226',
     cloutCost: 20,

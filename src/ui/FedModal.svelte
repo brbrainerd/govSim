@@ -13,7 +13,10 @@
     onClose: () => void;
   } = $props();
 
-  let pressureSelected = $state<boolean>(session.draft.fedPressure);
+  let pressureSelected = $state<boolean>(false);
+  $effect(() => {
+    pressureSelected = session.draft.fedPressure;
+  });
   const cost = C.fedPressureCost;
   const canAffordPressure = $derived(
     session.clout >= (session.draft.fedPressure ? 0 : cost),

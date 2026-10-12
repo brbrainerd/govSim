@@ -59,6 +59,16 @@ test.describe('viewport fitting and visual baselines (OBS-07)', () => {
       await assertNoOuterScroll('Oval Office');
       await page.screenshot({ path: `.playwright-screenshots/oval-${vp.width}x${vp.height}.png` });
 
+      // 2b. Myth modal
+      await page.locator('button.ticket:has-text("Myth? Can you lower gas prices")').click();
+      await expect(page.locator('div[role="dialog"]')).toBeVisible();
+      await assertNoOuterScroll('Myth Modal');
+      const gotItBtn = page.locator('button.got-it-btn');
+      await assertButtonInViewport(gotItBtn, 'GOT IT button');
+      await page.screenshot({ path: `.playwright-screenshots/myth-${vp.width}x${vp.height}.png` });
+      await gotItBtn.click();
+      await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
+
       // 3. Budget screen
       await page.locator('.tab:has-text("Budget")').click();
       await expect(page.locator('section[aria-label="Money in"]')).toBeVisible();
@@ -98,6 +108,14 @@ test.describe('viewport fitting and visual baselines (OBS-07)', () => {
       await expect(page.locator('.deadline-banner')).toBeVisible();
       await assertNoOuterScroll('Congress Deadline');
       await page.screenshot({ path: `.playwright-screenshots/congress-deadline-${vp.width}x${vp.height}.png` });
+
+      // 6b. Your Powers screen on Turn 2
+      await page.locator('.tab:has-text("Your Powers")').click();
+      await expect(page.locator('.h:has-text("What can you do without Congress?")')).toBeVisible();
+      await assertNoOuterScroll('Your Powers');
+      const signOrderBtn = page.locator('button.stamp-btn:has-text("SIGN ORDER")');
+      await assertButtonInViewport(signOrderBtn, 'SIGN ORDER button');
+      await page.screenshot({ path: `.playwright-screenshots/powers-${vp.width}x${vp.height}.png` });
 
       // 7. Crisis Modal (advance turns until crisis fires on turn 3, 4, or 5)
       while (!(await page.locator('.breaking-ribbon').isVisible())) {

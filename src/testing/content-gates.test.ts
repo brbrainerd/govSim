@@ -28,7 +28,11 @@ const BANNED_POLITICIANS = [
 function extractStrings(obj: unknown): string[] {
   if (typeof obj === 'string') return [obj];
   if (Array.isArray(obj)) return obj.flatMap(extractStrings);
-  if (obj && typeof obj === 'object') return Object.values(obj).flatMap(extractStrings);
+  if (obj && typeof obj === 'object') {
+    return Object.entries(obj)
+      .filter(([k]) => k !== 'citation' && k !== 'legalBasis')
+      .flatMap(([, v]) => extractStrings(v));
+  }
   return [];
 }
 
@@ -50,8 +54,15 @@ function collectFiles(dir: string): string[] {
 
 describe('content and readability gates (OBS-05, GR-24, GR-25)', () => {
   it('content strings in src/content/ have reading grade <= 9.0 and sentences <= 20 words', async () => {
-    const partiesMod = await import('../content/parties');
-    const strings = extractStrings(partiesMod);
+    const mods = [
+      await import('../content/parties'),
+      await import('../content/orders'),
+      await import('../content/myths'),
+    ];
+    const rawStrings = mods.flatMap(extractStrings);
+    const strings = rawStrings.filter(
+      (s) => !s.startsWith('http') && !s.includes('§') && !/\([A-Z0-9-]+\)$/.test(s.trim()),
+    );
 
     for (const str of strings) {
       // Split into sentences

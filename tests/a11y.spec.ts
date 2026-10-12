@@ -21,6 +21,15 @@ test.describe('accessibility audits (OBS-07, D6)', () => {
     const ovalSevere = ovalAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     expect(ovalSevere, `Oval Office a11y violations: ${JSON.stringify(ovalSevere, null, 2)}`).toEqual([]);
 
+    // 2b. Myth card modal
+    await page.locator('button.ticket:has-text("Myth? Can you lower gas prices")').click();
+    await expect(page.locator('div[role="dialog"]')).toBeVisible();
+    const mythAxe = await new AxeBuilder({ page }).analyze();
+    const mythSevere = mythAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(mythSevere, `Myth modal a11y violations: ${JSON.stringify(mythSevere, null, 2)}`).toEqual([]);
+    await page.locator('button.got-it-btn').click();
+    await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
+
     // 3. Budget screen
     await page.locator('.tab:has-text("Budget")').click();
     await expect(page.locator('section[aria-label="Money in"]')).toBeVisible();
@@ -58,8 +67,33 @@ test.describe('accessibility audits (OBS-07, D6)', () => {
     const reportSevere = reportAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     expect(reportSevere, `Turn Report a11y violations: ${JSON.stringify(reportSevere, null, 2)}`).toEqual([]);
 
-    // Close Turn Report
+    // Close Turn Report (advancing to Turn 2)
     await page.locator('button.stamp:has-text("Continue term")').click();
+    await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
+
+    // 8. Your Powers screen (Turn 2)
+    await page.locator('.tab:has-text("Your Powers")').click();
+    await expect(page.locator('.h:has-text("What can you do without Congress?")')).toBeVisible();
+    const powersAxe = await new AxeBuilder({ page }).analyze();
+    const powersSevere = powersAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(powersSevere, `Powers screen a11y violations: ${JSON.stringify(powersSevere, null, 2)}`).toEqual([]);
+
+    // 8b. Speech modal
+    await page.locator('.speech-dialog-link').click();
+    await expect(page.locator('div[role="dialog"]')).toBeVisible();
+    const speechAxe = await new AxeBuilder({ page }).analyze();
+    const speechSevere = speechAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(speechSevere, `Speech modal a11y violations: ${JSON.stringify(speechSevere, null, 2)}`).toEqual([]);
+    await page.locator('button.cancel-link').click();
+    await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
+
+    // 8c. Fed modal
+    await page.locator('.fed-btn.secondary').click();
+    await expect(page.locator('div[role="dialog"]')).toBeVisible();
+    const fedAxe = await new AxeBuilder({ page }).analyze();
+    const fedSevere = fedAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(fedSevere, `Fed modal a11y violations: ${JSON.stringify(fedSevere, null, 2)}`).toEqual([]);
+    await page.locator('button.cancel-link').click();
     await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
 
     // 8. Crisis modal (advance turns until crisis fires on turn 3, 4, or 5)
