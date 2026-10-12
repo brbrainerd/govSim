@@ -204,7 +204,20 @@ Plans:
   4. The data file contains sourced, cited Maine/Nebraska district margins, per-state House delegations and per-state farm / manufacturing / energy exposure, and a swing test (not just baseline totals) checks district electoral votes (GR-13, GR-14)
   5. Midterms at Year 2 Fall and Year 6 Fall change House and Senate seats based on approval, shown on a short results card, with the seat penalty bounded so a bad midterm cannot start a death spiral (D3, GR-18, GR-19)
 
-**Plans**: TBD
+**Plans**: 0/4 plans executed
+
+Plans:
+**Wave 1**
+- [ ] 06-01-PLAN.md — Pure engine electoral model, tipping-point centring, and midterm shift (VOT-04, VOT-05, VOT-06)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 06-02-PLAN.md — US Map SVG geometry, pattern encoding, and keyboard navigation (VOT-01, GR-23)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 06-03-PLAN.md — Interactive Voters screen, 270 EC bar, state drawer, and table fallback (VOT-01, VOT-02, VOT-03, VOT-05)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 06-04-PLAN.md — E2E tests, axe-core audits, and visual viewport fitting (VOT-01..VOT-06, OBS-05, OBS-07)
 **UI hint**: yes
 **Research flag**: Yes. Data sourcing and citations: ME/NE district canvasses (Secretaries of State), per-state House delegations (House Clerk), per-state exposure (USDA ERS, BEA); the tipping-point centring formula.
 
@@ -254,6 +267,6 @@ Phases execute in numeric order: 1 → 2 → 3 → (4 ∥ 5) → 6 → 7 → 8. 
 | 3. Turn report & Economy | 0/TBD | Not started | - |
 | 4. Events & crises | 0/TBD | Not started | - |
 | 5. Your Powers | 0/TBD | Not started | - |
-| 6. Voters & Electoral College | 0/TBD | Not started | - |
+| 6. Voters & Electoral College | 0/4 | In progress | - |
 | 7. Election & end of term | 0/TBD | Not started | - |
 | 8. Balance, hardening & release | 0/TBD | Not started | - |
