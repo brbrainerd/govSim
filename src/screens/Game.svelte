@@ -12,10 +12,18 @@
   import Rail from '../ui/Rail.svelte';
   import Overlay from '../ui/Overlay.svelte';
   import TurnReport from '../ui/TurnReport.svelte';
+  import CrisisModal from '../ui/CrisisModal.svelte';
 
   let { session, onImport }: { session: Session; onImport?: (f: File) => void } = $props();
   const screen = $derived(screenById(session.screen));
   const go = (id: typeof session.screen) => (session.screen = id);
+
+  let dismissedCrisisTurn = $state<number | null>(null);
+  const showCrisisModal = $derived(
+    session.current.activeCrisis !== null &&
+    !session.showingReport &&
+    dismissedCrisisTurn !== session.current.turn
+  );
 </script>
 
 <div class="app halftone">
@@ -50,6 +58,16 @@
         <TurnReport {session} onClose={() => session.closeReport()} />
       {/snippet}
     </Overlay>
+  {/if}
+
+  {#if showCrisisModal && session.current.activeCrisis}
+    <CrisisModal
+      crisis={session.current.activeCrisis}
+      {session}
+      onClose={() => {
+        dismissedCrisisTurn = session.current.turn;
+      }}
+    />
   {/if}
 </div>
 

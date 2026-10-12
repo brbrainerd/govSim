@@ -39,6 +39,12 @@ test.describe('zero-telemetry egress audit (OBS-04)', () => {
       const continueBtn = page.locator('button.stamp:has-text("Continue term")');
       await expect(continueBtn).toBeVisible();
       await continueBtn.click();
+
+      // If crisis modal appeared, decide it to continue
+      const decideBtn = page.locator('button.stamp:has-text("DECIDE")');
+      if (await decideBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+        await decideBtn.click();
+      }
     }
 
     // Verify no CSP errors in console

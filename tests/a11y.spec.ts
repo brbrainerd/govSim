@@ -61,5 +61,22 @@ test.describe('accessibility audits (OBS-07, D6)', () => {
     // Close Turn Report
     await page.locator('button.stamp:has-text("Continue term")').click();
     await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
+
+    // 8. Crisis modal (advance turns until crisis fires on turn 3, 4, or 5)
+    while (!(await page.locator('.breaking-ribbon').isVisible())) {
+      await page.locator('button.stamp:has-text("Next turn")').click();
+      await page.locator('button.stamp:has-text("Continue term")').click();
+    }
+
+    await expect(page.locator('.breaking-ribbon')).toBeVisible();
+    await expect(page.locator('div[role="dialog"]')).toBeVisible();
+    const crisisAxe = await new AxeBuilder({ page }).analyze();
+    const crisisSevere = crisisAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(crisisSevere, `Crisis modal a11y violations: ${JSON.stringify(crisisSevere, null, 2)}`).toEqual([]);
+
+    // Select an option and click DECIDE
+    await page.locator('.modal-grid .option-card:not(.unaffordable)').first().click();
+    await page.locator('button.stamp:has-text("DECIDE")').click();
+    await expect(page.locator('.breaking-ribbon')).not.toBeVisible();
   });
 });

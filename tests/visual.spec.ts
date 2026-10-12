@@ -92,6 +92,22 @@ test.describe('viewport fitting and visual baselines (OBS-07)', () => {
       await page.screenshot({ path: `.playwright-screenshots/report-${vp.width}x${vp.height}.png` });
       await continueBtn.click();
       await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
+
+      // 7. Crisis Modal (advance turns until crisis fires on turn 3, 4, or 5)
+      while (!(await page.locator('.breaking-ribbon').isVisible())) {
+        await page.locator('button.stamp:has-text("Next turn")').click();
+        await page.locator('button.stamp:has-text("Continue term")').click();
+      }
+
+      await expect(page.locator('.breaking-ribbon')).toBeVisible();
+      await expect(page.locator('div[role="dialog"]')).toBeVisible();
+      await assertNoOuterScroll('Crisis Modal');
+      const decideBtn = page.locator('button.stamp:has-text("DECIDE")');
+      await assertButtonInViewport(decideBtn, 'DECIDE button');
+      await page.screenshot({ path: `.playwright-screenshots/crisis-${vp.width}x${vp.height}.png` });
+
+      await decideBtn.click();
+      await expect(page.locator('.breaking-ribbon')).not.toBeVisible();
     });
   }
 });
