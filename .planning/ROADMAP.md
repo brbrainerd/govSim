@@ -24,7 +24,7 @@ subdomain on every green push.
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Engine foundations** - License files, keyed RNG, causal trace, raw-input decisions, bit-reproducible math, term calendar, party pick
+- [x] **Phase 1: Engine foundations** - License files, keyed RNG, causal trace, raw-input decisions, bit-reproducible math, term calendar, party pick (completed 2026-10-12)
 - [ ] **Phase 2: Saves, guardrails & continuous deploy** - Autosave/export, golden replays, CI gates, CSP privacy, GHCR to Coolify auto-promote, R2 assets
 - [ ] **Phase 3: Turn report & Economy** - Report card overlay, projected-final headline, Economy screen with you-vs-autopilot charts and Fed explainer
 - [ ] **Phase 4: Events & crises** - Seeded crisis schedule identical for autopilot, crisis modals, deadlines, risk bands, real Oval Office briefing
@@ -199,7 +199,7 @@ Phases execute in numeric order: 1 → 2 → 3 → (4 ∥ 5) → 6 → 7 → 8. 
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Engine foundations | 7/7 | In Progress|  |
+| 1. Engine foundations | 7/7 | Complete    | 2026-10-12 |
 | 2. Saves, guardrails & continuous deploy | 0/TBD | Not started | - |
 | 3. Turn report & Economy | 0/TBD | Not started | - |
 | 4. Events & crises | 0/TBD | Not started | - |

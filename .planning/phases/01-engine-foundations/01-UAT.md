@@ -1,5 +1,5 @@
 ---
-status: testing
+status: complete
 phase: 01-engine-foundations
 source: [01-VERIFICATION.md]
 started: 2026-10-10T00:00:00Z
@@ -25,14 +25,14 @@ result: pass
 
 ### 2. MIT license visible on GitHub (REL-01)
 expected: After the user pushes `game-pivot` and merges it to `master`, the repo sidebar shows "MIT license".
-result: [pending]
+result: pass
 
 ## Summary
 
 total: 2
-passed: 1
+passed: 2
 issues: 0
-pending: 1
+pending: 0
 skipped: 0
 blocked: 0
 
