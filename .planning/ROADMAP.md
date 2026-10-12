@@ -177,7 +177,17 @@ Plans:
   4. The player can give a speech to a chosen audience with visibly diminishing returns, clout stops at a cap, and the balance harness shows speech-spam and clout-hoarding strategies do not beat sensible play (GR-10, GR-11)
   5. The player can open 5 cited myth cards balanced across the spectrum (left/right tags balanced, GR-20); the first visit to each gives a small reward exactly once per game, and that survives save and reload
 
-**Plans**: TBD
+**Plans**: 5/5 plans executed
+
+Plans:
+**Wave 1**
+- [x] 05-01-PLAN.md — Content catalog: 10 cited executive orders and 5 spectrum-balanced myth cards (PWR-01, PWR-06, PWR-07)
+- [x] 05-02-PLAN.md — Pure model & engine mechanics: EOs, court rulings, Fed pressure/nomination, bully pulpit speeches (PWR-01, PWR-02, PWR-03, PWR-04, PWR-05, PWR-07)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [x] 05-03-PLAN.md — Powers.svelte screen, CourtBench, and FedPortrait vector art (PWR-01, OBS-07)
+- [x] 05-04-PLAN.md — MythModal, SpeechModal, and FedModal overlays wired into game (PWR-03, PWR-05, PWR-06, OBS-07)
+- [x] 05-05-PLAN.md — E2E test suite, axe-core audits, and visual baseline tests (PWR-01..PWR-07, OBS-05, OBS-07)
 **UI hint**: yes
 **Research flag**: Yes. Current EO and court law (2025 Supreme Court limits on universal injunctions change how challenges play out); Fed chair term timing against the game calendar; Senate confirmation threshold modelling.
 

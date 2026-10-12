@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v0.2
 milestone_name: Playable First Term
-current_phase: 5
-current_phase_name: Your Powers
+current_phase: 6
+current_phase_name: Voters & Electoral College
 status: ready_to_plan
-stopped_at: Phase 4 complete (04-01 to 04-05 executed and verified); ready to plan Phase 5
-last_updated: "2026-10-12T22:15:00.000Z"
+stopped_at: Phase 5 complete (05-01 to 05-05 executed and verified); ready to plan Phase 6
+last_updated: "2026-10-12T23:20:00.000Z"
 last_activity: 2026-10-12
-last_activity_desc: Phase 4 executed and verified (crises, decisions, modal UI, deadlines, dynamic briefing)
-state_head: 2f35604
+last_activity_desc: Phase 5 executed and verified (executive orders, court review, Fed pressure, bully pulpit, myth cards)
+state_head: 0a8f426
 progress:
   total_phases: 8
-  completed_phases: 4
-  total_plans: 28
-  completed_plans: 23
-  percent: 50
+  completed_phases: 5
+  total_plans: 33
+  completed_plans: 28
+  percent: 63
 ---
 
 # Project State
@@ -25,16 +25,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-09)
 
 **Core value:** A player can make real presidential tradeoffs against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
-**Current focus:** Phase 5 — Your Powers
+**Current focus:** Phase 6 — Voters & Electoral College
 
 ## Current Position
 
-Phase: 5 — Your Powers
-Plan: Ready to plan Phase 5
+Phase: 6 — Voters & Electoral College
+Plan: Ready to plan Phase 6
 Status: Ready to plan
-Last activity: 2026-10-12 — Phase 4 complete (04-01 to 04-05 executed and verified)
+Last activity: 2026-10-12 — Phase 5 complete (05-01 to 05-05 executed and verified)
 
-Progress: [█████░░░░░] 50%
+Progress: [██████░░░░] 63%
 
 ## Performance Metrics
 
