@@ -36,15 +36,15 @@ describe('replay', () => {
 
 describe('golden replays (OBS-02)', () => {
   const goldens: { name: string; seed: number; expectedHash: string; inputs: Record<number, Decisions> }[] = [
-    { name: 'autopilot', seed: 1, expectedHash: '0d8af09f9e6bba', inputs: {} },
-    { name: 'infrastructure', seed: 7, expectedHash: '03e91615502fee', inputs: { 1: enact(fromPackage('Infrastructure push')) } },
-    { name: 'tax-cut', seed: 42, expectedHash: '02d559b8759f58', inputs: { 1: enact(fromPackage('Tax cut')) } },
-    { name: 'balance-budget', seed: 2026, expectedHash: '0fff344a1250eb', inputs: { 3: enact(fromPackage('Balance the budget')) } },
-    { name: 'tariffs-35', seed: 99, expectedHash: '044c7f4a1a68df', inputs: { 5: enact({ ...fromPackage('Keep as is'), tar: 35 }) } },
+    { name: 'autopilot', seed: 1, expectedHash: '18e9a1345022db', inputs: {} },
+    { name: 'infrastructure', seed: 7, expectedHash: '135ad25da49e40', inputs: { 1: enact(fromPackage('Infrastructure push')) } },
+    { name: 'tax-cut', seed: 42, expectedHash: '13878b1a7a455e', inputs: { 1: enact(fromPackage('Tax cut')) } },
+    { name: 'balance-budget', seed: 2026, expectedHash: '08e7330f1bdbef', inputs: { 3: enact(fromPackage('Balance the budget')) } },
+    { name: 'tariffs-35', seed: 99, expectedHash: '0ed2d00932be8d', inputs: { 5: enact({ ...fromPackage('Keep as is'), tar: 35 }) } },
     {
       name: 'mixed-strategy',
       seed: 123,
-      expectedHash: '1e8e19494a0a27',
+      expectedHash: '18d9c80908b390',
       inputs: { 2: { bill: { budget: { ...fromPackage('Keep as is'), inc: 28, bus: 25, rds: 120 }, deals: ['mod'] } } },
     },
   ];

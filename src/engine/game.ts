@@ -63,6 +63,9 @@ export interface GameState {
   readonly modifiers: readonly Modifier[]; // lasting effects (events, orders, laws)
   readonly scheduled: readonly Scheduled[]; // delayed effects waiting for their turn
   readonly activeCrisis: ActiveCrisis | null;
+  readonly activeOrders: readonly string[]; // signed executive orders currently in force
+  readonly viewedMyths: readonly string[]; // myth cards visited by player (one-time reward)
+  readonly speechCountInWindow: number; // rolling speech count for diminishing returns
 }
 
 /** One thing that happened last turn (a bill passed, failed or was rejected). */
@@ -96,6 +99,9 @@ export function newGame(seed: number, start: Start): GameState {
     modifiers: [],
     scheduled: [],
     activeCrisis: null,
+    activeOrders: [],
+    viewedMyths: [],
+    speechCountInWindow: 0,
     econ: {
       gap: 0,
       growth: start.potential,
@@ -304,7 +310,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (cRes?.valid && cRes.cloutCost > 0) {
     cl.add('clout:crisis', -cRes.cloutCost);
   }
-  const clout = cl.clamp(state.clout + cl.sum, 0, Infinity);
+  const clout = cl.clamp(state.clout + cl.sum, 0, C.cloutCap);
 
   if (r) log.push(r.valid ? { kind: 'bill', id: r.passed ? 'passed' : 'failed', amount: r.whip.total } : { kind: 'bill', id: 'rejected', detail: r.reason });
 

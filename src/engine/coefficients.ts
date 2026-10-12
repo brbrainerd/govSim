@@ -398,6 +398,30 @@ export const COEFF = {
     value: 1.2, unit: 'debt/gdp ratio', basis: 'judgement', range: [1.1, 1.4],
     note: 'Debt to GDP ratio that elevates fiscal standoff risk.',
   },
+  cloutCap: {
+    value: 200, unit: 'clout pts', basis: 'judgement', range: [150, 300],
+    note: 'Maximum political capital a president can hold to stop hoarding strategies.',
+  },
+  speechBaseCost: {
+    value: 10, unit: 'clout pts', basis: 'judgement', range: [5, 20],
+    note: 'Base clout cost to deliver a major presidential speech.',
+  },
+  speechApprovalBoost: {
+    value: 2, unit: '% approval', basis: 'judgement', range: [1, 5],
+    note: 'Base public approval lift from addressing the nation.',
+  },
+  fedPressureCredibilityHit: {
+    value: 0.2, unit: '% inflation expectations', basis: 'judgement', range: [0.1, 0.5],
+    note: 'Increase in inflation expectations when presidential pressure erodes Fed independence.',
+  },
+  fedRatePressureRelief: {
+    value: 0.25, unit: '% policy rate', basis: 'judgement', range: [0.1, 0.5],
+    note: 'Temporary rate reduction resulting from presidential pressure on the central bank.',
+  },
+  mythRewardClout: {
+    value: 5, unit: 'clout pts', basis: 'judgement', range: [2, 10],
+    note: 'One-time political capital reward for reading a civics myth card.',
+  },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------

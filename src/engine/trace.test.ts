@@ -100,9 +100,9 @@ describe('trace', () => {
           if (['residual', 'other', 'misc'].includes(term.source)) bad.push(`${at}: catch-all source`);
           if (!isKnownSource(term.source)) bad.push(`${at}: unknown source`);
           if (term.source === 'clamp' && Math.abs(term.amount) > 1e-9) {
-            // empPop is clamped by the unemployment bound; clout floors at 0; other keys have no clamp.
+            // empPop is clamped by the unemployment bound; clout bounded by [0, C.cloutCap]; other keys have no clamp.
             const [k, b] = key === 'empPop' ? (['unemployment', LIMITS.unemployment.bounds] as const)
-              : key === 'clout' ? (['clout', [0, Infinity]] as const) : ([key, bounds[key]] as const);
+              : key === 'clout' ? (['clout', [0, C.cloutCap]] as const) : ([key, bounds[key]] as const);
             if (!b) bad.push(`${at}: key has no bound`);
             else if (!onBound(value(prev, k as TraceKey)!, b) && !onBound(value(next, k as TraceKey)!, b)) bad.push(`${at}: away from a bound`);
           }
