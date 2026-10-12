@@ -1,0 +1,11 @@
+node_modules
+dist
+.git
+.planning
+.gsd
+tests
+coverage
+test-results
+playwright-report
+.playwright-screenshots
+.design-targets

@@ -1,8 +1,9 @@
 name: CI
 on:
   push:
-    branches: [master]
+    branches: ['**']
   pull_request:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,8 +18,15 @@ jobs:
       - run: pnpm guard
       - run: pnpm check
       - run: pnpm test
+      - run: pnpm test:property
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
       - run: pnpm build
-  # Cross-browser replay proof (FND-02): the same input log must hash identically in all three engines.
+      - run: node scripts/notices.mjs --check
+      - name: Verify Docker build
+        run: docker build -t govsim:ci .
+
+  # Cross-browser replay proof (FND-02, OBS-02): identical replay hashes in all three engines.
   determinism:
     runs-on: ubuntu-latest
     steps:
@@ -31,4 +39,3 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium firefox webkit
       - run: pnpm determinism
-      - run: node scripts/notices.mjs --check

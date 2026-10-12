@@ -1,0 +1,19 @@
+:80 {
+    root * /srv
+    encode zstd gzip
+
+    handle /api/health {
+        header Content-Type "application/json"
+        respond `{"ok":true}` 200
+    }
+
+    handle {
+        header {
+            X-Content-Type-Options "nosniff"
+            X-Frame-Options "DENY"
+            Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.r2.cloudflarestorage.com;"
+        }
+        try_files {path} /index.html
+        file_server
+    }
+}
