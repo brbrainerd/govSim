@@ -261,6 +261,135 @@ export const COEFF = {
     value: 10, unit: 'approval pts per clout earned each quarter', basis: 'judgement', range: [5, 20],
     note: 'Each quarter you earn approval divided by ten in clout (52% approval earns 5).',
   },
+  // ---- crisis pacing & option coefficients (Phase 4, EVT-01..07) ----
+  crisisCloutLow: {
+    value: 10, unit: 'clout', basis: 'judgement', range: [5, 15],
+    note: 'Clout cost for standard minor emergency or targeted response.',
+  },
+  crisisCloutMedium: {
+    value: 20, unit: 'clout', basis: 'judgement', range: [15, 25],
+    note: 'Clout cost for moderate legislative or mobilization action.',
+  },
+  crisisCloutHigh: {
+    value: 30, unit: 'clout', basis: 'judgement', range: [20, 40],
+    note: 'Clout cost for major comprehensive mobilization or partisan battle.',
+  },
+  crisisMinPerTerm: {
+    value: 4, unit: 'crises per 16 turns', basis: 'judgement', range: [3, 5],
+    note: 'Minimum number of crises occurring during a 16-turn first term.',
+  },
+  crisisMaxPerTerm: {
+    value: 9, unit: 'crises per 16 turns', basis: 'judgement', range: [7, 10],
+    note: 'Maximum number of crises occurring during a 16-turn first term.',
+  },
+  crisisFirstTurnMin: {
+    value: 3, unit: 'turn number', basis: 'judgement', range: [3, 4],
+    note: 'Earliest turn a crisis can fire (grace period on turns 1-2).',
+  },
+  crisisFirstTurnMax: {
+    value: 5, unit: 'turn number', basis: 'judgement', range: [4, 6],
+    note: 'Latest turn the first crisis must arrive by.',
+  },
+  crisisCooldown: {
+    value: 1, unit: 'turns', basis: 'judgement', range: [1, 2],
+    note: 'Minimum turns of quiet required after a major crisis.',
+  },
+  disasterAidSpend: {
+    value: 15, unit: '$bn', basis: 'judgement', range: [5, 30],
+    note: 'FEMA disaster relief immediate federal outlay.',
+  },
+  disasterReconSpend: {
+    value: 40, unit: '$bn', basis: 'judgement', range: [25, 60],
+    note: 'Comprehensive long-term infrastructure and reconstruction grant.',
+  },
+  disasterRallyApproval: {
+    value: 3, unit: '% approval', basis: 'judgement', range: [1, 5],
+    note: 'Temporary rally in public support for effective disaster management (EVT-06).',
+  },
+  disasterRallyDuration: {
+    value: 2, unit: 'quarters', basis: 'judgement', range: [1, 4],
+    note: 'Number of quarters a disaster response approval rally persists.',
+  },
+  disasterNeglectApprovalHit: {
+    value: 4, unit: '% approval', basis: 'judgement', range: [2, 8],
+    note: 'Voter punishment for refusing emergency aid during a natural disaster.',
+  },
+  disasterNeglectTrustHit: {
+    value: 3, unit: '% trust', basis: 'judgement', range: [1, 6],
+    note: 'Loss in social trust when the federal government fails to aid victims.',
+  },
+  oilReserveRelief: {
+    value: 0.4, unit: '% inflation', basis: 'judgement', range: [0.1, 1.0],
+    note: 'Cooling effect on CPI from releasing Strategic Petroleum Reserve crude.',
+  },
+  oilTransitSpend: {
+    value: 20, unit: '$bn', basis: 'judgement', range: [10, 35],
+    note: 'Direct consumer transit relief and fuel subsidy outlays.',
+  },
+  oilNeglectSpike: {
+    value: 0.8, unit: '% inflation', basis: 'judgement', range: [0.3, 1.5],
+    note: 'Inflationary surge when energy price spikes pass directly to consumers.',
+  },
+  epidemicMobilizeSpend: {
+    value: 25, unit: '$bn', basis: 'judgement', range: [10, 50],
+    note: 'Emergency federal public health manufacturing and vaccination program.',
+  },
+  epidemicTargetedSpend: {
+    value: 5, unit: '$bn', basis: 'judgement', range: [2, 15],
+    note: 'Targeted CDC regional public health advisory and surveillance.',
+  },
+  epidemicNeglectLifeHit: {
+    value: 0.3, unit: 'years of life expectancy', basis: 'judgement', range: [0.1, 0.6],
+    note: 'Decline in average life expectancy from uncontained viral epidemic.',
+  },
+  scotusSwiftTrustGain: {
+    value: 2, unit: '% trust', basis: 'judgement', range: [1, 4],
+    note: 'Institutional trust gain from swift bipartisan Supreme Court confirmation.',
+  },
+  scotusBoldApprovalRally: {
+    value: 4, unit: '% approval', basis: 'judgement', range: [2, 7],
+    note: 'Base enthusiasm rally from appointing a principled ideological justice.',
+  },
+  scotusDelayTrustHit: {
+    value: 3, unit: '% trust', basis: 'judgement', range: [1, 5],
+    note: 'Erosion in institutional legitimacy from leaving high court seats vacant.',
+  },
+  unrestPackageSpend: {
+    value: 30, unit: '$bn', basis: 'judgement', range: [15, 60],
+    note: 'Community grants and urban revitalization investment.',
+  },
+  unrestSurgeTrustHit: {
+    value: 2, unit: '% trust', basis: 'judgement', range: [1, 5],
+    note: 'Increased polarization and trust friction from federal law enforcement surge.',
+  },
+  unrestNeglectGrowthHit: {
+    value: 0.5, unit: '% GDP growth', basis: 'judgement', range: [0.2, 1.0],
+    note: 'Economic drag from prolonged civil unrest and commerce disruption.',
+  },
+  disasterPotentialBoost: {
+    value: 0.1, unit: '% potential GDP', basis: 'judgement', range: [0.05, 0.3],
+    note: 'Minor infrastructure boost from long-term reconstruction investment.',
+  },
+  debtStressThreshold: {
+    value: 1.25, unit: 'debt/gdp ratio', basis: 'judgement', range: [1.1, 1.5],
+    note: 'Threshold where debt stress triggers a sovereign debt crisis event.',
+  },
+  unrestGiniThreshold: {
+    value: 0.495, unit: 'Gini coefficient', basis: 'judgement', range: [0.45, 0.55],
+    note: 'Inequality threshold triggering civil demonstrations.',
+  },
+  unrestApprovalThreshold: {
+    value: 28, unit: '% approval', basis: 'judgement', range: [20, 35],
+    note: 'Approval threshold triggering civil unrest.',
+  },
+  crisisPoolSize: {
+    value: 12, unit: 'archetypes', basis: 'judgement', range: [10, 16],
+    note: 'Number of distinct exogenous crisis archetypes in the game catalog.',
+  },
+  marketPanicTariffDrag: {
+    value: 0.6, unit: '% output gap', basis: 'judgement', range: [0.2, 1.2],
+    note: 'Output gap contraction resulting from credit freeze during financial panic.',
+  },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------

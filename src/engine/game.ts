@@ -10,9 +10,11 @@ import { normal } from './rng';
 import { prosperity, type ScoreBreakdown } from './score';
 import { isKnownSource, Ledger, type Term, type TraceKey } from './trace';
 import { BN_PER_TN, BUDGET_WINDOW_YEARS, LEGACY_QUARTERS, MONTHS_PER_YEAR, PERCENT, QUARTERS_PER_YEAR, TOTAL_TURNS } from './units';
+import { scheduleTurnEvents, type ActiveCrisis } from './director';
 
 export { prosperity, type ScoreBreakdown } from './score';
 export { LEGACY_QUARTERS, TOTAL_TURNS };
+export type { ActiveCrisis } from './director';
 
 /** Real-world starting values (from data/us-2026.json via fromData). */
 export interface Start {
@@ -60,6 +62,7 @@ export interface GameState {
   readonly report: Report; // what happened last turn
   readonly modifiers: readonly Modifier[]; // lasting effects (events, orders, laws)
   readonly scheduled: readonly Scheduled[]; // delayed effects waiting for their turn
+  readonly activeCrisis: ActiveCrisis | null;
 }
 
 /** One thing that happened last turn (a bill passed, failed or was rejected). */
@@ -92,6 +95,7 @@ export function newGame(seed: number, start: Start): GameState {
     report: { luck: { gap: 0, infl: 0, appr: 0 }, log: [], trace: {} },
     modifiers: [],
     scheduled: [],
+    activeCrisis: null,
     econ: {
       gap: 0,
       growth: start.potential,
@@ -280,14 +284,18 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
 
   if (r) log.push(r.valid ? { kind: 'bill', id: r.passed ? 'passed' : 'failed', amount: r.whip.total } : { kind: 'bill', id: 'rejected', detail: r.reason });
 
-  return {
+  const nextTurn = state.turn + 1;
+  const nextEcon = { gap, growth, unemployment, empPop, inflation, expected, fedRate, gdp, debt, realIncome, gini, lifeExp, trust, crime };
+  const interimState: GameState = {
     ...state,
-    turn: state.turn + 1,
+    turn: nextTurn,
     approval,
     clout,
     policy,
     modifiers,
     scheduled,
+    econ: nextEcon,
+    activeCrisis: state.activeCrisis,
     report: {
       luck: { gap: zGap, infl: zInfl, appr: zAppr },
       log,
@@ -297,7 +305,12 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
         trust: tr.terms, approval: ap.terms, clout: cl.terms,
       },
     },
-    econ: { gap, growth, unemployment, empPop, inflation, expected, fedRate, gdp, debt, realIncome, gini, lifeExp, trust, crime },
+  };
+  const activeCrisis = legacyRun ? null : scheduleTurnEvents(state.seed, nextTurn, interimState);
+
+  return {
+    ...interimState,
+    activeCrisis,
   };
 }
 
