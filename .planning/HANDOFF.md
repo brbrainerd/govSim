@@ -65,8 +65,17 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 - **Phase 2 (Saves, guardrails & continuous deploy): executed, all 6 plans completed and verified.**
 - **Phase 3 (Turn report & Economy): executed, all 5 plans completed and verified.**
 - **Phase 4 (Events & crises): executed, all 5 plans completed and verified.**
-- **Gates:** `pnpm test` 164 passing (28 files) · `pnpm test:e2e` 5 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
+- **Phase 5 (Your Powers): executed, all 5 plans completed and verified.**
+- **Gates:** `pnpm test` 185 passing (31 files) · `pnpm test:e2e` 7 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok.
+- **Built in Phase 5:**
+  - Curated catalog of 10 executive orders (`src/content/orders.ts`) and 5 spectrum-balanced civics myth cards (`src/content/myths.ts`) with statutory authority citations and qualitative court risk bands (PWR-01, PWR-06, PWR-07).
+  - Pure model power mechanics in `src/engine/powers.ts`: EO signing and revocation (tagged `eo`, dropped in legacy projection D5), judicial review challenges and rulings via keyed draws on `court` stream against a 6-3 court (PWR-02), Fed chair appointment and rate pressure with credibility trade-off (PWR-03), SCOTUS vacancy nomination (PWR-04), bully pulpit speeches with rolling window diminishing returns (PWR-05), and clout hard cap (`C.cloutCap: 200`, non-domination verified in balance harness, GR-10, GR-11, PWR-07).
+  - Americana vector art in `src/ui/art/CourtBench.svelte` (9 justice pill-people behind mahogany bench) and `src/ui/art/FedPortrait.svelte` (central bank chair medallion portrait) (OBS-07).
+  - Interactive `Powers.svelte` screen matching `g-powers.png` with question headline, 2-column EO card grid, institutional power strip, and Next step rail with single red stamp button (PWR-01, OBS-07).
+  - `MythModal.svelte` overlay matching `g-myth.png` with crossed-out MYTH badge, reality flowchart, Character explainer scene, real levers, and one-time insight bonus (+5 clout) (PWR-06, Pitfall 17).
+  - `SpeechModal.svelte` and `FedModal.svelte` dialogs with audience trade-offs and credibility warnings (PWR-03, PWR-05).
+  - Full E2E Playwright test suite (`tests/powers.spec.ts`), axe-core audits (0 violations), and visual viewport audits across 1376x768 and 1280x720 with zero outer document scroll (OBS-07).
 - **Built in Phase 4:**
   - Keyed exogenous crisis schedule (`src/engine/director.ts`, `src/engine/crises.ts`) independent of player choices across 500 seeds with strict pacing rules (0 in turns 1-2, first turn 3-5, 4-9 per term, no 3 consecutive, 10-60% archetype distribution) (EVT-01, GR-01, GR-02, GR-08).
   - Endogenous condition-triggered crises (`unrest`, `sovereign_debt`, `financial_panic`) flagged with "Autopilot didn't face this" (EVT-03).
