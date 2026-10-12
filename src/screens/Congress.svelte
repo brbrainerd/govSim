@@ -5,8 +5,11 @@
   import Character, { type Look } from '../ui/art/Character.svelte';
   import { arcPoint, HEMI, hemicycle } from '../ui/art/hemicycle';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
+  import { getImminentDeadlines } from '../engine/deadlines';
 
   let { session, question }: { session: Session; question: string } = $props();
+
+  const deadlines = $derived(getImminentDeadlines(session.current.turn, session.current));
 
   const seats = hemicycle(HOUSE_SEATS);
   const looks: Look[] = [
@@ -43,6 +46,23 @@
 <ScreenLayout {question}>
   {#snippet main()}
     <div class="card chamber">
+      {#if deadlines.length > 0}
+        <div class="deadline-banner" role="alert" aria-label="Impending legislative deadlines">
+          {#each deadlines as d (d.type)}
+            <div class="deadline-item" class:critical={d.critical}>
+              <div class="deadline-header">
+                <span class="deadline-pill" class:critical={d.critical}>
+                  {d.critical ? 'CRITICAL DEADLINE' : 'DEADLINE COUNTDOWN'}
+                </span>
+                <span class="deadline-title">
+                  {d.title}: <b>{d.turnsRemaining} {d.turnsRemaining === 1 ? 'turn' : 'turns'} remaining</b>
+                </span>
+              </div>
+              <span class="deadline-desc">{d.description}</span>
+            </div>
+          {/each}
+        </div>
+      {/if}
       <div class="bill"><span class="label">This turn's bill</span><b>{session.draft.pack ?? 'Your budget'}</b></div>
       <div class="arc">
         <svg viewBox="0 0 {HEMI.w} {HEMI.h}" role="img" aria-label="House: {whip.total} of {HOUSE_SEATS} seats voting yes; {TO_PASS} needed.">
@@ -93,6 +113,15 @@
         <b class="good">Enough votes!</b><span class="line">Call the vote while you have them.</span>
       {/if}
     </div>
+    {#if deadlines.length > 0}
+      <div class="card deadline-action-card">
+        <span class="label">Impending Deadline</span>
+        {#each deadlines as d (d.type)}
+          <b>{d.title}</b>
+          <span class="line">{d.actionText}</span>
+        {/each}
+      </div>
+    {/if}
     <span class="label">Fastest way to pass</span>
     {#each deals as d (d.id)}
       {@const done = session.draft.deals.includes(d.id)}
@@ -108,6 +137,15 @@
 
 <style>
   .chamber { position: relative; padding: clamp(8px, 1.2vh, 14px) clamp(10px, 1.2vw, 16px); display: flex; flex-direction: column; gap: clamp(4px, 0.6vh, 8px); flex-grow: 1; min-height: 0; overflow: hidden; }
+  .deadline-banner { display: flex; flex-direction: column; gap: 4px; padding: 6px 12px; background: var(--alert-tint); border: 2px solid var(--alert); border-radius: var(--r-md); margin-bottom: 2px; }
+  .deadline-item { display: flex; flex-direction: column; gap: 2px; }
+  .deadline-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .deadline-pill { font-family: var(--font-condensed); font-size: var(--text-xs); font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; padding: 1px 6px; background: var(--ink); color: var(--card); border-radius: var(--r-sm); }
+  .deadline-pill.critical { background: var(--alert); }
+  .deadline-title { font-family: var(--font-ui); font-size: var(--text-xs); color: var(--ink); }
+  .deadline-desc { font-family: var(--font-body); font-size: var(--text-xs); color: var(--ink-soft); }
+  .deadline-action-card { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border-left: 4px solid var(--alert); background: var(--paper-dark); }
+  .deadline-action-card b { font-family: var(--font-display); font-size: var(--text-sm); color: var(--alert); }
   .bill { display: flex; align-items: baseline; gap: 10px; }
   .bill b { font: 700 clamp(16px, 1.3vw, 20px) var(--font-display); }
   .arc { margin: clamp(8px, 1.5vh, 24px) auto clamp(2px, 0.5vh, 6px); position: relative; aspect-ratio: 640 / 340; align-self: center; width: min(100%, 640px); max-height: clamp(160px, 30vh, 300px); }

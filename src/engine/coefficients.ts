@@ -390,6 +390,14 @@ export const COEFF = {
     value: 0.6, unit: '% output gap', basis: 'judgement', range: [0.2, 1.2],
     note: 'Output gap contraction resulting from credit freeze during financial panic.',
   },
+  deadlineWarningTurns: {
+    value: 2, unit: 'turns', basis: 'judgement', range: [1, 4],
+    note: 'Turns ahead of a deadline when the warning countdown begins.',
+  },
+  debtLimitRiskThreshold: {
+    value: 1.2, unit: 'debt/gdp ratio', basis: 'judgement', range: [1.1, 1.4],
+    note: 'Debt to GDP ratio that elevates fiscal standoff risk.',
+  },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------
