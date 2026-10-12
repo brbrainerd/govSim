@@ -271,6 +271,7 @@ Policy: MIT / ISC / Apache-2.0 / CC0 code and assets; CC BY art with credit.
 | Test | `vitest` (+ `@playwright/test` when visual tests land) | 5.0.3 | MIT | Engine + registry + token-drift tests |
 | Property testing | `fast-check` | 4.10.2 | MIT | Invariant and fuzz testing over randomized seeds and decisions (OBS-03, D6) |
 | Readability gates | `flesch-kincaid` / `syllable` | 2.0.1 / 5.0.1 | MIT | Readability grade <= 9.0 and plain language enforcement (OBS-05, D6) |
+| Accessibility audit | `@axe-core/playwright` | 4.13.0 | MPL-2.0 | Automated WCAG 2.1 AA accessibility audit in E2E tests (OBS-07, D6 dev exception) |
 | Types | `typescript`, `svelte-check`, `@types/node` | 6.0.3 / 4.7.6 / 24.19.1 | Apache-2.0 / MIT / MIT | TS pinned to 6: svelte-check 4.7 does not support TS 7 yet |
 | Visual tooling (dev) | `sharp`, `pixelmatch` | 0.35.5 / 8.0.0 | Apache-2.0 / ISC | Contact sheets, motion metrics |
 

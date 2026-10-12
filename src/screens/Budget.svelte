@@ -107,7 +107,7 @@
   .info .num { font: 700 clamp(20px, 2vw, 28px) var(--font-ui); }
   .line { font: 600 clamp(14px, 1.1vw, 17px)/1.25 var(--font-ui); max-width: 45ch; }
   .fine { font-size: clamp(11px, 0.9vw, 13px); color: var(--ink-soft); max-width: 45ch; }
-  .good { color: var(--sage); }
+  .good { color: var(--sage-dark); }
   .bad { color: var(--alert); }
   .spacer { flex-grow: 1; min-height: 4px; }
   .stamp, .sent { align-self: center; flex-shrink: 0; }

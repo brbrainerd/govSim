@@ -82,14 +82,14 @@
   .score-text { display: flex; flex-direction: column; line-height: 1; }
   .score-text b { font: 700 clamp(30px, 3.2vw, 44px) var(--font-ui); }
   .score-text span { font: 600 clamp(14px, 1.2vw, 18px) var(--font-ui); color: var(--ink-soft); }
-  .score-text em { font: 600 clamp(14px, 1.1vw, 18px) var(--font-ui); font-style: normal; color: var(--sage); margin-top: 2px; }
+  .score-text em { font: 600 clamp(14px, 1.1vw, 18px) var(--font-ui); font-style: normal; color: var(--sage-dark); margin-top: 2px; }
   .score-text em.down { color: var(--alert); }
   .tile { display: flex; flex-direction: column; align-items: center; text-align: center; padding: clamp(4px, 0.8vh, 8px) clamp(4px, 0.5vw, 8px); gap: 2px; min-width: 0; }
   .tile .label { font-size: clamp(11px, 0.85vw, 13px); line-height: 1.1; color: var(--ink); text-wrap: balance; height: 2.2em; display: grid; place-items: center; }
   .tile .num { font-size: clamp(20px, 2vw, 30px); }
   .spark { width: 70%; height: clamp(16px, 2vh, 22px); }
   .dir { font: 600 clamp(12px, 0.9vw, 15px) var(--font-ui); color: var(--alert); }
-  .dir.good { color: var(--sage); }
+  .dir.good { color: var(--sage-dark); }
   .info { display: flex; flex-direction: column; gap: 4px; padding: clamp(8px, 1.2vh, 14px); text-align: center; }
   .info b { font: 700 clamp(17px, 1.4vw, 21px)/1.2 var(--font-display); }
   .info span:last-child { font-size: clamp(12px, 1vw, 15px); color: var(--ink-soft); max-width: 35ch; }

@@ -13,6 +13,7 @@ const base = {
   'gold-dark': '#A9771F',
   sky: '#4FA3D9',
   sage: '#4E9E74',
+  'sage-dark': '#2B6E47',
   dot: 'rgba(31,47,85,.09)',
   // Illustration
   'art-wall': '#F6EDD8',
@@ -65,6 +66,7 @@ export const themes = {
     gold: '#C9A23A',
     sky: '#8C7B5A',
     sage: '#6E7F4A',
+    'sage-dark': '#8EA064',
     dot: 'rgba(201,162,58,.14)',
     'art-wall': '#2B211A',
     'art-sky': '#1B2236',
