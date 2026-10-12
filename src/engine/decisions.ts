@@ -75,11 +75,11 @@ export function sanitizeBudget(d: unknown): BudgetDraft {
 }
 
 /** THE shared pure function: the engine charges with it and the Session previews with it. */
-export function resolveBill(clout: number, bill: unknown): BillResult {
+export function resolveBill(clout: number, bill: unknown, houseDelta = 0): BillResult {
   const b = isRecord(bill) ? bill : {};
   const ids = knownDeals(b.deals);
   const spent = cloutCost(ids);
-  const whip = tally(ids);
+  const whip = tally(ids, houseDelta);
   const budget = sanitizeBudget(b.budget);
   const rejected = (reason: 'unaffordable' | 'invalid'): BillResult =>
     ({ valid: false, reason, budget, deals: ids, spent, whip, passed: false, cloutBack: 0, cloutDelta: 0 });

@@ -466,6 +466,23 @@ export const COEFF = {
     value: 0.15, unit: '% output gap', basis: 'judgement', range: [0.05, 0.3],
     note: 'Output gap expansion from appointing a dove Fed chair.',
   },
+  voterApprovalElasticity: { value: 1.0, unit: 'pp state margin per pp national approval', basis: 'judgement', range: [0.5, 2.0], note: 'Sensitivity of state margin to national approval shift.' },
+  voterFarmTariffSensitivity: { value: 1.5, unit: 'pp margin loss per pp tariff change per unit exposure', basis: 'judgement', range: [0.5, 3.0], note: 'Vulnerability of agricultural states to tariff disputes.' },
+  voterMfgGrowthSensitivity: { value: 2.0, unit: 'pp margin gain per pp GDP growth per unit exposure', basis: 'judgement', range: [0.5, 4.0], note: 'Responsiveness of manufacturing states to industrial growth.' },
+  voterEnergyInflationSensitivity: { value: 1.0, unit: 'pp margin loss per pp inflation per unit exposure', basis: 'judgement', range: [0.2, 3.0], note: 'Responsiveness of energy states to inflation volatility.' },
+  voterStateVolatility: { value: 0.8, unit: 'std dev in pp margin', basis: 'judgement', range: [0.2, 2.0], note: 'State-specific idiosyncratic margin shock standard deviation.' },
+  midtermHistoricalPenalty: { value: 20, unit: 'House seats', basis: 'judgement', range: [10, 30], note: 'Average historical midterm seat loss penalty for the executive coalition (D3).' },
+  midtermApprovalSlope: { value: 1.2, unit: 'House seats per pp approval from 50', basis: 'judgement', range: [0.5, 2.5], note: 'Responsiveness of midterm House seat change to presidential approval.' },
+  midtermMaxHouseLoss: { value: 35, unit: 'House seats', basis: 'judgement', range: [25, 50], note: 'Maximum House seats the executive can lose in midterms to prevent death spiral (GR-18, GR-19).' },
+  midtermMaxHouseGain: { value: 15, unit: 'House seats', basis: 'judgement', range: [5, 25], note: 'Maximum House seats the executive can gain in a wave midterm.' },
+  midtermMaxSenateLoss: { value: 6, unit: 'Senate seats', basis: 'judgement', range: [3, 10], note: 'Maximum Senate seats lost in midterms across contested class.' },
+  midtermMaxSenateGain: { value: 4, unit: 'Senate seats', basis: 'judgement', range: [2, 8], note: 'Maximum Senate seats gained in midterms across contested class.' },
+  projectionZScore: { value: 1.28, unit: 'z-score multiplier', basis: 'judgement', range: [1.0, 2.0], note: 'Normal distribution z-score for 10th/90th percentile projection intervals (VOT-03).' },
+  projectionVolatilityQuarterly: { value: 1.5, unit: 'variance rate per quarter', basis: 'judgement', range: [0.5, 3.0], note: 'Remaining quarterly election variance for projection ranges.' },
+  swingThreshold: { value: 5.0, unit: 'pp margin', basis: 'judgement', range: [2.0, 10.0], note: 'Margin threshold within which a state is considered a battleground.' },
+  tossupThreshold: { value: 1.5, unit: 'pp margin', basis: 'judgement', range: [0.5, 3.0], note: 'Margin threshold for tossup classification.' },
+  likelyThreshold: { value: 5.0, unit: 'pp margin', basis: 'judgement', range: [3.0, 8.0], note: 'Margin threshold for likely classification.' },
+  safeThreshold: { value: 10.0, unit: 'pp margin', basis: 'judgement', range: [8.0, 15.0], note: 'Margin threshold for safe classification.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------

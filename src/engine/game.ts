@@ -9,8 +9,9 @@ import { activeAt, RESOLVERS, type Modifier, type Scheduled, type Resolver } fro
 import { resolvePowerDecisions } from './powers';
 import { normal } from './rng';
 import { prosperity, type ScoreBreakdown } from './score';
+import { calculateMidtermShift } from './congress';
 import { isKnownSource, Ledger, type Term, type TraceKey } from './trace';
-import { BN_PER_TN, BUDGET_WINDOW_YEARS, LEGACY_QUARTERS, MONTHS_PER_YEAR, PERCENT, QUARTERS_PER_YEAR, TOTAL_TURNS } from './units';
+import { BN_PER_TN, BUDGET_WINDOW_YEARS, LEGACY_QUARTERS, MIDTERM_TURN_1, MIDTERM_TURN_2, MONTHS_PER_YEAR, PERCENT, QUARTERS_PER_YEAR, TOTAL_TURNS } from './units';
 import { scheduleTurnEvents, type ActiveCrisis } from './director';
 
 export { prosperity, type ScoreBreakdown } from './score';
@@ -67,6 +68,7 @@ export interface GameState {
   readonly activeOrders: readonly string[]; // signed executive orders currently in force
   readonly viewedMyths: readonly string[]; // myth cards visited by player (one-time reward)
   readonly speechCountInWindow: number; // rolling speech count for diminishing returns
+  readonly houseSeatDelta: number; // net seat change from midterms (default 0)
 }
 
 /** One thing that happened last turn (a bill passed, failed or was rejected). */
@@ -103,6 +105,7 @@ export function newGame(seed: number, start: Start): GameState {
     activeOrders: [],
     viewedMyths: [],
     speechCountInWindow: 0,
+    houseSeatDelta: 0,
     econ: {
       gap: 0,
       growth: start.potential,
@@ -224,7 +227,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
 
   // The engine charges clout from the raw bill; the Session previews with the same function.
   const raw: unknown = decisions !== null && typeof decisions === 'object' ? decisions.bill : undefined;
-  const r = raw === undefined ? null : resolveBill(state.clout, raw);
+  const r = raw === undefined ? null : resolveBill(state.clout, raw, state.houseSeatDelta);
   const enacted = r && r.valid && r.passed ? r : null;
   const policy = enacted ? enacted.budget : state.policy;
   const before = estimate(state.policy), after = estimate(policy);
@@ -352,6 +355,20 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
 
   if (r) log.push(r.valid ? { kind: 'bill', id: r.passed ? 'passed' : 'failed', amount: r.whip.total } : { kind: 'bill', id: 'rejected', detail: r.reason });
 
+  let nextHouseSeatDelta = state.houseSeatDelta ?? 0;
+  if (!legacyRun && (state.turn === MIDTERM_TURN_1 || state.turn === MIDTERM_TURN_2)) {
+    const midterm = calculateMidtermShift(approval);
+    nextHouseSeatDelta = midterm.houseShift;
+    const houseWord = midterm.houseShift >= 0 ? `+${midterm.houseShift}` : `${midterm.houseShift}`;
+    const senateWord = midterm.senateShift >= 0 ? `+${midterm.senateShift}` : `${midterm.senateShift}`;
+    log.push({
+      kind: 'midterm',
+      id: 'midterm_results',
+      detail: `${houseWord} House seats, ${senateWord} Senate seats`,
+      amount: midterm.houseShift,
+    });
+  }
+
   const nextTurn = state.turn + 1;
   const nextEcon = { gap, growth, unemployment, empPop, inflation, expected, fedRate, gdp, debt, realIncome, gini, lifeExp, trust, crime };
   const interimState: GameState = {
@@ -365,6 +382,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     activeOrders,
     viewedMyths,
     speechCountInWindow,
+    houseSeatDelta: nextHouseSeatDelta,
     econ: nextEcon,
     activeCrisis: state.activeCrisis,
     report: {
