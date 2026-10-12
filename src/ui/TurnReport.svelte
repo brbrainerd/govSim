@@ -14,6 +14,7 @@
   const nowDiff = $derived(Math.round(session.score.now * 10) / 10);
   const laterDiff = $derived(Math.round(session.score.later * 10) / 10);
   const title = $derived(`${termLabel(session.current.turn)} Report`);
+  const midtermLog = $derived(session.current.report.log.find((l) => l.kind === 'midterm'));
 </script>
 
 <div class="report-card">
@@ -79,6 +80,21 @@
               <p class="ripple-desc">{r.description}</p>
             </div>
           {/each}
+        </div>
+      {/if}
+
+      {#if midtermLog}
+        <div class="info-card midterm-box" data-testid="midterm-results-card">
+          <span class="label">Midterm Results</span>
+          <p class="midterm-headline">Voters have spoken</p>
+          <div class="midterm-seats">
+            <span class="seat-badge" class:negative={(midtermLog.amount ?? 0) < 0}>
+              {midtermLog.detail}
+            </span>
+          </div>
+          <p class="midterm-desc">
+            Voters reacted to approval ratings and economic conditions, rebalancing congressional strength.
+          </p>
         </div>
       {/if}
 
@@ -331,6 +347,35 @@
   }
   .action-sub {
     font: 400 12px var(--font-body);
+    color: var(--ink-soft);
+  }
+
+  .midterm-box {
+    border-color: var(--gold);
+    background: var(--card);
+  }
+  .midterm-headline {
+    margin: 0 0 6px 0;
+    font: 700 clamp(13px, 1vw, 15px) var(--font-display);
+    color: var(--ink);
+  }
+  .midterm-seats {
+    display: flex;
+    margin-bottom: 6px;
+  }
+  .seat-badge {
+    font: 700 13px var(--font-ui);
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--sage);
+    color: var(--card);
+  }
+  .seat-badge.negative {
+    background: var(--alert);
+  }
+  .midterm-desc {
+    margin: 0;
+    font: 400 clamp(11px, 0.85vw, 12px)/1.3 var(--font-body);
     color: var(--ink-soft);
   }
 </style>

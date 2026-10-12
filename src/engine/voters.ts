@@ -334,6 +334,7 @@ export function calculateElectoralCollege(
         name: meState.name,
         electoralVotes: meState.electoralVotes,
       };
+      unitsMap['ME'] = statesMap['ME'];
     } else if (raw.code === 'NE-AL') {
       // Aggregate Nebraska statewide representation for 51-state map view
       const neState = us.states.rows.find((r) => r.code === 'NE')!;
@@ -343,6 +344,7 @@ export function calculateElectoralCollege(
         name: neState.name,
         electoralVotes: neState.electoralVotes,
       };
+      unitsMap['NE'] = statesMap['NE'];
     } else {
       statesMap[raw.code] = stateObj;
     }

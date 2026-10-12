@@ -8,6 +8,7 @@
   import Economy from './Economy.svelte';
   import OvalOffice from './OvalOffice.svelte';
   import Powers from './Powers.svelte';
+  import Voters from './Voters.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import StatusBar from '../ui/StatusBar.svelte';
   import Rail from '../ui/Rail.svelte';
@@ -65,10 +66,13 @@
         onOpenFed={() => (fedModalOpen = true)}
       />
     {:else}
-      <ScreenLayout question={screen.question}>
-        {#snippet main()}<div class="card placeholder">{screen.label}: coming in M1</div>{/snippet}
-        {#snippet next()}<div class="card placeholder-side"><span class="label">What it means</span></div>{/snippet}
-      </ScreenLayout>
+      <Voters
+        {session}
+        question={screen.question}
+        {go}
+        onOpenMyth={(id) => (activeMythId = id)}
+        onOpenSpeech={() => (speechModalOpen = true)}
+      />
     {/if}
   </div>
 
@@ -128,6 +132,4 @@
     min-height: 0;
     overflow: hidden;
   }
-  .placeholder { flex-grow: 1; display: grid; place-items: center; min-height: 200px; color: var(--ink-soft); }
-  .placeholder-side { padding: 16px; }
 </style>
