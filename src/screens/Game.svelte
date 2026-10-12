@@ -14,12 +14,22 @@
   import Overlay from '../ui/Overlay.svelte';
   import TurnReport from '../ui/TurnReport.svelte';
   import CrisisModal from '../ui/CrisisModal.svelte';
+  import MythModal from '../ui/MythModal.svelte';
+  import SpeechModal from '../ui/SpeechModal.svelte';
+  import FedModal from '../ui/FedModal.svelte';
+  import { getMyth } from '../content/myths';
 
   let { session, onImport }: { session: Session; onImport?: (f: File) => void } = $props();
   const screen = $derived(screenById(session.screen));
   const go = (id: typeof session.screen) => (session.screen = id);
 
   let dismissedCrisisTurn = $state<number | null>(null);
+  let activeMythId = $state<string | null>(null);
+  let speechModalOpen = $state<boolean>(false);
+  let fedModalOpen = $state<boolean>(false);
+
+  const activeMyth = $derived(activeMythId ? getMyth(activeMythId) : null);
+
   const showCrisisModal = $derived(
     session.current.activeCrisis !== null &&
     !session.showingReport &&
@@ -38,7 +48,7 @@
       {onImport}
     />
     {#if screen.id === 'oval'}
-      <OvalOffice {session} question={screen.question} {go} />
+      <OvalOffice {session} question={screen.question} {go} onOpenMyth={(id) => (activeMythId = id)} />
     {:else if screen.id === 'economy'}
       <Economy {session} question={screen.question} {go} />
     {:else if screen.id === 'budget'}
@@ -46,7 +56,14 @@
     {:else if screen.id === 'congress'}
       <Congress {session} question={screen.question} />
     {:else if screen.id === 'powers'}
-      <Powers {session} question={screen.question} {go} />
+      <Powers
+        {session}
+        question={screen.question}
+        {go}
+        onOpenMyth={(id) => (activeMythId = id)}
+        onOpenSpeech={() => (speechModalOpen = true)}
+        onOpenFed={() => (fedModalOpen = true)}
+      />
     {:else}
       <ScreenLayout question={screen.question}>
         {#snippet main()}<div class="card placeholder">{screen.label}: coming in M1</div>{/snippet}
@@ -70,6 +87,32 @@
       onClose={() => {
         dismissedCrisisTurn = session.current.turn;
       }}
+    />
+  {/if}
+
+  {#if activeMyth}
+    <MythModal
+      myth={activeMyth}
+      isFirstView={!session.current.viewedMyths.includes(activeMyth.id)}
+      onClose={() => (activeMythId = null)}
+      onGotIt={() => {
+        session.viewMythCard(activeMyth!.id);
+        activeMythId = null;
+      }}
+    />
+  {/if}
+
+  {#if speechModalOpen}
+    <SpeechModal
+      {session}
+      onClose={() => (speechModalOpen = false)}
+    />
+  {/if}
+
+  {#if fedModalOpen}
+    <FedModal
+      {session}
+      onClose={() => (fedModalOpen = false)}
     />
   {/if}
 </div>

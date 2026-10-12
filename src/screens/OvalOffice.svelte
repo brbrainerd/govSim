@@ -8,7 +8,17 @@
   import Rosette from '../ui/art/Rosette.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
-  let { session, question, go }: { session: Session; question: string; go: (id: ScreenId) => void } = $props();
+  let {
+    session,
+    question,
+    go,
+    onOpenMyth,
+  }: {
+    session: Session;
+    question: string;
+    go: (id: ScreenId) => void;
+    onOpenMyth?: (mythId: string) => void;
+  } = $props();
 
   const tiles = $derived(headline(session.history));
   const index = $derived(Math.round(session.index));
@@ -52,7 +62,7 @@
   {/snippet}
   {#snippet learn()}
     <button class="link" disabled title="Coming soon">How it works</button>
-    <button class="ticket" disabled title="Coming soon">Myth? Can you lower gas prices</button>
+    <button class="ticket" onclick={() => onOpenMyth?.('gas_prices')}>Myth? Can you lower gas prices</button>
   {/snippet}
   {#snippet next()}
     <div class="card info"><span class="label">This turn</span><b>{briefingInfo.thisTurn.title}</b><span>{briefingInfo.thisTurn.detail}</span></div>

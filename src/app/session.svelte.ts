@@ -80,7 +80,14 @@ export class Session {
     if (this.draft.speechAudience) cost += speechCost(this.current.speechCountInWindow);
     return cost;
   });
-  clout = $derived(this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost);
+  mythReward = $derived(
+    this.draft.viewMyth && !this.current.viewedMyths.includes(this.draft.viewMyth)
+      ? C.mythRewardClout
+      : 0,
+  );
+  clout = $derived(
+    this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost + this.mythReward,
+  );
   powers = $derived<PowerDecisions | null>(
     this.draft.signedOrders.length > 0 ||
     this.draft.revokedOrders.length > 0 ||

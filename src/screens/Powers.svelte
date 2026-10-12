@@ -13,11 +13,15 @@
     question,
     go,
     onOpenMyth,
+    onOpenSpeech,
+    onOpenFed,
   }: {
     session: Session;
     question: string;
     go?: (id: ScreenId) => void;
     onOpenMyth?: (mythId: string) => void;
+    onOpenSpeech?: () => void;
+    onOpenFed?: () => void;
   } = $props();
 
   let selectedOrderId = $state<string>(ORDERS_CATALOG[0]!.id);
@@ -133,6 +137,12 @@
                 <Landmark size={14} />
                 {session.draft.fedPressure ? 'Pressuring Fed (-15 clout)' : 'Pressure for Rate Cut (15 clout)'}
               </button>
+              <button
+                class="fed-btn secondary"
+                onclick={() => onOpenFed?.()}
+              >
+                More Fed options...
+              </button>
             </div>
           </div>
         </div>
@@ -212,7 +222,9 @@
             <Mic size={16} />
             <span class="label">Bully Pulpit Speech</span>
           </div>
-          <span class="speech-cost">{currentSpeechCost} clout</span>
+          <button class="speech-dialog-link" onclick={() => onOpenSpeech?.()}>
+            Choose audience...
+          </button>
         </div>
         <p class="speech-desc">Address the nation directly to lift public support with diminishing returns.</p>
 
@@ -680,6 +692,23 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+  }
+
+  .speech-dialog-link {
+    background: none;
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+  }
+
+  .speech-dialog-link:hover {
+    color: var(--ink);
   }
 
   .speech-title-box {

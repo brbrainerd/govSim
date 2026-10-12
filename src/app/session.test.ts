@@ -128,4 +128,30 @@ describe('Session persistence and save restore (OBS-01, OBS-02)', () => {
     expect(restored.history).toEqual(s.history);
     expect(restored.autopilot).toEqual(s.autopilot);
   });
+
+  it('drafts and commits presidential power actions (PWR-01, PWR-06)', () => {
+    const s = new Session(42, START, { party: 'D' });
+    const initialClout = s.clout;
+
+    // View a civics myth card
+    s.viewMythCard('gas_prices');
+    expect(s.draft.viewMyth).toBe('gas_prices');
+    expect(s.clout).toBe(initialClout + 5);
+
+    // Sign an executive order
+    s.toggleSignOrder('eo_hiring_freeze');
+    expect(s.draft.signedOrders).toContain('eo_hiring_freeze');
+    expect(s.clout).toBe(initialClout + 5 - 15);
+
+    // Turn resolution commits powers
+    s.nextTurn();
+    expect(s.current.activeOrders).toContain('eo_hiring_freeze');
+    expect(s.current.viewedMyths).toContain('gas_prices');
+
+    // Revoke the order in the next turn
+    s.toggleSignOrder('eo_hiring_freeze');
+    expect(s.draft.revokedOrders).toContain('eo_hiring_freeze');
+    s.nextTurn();
+    expect(s.current.activeOrders).not.toContain('eo_hiring_freeze');
+  });
 });
