@@ -2,18 +2,18 @@
 gsd_state_version: "1.0"
 milestone: v0.2
 milestone_name: Playable First Term
-current_phase: 3
-current_phase_name: Turn report & Economy
-status: completed
-stopped_at: Phase 3 executed and verified (plans 03-01 through 03-05 complete)
-last_updated: "2026-10-12T19:30:00.000Z"
+current_phase: 4
+current_phase_name: Events & crises
+status: ready_to_execute
+stopped_at: Phase 4 planned (04-01 to 04-05 ready to execute)
+last_updated: "2026-10-12T21:45:00.000Z"
 last_activity: 2026-10-12
-last_activity_desc: Phase 3 execution complete (Turn report card, unified scoring, Economy screen with comparative charts, VOT-06 electoral data)
-state_head: f8eb712
+last_activity_desc: Phase 4 planning complete (UI spec, research, 5 plans across 2 waves)
+state_head: fc2df83
 progress:
   total_phases: 8
   completed_phases: 3
-  total_plans: 18
+  total_plans: 23
   completed_plans: 18
   percent: 38
 ---
@@ -25,14 +25,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-09)
 
 **Core value:** A player can make real presidential tradeoffs against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
-**Current focus:** Phase 3 — Turn report & Economy (complete, ready for Phase 4)
+**Current focus:** Phase 4 — Events & crises
 
 ## Current Position
 
-Phase: 3 — Turn report & Economy
-Plan: Complete (03-01, 03-02, 03-03, 03-04, 03-05 executed)
-Status: Completed & verified
-Last activity: 2026-10-12 — Phase 3 executed and verified
+Phase: 4 — Events & crises
+Plan: Wave 1 (04-01, 04-02)
+Status: Ready to execute Wave 1
+Last activity: 2026-10-12 — Phase 4 planning complete (04-01 to 04-05)
 
 Progress: [████░░░░░░] 38%
 
