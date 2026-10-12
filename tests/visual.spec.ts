@@ -74,6 +74,24 @@ test.describe('viewport fitting and visual baselines (OBS-07)', () => {
       const voteBtn = page.locator('button.stamp:has-text("Call the vote")');
       await assertButtonInViewport(voteBtn, 'Call the vote button');
       await page.screenshot({ path: `.playwright-screenshots/congress-${vp.width}x${vp.height}.png` });
+
+      // 5. Economy screen
+      await page.locator('.tab:has-text("Economy")').click();
+      await expect(page.locator('.h:has-text("How is the economy doing?")')).toBeVisible();
+      await assertNoOuterScroll('Economy');
+      const budgetFixBtn = page.locator('button.btn:has-text("Fix it in Budget →")');
+      await assertButtonInViewport(budgetFixBtn, 'Fix it in Budget button');
+      await page.screenshot({ path: `.playwright-screenshots/economy-${vp.width}x${vp.height}.png` });
+
+      // 6. Turn Report overlay dialog
+      await page.locator('button.stamp:has-text("Next turn")').click();
+      await expect(page.locator('div[role="dialog"]')).toBeVisible();
+      await assertNoOuterScroll('Turn Report');
+      const continueBtn = page.locator('button.stamp:has-text("Continue term")');
+      await assertButtonInViewport(continueBtn, 'Continue term button');
+      await page.screenshot({ path: `.playwright-screenshots/report-${vp.width}x${vp.height}.png` });
+      await continueBtn.click();
+      await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
     });
   }
 });

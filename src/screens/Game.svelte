@@ -5,6 +5,7 @@
   import { PARTIES } from '../content/parties';
   import Budget from './Budget.svelte';
   import Congress from './Congress.svelte';
+  import Economy from './Economy.svelte';
   import OvalOffice from './OvalOffice.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import StatusBar from '../ui/StatusBar.svelte';
@@ -29,6 +30,8 @@
     />
     {#if screen.id === 'oval'}
       <OvalOffice {session} question={screen.question} {go} />
+    {:else if screen.id === 'economy'}
+      <Economy {session} question={screen.question} {go} />
     {:else if screen.id === 'budget'}
       <Budget {session} question={screen.question} {go} />
     {:else if screen.id === 'congress'}

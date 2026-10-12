@@ -35,7 +35,23 @@ test.describe('accessibility audits (OBS-07, D6)', () => {
     const congressSevere = congressAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     expect(congressSevere, `Congress a11y violations: ${JSON.stringify(congressSevere, null, 2)}`).toEqual([]);
 
-    // 5. Turn Report overlay dialog
+    // 5. Economy screen
+    await page.locator('.tab:has-text("Economy")').click();
+    await expect(page.locator('.h:has-text("How is the economy doing?")')).toBeVisible();
+    const econAxe = await new AxeBuilder({ page }).analyze();
+    const econSevere = econAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(econSevere, `Economy a11y violations: ${JSON.stringify(econSevere, null, 2)}`).toEqual([]);
+
+    // 6. All 8 scores modal
+    await page.locator('button[aria-label="See all 8 prosperity scores"]').click();
+    await expect(page.locator('div[role="dialog"]')).toBeVisible();
+    const scoresAxe = await new AxeBuilder({ page }).analyze();
+    const scoresSevere = scoresAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(scoresSevere, `Scores modal a11y violations: ${JSON.stringify(scoresSevere, null, 2)}`).toEqual([]);
+    await page.locator('button:has-text("Done")').click();
+    await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
+
+    // 7. Turn Report overlay dialog
     await page.locator('button.stamp:has-text("Next turn")').click();
     await expect(page.locator('div[role="dialog"]')).toBeVisible();
     const reportAxe = await new AxeBuilder({ page }).analyze();
