@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Session } from '../app/session.svelte';
+  import { downloadSave } from '../app/save';
   import { screenById } from '../app/screens';
   import { PARTIES } from '../content/parties';
   import Budget from './Budget.svelte';
@@ -9,7 +10,7 @@
   import StatusBar from '../ui/StatusBar.svelte';
   import Rail from '../ui/Rail.svelte';
 
-  let { session }: { session: Session } = $props();
+  let { session, onImport }: { session: Session; onImport?: (f: File) => void } = $props();
   const screen = $derived(screenById(session.screen));
   const go = (id: typeof session.screen) => (session.screen = id);
 </script>
@@ -17,7 +18,13 @@
 <div class="app halftone">
   <StatusBar state={session.current} clout={session.clout} title={screen.label} score={session.vsNothing} party={PARTIES.find((p) => p.id === session.options.party)!.name} onNextTurn={() => session.nextTurn()} />
   <div class="zones">
-    <Rail turn={session.current.turn} current={session.screen} onSelect={go} />
+    <Rail
+      turn={session.current.turn}
+      current={session.screen}
+      onSelect={go}
+      onExport={() => downloadSave(session)}
+      {onImport}
+    />
     {#if screen.id === 'oval'}
       <OvalOffice {session} question={screen.question} {go} />
     {:else if screen.id === 'budget'}

@@ -1,16 +1,61 @@
 <script lang="ts">
   import type { GameOptions } from '../app/session.svelte';
   import { PARTIES, type PartyId } from '../content/parties';
+  import { termLabel } from '../engine/calendar';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
+  import type { SaveFile } from '../app/save';
 
-  let { onStart }: { onStart: (o: GameOptions) => void } = $props();
-  // No party is preselected: the choice is the player's (FND-08).
+  let {
+    onStart,
+    onResume,
+    onImport,
+    autosave = null,
+    errorMessage = null,
+  }: {
+    onStart: (o: GameOptions) => void;
+    onResume?: (s: SaveFile) => void;
+    onImport?: (f: File) => void;
+    autosave?: SaveFile | null;
+    errorMessage?: string | null;
+  } = $props();
+
   let party = $state<PartyId | null>(null);
+  let dismissResume = $state(false);
+  let fileInput = $state<HTMLInputElement>();
+
+  const showResume = $derived(autosave !== null && !dismissResume && onResume !== undefined);
+  const saveParty = $derived(
+    autosave ? (PARTIES.find((p) => p.id === autosave.options.party)?.name ?? autosave.options.party) : '',
+  );
+  const saveTurn = $derived(autosave ? autosave.inputs.length + 1 : 1);
+  const saveSeason = $derived(termLabel(saveTurn));
 </script>
 
 <div class="newgame halftone">
   <ScreenLayout question="Which party do you lead?">
     {#snippet main()}
+      {#if errorMessage}
+        <div role="alert" class="card alert-banner">
+          <span class="label error-label">Notice</span>
+          <span class="error-text">{errorMessage}</span>
+        </div>
+      {/if}
+
+      {#if showResume && autosave}
+        <div class="card resume-card" role="region" aria-label="Resume previous game">
+          <span class="label">Saved game in progress</span>
+          <h2 class="resume-title">Resume your term?</h2>
+          <div class="resume-meta">
+            <span class="meta-item">Turn {saveTurn} of 32 · {saveSeason}</span>
+            <span class="meta-item">Party: {saveParty}</span>
+          </div>
+          <div class="resume-actions">
+            <button class="stamp resume-btn" onclick={() => onResume?.(autosave!)}>Resume term</button>
+            <button class="navy-btn" onclick={() => (dismissResume = true)}>Start new term</button>
+          </div>
+        </div>
+      {/if}
+
       <div class="options" role="radiogroup" aria-label="Your party">
         {#each PARTIES as p (p.id)}
           <label class="card option">
@@ -18,6 +63,23 @@
             <b>{p.name}</b>
           </label>
         {/each}
+      </div>
+
+      <div class="import-strip">
+        <button type="button" class="import-btn" onclick={() => fileInput?.click()}>
+          Load save file (.json)
+        </button>
+        <input
+          bind:this={fileInput}
+          type="file"
+          accept=".json,application/json"
+          style="display:none"
+          onchange={(e) => {
+            const f = e.currentTarget.files?.[0];
+            if (f && onImport) onImport(f);
+            e.currentTarget.value = '';
+          }}
+        />
       </div>
     {/snippet}
     {#snippet next()}
@@ -40,6 +102,83 @@
   .option input { width: 22px; height: 22px; accent-color: var(--ink); }
   .option:has(input:checked) { background: var(--gold); }
   .option:has(input:focus-visible) { outline: 3px solid var(--ink); outline-offset: 3px; }
+  
+  .resume-card {
+    padding: clamp(14px, 2vh, 20px);
+    margin-bottom: clamp(12px, 1.8vh, 18px);
+    max-width: 48rem;
+    border: 3px solid var(--ink);
+    background: var(--paper-warm);
+  }
+  .resume-title {
+    font: 700 clamp(22px, 2.2vw, 28px) var(--font-display);
+    color: var(--ink);
+    margin: 4px 0 8px 0;
+  }
+  .resume-meta {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 14px;
+    font: 600 clamp(14px, 1.1vw, 16px) var(--font-body);
+    color: var(--ink-soft);
+  }
+  .resume-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .navy-btn {
+    font: 600 clamp(14px, 1vw, 16px) var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: 10px 18px;
+    background: var(--ink);
+    color: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    box-shadow: 2px 2px 0 var(--ink);
+    cursor: pointer;
+  }
+  .navy-btn:hover {
+    background: var(--ink-soft);
+  }
+
+  .alert-banner {
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    border: 2px solid var(--alert);
+    background: var(--card);
+    max-width: 48rem;
+  }
+  .error-label {
+    color: var(--alert);
+    font-weight: 700;
+  }
+  .error-text {
+    display: block;
+    font: 500 15px/1.3 var(--font-body);
+    color: var(--ink);
+    margin-top: 2px;
+  }
+
+  .import-strip {
+    margin-top: clamp(10px, 1.5vh, 16px);
+  }
+  .import-btn {
+    background: none;
+    border: none;
+    font: 600 clamp(13px, 1vw, 15px) var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  .import-btn:hover {
+    color: var(--ink);
+  }
+
   .info { display: flex; flex-direction: column; gap: 4px; padding: clamp(12px, 1.5vh, 16px); }
   .line { font: 500 clamp(14px, 1.1vw, 16px)/1.3 var(--font-body); color: var(--ink-soft); max-width: 55ch; }
   .spacer { flex-grow: 1; min-height: 8px; }

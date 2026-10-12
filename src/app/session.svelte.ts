@@ -3,6 +3,7 @@ import { tally, type DealId } from '../engine/congress';
 import { cloutCost, resolveBill, type Decisions } from '../engine/decisions';
 import { endTurn, newGame, prosperity, TOTAL_TURNS, type GameState, type Start } from '../engine/game';
 import type { PartyId } from '../content/parties';
+import { storeAutosave, type SaveFile } from './save';
 import type { ScreenId } from './screens';
 
 /** Choices made at New Game. Kept beside the engine state, never inside it (D4). */
@@ -35,6 +36,7 @@ const freshDraft = (policy: BudgetDraft): Draft => ({
 export class Session {
   history = $state.raw<GameState[]>([]);
   autopilot = $state.raw<GameState[]>([]);
+  inputs = $state.raw<Decisions[]>([]);
   screen = $state<ScreenId>('oval');
   draft = $state<Draft>(freshDraft(fromPackage('Keep as is')));
 
@@ -64,6 +66,21 @@ export class Session {
   constructor(seed: number, start: Start, readonly options: GameOptions) {
     this.history = [newGame(seed, start)];
     this.autopilot = [newGame(seed, start)];
+    this.inputs = [];
+    storeAutosave(this);
+  }
+
+  static fromSave(save: SaveFile): Session {
+    const s = new Session(save.seed, save.start, save.options);
+    for (const input of save.inputs) {
+      const next = endTurn(s.current, input);
+      s.history = [...s.history, next];
+      s.autopilot = [...s.autopilot, endTurn(s.autopilot[s.autopilot.length - 1]!)];
+      s.inputs = [...s.inputs, input];
+      s.draft = freshDraft(next.policy);
+    }
+    storeAutosave(s);
+    return s;
   }
 
   /** A package changes only its own levers; "Keep as is" keeps the policy in force. */
@@ -102,8 +119,10 @@ export class Session {
     const decisions: Decisions = this.bill ? { bill: this.bill } : {};
     const next = endTurn(this.current, decisions);
     if (next === this.current) return;
+    this.inputs = [...this.inputs, decisions];
     this.history = [...this.history, next];
     this.autopilot = [...this.autopilot, endTurn(this.autopilot[this.autopilot.length - 1]!)];
     this.draft = freshDraft(next.policy);
+    storeAutosave(this);
   }
 }

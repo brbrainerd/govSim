@@ -94,3 +94,38 @@ describe('review fixes (01-REVIEW WR-02, WR-03, WR-06)', () => {
     expect(s.clout).toBe(s.current.clout);
   });
 });
+
+describe('Session persistence and save restore (OBS-01, OBS-02)', () => {
+  it('records decision history in inputs and restores via fromSave', async () => {
+    const s = new Session(101, START, { party: 'D' });
+    expect(s.inputs).toEqual([]);
+
+    // Turn 1
+    s.pickPackage('Infrastructure push');
+    s.makeDeal('mod');
+    s.callVote();
+    s.nextTurn();
+
+    // Turn 2
+    s.nextTurn();
+
+    // Turn 3
+    s.setLever('bus', 28);
+    s.sendToCongress();
+    s.nextTurn();
+
+    expect(s.inputs).toHaveLength(3);
+    expect(s.history).toHaveLength(4);
+    expect(s.current.turn).toBe(4);
+
+    const { parseSave, serializeSave } = await import('./save');
+    const json = serializeSave(s);
+    const save = parseSave(json);
+
+    const restored = Session.fromSave(save);
+    expect(restored.current.turn).toBe(4);
+    expect(restored.inputs).toEqual(s.inputs);
+    expect(restored.history).toEqual(s.history);
+    expect(restored.autopilot).toEqual(s.autopilot);
+  });
+});

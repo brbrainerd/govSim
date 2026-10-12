@@ -2,26 +2,71 @@
   import { navFor, type ScreenId } from '../app/screens';
   import { icons } from '../design/icons';
 
-  let { turn, current, onSelect }: { turn: number; current: ScreenId; onSelect: (id: ScreenId) => void } = $props();
+  let {
+    turn,
+    current,
+    onSelect,
+    onExport,
+    onImport,
+  }: {
+    turn: number;
+    current: ScreenId;
+    onSelect: (id: ScreenId) => void;
+    onExport?: () => void;
+    onImport?: (f: File) => void;
+  } = $props();
+
   const nav = $derived(navFor(turn));
+  let fileInput = $state<HTMLInputElement>();
+  const DownloadIcon = icons.download;
+  const UploadIcon = icons.upload;
 </script>
 
 <nav aria-label="Screens">
-  {#each nav as group (group.id)}
-    <span class="group">{group.label}</span>
-    {#each group.screens as s (s.id)}
-      {@const Icon = icons[s.icon]}
-      <button class="tab" aria-current={s.id === current ? 'page' : undefined} disabled={s.locked} onclick={() => onSelect(s.id)}>
-        <Icon size={24} strokeWidth={2.2} aria-hidden="true" />
-        <span class="name">{s.label}</span>
-        {#if s.locked}<span class="lock">Turn {s.unlockTurn}</span>{/if}
-      </button>
+  <div class="screens-list">
+    {#each nav as group (group.id)}
+      <span class="group">{group.label}</span>
+      {#each group.screens as s (s.id)}
+        {@const Icon = icons[s.icon]}
+        <button class="tab" aria-current={s.id === current ? 'page' : undefined} disabled={s.locked} onclick={() => onSelect(s.id)}>
+          <Icon size={24} strokeWidth={2.2} aria-hidden="true" />
+          <span class="name">{s.label}</span>
+          {#if s.locked}<span class="lock">Turn {s.unlockTurn}</span>{/if}
+        </button>
+      {/each}
     {/each}
-  {/each}
+  </div>
+
+  <div class="save-tray">
+    {#if onExport}
+      <button type="button" class="util-btn" onclick={onExport} aria-label="Export save file">
+        <DownloadIcon size={16} strokeWidth={2.2} aria-hidden="true" />
+        <span>Export save</span>
+      </button>
+    {/if}
+    {#if onImport}
+      <button type="button" class="util-btn" onclick={() => fileInput?.click()} aria-label="Load save file">
+        <UploadIcon size={16} strokeWidth={2.2} aria-hidden="true" />
+        <span>Load save</span>
+      </button>
+      <input
+        bind:this={fileInput}
+        type="file"
+        accept=".json,application/json"
+        style="display:none"
+        onchange={(e) => {
+          const f = e.currentTarget.files?.[0];
+          if (f && onImport) onImport(f);
+          e.currentTarget.value = '';
+        }}
+      />
+    {/if}
+  </div>
 </nav>
 
 <style>
-  nav { display: flex; flex-direction: column; gap: clamp(4px, 0.8vh, 10px); padding-right: clamp(10px, 1.2vw, 18px); border-right: 2px solid var(--ink); min-height: 0; overflow-y: auto; }
+  nav { display: flex; flex-direction: column; justify-content: space-between; gap: clamp(4px, 0.8vh, 10px); padding-right: clamp(10px, 1.2vw, 18px); border-right: 2px solid var(--ink); min-height: 0; overflow-y: auto; }
+  .screens-list { display: flex; flex-direction: column; gap: clamp(4px, 0.8vh, 10px); }
   .group { font: 600 clamp(11px, 0.8vw, 13px) var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); margin: clamp(4px, 0.6vh, 8px) 0 -2px 4px; }
   .tab {
     position: relative; display: flex; align-items: center; gap: clamp(6px, 0.8vw, 10px); min-height: clamp(38px, 4.8vh, 50px); padding: clamp(6px, 0.8vh, 10px) clamp(8px, 0.9vw, 12px); margin-top: clamp(2px, 0.4vh, 6px); text-align: left;
@@ -40,4 +85,31 @@
   .tab:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
   .name { flex: 1; }
   .lock { white-space: nowrap; font: 700 11px var(--font-body); text-transform: none; letter-spacing: 0; background: var(--paper); border-radius: 6px; padding: 2px 5px; }
+
+  .save-tray {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: clamp(12px, 1.5vh, 20px);
+    padding-top: 8px;
+    border-top: 1px dashed var(--ink-soft);
+  }
+  .util-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font: 600 clamp(12px, 0.9vw, 14px) var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+  }
+  .util-btn:hover {
+    color: var(--ink);
+    background: var(--paper-warm);
+  }
 </style>
