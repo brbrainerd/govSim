@@ -10,7 +10,8 @@
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run",
     "notices": "node scripts/notices.mjs",
-    "determinism": "node scripts/determinism.mjs"
+    "determinism": "node scripts/determinism.mjs",
+    "guard": "node scripts/guard.mjs"
   },
   "dependencies": {
     "@fontsource/arvo": "5.3.0",
