@@ -34,8 +34,16 @@
 </div>
 
 <style>
-  .app { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
-  .zones { display: grid; grid-template-columns: 220px minmax(0, 1fr) 260px; gap: 22px; padding: 10px 24px 24px; }
-  .placeholder { flex-grow: 1; display: grid; place-items: center; min-height: 320px; color: var(--ink-soft); }
+  .app { height: 100dvh; max-height: 100dvh; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
+  .zones {
+    display: grid;
+    grid-template-columns: clamp(170px, 15vw, 220px) minmax(0, 1fr) clamp(240px, 20vw, 290px);
+    gap: clamp(12px, 1.5vw, 22px);
+    padding: clamp(4px, 0.8vh, 10px) clamp(12px, 1.8vw, 24px) clamp(10px, 1.5vh, 20px);
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .placeholder { flex-grow: 1; display: grid; place-items: center; min-height: 200px; color: var(--ink-soft); }
   .placeholder-side { padding: 16px; }
 </style>

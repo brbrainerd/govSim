@@ -33,16 +33,16 @@
 </div>
 
 <style>
-  .newgame { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 22px; padding: 24px; }
-  .options { display: flex; flex-direction: column; gap: 14px; }
-  .option { display: flex; align-items: center; gap: 14px; padding: 18px 20px; cursor: pointer; }
-  .option b { font: 700 24px var(--font-display); color: var(--ink); }
+  .newgame { height: 100dvh; max-height: 100dvh; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) clamp(240px, 20vw, 290px); gap: clamp(14px, 2vw, 24px); padding: clamp(16px, 2.5vh, 28px) clamp(16px, 2.5vw, 28px); }
+  .options { display: flex; flex-direction: column; gap: clamp(10px, 1.5vh, 14px); max-width: 48rem; }
+  .option { display: flex; align-items: center; gap: clamp(10px, 1.2vw, 14px); padding: clamp(12px, 1.8vh, 18px) clamp(14px, 1.8vw, 20px); cursor: pointer; }
+  .option b { font: 700 clamp(20px, 2vw, 24px) var(--font-display); color: var(--ink); }
   .option input { width: 22px; height: 22px; accent-color: var(--ink); }
   .option:has(input:checked) { background: var(--gold); }
   .option:has(input:focus-visible) { outline: 3px solid var(--ink); outline-offset: 3px; }
-  .info { display: flex; flex-direction: column; gap: 4px; padding: 16px; }
-  .line { font: 500 16px/1.3 var(--font-body); color: var(--ink-soft); }
-  .spacer { flex-grow: 1; }
-  .stamp { align-self: center; }
+  .info { display: flex; flex-direction: column; gap: 4px; padding: clamp(12px, 1.5vh, 16px); }
+  .line { font: 500 clamp(14px, 1.1vw, 16px)/1.3 var(--font-body); color: var(--ink-soft); max-width: 55ch; }
+  .spacer { flex-grow: 1; min-height: 8px; }
+  .stamp { align-self: center; flex-shrink: 0; }
   .stamp:disabled { opacity: .45; cursor: not-allowed; }
 </style>

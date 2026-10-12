@@ -48,14 +48,14 @@
 </header>
 
 <style>
-  .bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 16px; padding: 14px 24px 6px; }
-  .resources, .time { display: flex; align-items: center; gap: 26px; padding-top: 6px; }
-  .time { justify-content: flex-end; gap: 18px; }
-  .stat { display: flex; align-items: center; gap: 10px; }
-  .num { font-size: 36px; }
+  .bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: clamp(8px, 1.2vw, 16px); padding: clamp(4px, 0.8vh, 10px) clamp(12px, 1.8vw, 24px) clamp(2px, 0.4vh, 6px); }
+  .resources, .time { display: flex; align-items: center; gap: clamp(12px, 1.8vw, 26px); padding-top: 4px; }
+  .time { justify-content: flex-end; gap: clamp(10px, 1.4vw, 18px); }
+  .stat { display: flex; align-items: center; gap: clamp(6px, 0.8vw, 10px); }
+  .num { font-size: clamp(24px, 2.4vw, 36px); }
   .center { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .score { font: 400 16px var(--font-body); color: var(--ink); }
-  .score b { color: var(--sage); font-family: var(--font-ui); font-size: 18px; }
+  .score { font: 400 clamp(13px, 1vw, 16px) var(--font-body); color: var(--ink); }
+  .score b { color: var(--sage); font-family: var(--font-ui); font-size: clamp(15px, 1.2vw, 18px); }
   .score b.worse { color: var(--alert); }
   .star { color: var(--ink); font-size: 12px; }
   /* Tooltips open on hover and on keyboard focus (WCAG 1.4.13), unlike title attributes. */
@@ -67,7 +67,7 @@
   .when [role='tooltip'] { left: auto; right: 0; }
   .tip:hover [role='tooltip'], .tip:focus-visible [role='tooltip'] { display: block; }
   .when-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-  .when { font: 600 19px var(--font-display); color: var(--ink); }
-  .next { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .next span { font: 400 14px var(--font-body); color: var(--ink-soft); }
+  .when { font: 600 clamp(15px, 1.3vw, 19px) var(--font-display); color: var(--ink); }
+  .next { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .next span { font: 400 13px var(--font-body); color: var(--ink-soft); }
 </style>

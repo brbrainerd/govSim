@@ -107,35 +107,35 @@
 </ScreenLayout>
 
 <style>
-  .chamber { position: relative; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; flex-grow: 1; overflow: hidden; }
+  .chamber { position: relative; padding: clamp(8px, 1.2vh, 14px) clamp(10px, 1.2vw, 16px); display: flex; flex-direction: column; gap: clamp(4px, 0.6vh, 8px); flex-grow: 1; min-height: 0; overflow: hidden; }
   .bill { display: flex; align-items: baseline; gap: 10px; }
-  .bill b { font: 700 20px var(--font-display); }
-  .arc { margin: 64px 96px 4px; position: relative; aspect-ratio: 640 / 340; align-self: center; width: calc(100% - 192px); max-width: 720px; }
+  .bill b { font: 700 clamp(16px, 1.3vw, 20px) var(--font-display); }
+  .arc { margin: clamp(8px, 1.5vh, 24px) auto clamp(2px, 0.5vh, 6px); position: relative; aspect-ratio: 640 / 340; align-self: center; width: min(100%, 640px); max-height: clamp(160px, 30vh, 300px); }
   .arc > svg { width: 100%; height: 100%; display: block; }
   .seat { transition: opacity .5s ease; }
-  .count { font: 700 40px var(--font-ui); fill: var(--ink); }
-  .count-sub { font: 600 17px var(--font-ui); fill: var(--ink-soft); }
+  .count { font: 700 clamp(28px, 3vw, 40px) var(--font-ui); fill: var(--ink); }
+  .count-sub { font: 600 clamp(13px, 1.1vw, 17px) var(--font-ui); fill: var(--ink-soft); }
   .leader { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .chip { font: 600 14px var(--font-ui); color: var(--ink); border: 2px solid var(--ink); border-radius: 6px; padding: 2px 8px; white-space: nowrap; }
+  .chip { font: 600 clamp(11px, 0.9vw, 14px) var(--font-ui); color: var(--ink); border: 2px solid var(--ink); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
   .chip.dark { color: var(--card); }
-  .mood { position: absolute; right: -14px; top: 6px; color: var(--ink); background: var(--card); border: 2px solid var(--ink); border-radius: 50%; width: 26px; height: 26px; display: grid; place-items: center; }
-  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: center; font: 500 15px var(--font-ui); color: var(--ink-soft); }
-  .legend i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid var(--ink); margin-right: 5px; }
+  .mood { position: absolute; right: -12px; top: 4px; color: var(--ink); background: var(--card); border: 2px solid var(--ink); border-radius: 50%; width: 22px; height: 22px; display: grid; place-items: center; }
+  .legend { display: flex; flex-wrap: wrap; gap: clamp(3px, 0.5vh, 6px) clamp(8px, 1vw, 18px); justify-content: center; font: 500 clamp(12px, 0.9vw, 15px) var(--font-ui); color: var(--ink-soft); max-width: 70ch; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--ink); margin-right: 4px; }
   .legend b { color: var(--ink); }
   .confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
   .confetti i { position: absolute; top: -10px; width: 9px; height: 9px; border-radius: 2px; animation: fall 1.8s linear infinite; }
   @keyframes fall { to { transform: translateY(380px) rotate(240deg); opacity: 0; } }
-  .info { display: flex; flex-direction: column; gap: 4px; padding: 16px; }
-  .info b { font: 700 24px var(--font-display); }
-  .line { font: 500 16px/1.3 var(--font-body); color: var(--ink-soft); }
+  .info { display: flex; flex-direction: column; gap: clamp(2px, 0.4vh, 4px); padding: clamp(8px, 1.2vh, 14px); }
+  .info b { font: 700 clamp(18px, 1.5vw, 24px) var(--font-display); }
+  .line { font: 500 clamp(13px, 1vw, 16px)/1.3 var(--font-body); color: var(--ink-soft); max-width: 45ch; }
   .good { color: var(--sage); }
   .bad { color: var(--alert); }
-  .deal { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
-  .deal div { display: flex; flex-direction: column; flex: 1; }
-  .deal b { font: 700 17px/1.15 var(--font-display); }
-  .deal span { font-size: 13px; color: var(--ink-soft); }
+  .deal { display: flex; align-items: center; gap: clamp(6px, 0.8vw, 10px); padding: clamp(6px, 1vh, 10px) clamp(8px, 1vw, 12px); }
+  .deal div { display: flex; flex-direction: column; flex: 1; max-width: 30ch; }
+  .deal b { font: 700 clamp(14px, 1.1vw, 17px)/1.15 var(--font-display); }
+  .deal span { font-size: clamp(11px, 0.85vw, 13px); color: var(--ink-soft); }
   .deal .btn { white-space: nowrap; }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
-  .spacer { flex-grow: 1; }
-  .stamp { align-self: center; }
+  .spacer { flex-grow: 1; min-height: 4px; }
+  .stamp { align-self: center; flex-shrink: 0; }
 </style>

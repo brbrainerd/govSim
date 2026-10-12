@@ -21,12 +21,12 @@
 </nav>
 
 <style>
-  nav { display: flex; flex-direction: column; gap: 12px; padding-right: 20px; border-right: 2px solid var(--ink); }
-  .group { font: 600 14px var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); margin: 10px 0 -2px 4px; }
+  nav { display: flex; flex-direction: column; gap: clamp(4px, 0.8vh, 10px); padding-right: clamp(10px, 1.2vw, 18px); border-right: 2px solid var(--ink); min-height: 0; overflow-y: auto; }
+  .group { font: 600 clamp(11px, 0.8vw, 13px) var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); margin: clamp(4px, 0.6vh, 8px) 0 -2px 4px; }
   .tab {
-    position: relative; display: flex; align-items: center; gap: 10px; min-height: 54px; padding: 12px 14px; margin-top: 8px; text-align: left;
+    position: relative; display: flex; align-items: center; gap: clamp(6px, 0.8vw, 10px); min-height: clamp(38px, 4.8vh, 50px); padding: clamp(6px, 0.8vh, 10px) clamp(8px, 0.9vw, 12px); margin-top: clamp(2px, 0.4vh, 6px); text-align: left;
     background: var(--card); color: var(--ink); border: var(--rule) solid var(--ink); border-radius: 4px 12px 12px 12px;
-    box-shadow: 3px 3px 0 var(--ink); cursor: pointer; font: 600 21px/1 var(--font-ui); letter-spacing: .03em; text-transform: uppercase;
+    box-shadow: 3px 3px 0 var(--ink); cursor: pointer; font: 600 clamp(16px, 1.3vw, 20px)/1 var(--font-ui); letter-spacing: .03em; text-transform: uppercase;
     transition: transform var(--dur-fast);
   }
   /* folder notch */
@@ -39,5 +39,5 @@
   .tab[aria-current='page']::before { border-color: var(--alert-dark); }
   .tab:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
   .name { flex: 1; }
-  .lock { white-space: nowrap; font: 700 12px var(--font-body); text-transform: none; letter-spacing: 0; background: var(--paper); border-radius: 6px; padding: 3px 6px; }
+  .lock { white-space: nowrap; font: 700 11px var(--font-body); text-transform: none; letter-spacing: 0; background: var(--paper); border-radius: 6px; padding: 2px 5px; }
 </style>

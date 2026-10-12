@@ -65,33 +65,34 @@
 </ScreenLayout>
 
 <style>
-  .stage { position: relative; height: 330px; padding: 10px; }
+  .stage { position: relative; height: clamp(170px, 30vh, 310px); padding: clamp(6px, 1vh, 10px); min-height: 0; flex-shrink: 1; }
   .scene { height: 100%; border-radius: 8px; overflow: hidden; border: 2px solid var(--ink); }
   .bubble {
-    position: absolute; right: 34px; top: 30px; max-width: 220px; padding: 12px 16px; background: var(--card);
-    border: 2.5px solid var(--ink); border-radius: 14px; font: 700 18px/1.3 var(--font-body); color: var(--ink); text-align: center;
+    position: absolute; right: clamp(14px, 2vw, 34px); top: clamp(12px, 2vh, 30px); max-width: 24ch; padding: clamp(8px, 1.2vh, 12px) clamp(10px, 1.2vw, 16px); background: var(--card);
+    border: 2.5px solid var(--ink); border-radius: 14px; font: 700 clamp(14px, 1.2vw, 18px)/1.3 var(--font-body); color: var(--ink); text-align: center;
     box-shadow: 3px 3px 0 var(--ink);
   }
   .bubble::after { content: ''; position: absolute; bottom: -14px; left: 40px; border: 14px solid transparent; border-top-color: var(--ink); border-bottom: 0; }
+  .doing { min-height: 0; }
   .doing-head { display: flex; justify-content: space-between; align-items: baseline; }
-  h3 { margin: 0; font: 700 22px var(--font-display); }
-  .doing-head a { font: 600 17px var(--font-ui); color: var(--ink); }
-  .tiles { display: grid; grid-template-columns: 210px repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 8px; }
+  h3 { margin: 0; font: 700 clamp(18px, 1.5vw, 22px) var(--font-display); }
+  .doing-head a { font: 600 clamp(14px, 1.1vw, 17px) var(--font-ui); color: var(--ink); }
+  .tiles { display: grid; grid-template-columns: minmax(150px, 1.2fr) repeat(4, minmax(0, 1fr)); gap: clamp(6px, 1vw, 14px); margin-top: clamp(4px, 0.6vh, 8px); }
   .score { display: flex; align-items: center; gap: 4px; }
   .score-text { display: flex; flex-direction: column; line-height: 1; }
-  .score-text b { font: 700 46px var(--font-ui); }
-  .score-text span { font: 600 18px var(--font-ui); color: var(--ink-soft); }
-  .score-text em { font: 600 18px var(--font-ui); font-style: normal; color: var(--sage); margin-top: 4px; }
+  .score-text b { font: 700 clamp(30px, 3.2vw, 44px) var(--font-ui); }
+  .score-text span { font: 600 clamp(14px, 1.2vw, 18px) var(--font-ui); color: var(--ink-soft); }
+  .score-text em { font: 600 clamp(14px, 1.1vw, 18px) var(--font-ui); font-style: normal; color: var(--sage); margin-top: 2px; }
   .score-text em.down { color: var(--alert); }
-  .tile { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 10px 8px 10px; gap: 2px; }
-  .tile .label { font-size: 13px; color: var(--ink); }
-  .tile .num { font-size: 32px; }
-  .spark { width: 70%; height: 22px; }
-  .dir { font: 600 15px var(--font-ui); color: var(--alert); }
+  .tile { display: flex; flex-direction: column; align-items: center; text-align: center; padding: clamp(4px, 0.8vh, 8px) clamp(4px, 0.5vw, 8px); gap: 2px; min-width: 0; }
+  .tile .label { font-size: clamp(11px, 0.85vw, 13px); line-height: 1.1; color: var(--ink); text-wrap: balance; height: 2.2em; display: grid; place-items: center; }
+  .tile .num { font-size: clamp(20px, 2vw, 30px); }
+  .spark { width: 70%; height: clamp(16px, 2vh, 22px); }
+  .dir { font: 600 clamp(12px, 0.9vw, 15px) var(--font-ui); color: var(--alert); }
   .dir.good { color: var(--sage); }
-  .info { display: flex; flex-direction: column; gap: 4px; padding: 16px; text-align: center; }
-  .info b { font: 700 21px/1.2 var(--font-display); }
-  .info span:last-child { font-size: 15px; color: var(--ink-soft); }
-  .option { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px 14px; text-align: center; }
-  .option b { font: 700 22px/1.15 var(--font-display); }
+  .info { display: flex; flex-direction: column; gap: 4px; padding: clamp(8px, 1.2vh, 14px); text-align: center; }
+  .info b { font: 700 clamp(17px, 1.4vw, 21px)/1.2 var(--font-display); }
+  .info span:last-child { font-size: clamp(12px, 1vw, 15px); color: var(--ink-soft); max-width: 35ch; }
+  .option { display: flex; flex-direction: column; align-items: center; gap: clamp(6px, 0.8vh, 10px); padding: clamp(8px, 1.2vh, 14px) clamp(8px, 1vw, 12px); text-align: center; }
+  .option b { font: 700 clamp(16px, 1.3vw, 20px)/1.15 var(--font-display); max-width: 25ch; }
 </style>

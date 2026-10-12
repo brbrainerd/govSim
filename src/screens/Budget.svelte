@@ -79,37 +79,37 @@
 </ScreenLayout>
 
 <style>
-  .packs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .packs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(6px, 1vw, 14px); }
   .pack {
-    font: 600 20px var(--font-ui); color: var(--ink); background: var(--card); border: var(--rule) solid var(--ink);
-    border-radius: var(--r-sm); padding: 12px 10px; min-height: 50px; cursor: pointer; box-shadow: var(--shadow);
+    font: 600 clamp(15px, 1.2vw, 20px) var(--font-ui); color: var(--ink); background: var(--card); border: var(--rule) solid var(--ink);
+    border-radius: var(--r-sm); padding: clamp(6px, 1vh, 10px) clamp(6px, 0.8vw, 10px); min-height: clamp(38px, 4.5vh, 48px); cursor: pointer; box-shadow: var(--shadow);
     transition: transform var(--dur-fast);
   }
   .pack:hover { transform: translateY(-2px); }
   .pack[aria-pressed='true'] { background: var(--gold); }
-  .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; flex-grow: 1; }
-  .group { padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; }
-  h3 { margin: 0 0 4px; font: 700 21px var(--font-display); }
-  h3 span { font: 400 16px var(--font-body); color: var(--ink-soft); }
-  .row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 10px; padding: 2px 6px; border-radius: 8px; }
+  .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(8px, 1.2vw, 18px); flex-grow: 1; min-height: 0; }
+  .group { padding: clamp(8px, 1.2vh, 14px) clamp(10px, 1.2vw, 18px); display: flex; flex-direction: column; gap: clamp(2px, 0.4vh, 5px); min-height: 0; }
+  h3 { margin: 0 0 2px; font: 700 clamp(16px, 1.3vw, 20px) var(--font-display); }
+  h3 span { font: 400 clamp(13px, 1vw, 16px) var(--font-body); color: var(--ink-soft); }
+  .row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 clamp(6px, 0.8vw, 10px); padding: 1px 4px; border-radius: 8px; }
   .row.changed { background: color-mix(in srgb, var(--gold) 30%, transparent); }
-  label { font: 600 18px var(--font-ui); }
-  .val { font: 600 16px var(--font-ui); color: var(--ink-soft); }
-  .track { grid-column: span 2; position: relative; height: 30px; }
-  .track::before { content: ''; position: absolute; left: 0; right: 0; top: 11px; height: 9px; border-radius: 5px; background: var(--ink); }
+  label { font: 600 clamp(14px, 1.1vw, 18px) var(--font-ui); }
+  .val { font: 600 clamp(13px, 1vw, 16px) var(--font-ui); color: var(--ink-soft); }
+  .track { grid-column: span 2; position: relative; height: clamp(20px, 2.6vh, 28px); }
+  .track::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 8px; border-radius: 4px; background: var(--ink); }
   .changed .track::before { background: linear-gradient(to right, var(--gold) var(--fill), var(--ink) var(--fill)); }
-  .tick { position: absolute; top: 4px; width: 3px; height: 22px; margin-left: -1.5px; background: var(--gold-dark); border-radius: 2px; }
+  .tick { position: absolute; top: 50%; transform: translateY(-50%); width: 3px; height: 18px; margin-left: -1.5px; background: var(--gold-dark); border-radius: 2px; }
   input { position: absolute; inset: 0; width: 100%; margin: 0; appearance: none; background: transparent; cursor: pointer; }
-  input::-webkit-slider-thumb { appearance: none; width: 26px; height: 26px; border-radius: 50%; background: var(--gold); border: 3px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); }
-  input::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--gold); border: 3px solid var(--ink); }
-  .info { display: flex; flex-direction: column; gap: 4px; padding: 16px; }
-  .info b { font: 700 20px/1.2 var(--font-display); }
-  .info .num { font: 700 30px var(--font-ui); }
-  .line { font: 600 18px/1.25 var(--font-ui); }
-  .fine { font-size: 13px; color: var(--ink-soft); }
+  input::-webkit-slider-thumb { appearance: none; width: clamp(20px, 2.2vh, 26px); height: clamp(20px, 2.2vh, 26px); border-radius: 50%; background: var(--gold); border: 2.5px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); }
+  input::-moz-range-thumb { width: clamp(18px, 2vh, 22px); height: clamp(18px, 2vh, 22px); border-radius: 50%; background: var(--gold); border: 2.5px solid var(--ink); }
+  .info { display: flex; flex-direction: column; gap: clamp(2px, 0.4vh, 4px); padding: clamp(8px, 1.2vh, 14px); }
+  .info b { font: 700 clamp(16px, 1.3vw, 20px)/1.2 var(--font-display); }
+  .info .num { font: 700 clamp(20px, 2vw, 28px) var(--font-ui); }
+  .line { font: 600 clamp(14px, 1.1vw, 17px)/1.25 var(--font-ui); max-width: 45ch; }
+  .fine { font-size: clamp(11px, 0.9vw, 13px); color: var(--ink-soft); max-width: 45ch; }
   .good { color: var(--sage); }
   .bad { color: var(--alert); }
-  .spacer { flex-grow: 1; }
-  .stamp, .sent { align-self: center; }
-  .sent { background: var(--sage); font-size: 19px; padding: 12px 16px; }
+  .spacer { flex-grow: 1; min-height: 4px; }
+  .stamp, .sent { align-self: center; flex-shrink: 0; }
+  .sent { background: var(--sage); font-size: clamp(15px, 1.2vw, 19px); padding: clamp(8px, 1.2vh, 12px) clamp(12px, 1.5vw, 16px); }
 </style>

@@ -21,7 +21,7 @@ awaiting: user response
 
 ### 1. New Game party pick and status-bar calendar
 expected: No default party; start disabled until chosen; party name in status bar; "Year 1 · Winter" on turn 1; real-date tooltip on hover and keyboard focus; turn 8 = Year 2 Fall.
-result: [pending]
+result: pass
 
 ### 2. MIT license visible on GitHub (REL-01)
 expected: After the user pushes `game-pivot` and merges it to `master`, the repo sidebar shows "MIT license".
@@ -30,9 +30,9 @@ result: [pending]
 ## Summary
 
 total: 2
-passed: 0
+passed: 1
 issues: 0
-pending: 2
+pending: 1
 skipped: 0
 blocked: 0
 
