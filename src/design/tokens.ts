@@ -15,6 +15,10 @@ const base = {
   sage: '#4E9E74',
   'sage-dark': '#2B6E47',
   dot: 'rgba(31,47,85,.09)',
+  scrim: 'rgba(31,47,85,.65)',
+  'sage-tint': 'rgba(43,110,71,.12)',
+  'alert-tint': 'rgba(142,47,34,.12)',
+  'ink-tint': 'rgba(74,86,119,.15)',
   // Illustration
   'art-wall': '#F6EDD8',
   'art-trim': '#E6D6B2',

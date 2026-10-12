@@ -116,7 +116,12 @@ test.describe('100% keyboard-only turn navigation (OBS-07)', () => {
     });
     await page.keyboard.press('Enter');
 
-    // 10. Verify turn advanced to Turn 2
+    // 10. Turn Report dialog appears — dismiss with Escape key
+    await expect(page.locator('div[role="dialog"]')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
+
+    // 11. Verify turn advanced to Turn 2
     await expect(page.locator('header.bar')).toContainText('Turn 2 of 32');
   });
 });

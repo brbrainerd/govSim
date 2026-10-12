@@ -39,6 +39,7 @@ export class Session {
   inputs = $state.raw<Decisions[]>([]);
   screen = $state<ScreenId>('oval');
   draft = $state<Draft>(freshDraft(fromPackage('Keep as is')));
+  showingReport = $state<boolean>(false);
 
   current = $derived(this.history[this.history.length - 1]!);
   previous = $derived(this.history[this.history.length - 2] ?? this.current);
@@ -125,6 +126,15 @@ export class Session {
     this.history = [...this.history, next];
     this.autopilot = [...this.autopilot, endTurn(this.autopilot[this.autopilot.length - 1]!)];
     this.draft = freshDraft(next.policy);
+    this.showingReport = true;
     storeAutosave(this);
+  }
+
+  openReport() {
+    if (this.current.turn > 1) this.showingReport = true;
+  }
+
+  closeReport() {
+    this.showingReport = false;
   }
 }

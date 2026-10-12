@@ -9,6 +9,8 @@
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import StatusBar from '../ui/StatusBar.svelte';
   import Rail from '../ui/Rail.svelte';
+  import Overlay from '../ui/Overlay.svelte';
+  import TurnReport from '../ui/TurnReport.svelte';
 
   let { session, onImport }: { session: Session; onImport?: (f: File) => void } = $props();
   const screen = $derived(screenById(session.screen));
@@ -38,6 +40,14 @@
       </ScreenLayout>
     {/if}
   </div>
+
+  {#if session.showingReport}
+    <Overlay title="Quarterly Turn Report" onClose={() => session.closeReport()}>
+      {#snippet children()}
+        <TurnReport {session} onClose={() => session.closeReport()} />
+      {/snippet}
+    </Overlay>
+  {/if}
 </div>
 
 <style>

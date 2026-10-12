@@ -36,6 +36,9 @@ test.describe('zero-telemetry egress audit (OBS-04)', () => {
       const nextBtn = page.locator('header.bar button.stamp:has-text("Next turn")');
       await expect(nextBtn).toBeVisible();
       await nextBtn.click();
+      const continueBtn = page.locator('button.stamp:has-text("Continue term")');
+      await expect(continueBtn).toBeVisible();
+      await continueBtn.click();
     }
 
     // Verify no CSP errors in console

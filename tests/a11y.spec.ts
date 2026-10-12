@@ -34,5 +34,16 @@ test.describe('accessibility audits (OBS-07, D6)', () => {
     const congressAxe = await new AxeBuilder({ page }).analyze();
     const congressSevere = congressAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     expect(congressSevere, `Congress a11y violations: ${JSON.stringify(congressSevere, null, 2)}`).toEqual([]);
+
+    // 5. Turn Report overlay dialog
+    await page.locator('button.stamp:has-text("Next turn")').click();
+    await expect(page.locator('div[role="dialog"]')).toBeVisible();
+    const reportAxe = await new AxeBuilder({ page }).analyze();
+    const reportSevere = reportAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(reportSevere, `Turn Report a11y violations: ${JSON.stringify(reportSevere, null, 2)}`).toEqual([]);
+
+    // Close Turn Report
+    await page.locator('button.stamp:has-text("Continue term")').click();
+    await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
   });
 });
