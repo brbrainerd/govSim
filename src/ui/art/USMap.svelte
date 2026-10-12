@@ -16,21 +16,21 @@
   function getLeaningColor(leaning?: string): string {
     switch (leaning) {
       case 'safe-you':
-        return 'var(--color-sage-dark)';
+        return 'var(--sage-dark)';
       case 'likely-you':
-        return 'var(--color-sage)';
+        return 'var(--sage)';
       case 'lean-you':
-        return 'var(--color-sky)';
+        return 'var(--sky)';
       case 'tossup':
-        return 'var(--color-gold)';
+        return 'var(--gold)';
       case 'lean-them':
-        return 'var(--color-alert)';
+        return 'var(--alert)';
       case 'likely-them':
-        return 'var(--color-alert)';
+        return 'var(--alert)';
       case 'safe-them':
-        return 'var(--color-alert-dark)';
+        return 'var(--alert-dark)';
       default:
-        return 'var(--color-ink-soft)';
+        return 'var(--ink-soft)';
     }
   }
 
@@ -70,12 +70,12 @@
     <defs>
       <!-- Opponent pattern: 45-degree diagonal hatching (GR-23) -->
       <pattern id="pattern-hatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-        <line x1="0" y1="0" x2="0" y2="8" stroke="var(--color-ink)" stroke-opacity="0.35" stroke-width="2.5" />
+        <line x1="0" y1="0" x2="0" y2="8" stroke="var(--ink)" stroke-opacity="0.35" stroke-width="2.5" />
       </pattern>
 
       <!-- Tossup pattern: Stippled dots (GR-23) -->
       <pattern id="pattern-dots" width="8" height="8" patternUnits="userSpaceOnUse">
-        <circle cx="4" cy="4" r="1.5" fill="var(--color-ink)" fill-opacity="0.4" />
+        <circle cx="4" cy="4" r="1.5" fill="var(--ink)" fill-opacity="0.4" />
       </pattern>
     </defs>
 
@@ -95,7 +95,7 @@
             data-map-code={code}
             d={path.d}
             fill={fillColor}
-            stroke="var(--color-ink)"
+            stroke="var(--ink)"
             stroke-width={isSelected ? '2.5' : '0.6'}
             stroke-linejoin="round"
             class="state-path"
@@ -132,7 +132,7 @@
             <path
               d={path.d}
               fill="none"
-              stroke="var(--color-gold)"
+              stroke="var(--gold)"
               stroke-width="3"
               stroke-linejoin="round"
               class="selected-glow"
@@ -147,8 +147,8 @@
               class="tipping-point-marker"
               pointer-events="none"
             >
-              <circle r="8" fill="var(--color-paper)" stroke="var(--color-gold)" stroke-width="1.5" />
-              <text text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="bold" fill="var(--color-gold)">★</text>
+              <circle r="8" fill="var(--paper)" stroke="var(--gold)" stroke-width="1.5" />
+              <text text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="bold" fill="var(--gold)">★</text>
             </g>
           {/if}
         {/if}
@@ -163,12 +163,12 @@
         width="260"
         height="105"
         rx="4"
-        fill="var(--color-card)"
-        stroke="var(--color-ink)"
+        fill="var(--card)"
+        stroke="var(--ink)"
         stroke-width="1"
         class="panel-backdrop"
       />
-      <text x="12" y="18" font-size="11" font-weight="bold" font-family="var(--font-condensed)" fill="var(--color-ink)">
+      <text x="12" y="18" font-size="11" font-weight="bold" font-family="var(--font-condensed)" fill="var(--ink)">
         DISTRICT ELECTORAL VOTES & DC
       </text>
 
@@ -204,7 +204,7 @@
             height="20"
             rx="3"
             fill={distColor}
-            stroke={isDistSelected ? 'var(--color-gold)' : 'var(--color-ink)'}
+            stroke={isDistSelected ? 'var(--gold)' : 'var(--ink)'}
             stroke-width={isDistSelected ? '2' : '0.8'}
           />
           {#if isOpp}
@@ -218,7 +218,7 @@
             font-size="10"
             font-family="var(--font-condensed)"
             font-weight="bold"
-            fill="var(--color-card)"
+            fill="var(--card)"
             pointer-events="none"
           >
             {chip.id} ({chip.electoralVotes} EV)
@@ -228,11 +228,11 @@
     </g>
 
     <!-- Inset boundary boxes for AK and HI -->
-    <rect x="25" y="470" width="180" height="120" fill="none" stroke="var(--color-ink)" stroke-width="0.5" stroke-dasharray="2 2" pointer-events="none" opacity="0.4" />
-    <text x="30" y="482" font-size="9" font-family="var(--font-condensed)" fill="var(--color-ink-soft)" pointer-events="none">AK INSET</text>
+    <rect x="25" y="470" width="180" height="120" fill="none" stroke="var(--ink)" stroke-width="0.5" stroke-dasharray="2 2" pointer-events="none" opacity="0.4" />
+    <text x="30" y="482" font-size="9" font-family="var(--font-condensed)" fill="var(--ink-soft)" pointer-events="none">AK INSET</text>
 
-    <rect x="230" y="520" width="110" height="70" fill="none" stroke="var(--color-ink)" stroke-width="0.5" stroke-dasharray="2 2" pointer-events="none" opacity="0.4" />
-    <text x="235" y="532" font-size="9" font-family="var(--font-condensed)" fill="var(--color-ink-soft)" pointer-events="none">HI INSET</text>
+    <rect x="230" y="520" width="110" height="70" fill="none" stroke="var(--ink)" stroke-width="0.5" stroke-dasharray="2 2" pointer-events="none" opacity="0.4" />
+    <text x="235" y="532" font-size="9" font-family="var(--font-condensed)" fill="var(--ink-soft)" pointer-events="none">HI INSET</text>
   </svg>
 </div>
 
@@ -240,6 +240,8 @@
   .us-map-container {
     width: 100%;
     height: 100%;
+    min-height: 0;
+    min-width: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -247,9 +249,10 @@
   }
 
   .us-map-svg {
-    width: 100%;
-    height: auto;
+    max-width: 100%;
     max-height: 100%;
+    width: auto;
+    height: 100%;
   }
 
   .state-path {
@@ -261,7 +264,7 @@
   .state-path:focus-visible {
     filter: brightness(1.12);
     outline: none;
-    stroke: var(--color-ink);
+    stroke: var(--ink);
     stroke-width: 2px;
   }
 

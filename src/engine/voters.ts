@@ -321,10 +321,9 @@ export function calculateElectoralCollege(
       reasons: item.reasons,
     };
 
-    unitsMap[raw.code] = stateObj;
-
     if (raw.isDistrict) {
       districtsMap[raw.code] = stateObj;
+      unitsMap[raw.code] = stateObj;
     } else if (raw.code === 'ME-AL') {
       // Aggregate Maine statewide representation for 51-state map view
       const meState = us.states.rows.find((r) => r.code === 'ME')!;
@@ -347,6 +346,7 @@ export function calculateElectoralCollege(
       unitsMap['NE'] = statesMap['NE'];
     } else {
       statesMap[raw.code] = stateObj;
+      unitsMap[raw.code] = stateObj;
     }
 
     if (isSwing && !raw.isDistrict) {

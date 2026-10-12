@@ -132,6 +132,20 @@ test.describe('viewport fitting and visual baselines (OBS-07)', () => {
 
       await decideBtn.click();
       await expect(page.locator('.breaking-ribbon')).not.toBeVisible();
+
+      // 8. Voters screen (Turn >= 3)
+      await page.locator('.tab:has-text("Voters")').click();
+      await expect(page.locator('.h:has-text("Who supports you?")')).toBeVisible();
+      await assertNoOuterScroll('Voters Map');
+      const stampBtn = page.locator('button.stamp-btn:has-text("Adjust tariffs")');
+      await assertButtonInViewport(stampBtn, 'Adjust tariffs stamp button');
+      await page.screenshot({ path: `.playwright-screenshots/voters-map-${vp.width}x${vp.height}.png` });
+
+      // 8b. Voters Table View
+      await page.locator('.switch-btn:has-text("Table View")').click();
+      await expect(page.locator('.states-table')).toBeVisible();
+      await assertNoOuterScroll('Voters Table');
+      await page.screenshot({ path: `.playwright-screenshots/voters-table-${vp.width}x${vp.height}.png` });
     });
   }
 });

@@ -225,19 +225,17 @@
           </div>
         {/if}
       </div>
-
-      <!-- Learn Civics Strip -->
-      <div class="learn-strip">
-        <span class="learn-badge">LEARN</span>
-        <button
-          type="button"
-          class="learn-link"
-          onclick={() => onOpenMyth?.('rule_by_decree')}
-        >
-          Myth? How presidential actions shift the electoral landscape →
-        </button>
-      </div>
     </div>
+  {/snippet}
+
+  {#snippet learn()}
+    <button
+      type="button"
+      class="link"
+      onclick={() => onOpenMyth?.('rule_by_decree')}
+    >
+      Myth? How presidential actions shift the electoral landscape →
+    </button>
   {/snippet}
 
   {#snippet next()}
@@ -331,12 +329,13 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 4px;
+    flex-shrink: 0;
   }
 
   .view-switcher {
     display: inline-flex;
-    background: var(--color-paper);
-    border: 1px solid var(--color-ink);
+    background: var(--paper);
+    border: 1px solid var(--ink);
     border-radius: var(--r-sm);
     overflow: hidden;
   }
@@ -349,13 +348,13 @@
     font-size: 13px;
     font-weight: bold;
     cursor: pointer;
-    color: var(--color-ink-soft);
+    color: var(--ink-soft);
     transition: background 0.15s ease, color 0.15s ease;
   }
 
   .switch-btn.active {
-    background: var(--color-ink);
-    color: var(--color-paper);
+    background: var(--ink);
+    color: var(--paper);
   }
 
   .meta-status {
@@ -363,12 +362,12 @@
     gap: 12px;
     font-size: 12px;
     font-family: var(--font-condensed);
-    color: var(--color-ink-soft);
+    color: var(--ink-soft);
     align-items: center;
   }
 
   .tipping-point-badge {
-    color: var(--color-gold);
+    color: var(--gold);
     font-weight: bold;
   }
 
@@ -376,9 +375,9 @@
     flex: 1;
     min-height: 0;
     position: relative;
-    border: 1px solid var(--color-ink);
+    border: 1px solid var(--ink);
     border-radius: var(--r-md);
-    background: var(--color-card);
+    background: var(--card);
     overflow: hidden;
   }
 
@@ -406,20 +405,20 @@
   .states-table th {
     position: sticky;
     top: 0;
-    background: var(--color-paper);
-    border-bottom: 2px solid var(--color-ink);
+    background: var(--paper);
+    border-bottom: 2px solid var(--ink);
     padding: 8px 10px;
     text-align: left;
     font-family: var(--font-ui);
     font-size: 12px;
-    color: var(--color-ink);
+    color: var(--ink);
     cursor: pointer;
     user-select: none;
   }
 
   .states-table td {
     padding: 6px 10px;
-    border-bottom: 1px solid var(--color-paper);
+    border-bottom: 1px solid var(--paper);
   }
 
   .state-row {
@@ -429,13 +428,13 @@
 
   .state-row:hover,
   .state-row:focus-visible {
-    background: var(--color-paper);
+    background: var(--paper);
     outline: none;
   }
 
   .state-row.selected {
-    background: var(--color-paper);
-    border-left: 4px solid var(--color-gold);
+    background: var(--paper);
+    border-left: 4px solid var(--gold);
   }
 
   .num-col, .num-cell {
@@ -444,7 +443,7 @@
   }
 
   .tag-star {
-    color: var(--color-gold);
+    color: var(--gold);
     font-size: 14px;
     margin-left: 4px;
   }
@@ -453,20 +452,20 @@
     font-size: 9px;
     font-family: var(--font-ui);
     font-weight: bold;
-    padding: 1px 4px;
+    padding: 1px 5px;
     border-radius: 3px;
-    background: var(--color-gold);
-    color: var(--color-card);
+    background: var(--ink);
+    color: var(--card);
     margin-left: 6px;
   }
 
   .lead-pos {
-    color: var(--color-sage-dark);
+    color: var(--sage-dark);
     font-weight: bold;
   }
 
   .lead-neg {
-    color: var(--color-alert-dark);
+    color: var(--alert-dark);
     font-weight: bold;
   }
 
@@ -477,40 +476,41 @@
     font-size: 11px;
     font-family: var(--font-ui);
     text-transform: capitalize;
-    color: var(--color-paper);
+    color: var(--paper);
   }
 
   .outlook-badge.safe-you,
   .outlook-badge.likely-you {
-    background: var(--color-sage-dark);
+    background: var(--sage-dark);
   }
 
   .outlook-badge.lean-you {
-    background: var(--color-sky);
+    background: var(--sky);
   }
 
   .outlook-badge.tossup {
-    background: var(--color-gold);
+    background: var(--gold);
   }
 
   .outlook-badge.lean-them {
-    background: var(--color-alert);
+    background: var(--alert);
   }
 
   .outlook-badge.likely-them,
   .outlook-badge.safe-them {
-    background: var(--color-alert-dark);
+    background: var(--alert-dark);
   }
 
   /* 270 EC Bar */
   .ec-bar-container {
-    background: var(--color-card);
-    border: 1px solid var(--color-ink);
+    background: var(--card);
+    border: 1px solid var(--ink);
     border-radius: var(--r-sm);
     padding: 8px 12px;
     display: flex;
     flex-direction: column;
     gap: 6px;
+    flex-shrink: 0;
   }
 
   .ec-header {
@@ -528,7 +528,7 @@
     font-size: 18px;
     font-family: var(--font-ui);
     font-weight: bold;
-    color: var(--color-sage-dark);
+    color: var(--sage-dark);
   }
 
   .ec-count.them {
@@ -539,14 +539,14 @@
     font-size: 18px;
     font-family: var(--font-ui);
     font-weight: bold;
-    color: var(--color-alert-dark);
+    color: var(--alert-dark);
   }
 
   .count-label {
     font-size: 10px;
     font-family: var(--font-ui);
     text-transform: uppercase;
-    color: var(--color-ink-soft);
+    color: var(--ink-soft);
   }
 
   .target-flag {
@@ -554,34 +554,34 @@
     font-family: var(--font-ui);
     font-weight: bold;
     padding: 2px 8px;
-    background: var(--color-paper);
-    border: 1px solid var(--color-ink);
+    background: var(--paper);
+    border: 1px solid var(--ink);
     border-radius: 4px;
-    color: var(--color-ink);
+    color: var(--ink);
   }
 
   .ec-meter-track {
     position: relative;
     height: 16px;
-    background: var(--color-paper);
-    border: 1px solid var(--color-ink);
+    background: var(--paper);
+    border: 1px solid var(--ink);
     border-radius: 4px;
     display: flex;
     overflow: visible;
   }
 
   .meter-segment.you-seg {
-    background: var(--color-sage);
+    background: var(--sage);
     transition: width 0.3s ease;
   }
 
   .meter-segment.tossup-seg {
-    background: var(--color-gold);
+    background: var(--gold);
     transition: width 0.3s ease;
   }
 
   .meter-segment.them-seg {
-    background: var(--color-alert);
+    background: var(--alert);
     transition: width 0.3s ease;
   }
 
@@ -590,7 +590,7 @@
     top: -4px;
     bottom: -4px;
     width: 2px;
-    background: var(--color-ink);
+    background: var(--ink);
     transform: translateX(-50%);
     z-index: 2;
   }
@@ -598,14 +598,14 @@
   .projection-whisker-row {
     font-size: 11px;
     font-family: var(--font-ui);
-    color: var(--color-ink-soft);
+    color: var(--ink-soft);
     display: flex;
     gap: 6px;
     align-items: center;
   }
 
   .whisker-range {
-    color: var(--color-ink);
+    color: var(--ink);
   }
 
   .whisker-note {
@@ -621,8 +621,8 @@
   }
 
   .learn-badge {
-    background: var(--color-ink);
-    color: var(--color-paper);
+    background: var(--ink);
+    color: var(--paper);
     font-size: 10px;
     font-family: var(--font-ui);
     font-weight: bold;
@@ -634,7 +634,7 @@
     background: none;
     border: none;
     padding: 0;
-    color: var(--color-ink);
+    color: var(--ink);
     text-decoration: underline;
     font-family: var(--font-body);
     font-size: 12px;
@@ -671,17 +671,17 @@
     margin: 0;
     font-family: var(--font-display);
     font-size: 20px;
-    color: var(--color-ink);
+    color: var(--ink);
   }
 
   .state-ev-pill {
     font-family: var(--font-ui);
     font-size: 13px;
     font-weight: bold;
-    background: var(--color-paper);
+    background: var(--paper);
     padding: 2px 8px;
     border-radius: 4px;
-    border: 1px solid var(--color-ink);
+    border: 1px solid var(--ink);
   }
 
   .inspector-badges {
@@ -693,17 +693,21 @@
     font-size: 10px;
     font-family: var(--font-ui);
     font-weight: bold;
-    color: var(--color-gold);
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--gold-dark);
+    padding: 1px 6px;
+    border-radius: 3px;
   }
 
   .badge-swing {
     font-size: 10px;
     font-family: var(--font-ui);
     font-weight: bold;
-    background: var(--color-gold);
-    color: var(--color-card);
-    padding: 1px 4px;
-    border-radius: 2px;
+    background: var(--ink);
+    color: var(--card);
+    padding: 1px 6px;
+    border-radius: 3px;
   }
 
   .support-metric-box {
@@ -711,7 +715,7 @@
     justify-content: space-between;
     align-items: baseline;
     padding: 8px 10px;
-    background: var(--color-paper);
+    background: var(--paper);
     border-radius: var(--r-sm);
   }
 
@@ -725,14 +729,14 @@
     font-size: 28px;
     font-family: var(--font-ui);
     font-weight: bold;
-    color: var(--color-ink);
+    color: var(--ink);
   }
 
   .support-label {
     font-size: 11px;
     font-family: var(--font-ui);
     text-transform: uppercase;
-    color: var(--color-ink-soft);
+    color: var(--ink-soft);
   }
 
   .support-trend {
@@ -745,11 +749,11 @@
   }
 
   .trend-up {
-    color: var(--color-sage-dark);
+    color: var(--sage-dark);
   }
 
   .trend-down {
-    color: var(--color-alert-dark);
+    color: var(--alert-dark);
   }
 
   .reasons-section {
@@ -764,7 +768,7 @@
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--color-ink-soft);
+    color: var(--ink-soft);
   }
 
   .reasons-list {
@@ -772,7 +776,7 @@
     padding-left: 18px;
     font-size: 12px;
     font-family: var(--font-body);
-    color: var(--color-ink);
+    color: var(--ink);
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -789,33 +793,33 @@
     font-family: var(--font-ui);
     font-weight: bold;
     text-transform: uppercase;
-    color: var(--color-ink-soft);
+    color: var(--ink-soft);
   }
 
   .side-btn {
     width: 100%;
     padding: 8px 12px;
-    background: var(--color-paper);
-    border: 1px solid var(--color-ink);
+    background: var(--paper);
+    border: 1px solid var(--ink);
     border-radius: var(--r-sm);
     font-family: var(--font-ui);
     font-size: 13px;
     font-weight: bold;
-    color: var(--color-ink);
+    color: var(--ink);
     cursor: pointer;
     text-align: left;
     transition: background 0.15s ease;
   }
 
   .side-btn:hover {
-    background: var(--color-card);
+    background: var(--card);
   }
 
   .action-hint {
     margin: 0;
     font-size: 11px;
     font-family: var(--font-body);
-    color: var(--color-ink-soft);
+    color: var(--ink-soft);
     line-height: 1.3;
   }
 
@@ -826,9 +830,9 @@
   .stamp-btn {
     width: 100%;
     padding: 12px 14px;
-    background: var(--color-ink);
-    color: var(--color-paper);
-    border: 2px solid var(--color-ink);
+    background: var(--ink);
+    color: var(--paper);
+    border: 2px solid var(--ink);
     border-radius: var(--r-sm);
     font-family: var(--font-ui);
     font-size: 14px;
@@ -845,7 +849,7 @@
   .empty-card {
     padding: 24px;
     text-align: center;
-    color: var(--color-ink-soft);
+    color: var(--ink-soft);
     font-size: 13px;
   }
 </style>

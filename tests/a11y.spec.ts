@@ -112,5 +112,22 @@ test.describe('accessibility audits (OBS-07, D6)', () => {
     await page.locator('.modal-grid .option-card:not(.unaffordable)').first().click();
     await page.locator('button.stamp:has-text("DECIDE")').click();
     await expect(page.locator('.breaking-ribbon')).not.toBeVisible();
+
+    // 9. Voters screen (Map View & Table View, VOT-01, OBS-07)
+    await page.locator('.tab:has-text("Voters")').click();
+    await expect(page.locator('.h:has-text("Who supports you?")')).toBeVisible();
+    await expect(page.locator('[data-testid="us-map"]')).toBeVisible();
+
+    const votersMapAxe = await new AxeBuilder({ page }).analyze();
+    const votersMapSevere = votersMapAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(votersMapSevere, `Voters Map View a11y violations: ${JSON.stringify(votersMapSevere, null, 2)}`).toEqual([]);
+
+    // 9b. Voters Table View
+    await page.locator('.switch-btn:has-text("Table View")').click();
+    await expect(page.locator('.states-table')).toBeVisible();
+
+    const votersTableAxe = await new AxeBuilder({ page }).analyze();
+    const votersTableSevere = votersTableAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(votersTableSevere, `Voters Table View a11y violations: ${JSON.stringify(votersTableSevere, null, 2)}`).toEqual([]);
   });
 });
