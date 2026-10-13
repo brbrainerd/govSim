@@ -71,7 +71,15 @@
   <EndScreen {session} {onRestart} />
 {:else}
   <div class="app halftone">
-    <StatusBar state={session.current} clout={session.clout} title={screen.label} score={session.score} party={PARTIES.find((p) => p.id === session.options.party)!.name} onNextTurn={() => session.nextTurn()} />
+    <StatusBar
+      state={session.current}
+      clout={session.clout}
+      title={screen.label}
+      score={session.score}
+      party={PARTIES.find((p) => p.id === session.options.party)!.name}
+      evilMode={session.isEvilMode}
+      onNextTurn={() => session.nextTurn()}
+    />
     <div class="zones">
       <Rail
         turn={session.current.turn}

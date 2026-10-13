@@ -37,6 +37,7 @@ import {
 /** Choices made at New Game. Kept beside the engine state, never inside it (D4). */
 export interface GameOptions {
   party: PartyId;
+  evilMode?: boolean;
 }
 
 interface Draft {
@@ -111,6 +112,7 @@ export class Session {
   unlockedBadges = $state<string[]>([]);
   newlyUnlockedBadges = $state<string[]>([]);
   selectedHouseholdPersona = $state<HouseholdPersona>(DEFAULT_HOUSEHOLD_PERSONA);
+  options = $state<GameOptions>({ party: 'D' });
 
   current = $derived(this.history[this.history.length - 1]!);
   previous = $derived(this.history[this.history.length - 2] ?? this.current);
@@ -143,6 +145,7 @@ export class Session {
           this.current.senateSeatDelta ?? 0,
           this.current.filibusterRule ?? 'sixty_vote',
           this.current.approval,
+          this.current.evil?.heat ?? 0,
         )
       : null,
   );
@@ -254,8 +257,14 @@ export class Session {
   vsNothing = $derived(this.score.total);
   /** The term has ended: every action is a no-op and the UI shows the term as over. */
   over = $derived(this.current.turn >= TOTAL_TURNS || this.termEnded);
+  /** Evil Mode helpers (Phase 17, EVIL-01, EVIL-02) */
+  isEvilMode = $derived(Boolean(this.options.evilMode));
+  offshoreStashBn = $derived(this.current.evil?.offshoreStashBn ?? 0);
+  heat = $derived(this.current.evil?.heat ?? 0);
+  evilState = $derived(this.current.evil);
 
-  constructor(seed: number, start: Start, readonly options: GameOptions) {
+  constructor(seed: number, start: Start, options: GameOptions) {
+    this.options = options;
     this.history = [newGame(seed, start)];
     this.autopilot = [newGame(seed, start)];
     this.inputs = [];

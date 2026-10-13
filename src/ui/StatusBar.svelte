@@ -4,7 +4,15 @@
   import CoinStack from './art/CoinStack.svelte';
   import Ribbon from './art/Ribbon.svelte';
 
-  let { state, clout, title, score, party, onNextTurn }: { state: GameState; clout: number; title: string; score: number | ScoreBreakdown; party: string; onNextTurn: () => void } = $props();
+  let { state, clout, title, score, party, evilMode = false, onNextTurn }: {
+    state: GameState;
+    clout: number;
+    title: string;
+    score: number | ScoreBreakdown;
+    party: string;
+    evilMode?: boolean;
+    onNextTurn: () => void;
+  } = $props();
   const circ = 2 * Math.PI * 19;
   const totalScore = $derived(typeof score === 'number' ? score : score.total);
   const nowScore = $derived(typeof score === 'number' ? null : Math.round(score.now * 10) / 10);
@@ -31,10 +39,26 @@
       <span><span class="label">Clout</span><span class="num" aria-live="polite">{clout}</span></span>
       <span role="tooltip" id="tip-clout">Real term: political capital</span>
     </button>
+    {#if evilMode}
+      <button type="button" class="stat tip evil-stat" aria-describedby="tip-stash" data-testid="status-offshore-stash">
+        <span><span class="label">Stash</span><span class="num evil-num">${(state.evil?.offshoreStashBn ?? 0).toFixed(1)}B</span></span>
+        <span role="tooltip" id="tip-stash">Personal wealth stashed in anonymous offshore accounts</span>
+      </button>
+      <button type="button" class="stat tip evil-stat" class:critical-heat={(state.evil?.heat ?? 0) >= 75} aria-describedby="tip-heat" data-testid="status-heat-meter">
+        <span><span class="label">Heat</span><span class="num heat-num">{Math.round(state.evil?.heat ?? 0)}/100</span></span>
+        <span role="tooltip" id="tip-heat">Public outrage and investigative scrutiny (50: Special Counsel, 75: Impeachment, 90: Conviction)</span>
+      </button>
+    {/if}
   </div>
   <div class="center">
     <Ribbon text={title} />
-    <div class="score"><span class="star">★</span> <b class:worse={shown < 0}>{shown < 0 ? '−' : '+'}{Math.abs(shown).toFixed(1)}</b> {shown < 0 ? 'worse' : 'better'} than doing nothing <span class="star">★</span></div>
+    {#if evilMode}
+      <div class="score evil-score" data-testid="evil-mode-indicator">
+        <span class="star">⚡</span> <b>SATIRICAL EVIL MODE</b> <span class="star">⚡</span>
+      </div>
+    {:else}
+      <div class="score"><span class="star">★</span> <b class:worse={shown < 0}>{shown < 0 ? '−' : '+'}{Math.abs(shown).toFixed(1)}</b> {shown < 0 ? 'worse' : 'better'} than doing nothing <span class="star">★</span></div>
+    {/if}
     {#if nowScore !== null && laterScore !== null}
       <div class="score-sub">
         <span>Now: <b>{nowScore >= 0 ? '+' : '−'}{Math.abs(nowScore).toFixed(1)}</b></span>
@@ -83,4 +107,10 @@
   .when { font: 600 clamp(15px, 1.3vw, 19px) var(--font-display); color: var(--ink); }
   .next { display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .next span { font: 400 13px var(--font-body); color: var(--ink-soft); }
+  .evil-stat { border-left: 1px dashed var(--ink-soft); padding-left: 10px; }
+  .evil-num { color: var(--gold-dark); font-weight: 700; }
+  .heat-num { color: var(--ink); font-weight: 700; }
+  .critical-heat .heat-num { color: var(--alert); font-weight: 800; }
+  .evil-score { font: 600 clamp(12px, 0.9vw, 15px) var(--font-ui); color: var(--alert); letter-spacing: 0.04em; }
+  .evil-score b { color: var(--alert-dark); }
 </style>

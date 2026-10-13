@@ -261,3 +261,27 @@ describe('Session household persona and impact (HOU-01, HOU-02)', () => {
   });
 });
 
+describe('Session Evil Mode (EVIL-01, EVIL-02, EVIL-03)', () => {
+  it('stores evilMode option and exposes derived stash and heat', () => {
+    const standard = new Session(7, START, { party: 'D' });
+    expect(standard.isEvilMode).toBe(false);
+    expect(standard.offshoreStashBn).toBe(0);
+    expect(standard.heat).toBe(0);
+
+    const evil = new Session(7, START, { party: 'D', evilMode: true });
+    expect(evil.isEvilMode).toBe(true);
+    expect(evil.offshoreStashBn).toBe(0);
+    expect(evil.heat).toBe(0);
+  });
+
+  it('incorporates evil heat into bill preview friction', () => {
+    const s = new Session(7, START, { party: 'D', evilMode: true });
+    s.makeDeal('mod');
+    s.makeDeal('cen');
+
+    // At zero heat: bill preview passes
+    expect(s.preview?.passed).toBe(true);
+    expect(s.preview?.status).toBe('passed');
+  });
+});
+

@@ -20,6 +20,7 @@
   } = $props();
 
   let party = $state<PartyId | null>(null);
+  let evilMode = $state(false);
   let dismissResume = $state(false);
   let fileInput = $state<HTMLInputElement>();
 
@@ -65,6 +66,26 @@
         {/each}
       </div>
 
+      <div class="mode-section" role="radiogroup" aria-label="Game Mode">
+        <span class="label">Governing Objective</span>
+        <div class="mode-cards">
+          <label class="card mode-option" class:active-mode={!evilMode}>
+            <input type="radio" name="gameMode" value="standard" checked={!evilMode} onchange={() => (evilMode = false)} />
+            <div class="mode-info">
+              <b>Public Servant (Standard)</b>
+              <span class="mode-sub">Serve the nation. Balance economic growth, stability, and societal well-being.</span>
+            </div>
+          </label>
+          <label class="card mode-option evil-option" class:active-mode={evilMode} data-testid="evil-mode-card">
+            <input type="radio" name="gameMode" value="evil" checked={evilMode} onchange={() => (evilMode = true)} data-testid="evil-mode-toggle" />
+            <div class="mode-info">
+              <b>Satirical "Evil Mode"</b>
+              <span class="mode-sub">Loot the treasury. Maximize your offshore stash while evading impeachment and conviction.</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
       <div class="import-strip">
         <button type="button" class="import-btn" onclick={() => fileInput?.click()}>
           Load save file (.json)
@@ -83,13 +104,28 @@
       </div>
     {/snippet}
     {#snippet next()}
-      <div class="card info">
-        <span class="label">What it means</span>
-        <span class="line">Your party changes the names you see. The economy plays the same either way.</span>
-        <span class="line">Your term is made up. It starts from the real economy of late 2026.</span>
-      </div>
+      {#if evilMode}
+        <div class="card info evil-warning" role="note" aria-label="Evil mode disclaimer">
+          <span class="label">Satirical Mode Warning</span>
+          <span class="line">You have selected Satirical Evil Mode. Your goal is personal enrichment.</span>
+          <span class="line">Every corrupt move generates public Heat. Too much Heat triggers Special Counsel, Impeachment, and Conviction.</span>
+        </div>
+      {:else}
+        <div class="card info">
+          <span class="label">What it means</span>
+          <span class="line">Your party changes the names you see. The economy plays the same either way.</span>
+          <span class="line">Your term is made up. It starts from the real economy of late 2026.</span>
+        </div>
+      {/if}
       <div class="spacer"></div>
-      <button class="stamp" disabled={party === null} onclick={() => party && onStart({ party })}>Start the term</button>
+      <button
+        class="stamp"
+        class:evil-stamp={evilMode}
+        disabled={party === null}
+        onclick={() => party && onStart({ party, evilMode })}
+      >
+        {evilMode ? 'Seize power' : 'Start the term'}
+      </button>
     {/snippet}
   </ScreenLayout>
 </div>
@@ -184,4 +220,17 @@
   .spacer { flex-grow: 1; min-height: 8px; }
   .stamp { align-self: center; flex-shrink: 0; }
   .stamp:disabled { opacity: .45; cursor: not-allowed; }
+
+  .mode-section { margin-top: clamp(12px, 1.8vh, 18px); max-width: 48rem; display: flex; flex-direction: column; gap: 8px; }
+  .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(10px, 1.2vw, 14px); }
+  .mode-option { display: flex; align-items: flex-start; gap: 10px; padding: clamp(10px, 1.4vh, 14px) clamp(12px, 1.4vw, 16px); cursor: pointer; }
+  .mode-option input { width: 18px; height: 18px; accent-color: var(--ink); margin-top: 2px; }
+  .mode-option.active-mode { background: var(--gold); }
+  .mode-option.evil-option.active-mode { background: var(--alert-tint); border-color: var(--alert); }
+  .mode-info { display: flex; flex-direction: column; gap: 2px; }
+  .mode-info b { font: 700 clamp(15px, 1.2vw, 17px) var(--font-display); color: var(--ink); }
+  .mode-sub { font: 500 clamp(12px, 0.9vw, 13px)/1.3 var(--font-body); color: var(--ink-soft); }
+  .evil-warning { border-color: var(--alert); background: var(--card); }
+  .evil-warning .label { color: var(--alert); }
+  .stamp.evil-stamp { background: var(--alert-dark); border-color: var(--ink); }
 </style>
