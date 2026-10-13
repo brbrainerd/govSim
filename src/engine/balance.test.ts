@@ -87,6 +87,7 @@ describe('balance', () => {
   });
 
   it('matches committed balance-report.json within tolerance (GR-35)', () => {
+    expect(committedReport.version).toBe('0.3');
     const seeds100 = Array.from({ length: 100 }, (_, i) => i + 1);
     for (const strat of ['autopilot', 'sensible', 'maxDeficit', 'maxAusterity']) {
       const finalStates = seeds100.map((sd) => run(sd, strategies[strat]!).at(-1)!);
@@ -95,6 +96,21 @@ describe('balance', () => {
       const expectedMean = committedReport.strategies[strat as keyof typeof committedReport.strategies].meanScore;
       expect(Math.abs(liveMean - expectedMean)).toBeLessThan(0.5);
     }
+  });
+
+  it('verifies party neutrality: Democratic and Republican re-election rates diverge by at most 5 pp (D4, GR-16)', () => {
+    const seeds100 = Array.from({ length: 100 }, (_, i) => i + 1);
+    const s16List = seeds100.map((sd) => {
+      let s = newGame(sd, START);
+      for (let t = 1; t < 16; t++) {
+        s = endTurn(s, t === 1 ? enact(strategies.sensible!.budget, strategies.sensible!.social) : {});
+      }
+      return s;
+    });
+    const winsD = s16List.filter((s) => resolveReelection(s, 'D').winner === 'player').length;
+    const winsR = s16List.filter((s) => resolveReelection(s, 'R').winner === 'player').length;
+    const divergencePP = Math.abs((winsD / seeds100.length) - (winsR / seeds100.length)) * 100;
+    expect(divergencePP).toBeLessThanOrEqual(5.0);
   });
 
   it('verifies that every budget lever moves the score non-trivially (GR-28, GR-36)', () => {

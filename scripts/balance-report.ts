@@ -28,7 +28,7 @@ interface StrategySummary {
 }
 
 export interface BalanceReport {
-  version: '0.2';
+  version: '0.3';
   seeds: number;
   strategies: Record<string, StrategySummary>;
 }
@@ -134,7 +134,7 @@ export async function generateBalanceReport(seedCount = 100): Promise<BalanceRep
     }
 
     return {
-      version: '0.2',
+      version: '0.3',
       seeds: seedCount,
       strategies: strategiesOut,
     };
