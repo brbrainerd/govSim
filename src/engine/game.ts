@@ -94,6 +94,8 @@ export interface GameState {
   readonly courtComposition?: { readonly conservative: number; readonly liberal: number }; // Supreme Court bench composition
   readonly activeAmendment?: ActiveAmendment; // active Article V constitutional amendment proposal
   readonly ratifiedAmendments?: readonly AmendmentId[]; // permanently ratified Article V constitutional amendments
+  readonly activeGeopoliticalCrises?: readonly ActiveCrisis[]; // active multi-turn geopolitical crises (CRISIS-01)
+  readonly resolvedGeopoliticalCrises?: readonly string[]; // resolved geopolitical crisis IDs
 }
 
 /** One thing that happened last turn (a bill passed, failed or was rejected). */

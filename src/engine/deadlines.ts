@@ -4,7 +4,7 @@ import { C } from './coefficients';
 import type { GameState } from './game';
 import { QUARTERS_PER_YEAR } from './units';
 
-export type DeadlineType = 'shutdown' | 'debt_limit';
+export type DeadlineType = 'shutdown' | 'debt_limit' | 'geopolitical_crisis';
 
 export interface DeadlineStatus {
   readonly type: DeadlineType;
@@ -61,6 +61,22 @@ export function getImminentDeadlines(turn: number, state: GameState): DeadlineSt
       description: 'Treasury extraordinary measures are approaching technical depletion.',
       actionText: 'Authorize statutory debt limit increase in Congress',
     });
+  }
+
+  // 3. Active geopolitical crisis deadlines (CRISIS-01)
+  if (state.activeGeopoliticalCrises && state.activeGeopoliticalCrises.length > 0) {
+    for (const crisis of state.activeGeopoliticalCrises) {
+      const turnsRemaining = crisis.turnsRemaining ?? 1;
+      deadlines.push({
+        type: 'geopolitical_crisis',
+        title: crisis.name,
+        turnsRemaining,
+        targetTurn: turn + turnsRemaining,
+        critical: turnsRemaining <= 1,
+        description: crisis.headline,
+        actionText: 'Resolve crisis diplomatic, economic or military options in Oval Office or Crisis Drawer',
+      });
+    }
   }
 
   return deadlines;

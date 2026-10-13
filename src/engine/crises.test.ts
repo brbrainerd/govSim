@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { START } from './fixture';
 import { endTurn, newGame, TOTAL_TURNS } from './game';
-import { getExogenousSchedule } from './director';
+import {
+  checkGeopoliticalEscalation,
+  createGeopoliticalActiveCrisis,
+  getExogenousSchedule,
+  getGeopoliticalSchedule,
+} from './director';
 import {
   CRISIS_CATALOG,
   EXOGENOUS_CRISES,
@@ -181,5 +186,45 @@ describe('crises director (EVT-01, EVT-03, GR-01, GR-02, GR-08)', () => {
 
     expect(isGeopoliticalCrisis('hurricane')).toBe(false);
     expect(isGeopoliticalCrisis('market_panic')).toBe(false);
+  });
+
+  it('CRISIS-01: geopolitical crisis schedule pacing and determinism across seeds', () => {
+    for (let seed = 1; seed <= 100; seed++) {
+      const schedule = getGeopoliticalSchedule(seed);
+      const turns = Array.from(schedule.keys()).sort((a, b) => a - b);
+
+      // Pacing checks:
+      const term1Turns = turns.filter((t) => t <= 16);
+      expect(term1Turns.length).toBeGreaterThanOrEqual(1);
+      expect(term1Turns.length).toBeLessThanOrEqual(2);
+
+      // No events on turns 1 or 2
+      expect(turns).not.toContain(1);
+      expect(turns).not.toContain(2);
+
+      // Spacing between events
+      for (let i = 0; i < turns.length - 1; i++) {
+        expect(turns[i + 1]! - turns[i]!).toBeGreaterThan(3);
+      }
+
+      // Bit-identical reproduction on same seed
+      const schedule2 = getGeopoliticalSchedule(seed);
+      expect(Array.from(schedule.entries())).toEqual(Array.from(schedule2.entries()));
+    }
+  });
+
+  it('CRISIS-01: active geopolitical crisis countdown lifecycle and escalation check', () => {
+    const def = getCrisis('oil_embargo')!;
+    const crisis = createGeopoliticalActiveCrisis(def, 5);
+
+    expect(crisis.isGeopolitical).toBe(true);
+    expect(crisis.startTurn).toBe(5);
+    expect(crisis.deadlineTurn).toBe(7);
+    expect(crisis.turnsRemaining).toBe(2);
+
+    expect(checkGeopoliticalEscalation(crisis, 5)).toBe(false);
+    expect(checkGeopoliticalEscalation(crisis, 6)).toBe(false);
+    expect(checkGeopoliticalEscalation(crisis, 7)).toBe(false);
+    expect(checkGeopoliticalEscalation(crisis, 8)).toBe(true);
   });
 });

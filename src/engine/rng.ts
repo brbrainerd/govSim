@@ -1,6 +1,6 @@
 // Keyed counter-based RNG (D10, FND-01): every draw is a pure function of (seed, stream, turn, key[, k]).
 // Stream numbers and key strings are part of the replay contract: append only, never renumber.
-export const STREAM = { macro: 1, events: 2, court: 3, fed: 4, voters: 5, election: 6, reform: 7 } as const;
+export const STREAM = { macro: 1, events: 2, court: 3, fed: 4, voters: 5, election: 6, reform: 7, geopolitics: 8 } as const;
 export type Stream = keyof typeof STREAM;
 
 const mix = (h: number): number => {            // murmur3 fmix32

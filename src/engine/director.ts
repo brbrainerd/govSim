@@ -1,9 +1,26 @@
 // Pure, deterministic crisis director (design.md §3, EVT-01..03, GR-01, GR-02, GR-08).
 import { C } from './coefficients';
-import { EXOGENOUS_CRISES, getCrisis, type CrisisDefinition, type CrisisOption, type CrisisType } from './crises';
+import {
+  EXOGENOUS_CRISES,
+  GEOPOLITICAL_CRISES,
+  getCrisis,
+  type CrisisDefinition,
+  type CrisisOption,
+  type CrisisType,
+} from './crises';
 import type { GameState } from './game';
 import { draw } from './rng';
-import { TOTAL_TURNS } from './units';
+import {
+  GEOPOLITICAL_COUNTDOWN_TURNS,
+  GEOPOLITICAL_FIRST_TURN_MIN,
+  GEOPOLITICAL_MIN_SPACING,
+  GEOPOLITICAL_TARGET_TERM1_MAX,
+  GEOPOLITICAL_TARGET_TERM1_MIN,
+  GEOPOLITICAL_TERM1_MAX_TURN,
+  GEOPOLITICAL_TERM2_MAX_TURN,
+  GEOPOLITICAL_TERM2_START_TURN,
+  TOTAL_TURNS,
+} from './units';
 
 export interface ActiveCrisis {
   readonly id: string;
@@ -16,6 +33,10 @@ export interface ActiveCrisis {
   readonly explainerTitle: string;
   readonly options: readonly CrisisOption[];
   readonly isEndogenous: boolean;
+  readonly isGeopolitical?: boolean;
+  readonly turnsRemaining?: number;
+  readonly startTurn?: number;
+  readonly deadlineTurn?: number;
 }
 
 function createActiveCrisis(def: CrisisDefinition, turn: number): ActiveCrisis {
@@ -30,6 +51,29 @@ function createActiveCrisis(def: CrisisDefinition, turn: number): ActiveCrisis {
     explainerTitle: def.explainerTitle,
     options: def.options,
     isEndogenous: def.type === 'endogenous',
+    isGeopolitical: false,
+    turnsRemaining: 0,
+    startTurn: turn,
+    deadlineTurn: turn,
+  };
+}
+
+export function createGeopoliticalActiveCrisis(def: CrisisDefinition, turn: number): ActiveCrisis {
+  return {
+    id: `${def.id}_t${turn}`,
+    crisisId: def.id,
+    turn,
+    type: def.type,
+    name: def.name,
+    headline: def.headline,
+    description: def.description,
+    explainerTitle: def.explainerTitle,
+    options: def.options,
+    isEndogenous: false,
+    isGeopolitical: true,
+    turnsRemaining: GEOPOLITICAL_COUNTDOWN_TURNS,
+    startTurn: turn,
+    deadlineTurn: turn + GEOPOLITICAL_COUNTDOWN_TURNS,
   };
 }
 
@@ -119,3 +163,88 @@ export function scheduleTurnEvents(seed: number, turn: number, state: GameState)
 
   return null;
 }
+
+/** Pre-schedules all geopolitical crisis turns and archetypes for a given seed (CRISIS-01, CRISIS-03). */
+export function getGeopoliticalSchedule(seed: number): Map<number, string> {
+  const one = 1;
+  const two = 1 + 1;
+  const half = one / two;
+  const countTerm1 =
+    GEOPOLITICAL_TARGET_TERM1_MIN +
+    (draw(seed, 'geopolitics', 0, 'count_term1') > half ? one : 0);
+
+  const candidatesTerm1: { turn: number; prio: number }[] = [];
+  for (let t = GEOPOLITICAL_FIRST_TURN_MIN; t <= GEOPOLITICAL_TERM1_MAX_TURN; t += one) {
+    candidatesTerm1.push({ turn: t, prio: draw(seed, 'geopolitics', t, 'prio_term1') });
+  }
+  candidatesTerm1.sort((a, b) => (a.prio < b.prio ? -one : a.prio > b.prio ? one : 0));
+
+  const activeTurnsTerm1 = new Set<number>();
+  for (const c of candidatesTerm1) {
+    if (activeTurnsTerm1.size >= countTerm1) break;
+    const t = c.turn;
+    let conflict = false;
+    for (let s = one; s <= GEOPOLITICAL_MIN_SPACING; s += one) {
+      if (activeTurnsTerm1.has(t - s) || activeTurnsTerm1.has(t + s)) {
+        conflict = true;
+        break;
+      }
+    }
+    if (!conflict) {
+      activeTurnsTerm1.add(t);
+    }
+  }
+
+  const countTerm2 =
+    GEOPOLITICAL_TARGET_TERM1_MIN +
+    (draw(seed, 'geopolitics', 0, 'count_term2') > half ? one : 0);
+
+  const candidatesTerm2: { turn: number; prio: number }[] = [];
+  for (let t = GEOPOLITICAL_TERM2_START_TURN; t <= GEOPOLITICAL_TERM2_MAX_TURN; t += one) {
+    candidatesTerm2.push({ turn: t, prio: draw(seed, 'geopolitics', t, 'prio_term2') });
+  }
+  candidatesTerm2.sort((a, b) => (a.prio < b.prio ? -one : a.prio > b.prio ? one : 0));
+
+  const activeTurnsTerm2 = new Set<number>();
+  for (const c of candidatesTerm2) {
+    if (activeTurnsTerm2.size >= countTerm2) break;
+    const t = c.turn;
+    let conflict = false;
+    for (let s = one; s <= GEOPOLITICAL_MIN_SPACING; s += one) {
+      if (activeTurnsTerm2.has(t - s) || activeTurnsTerm2.has(t + s)) {
+        conflict = true;
+        break;
+      }
+    }
+    if (!conflict) {
+      activeTurnsTerm2.add(t);
+    }
+  }
+
+  const allTurns = Array.from(activeTurnsTerm1).concat(Array.from(activeTurnsTerm2)).sort((a, b) => (a < b ? -one : a > b ? one : 0));
+
+  const shuffled = GEOPOLITICAL_CRISES.map((c, i) => ({
+    id: c.id,
+    prio: draw(seed, 'geopolitics', 0, `geo_arch_${i}`),
+  }))
+    .sort((a, b) => (a.prio < b.prio ? -one : a.prio > b.prio ? one : 0))
+    .map((x) => x.id);
+
+  const schedule = new Map<number, string>();
+  for (let i = 0; i < allTurns.length; i += one) {
+    const turn = allTurns[i];
+    const arch = shuffled[i % shuffled.length];
+    if (turn !== undefined && arch !== undefined) {
+      schedule.set(turn, arch);
+    }
+  }
+  return schedule;
+}
+
+export function checkGeopoliticalEscalation(activeCrisis: ActiveCrisis, currentTurn: number): boolean {
+  if (!activeCrisis.isGeopolitical || activeCrisis.deadlineTurn === undefined) {
+    return false;
+  }
+  return currentTurn > activeCrisis.deadlineTurn;
+}
+
