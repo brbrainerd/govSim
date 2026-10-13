@@ -2,11 +2,66 @@
 
 ## Milestones
 
+- 🚧 **v0.5 Satirical "Evil Mode"** — Phases 17-20 (in progress)
 - ✅ **v0.4 Foreign Policy & International Crises** — Phases 13-16 (shipped 2026-10-12)
 - ✅ **v0.3 Social Policy & Domestic Reform** — Phases 9-12 (shipped 2026-10-12)
 - ✅ **v0.2 Playable First Term** — Phases 1-8 (shipped 2026-10-12)
 
 ## Phases
+
+### 🚧 v0.5 Satirical "Evil Mode" (In Progress)
+
+**Milestone Goal:** Implement the satirical "Evil Mode" kleptocracy gameplay loop where the objective is to maximize an offshore stash while managing an escalating Heat meter to evade congressional investigations, special counsels, and impeachment trials.
+
+- [ ] **Phase 17: Evil Mode Engine, Offshore Stash & Heat Meter** (EVIL-01, EVIL-02, EVIL-03)
+- [ ] **Phase 18: Corrupt Executive Levers & Cronyism** (LEVER-01, LEVER-02, LEVER-03)
+- [ ] **Phase 19: Institutional Backlash & Impeachment Trial** (IMPEACH-01, IMPEACH-02, IMPEACH-03)
+- [ ] **Phase 20: Satirical UI Reskin & Heist End Screens** (UI-01, UI-02, UI-03)
+
+### Phase Details
+
+#### Phase 17: Evil Mode Engine, Offshore Stash & Heat Meter
+**Goal**: Implement the alternative game mode toggle at New Game, pure deterministic offshore stash accounting, and the dynamic 0–100 Heat meter tracking public corruption exposure and evidence leakage.
+**Depends on**: Milestone v0.4 foundations
+**Requirements**: EVIL-01, EVIL-02, EVIL-03
+**Success Criteria** (what must be TRUE):
+  1. Player can toggle "Evil Mode" during New Game setup, storing mode choice cleanly in session options.
+  2. Engine tracks `offshoreStash` ($B) accumulating from corrupt kickbacks and `heat` (0–100) decaying slowly over quarters.
+  3. Escalating Heat applies pure arithmetic penalties to voter trust, national approval, and legislative friction.
+**Plans**: TBD (4 plans expected)
+
+#### Phase 18: Corrupt Executive Levers & Cronyism
+**Goal**: Provide corrupt executive actions: awarding no-bid crony procurement contracts, fire-sale auctions of federal assets/lands, selling tariff exemptions, and firing inspectors general to suppress investigations.
+**Depends on**: Phase 17
+**Requirements**: LEVER-01, LEVER-02, LEVER-03
+**Success Criteria** (what must be TRUE):
+  1. Corrupt actions catalog in `src/data/evil.ts` with direct kickback amounts, clout costs, and heat generation.
+  2. Player can enact no-bid contracts and auction tariff exemptions to siphon funds into the offshore stash.
+  3. Player can fire inspectors general to suppress active heat generation at high clout and trust costs.
+**Plans**: TBD (4 plans expected)
+
+#### Phase 19: Institutional Backlash & Impeachment Trial
+**Goal**: Model institutional retaliation when Heat exceeds critical thresholds: House judiciary investigations, special counsel subpoenas, House impeachment votes, and Senate conviction trials.
+**Depends on**: Phase 18
+**Requirements**: IMPEACH-01, IMPEACH-02, IMPEACH-03
+**Success Criteria** (what must be TRUE):
+  1. High heat (>60) triggers special counsel appointments and congressional subpoenas that drain presidential clout each quarter.
+  2. Critical heat (>80) triggers House impeachment votes using the 435-seat congressional bloc voting model.
+  3. Impeachment leads to a Senate conviction trial requiring a 2/3 supermajority; conviction instantly terminates the term and forfeits the entire offshore stash.
+**Plans**: TBD (4 plans expected)
+
+#### Phase 20: Satirical UI Reskin & Heist End Screens
+**Goal**: Build the dark Americana poster visual reskin (oxblood, aged gold, ink), live Offshore Stash and Heat Gauge UI components, and specialized victory/conviction end screens.
+**Depends on**: Phase 19
+**Requirements**: UI-01, UI-02, UI-03
+**Success Criteria** (what must be TRUE):
+  1. CSS theme token reskin (ink, aged gold, oxblood) toggles seamlessly when playing Evil Mode.
+  2. Offshore stash counter and Heat Gauge permanently displayed in the top status bar and Situation Room.
+  3. End screen ranks unconvicted players by their offshore heist tier, or details their downfall upon conviction.
+  4. Fully audited with headless Playwright across 1376×768 and 1280×720 viewports with zero a11y violations.
+**Plans**: TBD (4 plans expected)
+
+---
 
 <details>
 <summary>✅ v0.4 Foreign Policy & International Crises (Phases 13-16) — SHIPPED 2026-10-12</summary>
@@ -49,19 +104,10 @@ Full phase execution history and plans archived to [.planning/milestones/v0.2-RO
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1. Engine foundations | v0.2 | 7/7 | Complete | 2026-10-12 |
-| 2. Saves, guardrails & deploy | v0.2 | 6/6 | Complete | 2026-10-12 |
-| 3. Turn report & Economy | v0.2 | 5/5 | Complete | 2026-10-12 |
-| 4. Events & crises | v0.2 | 5/5 | Complete | 2026-10-12 |
-| 5. Your Powers | v0.2 | 5/5 | Complete | 2026-10-12 |
-| 6. Voters & Electoral College | v0.2 | 4/4 | Complete | 2026-10-12 |
-| 7. Election & end of term | v0.2 | 4/4 | Complete | 2026-10-12 |
-| 8. Balance, hardening & release | v0.2 | 4/4 | Complete | 2026-10-12 |
-| 9. Domestic Social Policy | v0.3 | 4/4 | Complete | 2026-10-12 |
-| 10. Demographic & Regional | v0.3 | 4/4 | Complete | 2026-10-12 |
-| 11. Structural Reform & Amend | v0.3 | 4/4 | Complete | 2026-10-12 |
-| 12. Household Card & Balance | v0.3 | 4/4 | Complete | 2026-10-12 |
-| 13. Geopolitical Crises | v0.4 | 4/4 | Complete | 2026-10-12 |
-| 14. Foreign Policy Levers | v0.4 | 4/4 | Complete | 2026-10-12 |
-| 15. Security Index & Macro | v0.4 | 4/4 | Complete | 2026-10-12 |
-| 16. Trade & Tariffs Screen | v0.4 | 4/4 | Complete | 2026-10-12 |
+| 1-8 | v0.2 | 39/39 | Complete | 2026-10-12 |
+| 9-12 | v0.3 | 16/16 | Complete | 2026-10-12 |
+| 13-16 | v0.4 | 16/16 | Complete | 2026-10-12 |
+| 17. Evil Mode Engine | v0.5 | 0/4 | Not started | - |
+| 18. Corrupt Executive Levers | v0.5 | 0/4 | Not started | - |
+| 19. Backlash & Impeachment | v0.5 | 0/4 | Not started | - |
+| 20. Reskin & Heist Screens | v0.5 | 0/4 | Not started | - |

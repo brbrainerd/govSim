@@ -1,0 +1,61 @@
+# Requirements: govSim (Milestone v0.5)
+
+**Defined:** 2026-10-12
+**Core Value:** A player can make real presidential tradeoffs (or play the satirical "Evil Mode" kleptocracy) against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
+
+## v0.5 Requirements
+
+### Evil Mode Game Engine & Heat Mechanics (EVIL)
+
+- [ ] **EVIL-01**: Player can toggle "Evil Mode" at New Game, setting the primary objective to maximizing an offshore stash ($B) while evading conviction.
+- [ ] **EVIL-02**: Pure engine computes a dynamic 0–100 Heat meter driven by corrupt actions, leaking evidence, and media scrutiny, with slow natural decay.
+- [ ] **EVIL-03**: Heat level applies escalating penalties to public trust, voter approval, and congressional legislative friction.
+
+### Corrupt Executive Levers & Cronyism (LEVER)
+
+- [ ] **LEVER-01**: Player can award no-bid crony procurement contracts and auction federal land/assets to siphon kickbacks directly into the offshore stash.
+- [ ] **LEVER-02**: Player can sell targeted tariff exemptions and solicit presidential "library foundation" donations at the cost of heat generation.
+- [ ] **LEVER-03**: Player can fire inspectors general and pressure law enforcement to suppress active heat generation at high clout and trust costs.
+
+### Institutional Backlash & Impeachment (IMPEACH)
+
+- [ ] **IMPEACH-01**: High heat levels (>60) trigger special counsel investigations and congressional subpoenas that drain presidential clout each quarter.
+- [ ] **IMPEACH-02**: Critical heat levels (>80) trigger House impeachment votes using the 435-seat congressional bloc voting model.
+- [ ] **IMPEACH-03**: Impeachment leads to a Senate conviction trial requiring a 2/3 supermajority; conviction instantly terminates the term and forfeits the entire offshore stash.
+
+### Satirical Visual Reskin & Heist End Screens (UI)
+
+- [ ] **UI-01**: Satirical visual reskin applying a dark Americana theme (oxblood, aged gold, ink) when Evil Mode is active.
+- [ ] **UI-02**: Live Offshore Stash counter and Heat Gauge integrated into the status bar and Oval Office / Situation Room.
+- [ ] **UI-03**: Specialized End Screens ranking unconvicted players by their offshore heist tier, or detailing their downfall upon conviction or electoral rejection.
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Real foreign heads of state | Violates civics nonpartisanship and fictional person policy (Q6) |
+| Direct tactical military combat sim | govSim is a presidential civilian strategy and macro civics game, not an RTS or wargame |
+| Nuclear war annihilation sandbox | Terminal instant-lose state without pedagogical civics value |
+| Live geopolitical news feeds | Requires external server, breaches zero-egress CSP and creates partisan risk (E5) |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| EVIL-01 | Phase 17 | Pending |
+| EVIL-02 | Phase 17 | Pending |
+| EVIL-03 | Phase 17 | Pending |
+| LEVER-01 | Phase 18 | Pending |
+| LEVER-02 | Phase 18 | Pending |
+| LEVER-03 | Phase 18 | Pending |
+| IMPEACH-01 | Phase 19 | Pending |
+| IMPEACH-02 | Phase 19 | Pending |
+| IMPEACH-03 | Phase 19 | Pending |
+| UI-01 | Phase 20 | Pending |
+| UI-02 | Phase 20 | Pending |
+| UI-03 | Phase 20 | Pending |
+
+**Coverage:**
+- v0.5 requirements: 12 total
+- Mapped to phases: 12
+- Unmapped: 0 ✓
