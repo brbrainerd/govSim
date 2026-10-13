@@ -150,7 +150,7 @@ describe('social policy decisions and bill integration (SOC-01..04)', () => {
 
   it('enacts social policy via endTurn when bill passes', () => {
     const budget = fromPackage('Keep as is');
-    const deals: DealId[] = ['mod', 'cen'];
+    const deals: DealId[] = ['mod', 'cen', 'spc'];
     const bill: Bill = {
       budget,
       deals,

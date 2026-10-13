@@ -65,6 +65,9 @@ export const WHY_COPY: Record<string, string> = {
   'social:title_i': 'School grant funding',
   'social:student_debt': 'Student loan debt relief',
   'social:prek': 'Early childhood education grants',
+  'clout:reform': 'Effort spent on reform rules',
+  'trust:reform': 'Public trust from rule changes',
+  'approval:reform': 'Voter views on rule changes',
 };
 
 /** Plain-language description of an engine trace source key (GR-06). */

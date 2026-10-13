@@ -77,3 +77,11 @@ export const COLLEGE_COHORT_SHARE = 24;
 export const IMMIGRANT_COHORT_SHARE = 15;
 export const ENERGY_AG_COHORT_SHARE = 8;
 
+// Senate Cloture & Filibuster Thresholds (REF-01)
+export const SENATE_CLOTURE_60 = 60;
+export const SENATE_CLOTURE_55 = 55;
+export const SENATE_SIMPLE_MAJORITY = 51;
+export const SENATE_TOTAL_SEATS = 100;
+export const SENATE_BASE_SEATS = 50;
+
+

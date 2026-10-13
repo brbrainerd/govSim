@@ -9,7 +9,7 @@ import { activeAt, RESOLVERS, type Modifier, type Scheduled, type Resolver } fro
 import { resolvePowerDecisions } from './powers';
 import { normal } from './rng';
 import { prosperity, type ScoreBreakdown } from './score';
-import { calculateMidtermShift } from './congress';
+import { calculateMidtermShift, FILIBUSTER_RULES_CATALOG, type FilibusterRule } from './congress';
 import { isKnownSource, Ledger, type Term, type TraceKey } from './trace';
 import { BN_PER_TN, BUDGET_WINDOW_YEARS, LEGACY_QUARTERS, MIDTERM_TURN_1, MIDTERM_TURN_2, MONTHS_PER_YEAR, PERCENT, QUARTERS_PER_YEAR, TOTAL_TURNS } from './units';
 import { scheduleTurnEvents, type ActiveCrisis } from './director';
@@ -72,6 +72,8 @@ export interface GameState {
   readonly viewedMyths: readonly string[]; // myth cards visited by player (one-time reward)
   readonly speechCountInWindow: number; // rolling speech count for diminishing returns
   readonly houseSeatDelta: number; // net seat change from midterms (default 0)
+  readonly senateSeatDelta?: number; // net Senate seat change from midterms (default 0)
+  readonly filibusterRule?: FilibusterRule; // active Senate filibuster rule (default sixty_vote)
 }
 
 /** One thing that happened last turn (a bill passed, failed or was rejected). */
@@ -218,6 +220,36 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     speechCountInWindow = Math.max(0, speechCountInWindow - 1);
   }
 
+  // Filibuster rule reform resolution (Phase 11, REF-01)
+  const rawFilibuster: unknown = decisions !== null && typeof decisions === 'object' ? (decisions as { filibusterRule?: unknown }).filibusterRule : undefined;
+  let nextFilibusterRule = state.filibusterRule;
+  let filibusterCost = 0;
+  let filibusterTrustPenalty = 0;
+  let filibusterApprovalPenalty = 0;
+  let filibusterLog: LogEntry | null = null;
+  if (!legacyRun && typeof rawFilibuster === 'string' && Object.hasOwn(FILIBUSTER_RULES_CATALOG, rawFilibuster)) {
+    const targetRule = rawFilibuster as FilibusterRule;
+    const currentRule = state.filibusterRule ?? 'sixty_vote';
+    if (targetRule !== currentRule) {
+      const cost = FILIBUSTER_RULES_CATALOG[targetRule].cloutCost;
+      if (state.clout >= cost) {
+        filibusterCost = cost;
+        if (targetRule === 'talking_filibuster') {
+          filibusterTrustPenalty = C.filibusterTalkingTrustPenalty;
+        } else if (targetRule === 'fifty_five_vote') {
+          filibusterTrustPenalty = C.filibusterFiftyFiveTrustPenalty;
+        } else if (targetRule === 'simple_majority') {
+          filibusterTrustPenalty = C.filibusterNuclearTrustPenalty;
+          filibusterApprovalPenalty = C.filibusterNuclearApprovalPenalty;
+        }
+        nextFilibusterRule = targetRule;
+        filibusterLog = { kind: 'reform', id: 'filibuster_rule', detail: targetRule, amount: cost };
+      } else {
+        filibusterLog = { kind: 'reform', id: 'rejected', detail: 'unaffordable' };
+      }
+    }
+  }
+
   const active = activeAt(modifiers, state.turn, legacyRun);
   for (const m of active) {
     if (!m.source.startsWith(`${m.tag}:`) || !isKnownSource(m.source)) throw new Error(`modifier ${m.id} has source "${m.source}", which must start with "${m.tag}:"`);
@@ -230,7 +262,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
 
   // The engine charges clout from the raw bill; the Session previews with the same function.
   const raw: unknown = decisions !== null && typeof decisions === 'object' ? decisions.bill : undefined;
-  const r = raw === undefined ? null : resolveBill(state.clout, raw, state.houseSeatDelta);
+  const activeRule = nextFilibusterRule ?? state.filibusterRule ?? 'sixty_vote';
+  const r = raw === undefined ? null : resolveBill(state.clout - filibusterCost, raw, state.houseSeatDelta, state.senateSeatDelta ?? 0, activeRule, state.approval);
   const enacted = r && r.valid && r.passed ? r : null;
   const policy = enacted ? enacted.budget : state.policy;
   const before = estimate(state.policy), after = estimate(policy);
@@ -355,11 +388,13 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   ap.add('approval:growth', C.approvalPull * C.approvalGrowth * (growth - s.potential));
   ap.add('luck', C.shockApproval * zAppr);
   for (const m of mods('approval')) ap.add(m.source, m.amount);
+  if (filibusterApprovalPenalty > 0) ap.add('approval:reform', -filibusterApprovalPenalty);
   const approval = ap.round(ap.clamp(state.approval + ap.sum, ...LIMITS.approval.bounds), RULES.approvalStep.value);
   const tr = new Ledger();
   tr.add('trust:reversion', C.trustAdjust * (s.trust - e.trust));
   tr.add('trust:approval', C.trustAdjust * C.trustApproval * (approval - C.approvalNeutral));
   for (const m of mods('trust')) tr.add(m.source, m.amount);
+  if (filibusterTrustPenalty > 0) tr.add('trust:reform', -filibusterTrustPenalty);
   const trust = tr.clamp(e.trust + tr.sum, ...LIMITS.trust.bounds);
 
   const cl = new Ledger();
@@ -376,14 +411,18 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     if (pRes.cloutSpent > 0) cl.add('clout:powers', -pRes.cloutSpent);
     if (pRes.cloutGained > 0) cl.add('clout:powers', pRes.cloutGained);
   }
+  if (filibusterCost > 0) cl.add('clout:reform', -filibusterCost);
   const clout = cl.clamp(state.clout + cl.sum, 0, C.cloutCap);
 
-  if (r) log.push(r.valid ? { kind: 'bill', id: r.passed ? 'passed' : 'failed', amount: r.whip.total } : { kind: 'bill', id: 'rejected', detail: r.reason });
+  if (filibusterLog) log.push(filibusterLog);
+  if (r) log.push(r.valid ? { kind: 'bill', id: r.status, amount: r.whip.total } : { kind: 'bill', id: 'rejected', detail: r.reason });
 
   let nextHouseSeatDelta = state.houseSeatDelta ?? 0;
+  let nextSenateSeatDelta = state.senateSeatDelta;
   if (!legacyRun && (state.turn === MIDTERM_TURN_1 || state.turn === MIDTERM_TURN_2)) {
     const midterm = calculateMidtermShift(approval);
     nextHouseSeatDelta = midterm.houseShift;
+    nextSenateSeatDelta = midterm.senateShift;
     const houseWord = midterm.houseShift >= 0 ? `+${midterm.houseShift}` : `${midterm.houseShift}`;
     const senateWord = midterm.senateShift >= 0 ? `+${midterm.senateShift}` : `${midterm.senateShift}`;
     log.push({
@@ -409,6 +448,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     viewedMyths,
     speechCountInWindow,
     houseSeatDelta: nextHouseSeatDelta,
+    ...(state.senateSeatDelta !== undefined || state.filibusterRule !== undefined || nextFilibusterRule !== undefined ? { senateSeatDelta: nextSenateSeatDelta ?? 0 } : {}),
+    ...(nextFilibusterRule !== undefined && nextFilibusterRule !== 'sixty_vote' ? { filibusterRule: nextFilibusterRule } : {}),
     econ: nextEcon,
     activeCrisis: state.activeCrisis,
     report: {

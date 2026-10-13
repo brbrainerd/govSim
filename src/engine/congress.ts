@@ -3,17 +3,121 @@
 
 import { C, RULES } from './coefficients';
 import { socialDev, type SocialDraft } from './social';
+import {
+  SENATE_BASE_SEATS,
+  SENATE_CLOTURE_55,
+  SENATE_CLOTURE_60,
+  SENATE_SIMPLE_MAJORITY,
+  SENATE_TOTAL_SEATS,
+} from './units';
 
 export const HOUSE_SEATS = 435;
 export const TO_PASS = 218;
 
-export const SENATE_SEATS = 100;
-export const SENATE_CONFIRMATION_THRESHOLD = 51;
+export const SENATE_SEATS = SENATE_TOTAL_SEATS;
+export const SENATE_CONFIRMATION_THRESHOLD = SENATE_SIMPLE_MAJORITY;
 export const SENATE_CONFIRMATION = {
   centrist: 68,
   hawk: 54,
   dove: 47,
 } as const;
+
+export type FilibusterRule = 'sixty_vote' | 'talking_filibuster' | 'fifty_five_vote' | 'simple_majority';
+
+export interface FilibusterRuleInfo {
+  readonly id: FilibusterRule;
+  readonly name: string;
+  readonly description: string;
+  readonly threshold: number | 'dynamic';
+  readonly cloutCost: number;
+}
+
+export const FILIBUSTER_RULES_CATALOG: Record<FilibusterRule, FilibusterRuleInfo> = {
+  sixty_vote: {
+    id: 'sixty_vote',
+    name: '60-Vote Cloture',
+    description: 'Traditional Senate supermajority requirement under Rule XXII.',
+    threshold: SENATE_CLOTURE_60,
+    cloutCost: 0,
+  },
+  talking_filibuster: {
+    id: 'talking_filibuster',
+    name: 'Talking Filibuster',
+    description: 'Minority must continuously hold the floor; cloture threshold lowers as public approval increases.',
+    threshold: 'dynamic',
+    cloutCost: C.filibusterTalkingCloutCost,
+  },
+  fifty_five_vote: {
+    id: 'fifty_five_vote',
+    name: '55-Vote Threshold',
+    description: 'Moderate supermajority requirement easing passage for bipartisan legislation.',
+    threshold: SENATE_CLOTURE_55,
+    cloutCost: C.filibusterFiftyFiveCloutCost,
+  },
+  simple_majority: {
+    id: 'simple_majority',
+    name: 'Simple Majority (Nuclear Option)',
+    description: 'Filibuster eliminated for all domestic legislation; simple majority cloture.',
+    threshold: SENATE_SIMPLE_MAJORITY,
+    cloutCost: C.filibusterNuclearCloutCost,
+  },
+};
+
+/**
+ * Returns required Senate cloture threshold for substantive legislation under the given filibuster rule.
+ */
+export function getSenateClotureThreshold(rule: FilibusterRule = 'sixty_vote', approval = 50): number {
+  switch (rule) {
+    case 'simple_majority':
+      return SENATE_SIMPLE_MAJORITY;
+    case 'fifty_five_vote':
+      return SENATE_CLOTURE_55;
+    case 'talking_filibuster': {
+      const delta = approval - 50;
+      const reduction = Math.round(delta * C.filibusterTalkingApprovalSlope);
+      return Math.max(C.filibusterTalkingMinThreshold, Math.min(SENATE_CLOTURE_60, SENATE_CLOTURE_60 - reduction));
+    }
+    case 'sixty_vote':
+    default:
+      return SENATE_CLOTURE_60;
+  }
+}
+
+/**
+ * Calculates Senate votes supporting a bill based on coalition seats, public approval, and deal appeal.
+ */
+export function calculateSenateVotes(
+  playerSenateSeats: number = SENATE_BASE_SEATS,
+  approval = 50,
+  bipartisanAppeal = 0
+): number {
+  const baseVotes = playerSenateSeats;
+  const approvalBonus = Math.max(-3, Math.min(5, Math.round((approval - 50) * 0.15)));
+  const crossoverVotes = Math.max(0, Math.min(10, Math.round(bipartisanAppeal * 0.5)));
+  return Math.max(0, Math.min(SENATE_TOTAL_SEATS, baseVotes + approvalBonus + crossoverVotes));
+}
+
+/**
+ * Calculates bipartisan deal and policy appeal to win Senate crossover votes.
+ */
+export function billBipartisanAppeal(ids: readonly DealId[], social?: SocialDraft): number {
+  let appeal = 0;
+  if (ids.includes('cen')) appeal += 8;
+  if (ids.includes('spc')) appeal += 6;
+  if (ids.includes('mod')) appeal += 6;
+  if (social) {
+    const cln = socialDev(social, 'cln');
+    const fos = socialDev(social, 'fos');
+    const bdr = socialDev(social, 'bdr');
+    const vis = socialDev(social, 'vis');
+    if (cln > 0 && fos > 0) appeal += 6;
+    if (bdr > 0 && vis > 0) appeal += 4;
+  }
+  return appeal;
+}
+
+export const dealAppeal = (ids: readonly DealId[]) => billBipartisanAppeal(ids);
+
 
 export interface CongressGroup {
   readonly id: GroupId;

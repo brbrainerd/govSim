@@ -86,7 +86,18 @@ export class Session {
       : null,
   );
   /** Preview and engine charge with the same function (FND-05). */
-  preview = $derived(this.bill ? resolveBill(this.current.clout, this.bill, this.current.houseSeatDelta) : null);
+  preview = $derived(
+    this.bill
+      ? resolveBill(
+          this.current.clout,
+          this.bill,
+          this.current.houseSeatDelta,
+          this.current.senateSeatDelta ?? 0,
+          this.current.filibusterRule ?? 'sixty_vote',
+          this.current.approval,
+        )
+      : null,
+  );
   crisisCost = $derived(
     this.draft.crisisChoice && this.current.activeCrisis
       ? (this.current.activeCrisis.options.find((o) => o.id === this.draft.crisisChoice!.optionId)?.cloutCost ?? 0)

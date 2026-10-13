@@ -4,11 +4,24 @@
 // anything malformed is rejected, never trusted and never thrown on.
 
 import { spendLevers, taxLevers, type BudgetDraft } from './budget';
-import { deals as DEALS, tally, voteOutcome, type DealId } from './congress';
+import { C } from './coefficients';
+import {
+  billBipartisanAppeal,
+  calculateSenateVotes,
+  dealAppeal,
+  deals as DEALS,
+  getSenateClotureThreshold,
+  tally,
+  TO_PASS,
+  voteOutcome,
+  type DealId,
+  type FilibusterRule,
+} from './congress';
 import { getCrisis } from './crises';
 import type { Modifier, Scheduled } from './modifiers';
 import type { PowerDecisions } from './powers';
-import { sanitizeSocial, type SocialDraft } from './social';
+import { isSocialBaseline, sanitizeSocial, type SocialDraft } from './social';
+import { SENATE_BASE_SEATS, SENATE_SIMPLE_MAJORITY } from './units';
 
 export interface Bill {
   budget: BudgetDraft;
@@ -24,12 +37,13 @@ export interface CrisisDecision {
 export type { PowerDecisions } from './powers';
 export type { SocialDraft } from './social';
 
-/** Phases 4/5/9 add keys here (crisis, powers, social). There is deliberately no clout field. */
+/** Phases 4/5/9/11 add keys here (crisis, powers, social, filibusterRule). There is deliberately no clout field. */
 export interface Decisions {
   bill?: Bill;
   crisis?: CrisisDecision;
   powers?: PowerDecisions;
   social?: SocialDraft;
+  filibusterRule?: FilibusterRule;
 }
 
 export interface CrisisChoiceResult {
@@ -50,6 +64,9 @@ export interface BillResult {
   deals: DealId[];
   spent: number;
   whip: ReturnType<typeof tally>;
+  senateVotes: number;
+  senateThreshold: number;
+  status: 'passed' | 'failed' | 'filibustered';
   passed: boolean;
   cloutBack: number;
   cloutDelta: number;
@@ -83,19 +100,50 @@ export function sanitizeBudget(d: unknown): BudgetDraft {
 }
 
 /** THE shared pure function: the engine charges with it and the Session previews with it. */
-export function resolveBill(clout: number, bill: unknown, houseDelta = 0): BillResult {
+export function resolveBill(
+  clout: number,
+  bill: unknown,
+  houseDelta = 0,
+  senateDelta = 0,
+  filibusterRule: FilibusterRule = 'sixty_vote',
+  approval = C.approvalNeutral,
+): BillResult {
   const b = isRecord(bill) ? bill : {};
   const ids = knownDeals(b.deals);
   const spent = cloutCost(ids);
   const budget = sanitizeBudget(b.budget);
   const social = Object.hasOwn(b, 'social') && b.social !== undefined ? sanitizeSocial(b.social) : undefined;
   const whip = tally(ids, houseDelta, social);
+
+  const isSubstantive = Boolean(social && !isSocialBaseline(social));
+  const senateThreshold = isSubstantive ? getSenateClotureThreshold(filibusterRule, approval) : SENATE_SIMPLE_MAJORITY;
+  const appeal = billBipartisanAppeal(ids, social);
+  const playerSenateSeats = SENATE_BASE_SEATS + senateDelta;
+  const senateVotes = calculateSenateVotes(playerSenateSeats, approval, appeal);
+
+  const housePassed = whip.total >= TO_PASS;
+  const senatePassed = senateVotes >= senateThreshold;
+
+  let status: 'passed' | 'failed' | 'filibustered' = 'failed';
+  let passed = false;
+  if (housePassed && senatePassed) {
+    status = 'passed';
+    passed = true;
+  } else if (housePassed && !senatePassed) {
+    status = 'filibustered';
+    passed = false;
+  } else {
+    status = 'failed';
+    passed = false;
+  }
+
+  const { cloutBack } = voteOutcome(passed ? TO_PASS : 0, spent);
   const rejected = (reason: 'unaffordable' | 'invalid'): BillResult =>
-    ({ valid: false, reason, budget, social, deals: ids, spent, whip, passed: false, cloutBack: 0, cloutDelta: 0 });
+    ({ valid: false, reason, budget, social, deals: ids, spent, whip, senateVotes, senateThreshold, status: 'failed', passed: false, cloutBack: 0, cloutDelta: 0 });
   if (!isRecord(bill) || !isRecord(bill.budget) || !Array.isArray(bill.deals)) return rejected('invalid');
   if (spent > clout) return rejected('unaffordable');
-  const { passed, cloutBack } = voteOutcome(whip.total, spent);
-  return { valid: true, budget, social, deals: ids, spent, whip, passed, cloutBack, cloutDelta: cloutBack - spent };
+
+  return { valid: true, budget, social, deals: ids, spent, whip, senateVotes, senateThreshold, status, passed, cloutBack, cloutDelta: cloutBack - spent };
 }
 
 export function resolveCrisisChoice(

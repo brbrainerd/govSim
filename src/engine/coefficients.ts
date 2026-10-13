@@ -526,6 +526,16 @@ export const COEFF = {
   fossilPermittingFamilyRelief: { value: 8, unit: '$/month', basis: 'judgement', range: [2, 20], note: 'Household utility and fuel savings from expanded oil and gas supply.' },
   titleIFamilyRelief: { value: 5, unit: '$/month', basis: 'judgement', range: [1, 15], note: 'Household educational support value from Title I grants.' },
   universalPreKFamilyRelief: { value: 45, unit: '$/month', basis: 'judgement', range: [20, 100], note: 'Monthly household childcare expense savings from universal pre-K.' },
+  // ---- filibuster reform coefficients (Phase 11, REF-01) ----
+  filibusterTalkingApprovalSlope: { value: 0.4, unit: 'cloture reduction per approval pt', basis: 'judgement', range: [0.1, 0.8], note: 'Higher public approval lowers minority obstruction capacity under talking filibuster.' },
+  filibusterTalkingMinThreshold: { value: 51, unit: 'votes', basis: 'judgement', range: [51, 60], note: 'Talking filibuster cannot reduce cloture below simple majority.' },
+  filibusterNuclearTrustPenalty: { value: 5, unit: 'index pts', basis: 'judgement', range: [1, 15], note: 'Public trust loss from abolishing the Senate filibuster.' },
+  filibusterNuclearApprovalPenalty: { value: 3, unit: '% approval', basis: 'judgement', range: [1, 10], note: 'Immediate political backlash from simple-majority nuclear option.' },
+  filibusterFiftyFiveTrustPenalty: { value: 2, unit: 'index pts', basis: 'judgement', range: [0, 8], note: 'Trust impact from lowering cloture to 55 votes.' },
+  filibusterTalkingTrustPenalty: { value: 1, unit: 'index pts', basis: 'judgement', range: [0, 5], note: 'Trust impact from instituting talking filibuster.' },
+  filibusterNuclearCloutCost: { value: 35, unit: 'clout', basis: 'judgement', range: [15, 60], note: 'Clout cost to invoke nuclear option.' },
+  filibusterFiftyFiveCloutCost: { value: 20, unit: 'clout', basis: 'judgement', range: [10, 40], note: 'Clout cost to pass 55-vote threshold reform.' },
+  filibusterTalkingCloutCost: { value: 15, unit: 'clout', basis: 'judgement', range: [5, 30], note: 'Clout cost to restore talking filibuster.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------
