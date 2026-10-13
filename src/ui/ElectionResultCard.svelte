@@ -22,7 +22,7 @@
 
 <div class="result-card" data-testid="election-result-card">
   <div class="header-strip {isWon ? 'won' : 'lost'}">
-    <span class="decision-tag">OFFICIAL CERTIFIED RESULT</span>
+    <span class="decision-tag cert-title">OFFICIAL CERTIFIED RESULT</span>
     <h3 class="result-title">
       {isWon ? 'REELECTED TO A SECOND TERM' : 'DEFEATED FOR REELECTION'}
     </h3>
@@ -48,7 +48,7 @@
   </div>
 
   <!-- Autopilot Comparison Pill -->
-  <div class="autopilot-pill">
+  <div class="autopilot-pill autopilot-comparison">
     <span class="auto-lbl">Autopilot (Doing Nothing):</span>
     <span class="auto-val">
       {autopilotOutcome.playerEV} EV · {autopilotOutcome.winner === 'player' ? 'Won Reelection' : 'Lost Reelection'}
@@ -71,7 +71,7 @@
 
   <!-- Attribution reasons -->
   <div class="reasons-section">
-    <h4 class="reasons-heading">WHY THE ELECTION TURNED OUT THIS WAY</h4>
+    <h4 class="reasons-heading reasons-title">WHY THE ELECTION TURNED OUT THIS WAY</h4>
     <ul class="reasons-list">
       {#each reasons as reason}
         <li class="reason-item">{reason}</li>
@@ -122,10 +122,9 @@
 
   .decision-tag {
     font-family: var(--font-condensed);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: bold;
     letter-spacing: 0.1em;
-    opacity: 0.9;
   }
 
   .result-title {

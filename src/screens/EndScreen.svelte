@@ -476,7 +476,7 @@
   }
 
   .stat-num.highlight {
-    color: var(--sage);
+    color: var(--ink);
   }
 
   .zones {
@@ -547,7 +547,7 @@
 
   .score-value {
     font: 700 clamp(28px, 2.8vw, 38px) var(--font-headline);
-    color: var(--sage);
+    color: var(--ink);
     line-height: 1.1;
   }
 

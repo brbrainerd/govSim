@@ -146,6 +146,52 @@ test.describe('viewport fitting and visual baselines (OBS-07)', () => {
       await expect(page.locator('.states-table')).toBeVisible();
       await assertNoOuterScroll('Voters Table');
       await page.screenshot({ path: `.playwright-screenshots/voters-table-${vp.width}x${vp.height}.png` });
+
+      // 9. Election Night Modal & EndScreen (Turn 16)
+      while (!(await page.locator('.when').innerText()).includes('Turn 16 of 32')) {
+        await page.locator('button.stamp:has-text("Next turn")').click();
+        await page.locator('button.stamp:has-text("Continue term")').click();
+
+        if (await page.locator('.breaking-ribbon').isVisible()) {
+          await page.locator('.modal-grid .option-card:not(.unaffordable)').first().click();
+          await page.locator('button.stamp:has-text("DECIDE")').click();
+          await expect(page.locator('.breaking-ribbon')).not.toBeVisible();
+        }
+      }
+
+      // Advance from Turn 16 to open Election Night
+      await page.locator('button.stamp:has-text("Next turn")').click();
+      const electionModal = page.locator('[data-testid="election-night-modal"]');
+      await expect(electionModal).toBeVisible();
+      await assertNoOuterScroll('Election Night Modal');
+      await page.screenshot({ path: `.playwright-screenshots/election-night-${vp.width}x${vp.height}.png` });
+
+      // Skip animation to see result card
+      const skipBtn = page.locator('button.skip-btn:has-text("Skip to Final Result")');
+      if (await skipBtn.isVisible()) {
+        await skipBtn.click();
+      }
+      await expect(page.locator('[data-testid="election-result-card"]')).toBeVisible();
+      await assertNoOuterScroll('Election Result Card');
+      await page.screenshot({ path: `.playwright-screenshots/election-result-${vp.width}x${vp.height}.png` });
+
+      // Continue
+      await page.locator('[data-testid="election-continue-btn"]').click();
+      await expect(electionModal).not.toBeVisible();
+
+      // If EndScreen is rendered (lost election)
+      if (await page.locator('[data-testid="end-screen"]').isVisible()) {
+        await assertNoOuterScroll('End Screen');
+        const startNewBtn = page.locator('[data-testid="start-new-presidency-btn"]');
+        await assertButtonInViewport(startNewBtn, 'Start New Presidency button');
+        await page.screenshot({ path: `.playwright-screenshots/endscreen-${vp.width}x${vp.height}.png` });
+      } else {
+        // Won election: close turn report if showing
+        if (await page.locator('button.stamp:has-text("Continue term")').isVisible()) {
+          await page.locator('button.stamp:has-text("Continue term")').click();
+        }
+        await expect(page.locator('.when')).toContainText('Turn 17 of 32');
+      }
     });
   }
 });

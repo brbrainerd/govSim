@@ -268,7 +268,11 @@ export class Session {
       this.termEnded = true;
     }
 
-    this.showingReport = true;
+    if (this.showingElectionNight) {
+      this.showingReport = false;
+    } else {
+      this.showingReport = true;
+    }
     storeAutosave(this);
   }
 
@@ -276,11 +280,14 @@ export class Session {
     this.showingElectionNight = false;
     if (!this.reelectionWon) {
       this.termEnded = true;
+      this.showingReport = false;
       if (this.history.length > 16) {
         this.history = this.history.slice(0, 16);
         this.inputs = this.inputs.slice(0, 15);
       }
       storeAutosave(this);
+    } else {
+      this.showingReport = true;
     }
   }
 

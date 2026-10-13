@@ -130,4 +130,57 @@ test.describe('accessibility audits (OBS-07, D6)', () => {
     const votersTableSevere = votersTableAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     expect(votersTableSevere, `Voters Table View a11y violations: ${JSON.stringify(votersTableSevere, null, 2)}`).toEqual([]);
   });
+
+  test('Election Night modal, result card, and EndScreen have zero serious or critical violations (OBS-07)', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('.newgame')).toBeVisible();
+    await page.locator('input[name="party"][value="D"]').check();
+    await page.locator('button.stamp:has-text("START THE TERM")').click();
+    await expect(page.locator('.app')).toBeVisible();
+
+    // Fast-forward to Turn 16
+    let currentTurn = 1;
+    while (currentTurn < 16) {
+      await page.locator('button.stamp:has-text("Next turn")').click();
+      await page.locator('button.stamp:has-text("Continue term")').click();
+      currentTurn++;
+
+      if (await page.locator('.breaking-ribbon').isVisible()) {
+        await page.locator('.modal-grid .option-card:not(.unaffordable)').first().click();
+        await page.locator('button.stamp:has-text("DECIDE")').click();
+        await expect(page.locator('.breaking-ribbon')).not.toBeVisible();
+      }
+    }
+
+    // Advance from Turn 16 to trigger Election Night
+    await page.locator('button.stamp:has-text("Next turn")').click();
+    const electionModal = page.locator('[data-testid="election-night-modal"]');
+    await expect(electionModal).toBeVisible();
+
+    const electionAxe = await new AxeBuilder({ page }).analyze();
+    const electionSevere = electionAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(electionSevere, `Election Night modal a11y violations: ${JSON.stringify(electionSevere, null, 2)}`).toEqual([]);
+
+    // Skip to result card
+    const skipBtn = page.locator('button.skip-btn:has-text("Skip to Final Result")');
+    if (await skipBtn.isVisible()) {
+      await skipBtn.click();
+    }
+    const resultCard = page.locator('[data-testid="election-result-card"]');
+    await expect(resultCard).toBeVisible();
+
+    const resultAxe = await new AxeBuilder({ page }).analyze();
+    const resultSevere = resultAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(resultSevere, `Result card a11y violations: ${JSON.stringify(resultSevere, null, 2)}`).toEqual([]);
+
+    // Continue
+    await page.locator('[data-testid="election-continue-btn"]').click();
+    await expect(electionModal).not.toBeVisible();
+
+    if (await page.locator('[data-testid="end-screen"]').isVisible()) {
+      const endAxe = await new AxeBuilder({ page }).analyze();
+      const endSevere = endAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+      expect(endSevere, `EndScreen a11y violations: ${JSON.stringify(endSevere, null, 2)}`).toEqual([]);
+    }
+  });
 });

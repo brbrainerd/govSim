@@ -102,7 +102,7 @@
     <!-- Breaking Broadcast Ribbon -->
     <div class="broadcast-ribbon" aria-hidden="true">
       <span class="pulse-indicator">● LIVE</span>
-      <span class="ribbon-text">PRESIDENTIAL ELECTION DECISION NIGHT</span>
+      <span class="ribbon-text election-title">PRESIDENTIAL ELECTION DECISION NIGHT</span>
       {#if !animationComplete}
         <button class="skip-btn" onclick={skipAnimation} data-testid="skip-election-night-btn">
           Skip to Final Result [Space]
@@ -126,7 +126,14 @@
         </div>
       </div>
 
-      <div class="progress-bar-container" role="progressbar" aria-valuenow={currentRunningPlayerEV} aria-valuemin={0} aria-valuemax={538}>
+      <div
+        class="progress-bar-container"
+        role="progressbar"
+        aria-label="Electoral College 270 to win progress"
+        aria-valuenow={currentRunningPlayerEV}
+        aria-valuemin={0}
+        aria-valuemax={538}
+      >
         <div class="bar-fill player" style="width: {(currentRunningPlayerEV / 538) * 100}%"></div>
         <div class="center-marker" style="left: {(270 / 538) * 100}%"></div>
         <div class="bar-fill opponent" style="width: {(currentRunningOpponentEV / 538) * 100}%"></div>
@@ -355,16 +362,18 @@
     align-items: center;
     gap: 6px;
     box-shadow: 3px 3px 0 var(--ink);
+    background: var(--card);
+    color: var(--ink);
   }
 
   .latest-call-box.player {
-    background: var(--sage);
-    color: var(--paper);
+    border-color: var(--sage);
+    border-width: 3px;
   }
 
   .latest-call-box.opponent {
-    background: var(--alert);
-    color: var(--paper);
+    border-color: var(--alert);
+    border-width: 3px;
   }
 
   .projected-badge {
@@ -411,16 +420,20 @@
     padding: 2px 6px;
     border-radius: var(--r-sm);
     font-family: var(--font-condensed);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: bold;
-    color: var(--paper);
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--ink);
   }
 
   .mini-chip.player {
-    background: var(--sage);
+    border: 1.5px solid var(--sage);
+    color: var(--ink);
   }
 
   .mini-chip.opponent {
-    background: var(--alert);
+    border: 1.5px solid var(--alert);
+    color: var(--ink);
   }
 </style>
