@@ -23,7 +23,7 @@
 
 ### Milestone v0.3: Social Policy & Domestic Reform
 
-- [ ] **Phase 9: Domestic Social Policy Levers** - Healthcare, immigration, energy/climate, and education models, pure engine levers, cited coefficients, causal traces (SOC-01, SOC-02, SOC-03, SOC-04)
+- [x] **Phase 9: Domestic Social Policy Levers** - Healthcare, immigration, energy/climate, and education models, pure engine levers, cited coefficients, causal traces (SOC-01, SOC-02, SOC-03, SOC-04) — completed 2026-10-12
 - [ ] **Phase 10: Demographic & Regional Distribution** - Sector exposure, state-level cost-of-living impacts, and voter coalition shifts (SOC-05)
 - [ ] **Phase 11: Structural Government Reform & Amendments** - Senate filibuster reforms, judicial reform, electoral rules, and constitutional amendment hurdles (REF-01, REF-02, REF-03, REF-04)
 - [ ] **Phase 12: Household Impact Card & Balance** - "Your Household" card on Oval Office and Economy screens, persona presets, custom builder, balance calibration pass, and E2E verification (HOU-01, HOU-02)
@@ -44,10 +44,10 @@
 **Plans**: 4 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Wave 1: Pure Social Levers, Catalog, and Registered Coefficients (SOC-01..04)
-- [ ] 09-02-PLAN.md — Wave 2: Step() Simulation Dynamics, Ledger Attribution, and Invariants (SOC-01..04)
-- [ ] 09-03-PLAN.md — Wave 3: Congressional Voting Blocs, Decisions, and Session Drafting (SOC-01..04)
-- [ ] 09-04-PLAN.md — Wave 4: Plain-Language Attribution, Balance Calibration, and Verification Suite (SOC-01..04)
+- [x] 09-01-PLAN.md — Wave 1: Pure Social Levers, Catalog, and Registered Coefficients (SOC-01..04)
+- [x] 09-02-PLAN.md — Wave 2: Step() Simulation Dynamics, Ledger Attribution, and Invariants (SOC-01..04)
+- [x] 09-03-PLAN.md — Wave 3: Congressional Voting Blocs, Decisions, and Session Drafting (SOC-01..04)
+- [x] 09-04-PLAN.md — Wave 4: Plain-Language Attribution, Balance Calibration, and Verification Suite (SOC-01..04)
 
 ### Phase 10: Demographic & Regional Distribution
 
