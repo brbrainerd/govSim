@@ -124,3 +124,21 @@ export const AMENDMENT_HOUSE_BASE_CAMPAIGN = 290;
 export const AMENDMENT_HOUSE_BASE_PARTISAN = 225;
 export const AMENDMENT_APPROVAL_SLOPE = 0.5;
 export const AMENDMENT_SENATE_CROSSOVER_SCALE = 20;
+
+// Household Impact Card (Phase 12, HOU-01, HOU-02)
+export const INCOME_TIER_LOW = 35_000;
+export const INCOME_TIER_SERVICE = 42_000;
+export const INCOME_TIER_MEDIAN = 65_000;
+export const INCOME_TIER_UPPER_MIDDLE = 105_000;
+export const INCOME_TIER_HIGH = 160_000;
+export const PAYROLL_TAX_CAP = 184_500;
+export const ESSENTIALS_BASKET_BASE = 1400; // $/mo base groceries/goods basket
+export const LOW_INCOME_BASKET_SHARE_BOOST = 0.20;
+export const BASKET_SCALE_SINGLE = 0.7;
+export const BASKET_SCALE_COUPLE = 1.0;
+export const BASKET_SCALE_SENIOR = 0.8;
+export const BASKET_SCALE_CHILD = 0.15;
+export const DEFAULT_RPP_FACTOR = 1.0;
+export const DEFAULT_CARBON_INTENSITY = 1.0;
+export const DEFAULT_CLEAN_ENERGY_GROWTH = 1.0;
+

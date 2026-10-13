@@ -558,6 +558,22 @@ export const COEFF = {
   amendmentEraGiniReduction: { value: 0.01, unit: 'index pts', basis: 'judgement', range: [0.002, 0.03], note: 'Inequality reduction from Equal Rights Amendment codification.' },
   amendmentEraTrustGain: { value: 3, unit: 'index pts', basis: 'judgement', range: [1, 8], note: 'Trust gain from Equal Rights Amendment codification.' },
   amendmentBalancedBudgetBondYieldReduction: { value: 0.25, unit: 'pp', basis: 'judgement', range: [0.05, 0.6], note: 'Bond yield spread reduction from constitutional fiscal constraint credibility.' },
+  // ---- Household transmission coefficients (Phase 12, HOU-01, HOU-02) ----
+  householdWageGrowthFactor: { value: 0.65, unit: 'share of macro wage growth reaching household', basis: 'judgement', range: [0.3, 1.0], note: 'Share of aggregate real wage growth passed through to take-home pay.' },
+  householdTariffPassthrough: { value: 8.0, unit: '$/mo consumer basket cost per 1% tariff', basis: 'judgement', range: [2.0, 20.0], note: 'Monthly goods inflation cost per tariff percentage point.' },
+  householdCarbonUtilityRate: { value: 0.8, unit: '$/mo electricity/fuel per carbon index pt', basis: 'judgement', range: [0.2, 2.5], note: 'Monthly energy utility increase per unit of carbon intensity index.' },
+  householdCleanEnergyUtilitySavings: { value: 1.0, unit: '$/mo utility reduction per clean energy pt', basis: 'judgement', range: [0.2, 3.0], note: 'Monthly clean energy tax credit utility bill savings.' },
+  householdFossilPermittingSavings: { value: 0.8, unit: '$/mo pump/fuel relief per leasing pt', basis: 'judgement', range: [0.2, 2.5], note: 'Monthly pump and fuel price relief from domestic energy permitting.' },
+  householdAcaSubsidyRelief: { value: 30.0, unit: '$/mo premium relief per ACA subsidy pt', basis: 'judgement', range: [10.0, 60.0], note: 'Monthly premium subsidy savings for marketplace participants.' },
+  householdDrugPriceSeniorSavings: { value: 25.0, unit: '$/mo out-of-pocket savings per Medicare negotiation pt', basis: 'judgement', range: [5.0, 50.0], note: 'Monthly prescription drug savings for seniors under Medicare negotiation.' },
+  householdPublicOptionRelief: { value: 15.0, unit: '$/mo premium relief per public option pt', basis: 'judgement', range: [5.0, 40.0], note: 'Monthly premium competition savings for marketplace/uninsured families.' },
+  householdUniversalPreKRelief: { value: 45.0, unit: '$/mo childcare savings per child under 6', basis: 'judgement', range: [15.0, 100.0], note: 'Monthly childcare relief per pre-K child from federal universal pre-K.' },
+  householdTitleIEducationRelief: { value: 10.0, unit: '$/mo school fee relief per school child', basis: 'judgement', range: [2.0, 30.0], note: 'Monthly public school activity and materials savings per school child.' },
+  householdStudentDebtRelief: { value: 25.0, unit: '$/mo loan payment relief per cancellation pt', basis: 'judgement', range: [5.0, 60.0], note: 'Monthly federal student loan payment savings for debt-bearing households.' },
+  householdTaxProgressivityLow: { value: 0.35, unit: 'tax rate elasticity factor', basis: 'judgement', range: [0.1, 0.7], note: 'Effective tax rate sensitivity for low-income tier.' },
+  householdTaxProgressivityMedian: { value: 0.85, unit: 'tax rate elasticity factor', basis: 'judgement', range: [0.5, 1.2], note: 'Effective tax rate sensitivity for median-income tier.' },
+  householdTaxProgressivityUpper: { value: 1.25, unit: 'tax rate elasticity factor', basis: 'judgement', range: [0.8, 1.6], note: 'Effective tax rate sensitivity for upper-middle-income tier.' },
+  householdTaxProgressivityHigh: { value: 1.65, unit: 'tax rate elasticity factor', basis: 'judgement', range: [1.0, 2.2], note: 'Effective tax rate sensitivity for high-income tier.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------
