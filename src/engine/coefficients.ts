@@ -619,6 +619,11 @@ export const COEFF = {
   retaliatoryVoterSwing: { value: 0.40, unit: '% state approval penalty per retaliatory pt', basis: 'judgement', range: [0.1, 1.0], note: 'Approval penalty in export-exposed farm/industrial states from trade war.' },
   retaliatoryAgWeight: { value: 0.7, unit: 'weight', basis: 'judgement', range: [0.3, 1.0], note: 'Relative exposure of farm sector to trade retaliation.' },
   retaliatoryMfgWeight: { value: 0.5, unit: 'weight', basis: 'judgement', range: [0.2, 0.9], note: 'Relative exposure of industrial sector to trade retaliation.' },
+  // ---- Evil Mode & Corrupt Governance coefficients (Phase 17, EVIL-01, EVIL-02, EVIL-03) ----
+  heatDecayQuarterly: { value: 3.0, unit: 'heat pts per quarter', basis: 'judgement', range: [1.0, 10.0], note: 'Quarterly natural dissipation of public outrage and investigative scrutiny.' },
+  heatApprovalPenalty: { value: 0.20, unit: 'approval pts per heat pt', basis: 'judgement', range: [0.05, 0.50], note: 'Quarterly presidential approval penalty per point of accumulated heat.' },
+  heatTrustPenalty: { value: 0.30, unit: 'trust pts per heat pt', basis: 'judgement', range: [0.05, 0.60], note: 'Public trust in government erosion per point of accumulated heat.' },
+  heatCongressionalFriction: { value: 0.10, unit: 'effective opposition votes per heat pt', basis: 'judgement', range: [0.02, 0.30], note: 'Legislative passage friction in Congress per point of heat.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------
@@ -631,6 +636,7 @@ export const LIMITS = {
   income: { bounds: [0.25, 4], unit: 'multiple of starting median income', basis: 'judgement', note: 'Keeps a collapsed economy finite: median income never falls below a quarter or rises above four times its start.' },
   trust: { bounds: [5, 80], unit: '% trust in government', basis: 'judgement', note: 'Wide enough for any plausible path; hand-set.' },
   score: { bounds: [0, 100], unit: 'index pts', basis: 'judgement', note: 'Each score component is capped to the 0 to 100 index scale.' },
+  heat: { bounds: [0, 100], unit: 'heat pts', basis: 'judgement', note: 'Public outrage and investigative scrutiny index.' },
 } as const satisfies Record<string, Limit>;
 
 // ---- score (design.md section 2) --------------------------------------------------------------

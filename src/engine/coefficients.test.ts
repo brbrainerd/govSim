@@ -45,7 +45,7 @@ describe('registry tables', () => {
   it('score weights sum to 1 and the limits and rules are present', () => {
     const w = [SCORE.incomeWeight, SCORE.employmentWeight, SCORE.inflationWeight, SCORE.debtWeight, SCORE.lifeExpWeight, SCORE.inequalityWeight, SCORE.securityWeight, SCORE.trustWeight];
     expect(Math.abs(w.reduce((a, c) => a + c.value, 0) - 1)).toBeLessThan(1e-12);
-    expect(Object.keys(LIMITS).sort()).toEqual(['approval', 'fedRate', 'gini', 'income', 'inflation', 'score', 'trust', 'unemployment']);
+    expect(Object.keys(LIMITS).sort()).toEqual(['approval', 'fedRate', 'gini', 'heat', 'income', 'inflation', 'score', 'trust', 'unemployment']);
     expect(Object.keys(RULES).sort()).toEqual(['approvalStep', 'refundDivisor', 'startApproval', 'startClout', 'voteReward']);
   });
 

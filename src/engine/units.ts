@@ -167,5 +167,12 @@ export const ROUND_HUNDREDTHS = 100;
 export const DEFAULT_GDP_ESTIMATE = 28000;
 export const DEFAULT_TARIFF_RATE = 11;
 
+// Evil Mode & Corrupt Governance Constants (Phase 17, EVIL-01, EVIL-02, EVIL-03)
+export const MAX_HEAT = 100;
+export const MIN_HEAT = 0;
+export const HEAT_SPECIAL_COUNSEL_THRESHOLD = 50;
+export const HEAT_IMPEACHMENT_THRESHOLD = 75;
+export const HEAT_CONVICTION_THRESHOLD = 90;
+
 
 
