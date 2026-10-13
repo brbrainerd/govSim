@@ -28,7 +28,8 @@ import {
 } from './amendments';
 import { isKnownSource, Ledger, type Term, type TraceKey } from './trace';
 import { BN_PER_TN, BUDGET_WINDOW_YEARS, LEGACY_QUARTERS, MIDTERM_TURN_1, MIDTERM_TURN_2, MONTHS_PER_YEAR, PERCENT, QUARTERS_PER_YEAR, TOTAL_TURNS } from './units';
-import { scheduleTurnEvents, type ActiveCrisis } from './director';
+import { scheduleTurnEvents, checkGeopoliticalEscalation, createGeopoliticalActiveCrisis, getGeopoliticalSchedule, type ActiveCrisis } from './director';
+import { getCrisis, isGeopoliticalCrisis } from './crises';
 import { estimateSocial, isSocialBaseline, sanitizeSocial, socialBaseline, type SocialDraft } from './social';
 
 export { prosperity, type ScoreBreakdown } from './score';
@@ -133,6 +134,8 @@ export function newGame(seed: number, start: Start): GameState {
     viewedMyths: [],
     speechCountInWindow: 0,
     houseSeatDelta: 0,
+    activeGeopoliticalCrises: [],
+    resolvedGeopoliticalCrises: [],
     econ: {
       gap: 0,
       growth: start.potential,
@@ -155,6 +158,7 @@ export function newGame(seed: number, start: Start): GameState {
 export interface StepOptions {
   legacy?: boolean; // the 10-year projection: no resolvers, no executive orders (FND-06, D5)
   resolvers?: Record<string, Resolver>; // tests inject stubs; defaults to RESOLVERS
+  autopilot?: boolean;
 }
 
 export function endTurn(state: GameState, decisions: Decisions = {}, opts: StepOptions = {}): GameState {
@@ -218,6 +222,80 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     } else {
       log.push({ kind: 'crisis', id: 'rejected', detail: cRes.reason });
     }
+  }
+
+  // Geopolitical crisis resolution & advancement (Phase 13, CRISIS-01, CRISIS-02, CRISIS-03)
+  let activeGeoCrises: ActiveCrisis[] = state.activeGeopoliticalCrises ? [...state.activeGeopoliticalCrises] : [];
+  let resolvedGeoCrises: string[] = state.resolvedGeopoliticalCrises ? [...state.resolvedGeopoliticalCrises] : [];
+  let geoEscalationApprovalPenalty = 0;
+  let geoEscalationTrustPenalty = 0;
+
+  let rawGeoCrisis: { crisisId?: unknown; optionId?: unknown } | undefined = undefined;
+  if (decisions !== null && typeof decisions === 'object') {
+    if (decisions.geopoliticalCrisis) {
+      rawGeoCrisis = decisions.geopoliticalCrisis;
+    } else if (decisions.crisis && isGeopoliticalCrisis(String(decisions.crisis.crisisId))) {
+      rawGeoCrisis = decisions.crisis;
+    }
+  }
+  if (!rawGeoCrisis && opts.autopilot && activeGeoCrises.length > 0) {
+    const firstActive = activeGeoCrises[0];
+    if (firstActive) {
+      const autoOpt = firstActive.options.find((o) => o.autopilot);
+      if (autoOpt) {
+        rawGeoCrisis = { crisisId: firstActive.crisisId, optionId: autoOpt.id };
+      }
+    }
+  }
+
+  const geoRes = !legacyRun && rawGeoCrisis !== undefined && typeof rawGeoCrisis === 'object' && rawGeoCrisis !== null
+    ? resolveCrisisChoice(
+        state.clout - (cRes?.valid ? cRes.cloutCost : 0),
+        rawGeoCrisis.crisisId,
+        rawGeoCrisis.optionId,
+        state.turn,
+      )
+    : null;
+
+  if (geoRes) {
+    if (geoRes.valid) {
+      modifiers = [...modifiers, ...geoRes.modifiers];
+      scheduled = [...scheduled, ...geoRes.scheduled];
+      activeGeoCrises = activeGeoCrises.filter((c) => c.crisisId !== geoRes.crisisId);
+      if (!resolvedGeoCrises.includes(geoRes.crisisId)) {
+        resolvedGeoCrises.push(geoRes.crisisId);
+      }
+      log.push({ kind: 'crisis', id: geoRes.crisisId, detail: geoRes.optionId, amount: geoRes.cloutCost });
+    } else {
+      log.push({ kind: 'crisis', id: 'rejected', detail: geoRes.reason });
+    }
+  }
+
+  if (!legacyRun) {
+    const remainingGeo: ActiveCrisis[] = [];
+    for (const crisis of activeGeoCrises) {
+      const remainingTurns = (crisis.turnsRemaining ?? 1) - 1;
+      const isEscalated = remainingTurns <= 0 || checkGeopoliticalEscalation(crisis, state.turn);
+      if (isEscalated) {
+        geoEscalationApprovalPenalty += C.geopoliticalEscalationPenalty;
+        geoEscalationTrustPenalty += C.geopoliticalEscalationTrust;
+        log.push({
+          kind: 'geopolitical_escalation',
+          id: crisis.crisisId,
+          detail: 'countdown_expired',
+          amount: C.geopoliticalEscalationPenalty,
+        });
+        if (!resolvedGeoCrises.includes(crisis.crisisId)) {
+          resolvedGeoCrises.push(crisis.crisisId);
+        }
+      } else {
+        remainingGeo.push({
+          ...crisis,
+          turnsRemaining: remainingTurns,
+        });
+      }
+    }
+    activeGeoCrises = remainingGeo;
   }
 
   // Executive powers resolution (Phase 5, PWR-01..PWR-07)
@@ -517,6 +595,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   for (const m of mods('approval')) ap.add(m.source, m.amount);
   if (filibusterApprovalPenalty > 0) ap.add('approval:reform', -filibusterApprovalPenalty);
   if (reformResult && reformResult.approvalDelta !== 0) ap.add('approval:reform', reformResult.approvalDelta);
+  if (geoEscalationApprovalPenalty > 0) ap.add('event:geopolitical_escalation', -geoEscalationApprovalPenalty);
   const approval = ap.round(ap.clamp(state.approval + ap.sum, ...LIMITS.approval.bounds), RULES.approvalStep.value);
   const tr = new Ledger();
   tr.add('trust:reversion', C.trustAdjust * (s.trust - e.trust));
@@ -525,6 +604,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (filibusterTrustPenalty > 0) tr.add('trust:reform', -filibusterTrustPenalty);
   if (reformResult && reformResult.trustDelta !== 0) tr.add('trust:reform', reformResult.trustDelta);
   if (amendmentTrustGain > 0) tr.add('trust:reform', amendmentTrustGain);
+  if (geoEscalationTrustPenalty > 0) tr.add('event:geopolitical_escalation', -geoEscalationTrustPenalty);
   const trust = tr.clamp(e.trust + tr.sum, ...LIMITS.trust.bounds);
 
   const cl = new Ledger();
@@ -536,6 +616,9 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   }
   if (cRes?.valid && cRes.cloutCost > 0) {
     cl.add('clout:crisis', -cRes.cloutCost);
+  }
+  if (geoRes?.valid && geoRes.cloutCost > 0) {
+    cl.add('clout:crisis', -geoRes.cloutCost);
   }
   if (pRes?.valid) {
     if (pRes.cloutSpent > 0) cl.add('clout:powers', -pRes.cloutSpent);
@@ -567,6 +650,17 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   }
 
   const nextTurn = state.turn + 1;
+  if (!legacyRun) {
+    const geoSchedule = getGeopoliticalSchedule(state.seed);
+    const nextGeoId = geoSchedule.get(nextTurn);
+    if (nextGeoId && !resolvedGeoCrises.includes(nextGeoId) && !activeGeoCrises.some((c) => c.crisisId === nextGeoId)) {
+      const def = getCrisis(nextGeoId);
+      if (def) {
+        activeGeoCrises.push(createGeopoliticalActiveCrisis(def, nextTurn));
+      }
+    }
+  }
+
   const nextEcon = { gap, growth, unemployment, empPop, inflation, expected, fedRate, gdp, debt, realIncome, gini, lifeExp, trust, crime };
   const interimState: GameState = {
     ...state,
@@ -581,6 +675,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     viewedMyths,
     speechCountInWindow,
     houseSeatDelta: nextHouseSeatDelta,
+    activeGeopoliticalCrises: activeGeoCrises,
+    resolvedGeopoliticalCrises: resolvedGeoCrises,
     ...(state.senateSeatDelta !== undefined || state.filibusterRule !== undefined || nextFilibusterRule !== undefined ? { senateSeatDelta: nextSenateSeatDelta ?? 0 } : {}),
     ...(nextFilibusterRule !== undefined && nextFilibusterRule !== 'sixty_vote' ? { filibusterRule: nextFilibusterRule } : {}),
     ...(nextActiveReforms && nextActiveReforms.length > 0 ? { activeReforms: nextActiveReforms } : {}),

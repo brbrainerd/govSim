@@ -51,10 +51,6 @@ function createActiveCrisis(def: CrisisDefinition, turn: number): ActiveCrisis {
     explainerTitle: def.explainerTitle,
     options: def.options,
     isEndogenous: def.type === 'endogenous',
-    isGeopolitical: false,
-    turnsRemaining: 0,
-    startTurn: turn,
-    deadlineTurn: turn,
   };
 }
 

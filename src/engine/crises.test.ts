@@ -15,6 +15,8 @@ import {
   isGeopoliticalCrisis,
   type CrisisOption,
 } from './crises';
+import { autopilotDecisions } from './decisions';
+import { C } from './coefficients';
 
 describe('crises director (EVT-01, EVT-03, GR-01, GR-02, GR-08)', () => {
   it('GR-01 & GR-02: player with no decisions matches autopilot crisis schedule across 200 seeds', () => {
@@ -226,5 +228,104 @@ describe('crises director (EVT-01, EVT-03, GR-01, GR-02, GR-08)', () => {
     expect(checkGeopoliticalEscalation(crisis, 6)).toBe(false);
     expect(checkGeopoliticalEscalation(crisis, 7)).toBe(false);
     expect(checkGeopoliticalEscalation(crisis, 8)).toBe(true);
+  });
+
+  it('CRISIS-03: autopilot resolves each of the 4 geopolitical crises on turn of arrival', () => {
+    for (const crisisDef of GEOPOLITICAL_CRISES) {
+      let state = newGame(1, START);
+      const activeCrisis = createGeopoliticalActiveCrisis(crisisDef, state.turn);
+      state = { ...state, activeGeopoliticalCrises: [activeCrisis] };
+
+      const decisions = autopilotDecisions(state);
+      expect(decisions.geopoliticalCrisis).toBeDefined();
+      expect(decisions.geopoliticalCrisis?.crisisId).toBe(crisisDef.id);
+
+      const autoOption = crisisDef.options.find((o) => o.autopilot);
+      expect(decisions.geopoliticalCrisis?.optionId).toBe(autoOption?.id);
+
+      const next = endTurn(state, decisions);
+      expect(next.resolvedGeopoliticalCrises).toContain(crisisDef.id);
+      expect(next.activeGeopoliticalCrises?.some((c) => c.crisisId === crisisDef.id)).toBe(false);
+      expect(next.report.log.some((l) => l.kind === 'crisis' && l.id === crisisDef.id)).toBe(true);
+    }
+  });
+
+  it('CRISIS-02 & CRISIS-03: player response triad trade-offs (Diplomatic vs Economic vs Military)', () => {
+    const def = getCrisis('oil_embargo')!;
+    for (const opt of def.options) {
+      let state = newGame(10, START);
+      state = {
+        ...state,
+        clout: 100,
+        activeGeopoliticalCrises: [createGeopoliticalActiveCrisis(def, state.turn)],
+      };
+
+      const startClout = state.clout;
+      const next = endTurn(state, {
+        geopoliticalCrisis: { crisisId: def.id, optionId: opt.id },
+      });
+
+      expect(next.resolvedGeopoliticalCrises).toContain(def.id);
+      expect(next.activeGeopoliticalCrises?.some((c) => c.crisisId === def.id)).toBe(false);
+      if (opt.cloutCost > 0) {
+        expect(next.report.trace.clout).toContainEqual(
+          expect.objectContaining({ source: 'clout:crisis', amount: -opt.cloutCost }),
+        );
+      }
+      expect(next.report.log).toContainEqual(
+        expect.objectContaining({ kind: 'crisis', id: def.id, detail: opt.id, amount: opt.cloutCost }),
+      );
+    }
+  });
+
+  it('CRISIS-02: unresolved geopolitical crisis escalates with penalty upon countdown expiration', () => {
+    const def = getCrisis('border_clashes')!;
+    let state = newGame(20, START);
+    const startTurn = state.turn;
+    const initialCrisis = createGeopoliticalActiveCrisis(def, startTurn);
+    state = {
+      ...state,
+      activeGeopoliticalCrises: [initialCrisis],
+    };
+
+    // Turn 1: warning (turnsRemaining 2 -> 1)
+    state = endTurn(state, {});
+    expect(state.activeGeopoliticalCrises?.some((c) => c.crisisId === def.id)).toBe(true);
+    expect(state.activeGeopoliticalCrises?.find((c) => c.crisisId === def.id)?.turnsRemaining).toBe(1);
+    expect(state.report.log.some((l) => l.kind === 'geopolitical_escalation')).toBe(false);
+
+    // Turn 2: final quarter (turnsRemaining 1 -> 0, countdown expired -> escalation!)
+    state = endTurn(state, {});
+    expect(state.activeGeopoliticalCrises?.some((c) => c.crisisId === def.id)).toBe(false);
+    expect(state.resolvedGeopoliticalCrises).toContain(def.id);
+    expect(state.report.log).toContainEqual(
+      expect.objectContaining({
+        kind: 'geopolitical_escalation',
+        id: def.id,
+        detail: 'countdown_expired',
+        amount: C.geopoliticalEscalationPenalty,
+      }),
+    );
+  });
+
+  it('CRISIS-02: clout deductions and conservation rules across crisis decisions', () => {
+    const def = getCrisis('strait_blockade')!;
+    const expensiveOpt = def.options.find((o) => o.cloutCost > 0)!;
+
+    let state = newGame(30, START);
+    state = {
+      ...state,
+      clout: 0,
+      activeGeopoliticalCrises: [createGeopoliticalActiveCrisis(def, state.turn)],
+    };
+
+    const next = endTurn(state, {
+      geopoliticalCrisis: { crisisId: def.id, optionId: expensiveOpt.id },
+    });
+
+    expect(next.report.log).toContainEqual(
+      expect.objectContaining({ kind: 'crisis', id: 'rejected', detail: 'unaffordable' }),
+    );
+    expect(next.clout).toBeGreaterThanOrEqual(0);
   });
 });

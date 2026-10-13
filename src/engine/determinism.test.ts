@@ -36,15 +36,15 @@ describe('replay', () => {
 
 describe('golden replays (OBS-02)', () => {
   const goldens: { name: string; seed: number; expectedHash: string; inputs: Record<number, Decisions> }[] = [
-    { name: 'autopilot', seed: 1, expectedHash: '1a52c417ac7238', inputs: {} },
-    { name: 'infrastructure', seed: 7, expectedHash: '07e41ada193999', inputs: { 1: enact(fromPackage('Infrastructure push')) } },
-    { name: 'tax-cut', seed: 42, expectedHash: '1b2078f524ff01', inputs: { 1: enact(fromPackage('Tax cut')) } },
-    { name: 'balance-budget', seed: 2026, expectedHash: '0a3b7fcdce59c4', inputs: { 3: enact(fromPackage('Balance the budget')) } },
-    { name: 'tariffs-35', seed: 99, expectedHash: '1b3b198155fe61', inputs: { 5: enact({ ...fromPackage('Keep as is'), tar: 35 }) } },
+    { name: 'autopilot', seed: 1, expectedHash: '06cb9e6099be48', inputs: {} },
+    { name: 'infrastructure', seed: 7, expectedHash: '0473149b8296f5', inputs: { 1: enact(fromPackage('Infrastructure push')) } },
+    { name: 'tax-cut', seed: 42, expectedHash: '03b0d9141f2314', inputs: { 1: enact(fromPackage('Tax cut')) } },
+    { name: 'balance-budget', seed: 2026, expectedHash: '042d40860f2d7d', inputs: { 3: enact(fromPackage('Balance the budget')) } },
+    { name: 'tariffs-35', seed: 99, expectedHash: '09e65477e4a91e', inputs: { 5: enact({ ...fromPackage('Keep as is'), tar: 35 }) } },
     {
       name: 'mixed-strategy',
       seed: 123,
-      expectedHash: '0670ac66ee8ad0',
+      expectedHash: '02c526af6c730e',
       inputs: { 2: { bill: { budget: { ...fromPackage('Keep as is'), inc: 28, bus: 25, rds: 120 }, deals: ['mod'] } } },
     },
   ];
@@ -58,6 +58,21 @@ describe('golden replays (OBS-02)', () => {
       expect(stableHash(s)).toBe(g.expectedHash);
     });
   }
+
+  it('runs 8/8 determinism suite with zero drift across repeated seed replays', () => {
+    const testSeeds = [1, 7, 42, 99, 123, 777, 1984, 2026];
+    for (const seed of testSeeds) {
+      let s1 = newGame(seed, START);
+      let s2 = newGame(seed, START);
+      for (let t = 1; t <= 16; t++) {
+        s1 = endTurn(s1, {});
+        s2 = endTurn(s2, {});
+      }
+      expect(stableHash(s1)).toBe(stableHash(s2));
+      expect(s1.activeGeopoliticalCrises).toEqual(s2.activeGeopoliticalCrises);
+      expect(s1.resolvedGeopoliticalCrises).toEqual(s2.resolvedGeopoliticalCrises);
+    }
+  });
 });
 
 describe('fixture coverage (FND-02)', () => {

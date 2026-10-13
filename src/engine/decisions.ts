@@ -46,6 +46,7 @@ export type { SocialDraft } from './social';
 export interface Decisions {
   bill?: Bill;
   crisis?: CrisisDecision;
+  geopoliticalCrisis?: CrisisDecision;
   powers?: PowerDecisions;
   social?: SocialDraft;
   filibusterRule?: FilibusterRule;
@@ -211,13 +212,27 @@ export function resolveCrisisChoice(
 }
 
 export function autopilotDecisions(state: {
-  readonly activeCrisis: {
+  readonly activeCrisis?: {
     readonly crisisId: string;
     readonly options: readonly { readonly id: string; readonly autopilot?: boolean }[];
   } | null;
+  readonly activeGeopoliticalCrises?: readonly {
+    readonly crisisId: string;
+    readonly options: readonly { readonly id: string; readonly autopilot?: boolean }[];
+  }[];
 }): Decisions {
-  if (!state.activeCrisis) return {};
-  const opt = state.activeCrisis.options.find((o) => o.autopilot);
-  return opt ? { crisis: { crisisId: state.activeCrisis.crisisId, optionId: opt.id } } : {};
+  const d: Decisions = {};
+  if (state.activeCrisis) {
+    const opt = state.activeCrisis.options.find((o) => o.autopilot);
+    if (opt) d.crisis = { crisisId: state.activeCrisis.crisisId, optionId: opt.id };
+  }
+  if (state.activeGeopoliticalCrises && state.activeGeopoliticalCrises.length > 0) {
+    const geo = state.activeGeopoliticalCrises[0];
+    if (geo) {
+      const opt = geo.options.find((o) => o.autopilot);
+      if (opt) d.geopoliticalCrisis = { crisisId: geo.crisisId, optionId: opt.id };
+    }
+  }
+  return d;
 }
 
