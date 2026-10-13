@@ -4,18 +4,18 @@ milestone: v0.2
 milestone_name: Playable First Term
 current_phase: 8
 current_phase_name: Balance, hardening & release
-status: ready_to_execute
-stopped_at: Phase 8 planned (08-01 to 08-04 created); ready to execute Wave 1
-last_updated: "2026-10-13T01:15:00.000Z"
+status: complete
+stopped_at: Milestone v0.2 complete (all 8 phases executed and verified)
+last_updated: "2026-10-13T01:31:00.000Z"
 last_activity: 2026-10-12
-last_activity_desc: Phase 8 UI spec and 4 execution plans complete; ready for Wave 1 execution
-state_head: 8985fbc
+last_activity_desc: Phase 8 (all 4 plans) complete and verified with 14 Playwright E2E tests, 246 unit tests, and axe audits
+state_head: 6ae7fab
 progress:
   total_phases: 8
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 39
-  completed_plans: 35
-  percent: 90
+  completed_plans: 39
+  percent: 100
 ---
 
 # Project State
@@ -25,16 +25,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-09)
 
 **Core value:** A player can make real presidential tradeoffs against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
-**Current focus:** Phase 8 — Balance, hardening & release
+**Current focus:** Milestone v0.2 complete — Playable First Term
 
 ## Current Position
 
 Phase: 8 — Balance, hardening & release
-Plan: Ready to execute 08-01-PLAN.md (Wave 1)
-Status: Ready to execute
-Last activity: 2026-10-12 — Phase 8 UI spec and 4 execution plans complete
+Plan: 08-04 Complete
+Status: Milestone v0.2 Complete (100%)
+Last activity: 2026-10-12 — Phase 8 execution complete, all plans and verification passing
 
-Progress: [█████████░] 90%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 

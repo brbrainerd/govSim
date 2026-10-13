@@ -264,20 +264,20 @@ Plans:
   4. The player can open an About / Privacy / Credits screen showing credits and third-party notices; PRIVACY.md states that nothing is collected and which server logs exist (Hetzner/Coolify proxy, Cloudflare R2)
   5. The full balance harness (spam, hoard and always-X strategies, a hill-climber trained on seeds 1-40 and tested on 41-80) keeps sensible play 2-10 points above doing nothing with reelection rates in band; a keyboard-only player can finish a full term within performance budgets
 
-**Plans**: 0/4 plans executed
+**Plans**: 4/4 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 08-01-PLAN.md — Milestone badges engine, content definitions, and UI display (RPT-03)
+- [x] 08-01-PLAN.md — Milestone badges engine, content definitions, and UI display (RPT-03)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 08-02-PLAN.md — Save format v1 freeze, share-your-run code, and replay loader (REL-03, GR-33)
+- [x] 08-02-PLAN.md — Save format v1 freeze, share-your-run code, and replay loader (REL-03, GR-33)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 08-03-PLAN.md — About, Privacy & Credits modal, PRIVACY.md, and problem report bundle (REL-02, REL-04)
+- [x] 08-03-PLAN.md — About, Privacy & Credits modal, PRIVACY.md, and problem report bundle (REL-02, REL-04)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 08-04-PLAN.md — Balance harness extension, hardening, full-term keyboard playthrough, and E2E audits (RPT-03, REL-02..REL-04, OBS-07)
+- [x] 08-04-PLAN.md — Balance harness extension, hardening, full-term keyboard playthrough, and E2E audits (RPT-03, REL-02..REL-04, OBS-07)
 **UI hint**: yes
 **Research flag**: No (harness extension and release artifacts are standard). The 30-45 min first-term session length needs an in-person playtest; public title (D8) is a user decision before any public link.
 
@@ -295,4 +295,4 @@ Phases execute in numeric order: 1 → 2 → 3 → (4 ∥ 5) → 6 → 7 → 8. 
 | 5. Your Powers | 4/4 | Complete | 2026-10-12 |
 | 6. Voters & Electoral College | 4/4 | Complete | 2026-10-12 |
 | 7. Election & end of term | 4/4 | Complete | 2026-10-12 |
-| 8. Balance, hardening & release | 0/4 | In progress | - |
+| 8. Balance, hardening & release | 4/4 | Complete | 2026-10-12 |
