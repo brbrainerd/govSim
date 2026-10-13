@@ -2,24 +2,41 @@
 // No UI imports. Neutral: uses player side ('D' | 'R') and player-relative metrics.
 // Every constant comes from coefficients.ts or units.ts (exempt from literal scan).
 
-import { DISTRICTS, STATE_EXPOSURES } from '../data/electoral';
+import { DISTRICTS, getStateExposure, type StateDemographicExposure } from '../data/electoral';
 import { us } from '../data/us';
 import { C, RULES } from './coefficients';
-import { clamp, sqrt } from './detmath';
+import { abs, clamp, round, sqrt } from './detmath';
 import type { GameState } from './game';
 import { normal } from './rng';
+import { isSocialBaseline, socialDev, type SocialDraft } from './social';
 import {
   BASE_PERCENT,
   DISTRICT_EV,
   ELECTION_TURN_1,
+  FAMILY_RELIEF_UNIT_DOLLARS,
   HALF_DIVISOR,
   MAX_SUPPORT_PCT,
   ME_AT_LARGE_EV,
   MIN_SUPPORT_PCT,
+  NAT_CHILD_POVERTY_BASELINE,
+  NAT_CLEAN_ENERGY_BASELINE,
+  NAT_FOSSIL_ENERGY_BASELINE,
+  NAT_IMMIGRANT_LABOR_BASELINE,
+  NAT_SENIOR_BASELINE,
+  NAT_STUDENT_DEBT_BASELINE,
+  NAT_UNINSURED_BASELINE,
+  NAT_YOUNG_FAMILY_BASELINE,
   NE_AT_LARGE_EV,
   PROJECTION_START_TURN,
   REASON_IMPACT_THRESHOLD,
   REASON_NATIONAL_THRESHOLD,
+  RPP_BASE_INDEX,
+  SOCIAL_INDEX_STEP,
+  SOCIAL_INDEX_STEP_FINE,
+  SOCIAL_MAX_DEV,
+  SOCIAL_NARROW_MAX_DEV,
+  SOCIAL_PERCENT_MAX,
+  SOCIAL_PERCENT_STEP,
   TOTAL_ELECTORAL_VOTES,
   TO_WIN_ELECTORAL_VOTES,
 } from './units';
@@ -46,6 +63,8 @@ export interface StateVoterState {
   readonly isSwing: boolean;
   readonly isTippingPoint: boolean;
   readonly reasons: readonly string[];
+  readonly familyReliefMonthly?: number;
+  readonly rppIndex?: number;
 }
 
 export interface ProjectionRange {
@@ -167,28 +186,84 @@ function classifyLeaning(margin: number): VoterLeaning {
   return 'safe-them';
 }
 
-function deriveReasons(
-  farmShift: number,
-  mfgShift: number,
-  energyShift: number,
-  natShift: number
-): string[] {
+export interface PolicyShifts {
+  readonly farmShift: number;
+  readonly mfgShift: number;
+  readonly energyShift: number;
+  readonly natShift: number;
+  readonly drugShift: number;
+  readonly acaShift: number;
+  readonly bdrShift: number;
+  readonly immLaborShift: number;
+  readonly clnShift: number;
+  readonly fosShift: number;
+  readonly crbShift: number;
+  readonly prekShift: number;
+  readonly sdrShift: number;
+  readonly k12Shift: number;
+}
+
+export function deriveReasons(shifts: PolicyShifts): string[] {
   const out: string[] = [];
 
-  if (farmShift < -REASON_IMPACT_THRESHOLD) out.push('Farmers upset by tariffs');
-  else if (farmShift > REASON_IMPACT_THRESHOLD) out.push('Farm export conditions favorable');
+  // Social policy drivers (Phase 10, SOC-05)
+  if (shifts.drugShift > REASON_IMPACT_THRESHOLD) out.push('Seniors benefit from Medicare drug price caps');
+  if (shifts.acaShift > REASON_IMPACT_THRESHOLD) out.push('Families gain from expanded ACA health subsidies');
+  if (shifts.bdrShift > REASON_IMPACT_THRESHOLD) out.push('Border communities supported by enforcement resources');
+  if (shifts.immLaborShift > REASON_IMPACT_THRESHOLD) out.push('Regional labor stabilized by visa and worker reforms');
+  if (shifts.clnShift > REASON_IMPACT_THRESHOLD) out.push('Clean energy investments expand local employment');
+  if (shifts.fosShift > REASON_IMPACT_THRESHOLD) out.push('Energy sector boosted by federal leasing permits');
+  if (shifts.crbShift < -REASON_IMPACT_THRESHOLD) out.push('Utility bills rise under carbon standards');
+  if (shifts.prekShift > REASON_IMPACT_THRESHOLD) out.push('Parents relieved by universal pre-K grants');
+  if (shifts.sdrShift > REASON_IMPACT_THRESHOLD) out.push('Young professionals benefit from student debt relief');
+  if (shifts.k12Shift > REASON_IMPACT_THRESHOLD) out.push('Schools supported by Title I poverty grants');
 
-  if (mfgShift > REASON_IMPACT_THRESHOLD) out.push('Strong manufacturing growth');
-  else if (mfgShift < -REASON_IMPACT_THRESHOLD) out.push('Industrial output slowdown');
+  // Macroeconomic and trade drivers
+  if (shifts.farmShift < -REASON_IMPACT_THRESHOLD) out.push('Farmers upset by tariffs');
+  else if (shifts.farmShift > REASON_IMPACT_THRESHOLD) out.push('Farm export conditions favorable');
 
-  if (energyShift < -REASON_IMPACT_THRESHOLD) out.push('High inflation impacts energy');
-  else if (energyShift > REASON_IMPACT_THRESHOLD) out.push('Energy sector steady');
+  if (shifts.mfgShift > REASON_IMPACT_THRESHOLD) out.push('Strong manufacturing growth');
+  else if (shifts.mfgShift < -REASON_IMPACT_THRESHOLD) out.push('Industrial output slowdown');
 
-  if (natShift > REASON_NATIONAL_THRESHOLD) out.push('Lifted by national popularity');
-  else if (natShift < -REASON_NATIONAL_THRESHOLD) out.push('Dragged by national approval');
+  if (shifts.energyShift < -REASON_IMPACT_THRESHOLD) out.push('High inflation impacts energy');
+  else if (shifts.energyShift > REASON_IMPACT_THRESHOLD) out.push('Energy sector steady');
+
+  if (shifts.natShift > REASON_NATIONAL_THRESHOLD) out.push('Lifted by national popularity');
+  else if (shifts.natShift < -REASON_NATIONAL_THRESHOLD) out.push('Dragged by national approval');
 
   if (out.length === 0) out.push('Local voter conditions steady');
   return out;
+}
+
+/**
+ * Computes state-specific monthly family financial impact ($/month)
+ * adjusting national social relief by state exposure and regional price parity (SOC-05).
+ */
+export function calculateStateFamilyRelief(
+  stateCode: string,
+  draft?: SocialDraft
+): number {
+  if (!draft || isSocialBaseline(draft)) return 0;
+  const exp = getStateExposure(stateCode);
+  if (!exp) return 0;
+
+  const acaRelief = (socialDev(draft, 'aca') / SOCIAL_INDEX_STEP_FINE) * C.acaFamilyRelief * (exp.uninsuredRate / NAT_UNINSURED_BASELINE);
+  const drugRelief = (socialDev(draft, 'drg') / SOCIAL_PERCENT_STEP) * C.drugFamilySavings * (exp.seniorShare / NAT_SENIOR_BASELINE);
+  const pubRelief = socialDev(draft, 'pub') * C.publicOptionPremiumRelief * (exp.uninsuredRate / NAT_UNINSURED_BASELINE);
+  const visaBenefit = (socialDev(draft, 'vis') / SOCIAL_INDEX_STEP) * C.visaFamilyBenefit * (exp.immigrantLaborShare / NAT_IMMIGRANT_LABOR_BASELINE);
+  const regBenefit = socialDev(draft, 'reg') * C.regularizationFamilyRelief * (exp.immigrantLaborShare / NAT_IMMIGRANT_LABOR_BASELINE);
+  const cleanBenefit = (socialDev(draft, 'cln') / SOCIAL_INDEX_STEP) * C.cleanEnergyFamilyRelief * exp.cleanEnergyGrowth;
+  const fossilBenefit = (socialDev(draft, 'fos') / SOCIAL_INDEX_STEP) * C.fossilPermittingFamilyRelief * (exp.energy / NAT_FOSSIL_ENERGY_BASELINE);
+  const carbonCost = (socialDev(draft, 'crb') / SOCIAL_PERCENT_STEP) * C.carbonStandardCost * exp.carbonIntensity;
+  const titleIBenefit = (socialDev(draft, 'k12') / SOCIAL_INDEX_STEP_FINE) * C.titleIFamilyRelief * (exp.childPovertyRate / NAT_CHILD_POVERTY_BASELINE);
+  const debtRelief = (socialDev(draft, 'sdr') / SOCIAL_PERCENT_STEP) * C.studentDebtMonthlyRelief * (exp.studentDebtShare / NAT_STUDENT_DEBT_BASELINE);
+  const prekRelief = socialDev(draft, 'prek') * C.universalPreKFamilyRelief * (exp.youngFamilyShare / NAT_YOUNG_FAMILY_BASELINE);
+
+  const rawRelief = acaRelief + drugRelief + pubRelief + visaBenefit + regBenefit +
+                    cleanBenefit + fossilBenefit - carbonCost + titleIBenefit + debtRelief + prekRelief;
+
+  const rppFactor = (exp.rpp ?? RPP_BASE_INDEX) / RPP_BASE_INDEX;
+  return round(rawRelief / rppFactor);
 }
 
 /**
@@ -211,7 +286,53 @@ export function calculateElectoralCollege(
   const growthDev = state.econ.growth - state.start.potential;
   const inflDev = state.econ.inflation - state.start.inflation;
 
-  // 3. First pass: compute margins and candidate vote tallies
+  // 3. Compute regional social shifts centered around national average (SOC-05)
+  let meanSocialShift = 0;
+  const rawSocialShifts: number[] = [];
+
+  if (!isUnadjusted && state.socialPolicy && !isSocialBaseline(state.socialPolicy)) {
+    const draft = state.socialPolicy;
+    let sumSocial = 0;
+    for (const raw of RAW_UNITS) {
+      const exp = getStateExposure(raw.code) ?? getStateExposure(raw.stateCode) ?? {
+        farm: 0,
+        manufacturing: 0,
+        energy: 0,
+        fossilEnergy: 0,
+        seniorShare: 0,
+        uninsuredRate: 0,
+        borderState: false,
+        immigrantLaborShare: 0,
+        cleanEnergyGrowth: 0,
+        carbonIntensity: 1,
+        childPovertyRate: 0,
+        studentDebtShare: 0,
+        youngFamilyShare: 0,
+        rpp: RPP_BASE_INDEX,
+      };
+      const aca = (socialDev(draft, 'aca') / SOCIAL_MAX_DEV) * (exp.uninsuredRate / NAT_UNINSURED_BASELINE) * C.voterAcaSensitivity;
+      const drg = (socialDev(draft, 'drg') / SOCIAL_PERCENT_MAX) * (exp.seniorShare / NAT_SENIOR_BASELINE) * C.voterDrugPriceSensitivity;
+      const pub = socialDev(draft, 'pub') * (exp.uninsuredRate / NAT_UNINSURED_BASELINE) * C.voterPublicOptionSensitivity;
+      const bdrDev = socialDev(draft, 'bdr') / SOCIAL_NARROW_MAX_DEV;
+      const bdr = exp.borderState ? bdrDev * C.voterBorderSecuritySensitivity : 0;
+      const vis = (socialDev(draft, 'vis') / SOCIAL_MAX_DEV) * (exp.immigrantLaborShare / NAT_IMMIGRANT_LABOR_BASELINE) * C.voterVisaLaborSensitivity;
+      const reg = socialDev(draft, 'reg') * (exp.immigrantLaborShare / NAT_IMMIGRANT_LABOR_BASELINE) * C.voterRegularizationSensitivity;
+      const cln = (socialDev(draft, 'cln') / SOCIAL_MAX_DEV) * (exp.cleanEnergyGrowth / NAT_CLEAN_ENERGY_BASELINE) * C.voterCleanEnergySensitivity;
+      const fos = (socialDev(draft, 'fos') / SOCIAL_MAX_DEV) * (exp.energy / NAT_FOSSIL_ENERGY_BASELINE) * C.voterFossilPermittingSensitivity;
+      const crb = -(socialDev(draft, 'crb') / SOCIAL_PERCENT_MAX) * exp.carbonIntensity * C.voterCarbonStandardPenalty;
+      const k12 = (socialDev(draft, 'k12') / SOCIAL_NARROW_MAX_DEV) * (exp.childPovertyRate / NAT_CHILD_POVERTY_BASELINE) * C.voterTitleIEducationSensitivity;
+      const sdr = (socialDev(draft, 'sdr') / SOCIAL_PERCENT_MAX) * (exp.studentDebtShare / NAT_STUDENT_DEBT_BASELINE) * C.voterStudentDebtSensitivity;
+      const prek = socialDev(draft, 'prek') * (exp.youngFamilyShare / NAT_YOUNG_FAMILY_BASELINE) * C.voterUniversalPreKSensitivity;
+      const famRelief = calculateStateFamilyRelief(raw.code, draft);
+      const relief = (famRelief / FAMILY_RELIEF_UNIT_DOLLARS) * C.voterFamilyReliefElasticity;
+      const totalShift = aca + drg + pub + bdr + vis + reg + cln + fos + crb + k12 + sdr + prek + relief;
+      rawSocialShifts.push(totalShift);
+      sumSocial += totalShift;
+    }
+    meanSocialShift = sumSocial / rawSocialShifts.length;
+  }
+
+  // 4. First pass: compute margins and candidate vote tallies
   interface ComputedUnit {
     readonly raw: RawUnit;
     readonly baselineMargin: number;
@@ -220,19 +341,82 @@ export function calculateElectoralCollege(
     readonly supportDelta: number;
     readonly leaning: VoterLeaning;
     readonly reasons: readonly string[];
+    readonly familyReliefMonthly?: number;
+    readonly rppIndex?: number;
   }
 
   const computed: ComputedUnit[] = [];
 
-  for (const raw of RAW_UNITS) {
+  for (let unitIdx = 0; unitIdx < RAW_UNITS.length; unitIdx++) {
+    const raw = RAW_UNITS[unitIdx]!;
     const unadjustedBase = unadjustedPlayerMargin(raw, side);
     const baselineMargin = unadjustedBase - tipOffset;
 
-    const exp = STATE_EXPOSURES[raw.stateCode] ?? { farm: 0, manufacturing: 0, energy: 0 };
+    const exp = getStateExposure(raw.code) ?? getStateExposure(raw.stateCode) ?? {
+      farm: 0,
+      manufacturing: 0,
+      energy: 0,
+      fossilEnergy: 0,
+      seniorShare: 0,
+      uninsuredRate: 0,
+      borderState: false,
+      immigrantLaborShare: 0,
+      cleanEnergyGrowth: 0,
+      carbonIntensity: 1,
+      childPovertyRate: 0,
+      studentDebtShare: 0,
+      youngFamilyShare: 0,
+      rpp: RPP_BASE_INDEX,
+    };
     const farmShift = isUnadjusted ? 0 : -tariffDev * exp.farm * C.voterFarmTariffSensitivity;
     const mfgShift = isUnadjusted ? 0 : growthDev * exp.manufacturing * C.voterMfgGrowthSensitivity;
     const energyShift = isUnadjusted ? 0 : -inflDev * exp.energy * C.voterEnergyInflationSensitivity;
-    const totalExposureShift = farmShift + mfgShift + energyShift;
+    let totalExposureShift = farmShift + mfgShift + energyShift;
+
+    let drugShift = 0;
+    let acaShift = 0;
+    let bdrShift = 0;
+    let immLaborShift = 0;
+    let clnShift = 0;
+    let fosShift = 0;
+    let crbShift = 0;
+    let prekShift = 0;
+    let sdrShift = 0;
+    let k12Shift = 0;
+    let familyReliefMonthly = 0;
+
+    if (!isUnadjusted && state.socialPolicy && !isSocialBaseline(state.socialPolicy)) {
+      const draft = state.socialPolicy;
+
+      // 1. Healthcare
+      acaShift = (socialDev(draft, 'aca') / SOCIAL_MAX_DEV) * (exp.uninsuredRate / NAT_UNINSURED_BASELINE) * C.voterAcaSensitivity;
+      drugShift = (socialDev(draft, 'drg') / SOCIAL_PERCENT_MAX) * (exp.seniorShare / NAT_SENIOR_BASELINE) * C.voterDrugPriceSensitivity;
+      const pubShift = socialDev(draft, 'pub') * (exp.uninsuredRate / NAT_UNINSURED_BASELINE) * C.voterPublicOptionSensitivity;
+
+      // 2. Immigration
+      const bdrDev = socialDev(draft, 'bdr') / SOCIAL_NARROW_MAX_DEV;
+      bdrShift = exp.borderState ? bdrDev * C.voterBorderSecuritySensitivity : 0;
+      const visShift = (socialDev(draft, 'vis') / SOCIAL_MAX_DEV) * (exp.immigrantLaborShare / NAT_IMMIGRANT_LABOR_BASELINE) * C.voterVisaLaborSensitivity;
+      const regShift = socialDev(draft, 'reg') * (exp.immigrantLaborShare / NAT_IMMIGRANT_LABOR_BASELINE) * C.voterRegularizationSensitivity;
+      immLaborShift = visShift + regShift;
+
+      // 3. Energy
+      clnShift = (socialDev(draft, 'cln') / SOCIAL_MAX_DEV) * (exp.cleanEnergyGrowth / NAT_CLEAN_ENERGY_BASELINE) * C.voterCleanEnergySensitivity;
+      fosShift = (socialDev(draft, 'fos') / SOCIAL_MAX_DEV) * (exp.energy / NAT_FOSSIL_ENERGY_BASELINE) * C.voterFossilPermittingSensitivity;
+      crbShift = -(socialDev(draft, 'crb') / SOCIAL_PERCENT_MAX) * exp.carbonIntensity * C.voterCarbonStandardPenalty;
+
+      // 4. Education
+      k12Shift = (socialDev(draft, 'k12') / SOCIAL_NARROW_MAX_DEV) * (exp.childPovertyRate / NAT_CHILD_POVERTY_BASELINE) * C.voterTitleIEducationSensitivity;
+      sdrShift = (socialDev(draft, 'sdr') / SOCIAL_PERCENT_MAX) * (exp.studentDebtShare / NAT_STUDENT_DEBT_BASELINE) * C.voterStudentDebtSensitivity;
+      prekShift = socialDev(draft, 'prek') * (exp.youngFamilyShare / NAT_YOUNG_FAMILY_BASELINE) * C.voterUniversalPreKSensitivity;
+
+      // 5. Cost of living / family relief
+      familyReliefMonthly = calculateStateFamilyRelief(raw.code, draft);
+
+      const rawShift = rawSocialShifts[unitIdx] ?? 0;
+      const totalSocialShift = rawShift - meanSocialShift;
+      totalExposureShift += totalSocialShift;
+    }
 
     const shock = isUnadjusted
       ? 0
@@ -254,7 +438,22 @@ export function calculateElectoralCollege(
     );
     const supportDelta = supportPct - baselineSupport;
     const leaning = classifyLeaning(currentMargin);
-    const reasons = deriveReasons(farmShift, mfgShift, energyShift, natShift);
+    const reasons = deriveReasons({
+      farmShift,
+      mfgShift,
+      energyShift,
+      natShift,
+      drugShift,
+      acaShift,
+      bdrShift,
+      immLaborShift,
+      clnShift,
+      fosShift,
+      crbShift,
+      prekShift,
+      sdrShift,
+      k12Shift,
+    });
 
     computed.push({
       raw,
@@ -264,6 +463,8 @@ export function calculateElectoralCollege(
       supportDelta,
       leaning,
       reasons,
+      familyReliefMonthly,
+      rppIndex: exp.rpp,
     });
   }
 
@@ -294,7 +495,7 @@ export function calculateElectoralCollege(
     const isWin = item.currentMargin >= 0;
     const winner: 'you' | 'them' = isWin ? 'you' : 'them';
     const isTippingPoint = raw.code === tippingPointCode || raw.stateCode === tippingPointCode;
-    const isSwing = Math.abs(item.currentMargin) <= C.swingThreshold;
+    const isSwing = abs(item.currentMargin) <= C.swingThreshold;
 
     if (isWin) {
       playerVotes += raw.electoralVotes;
@@ -319,6 +520,8 @@ export function calculateElectoralCollege(
       isSwing,
       isTippingPoint,
       reasons: item.reasons,
+      familyReliefMonthly: item.familyReliefMonthly,
+      rppIndex: item.rppIndex,
     };
 
     if (raw.isDistrict) {
@@ -357,7 +560,8 @@ export function calculateElectoralCollege(
   // 6. Compute honest projection range from Year 3 onward (turn >= 9) (VOT-03)
   let projectionRange: ProjectionRange | undefined = undefined;
   if (!isUnadjusted && state.turn >= PROJECTION_START_TURN) {
-    const turnsRemaining = Math.max(1, ELECTION_TURN_1 - state.turn);
+    const rawTurns = ELECTION_TURN_1 - state.turn;
+    const turnsRemaining = rawTurns < 1 ? 1 : rawTurns;
     const sigma = sqrt(turnsRemaining * C.projectionVolatilityQuarterly);
     const zShift = C.projectionZScore * sigma;
 

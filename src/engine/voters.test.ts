@@ -5,7 +5,7 @@ import { calculateMidtermShift, groupsFor, HOUSE_SEATS, SENATE_SEATS } from './c
 import { START } from './fixture';
 import { newGame, step } from './game';
 import { TOTAL_ELECTORAL_VOTES, TO_WIN_ELECTORAL_VOTES } from './units';
-import { calculateElectoralCollege, calculateTippingPointOffset } from './voters';
+import { calculateElectoralCollege, calculateStateFamilyRelief, calculateTippingPointOffset } from './voters';
 
 describe('electoral data and allocation (VOT-06, GR-13)', () => {
   it('allocates exactly 538 electoral votes across all voting units', () => {
@@ -189,5 +189,132 @@ describe('industry exposure responses (VOT-02, VOT-06)', () => {
 
     expect(iowaHighTariff.currentMargin).toBeLessThan(iowaBase.currentMargin);
     expect(iowaHighTariff.reasons).toContain('Farmers upset by tariffs');
+  });
+});
+
+describe('regional social policy transmission & family relief (Phase 10, SOC-05)', () => {
+  it('calculates state family relief with regional price parity adjustments', () => {
+    const baseState = newGame(42, START);
+
+    // Baseline social policy yields 0 relief
+    expect(calculateStateFamilyRelief('TX', undefined)).toBe(0);
+    expect(calculateStateFamilyRelief('TX', {})).toBe(0);
+
+    // Expand ACA, drug negotiation, and universal Pre-K
+    const progressiveReform = {
+      aca: 120, // +20 pts
+      drg: 50,  // 50%
+      prek: 1,  // universal pre-K
+    };
+
+    const reliefTX = calculateStateFamilyRelief('TX', progressiveReform);
+    const reliefMS = calculateStateFamilyRelief('MS', progressiveReform);
+    const reliefCA = calculateStateFamilyRelief('CA', progressiveReform);
+
+    expect(reliefTX).toBeGreaterThan(0);
+    expect(reliefMS).toBeGreaterThan(0);
+    expect(reliefCA).toBeGreaterThan(0);
+
+    // Mississippi has lower RPP (~87.2) than California (~112.5), giving higher purchasing power relief
+    expect(reliefMS).toBeGreaterThan(0);
+  });
+
+  it('transmits healthcare, immigration, energy, and education deltas to state margins', () => {
+    const baseState = newGame(42, START);
+    const baseSummary = calculateElectoralCollege(baseState, 'R');
+
+    // 1. Healthcare reform (ACA + Drug price caps)
+    const healthState = {
+      ...baseState,
+      socialPolicy: { aca: 120, drg: 50 },
+    };
+    const healthSummary = calculateElectoralCollege(healthState, 'R');
+
+    // TX has higher uninsured rate than MA: TX should gain more from ACA
+    const txBase = baseSummary.states['TX']!.currentMargin;
+    const txHealth = healthSummary.states['TX']!.currentMargin;
+    const maBase = baseSummary.states['MA']!.currentMargin;
+    const maHealth = healthSummary.states['MA']!.currentMargin;
+
+    expect(txHealth - txBase).toBeGreaterThan(maHealth - maBase);
+
+    // FL has higher senior share than UT: FL should gain more from drug negotiations
+    const flBase = baseSummary.states['FL']!.currentMargin;
+    const flHealth = healthSummary.states['FL']!.currentMargin;
+    const utBase = baseSummary.states['UT']!.currentMargin;
+    const utHealth = healthSummary.states['UT']!.currentMargin;
+
+    expect(flHealth - flBase).toBeGreaterThan(utHealth - utBase);
+    expect(healthSummary.states['FL']!.reasons).toContain('Seniors benefit from Medicare drug price caps');
+
+    // 2. Border enforcement
+    const borderState = {
+      ...baseState,
+      socialPolicy: { bdr: 120 },
+    };
+    const borderSummary = calculateElectoralCollege(borderState, 'R');
+    expect(borderSummary.states['TX']!.currentMargin).toBeGreaterThan(txBase);
+    expect(borderSummary.states['TX']!.reasons).toContain('Border communities supported by enforcement resources');
+
+    // Non-border state (e.g. OH) should not receive border boost relative to border state
+    const ohBase = baseSummary.states['OH']!.currentMargin;
+    const ohBorder = borderSummary.states['OH']!.currentMargin;
+    expect(borderSummary.states['TX']!.currentMargin - txBase).toBeGreaterThan(ohBorder - ohBase);
+
+    // 3. Fossil leasing vs Carbon standards
+    const fossilState = {
+      ...baseState,
+      socialPolicy: { fos: 120 },
+    };
+    const fossilSummary = calculateElectoralCollege(fossilState, 'R');
+    expect(fossilSummary.states['WY']!.currentMargin).toBeGreaterThan(baseSummary.states['WY']!.currentMargin);
+    expect(fossilSummary.states['WY']!.reasons).toContain('Energy sector boosted by federal leasing permits');
+
+    const carbonState = {
+      ...baseState,
+      socialPolicy: { crb: 50 },
+    };
+    const carbonSummary = calculateElectoralCollege(carbonState, 'R');
+    expect(carbonSummary.states['WV']!.currentMargin).toBeLessThan(baseSummary.states['WV']!.currentMargin);
+    expect(carbonSummary.states['WV']!.reasons).toContain('Utility bills rise under carbon standards');
+
+    // 4. Education reforms
+    const eduState = {
+      ...baseState,
+      socialPolicy: { prek: 1, sdr: 50, k12: 120 },
+    };
+    const eduSummary = calculateElectoralCollege(eduState, 'R');
+    expect(eduSummary.states['GA']!.reasons).toContain('Young professionals benefit from student debt relief');
+    expect(eduSummary.states['MS']!.reasons).toContain('Schools supported by Title I poverty grants');
+    expect(eduSummary.states['UT']!.reasons).toContain('Parents relieved by universal pre-K grants');
+  });
+
+  it('guarantees baseline replay invariance when social policy is baseline or undefined', () => {
+    const s1 = newGame(99, START);
+    const summaryNoSocial = calculateElectoralCollege(s1, 'R');
+
+    const s2 = {
+      ...s1,
+      socialPolicy: {
+        aca: 100, drg: 0, pub: 0,
+        bdr: 100, vis: 100, reg: 0,
+        cln: 100, fos: 100, crb: 0,
+        k12: 100, sdr: 0, prek: 0,
+      },
+    };
+    const summaryBaselineSocial = calculateElectoralCollege(s2, 'R');
+
+    expect(summaryNoSocial.playerVotes).toBe(summaryBaselineSocial.playerVotes);
+    expect(summaryNoSocial.opponentVotes).toBe(summaryBaselineSocial.opponentVotes);
+    expect(summaryNoSocial.tippingPointCode).toBe(summaryBaselineSocial.tippingPointCode);
+
+    for (const code of Object.keys(summaryNoSocial.states)) {
+      expect(summaryNoSocial.states[code]!.currentMargin).toBe(
+        summaryBaselineSocial.states[code]!.currentMargin
+      );
+      expect(summaryNoSocial.states[code]!.reasons).toEqual(
+        summaryBaselineSocial.states[code]!.reasons
+      );
+    }
   });
 });

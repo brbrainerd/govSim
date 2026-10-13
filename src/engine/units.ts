@@ -55,9 +55,20 @@ export const SOCIAL_PERCENT_STEP = 10;
 export const SOCIAL_BINARY_BASE = 0;
 export const SOCIAL_BINARY_MAX = 1;
 export const SOCIAL_BINARY_STEP = 1;
+export const SOCIAL_MAX_DEV = 50;
+export const SOCIAL_NARROW_MAX_DEV = 40;
 
 export const RPP_BASE_INDEX = 100;
 export const FAMILY_RELIEF_UNIT_DOLLARS = 10;
+
+export const NAT_UNINSURED_BASELINE = 0.08;
+export const NAT_SENIOR_BASELINE = 0.175;
+export const NAT_IMMIGRANT_LABOR_BASELINE = 0.185;
+export const NAT_CLEAN_ENERGY_BASELINE = 0.15;
+export const NAT_FOSSIL_ENERGY_BASELINE = 0.03;
+export const NAT_CHILD_POVERTY_BASELINE = 0.16;
+export const NAT_STUDENT_DEBT_BASELINE = 0.20;
+export const NAT_YOUNG_FAMILY_BASELINE = 0.095;
 
 export const SENIOR_COHORT_SHARE = 0.20;
 export const WORKING_CLASS_COHORT_SHARE = 0.26;

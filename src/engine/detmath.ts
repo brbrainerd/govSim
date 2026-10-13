@@ -16,3 +16,10 @@ export function sqrt(x: number): number {
   return r;
 }
 
+/** Arithmetic absolute value. */
+export const abs = (x: number): number => (x < 0 ? -x : x);
+
+/** Deterministic rounding to nearest integer. */
+export const round = (x: number): number => (x >= 0 ? Math.floor(x + 0.5) : Math.ceil(x - 0.5));
+
+
