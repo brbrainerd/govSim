@@ -84,6 +84,7 @@
       <Rail
         turn={session.current.turn}
         current={session.screen}
+        isEvilMode={session.isEvilMode}
         onSelect={go}
         onExport={() => downloadSave(session)}
         onAbout={() => (aboutModalOpen = true)}

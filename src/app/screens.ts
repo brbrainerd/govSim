@@ -26,11 +26,14 @@ export type ScreenId = Screen['id'];
 export const screenById = (id: ScreenId): Screen => screens.find((s) => s.id === id)!;
 
 /** Rail model: groups in fixed order, each with its screens and lock state for this turn. */
-export function navFor(turn: number, unlockAll = false) {
+export function navFor(turn: number, unlockAll = false, isEvilMode = false) {
   return groups.map((g) => ({
     ...g,
     screens: screens
       .filter((s) => s.group === g.id)
-      .map((s) => ({ ...s, locked: !unlockAll && turn < s.unlockTurn })),
+      .map((s) => ({
+        ...s,
+        locked: !unlockAll && (isEvilMode && s.id === 'powers' ? false : turn < s.unlockTurn),
+      })),
   }));
 }

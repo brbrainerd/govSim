@@ -33,6 +33,9 @@ import {
   type TradeDraft,
   type TradeState,
 } from '../engine/trade';
+import { type EvilLeverId } from '../engine/units';
+import { getEvilLever } from '../data/evil';
+import { resolveEvilLevers } from '../engine/evil';
 
 /** Choices made at New Game. Kept beside the engine state, never inside it (D4). */
 export interface GameOptions {
@@ -62,6 +65,7 @@ interface Draft {
   activeSanctions: SanctionType[] | null;
   sectorTariffs: SectorTariffId[] | null;
   tradeAgreements: TradeAgreementId[] | null;
+  stagedEvilLevers: EvilLeverId[];
 }
 
 /** A new turn's draft starts from the policy already in force. */
@@ -87,6 +91,7 @@ const freshDraft = (policy: BudgetDraft, socialPolicy?: SocialDraft): Draft => (
   activeSanctions: null,
   sectorTariffs: null,
   tradeAgreements: null,
+  stagedEvilLevers: [],
 });
 
 /**
@@ -221,13 +226,27 @@ export class Session {
       this.current.econ.gdp,
     ),
   );
+  evilLeversCost = $derived.by(() => {
+    let cost = 0;
+    for (const id of this.draft.stagedEvilLevers) {
+      const lever = getEvilLever(id);
+      if (lever) cost += lever.cloutCost;
+    }
+    return cost;
+  });
+  evilLeversResolution = $derived.by(() => {
+    return resolveEvilLevers(this.draft.stagedEvilLevers, this.current.clout);
+  });
+  stagedEvilLeversCount = $derived(this.draft.stagedEvilLevers.length);
+  stagedEvilLeversKickbackBn = $derived(this.evilLeversResolution.stashDeltaBn);
+  stagedEvilLeversHeatDelta = $derived(this.evilLeversResolution.heatDelta);
   mythReward = $derived(
     this.draft.viewMyth && !this.current.viewedMyths.includes(this.draft.viewMyth)
       ? C.mythRewardClout
       : 0,
   );
   clout = $derived(
-    this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost - this.reformCost - this.foreignCost - this.tradeCost + this.mythReward,
+    this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost - this.reformCost - this.foreignCost - this.tradeCost - this.evilLeversCost + this.mythReward,
   );
   powers = $derived<PowerDecisions | null>(
     this.draft.signedOrders.length > 0 ||
@@ -262,6 +281,19 @@ export class Session {
   offshoreStashBn = $derived(this.current.evil?.offshoreStashBn ?? 0);
   heat = $derived(this.current.evil?.heat ?? 0);
   evilState = $derived(this.current.evil);
+
+  toggleEvilLever(id: EvilLeverId): void {
+    const current = this.draft.stagedEvilLevers;
+    if (current.includes(id)) {
+      this.draft.stagedEvilLevers = current.filter((l) => l !== id);
+    } else {
+      this.draft.stagedEvilLevers = [...current, id];
+    }
+  }
+
+  isEvilLeverStaged(id: EvilLeverId): boolean {
+    return this.draft.stagedEvilLevers.includes(id);
+  }
 
   constructor(seed: number, start: Start, options: GameOptions) {
     this.options = options;
@@ -555,6 +587,11 @@ export class Session {
         : undefined;
     if (tradeDraft) {
       decisions.trade = tradeDraft;
+    }
+    if (this.draft.stagedEvilLevers.length > 0) {
+      decisions.evil = {
+        enactedLevers: $state.snapshot(this.draft.stagedEvilLevers),
+      };
     }
     decisions.presidentialSide = (this.options.party === 'R' ? 'R' : 'D') as 'D' | 'R';
 

@@ -5,6 +5,7 @@
   let {
     turn,
     current,
+    isEvilMode = false,
     onSelect,
     onExport,
     onImport,
@@ -12,13 +13,14 @@
   }: {
     turn: number;
     current: ScreenId;
+    isEvilMode?: boolean;
     onSelect: (id: ScreenId) => void;
     onExport?: () => void;
     onImport?: (f: File) => void;
     onAbout?: () => void;
   } = $props();
 
-  const nav = $derived(navFor(turn));
+  const nav = $derived(navFor(turn, false, isEvilMode));
   let fileInput = $state<HTMLInputElement>();
   const DownloadIcon = icons.download;
   const UploadIcon = icons.upload;

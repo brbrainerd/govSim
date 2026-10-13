@@ -8,6 +8,7 @@
   import FedPortrait from '../ui/art/FedPortrait.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import JudicialReformModal from '../ui/JudicialReformModal.svelte';
+  import EvilLeversSection from '../ui/EvilLeversSection.svelte';
   import { SANCTIONS_CATALOG, type DefensePosture, type SanctionType } from '../engine/foreign';
 
   let {
@@ -325,6 +326,10 @@
           </div>
         </div>
       </div>
+
+      {#if session.isEvilMode}
+        <EvilLeversSection {session} />
+      {/if}
     </div>
   {/snippet}
 
