@@ -61,31 +61,14 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 
 **As of 2026-10-12, branch `game-pivot`** (not pushed; GitHub default branch is `master`; `git log -5` for the latest commits).
 
-- **Phase 1 (Engine foundations): executed, reviewed, all review findings fixed.**
-- **Phase 2 (Saves, guardrails & continuous deploy): executed, all 6 plans completed and verified.**
-- **Phase 3 (Turn report & Economy): executed, all 5 plans completed and verified.**
-- **Phase 4 (Events & crises): executed, all 5 plans completed and verified.**
-- **Phase 5 (Your Powers): executed, all 5 plans completed and verified.**
-- **Gates:** `pnpm test` 185 passing (31 files) · `pnpm test:e2e` 7 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
-  `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok.
-- **Built in Phase 5:**
-  - Curated catalog of 10 executive orders (`src/content/orders.ts`) and 5 spectrum-balanced civics myth cards (`src/content/myths.ts`) with statutory authority citations and qualitative court risk bands (PWR-01, PWR-06, PWR-07).
-  - Pure model power mechanics in `src/engine/powers.ts`: EO signing and revocation (tagged `eo`, dropped in legacy projection D5), judicial review challenges and rulings via keyed draws on `court` stream against a 6-3 court (PWR-02), Fed chair appointment and rate pressure with credibility trade-off (PWR-03), SCOTUS vacancy nomination (PWR-04), bully pulpit speeches with rolling window diminishing returns (PWR-05), and clout hard cap (`C.cloutCap: 200`, non-domination verified in balance harness, GR-10, GR-11, PWR-07).
-  - Americana vector art in `src/ui/art/CourtBench.svelte` (9 justice pill-people behind mahogany bench) and `src/ui/art/FedPortrait.svelte` (central bank chair medallion portrait) (OBS-07).
-  - Interactive `Powers.svelte` screen matching `g-powers.png` with question headline, 2-column EO card grid, institutional power strip, and Next step rail with single red stamp button (PWR-01, OBS-07).
-  - `MythModal.svelte` overlay matching `g-myth.png` with crossed-out MYTH badge, reality flowchart, Character explainer scene, real levers, and one-time insight bonus (+5 clout) (PWR-06, Pitfall 17).
-  - `SpeechModal.svelte` and `FedModal.svelte` dialogs with audience trade-offs and credibility warnings (PWR-03, PWR-05).
-  - Full E2E Playwright test suite (`tests/powers.spec.ts`), axe-core audits (0 violations), and visual viewport audits across 1376x768 and 1280x720 with zero outer document scroll (OBS-07).
-- **Built in Phase 4:**
-  - Keyed exogenous crisis schedule (`src/engine/director.ts`, `src/engine/crises.ts`) independent of player choices across 500 seeds with strict pacing rules (0 in turns 1-2, first turn 3-5, 4-9 per term, no 3 consecutive, 10-60% archetype distribution) (EVT-01, GR-01, GR-02, GR-08).
-  - Endogenous condition-triggered crises (`unrest`, `sovereign_debt`, `financial_panic`) flagged with "Autopilot didn't face this" (EVT-03).
-  - Crisis decision drafting in `Session` applied at `Next turn` (GR-38), autopilot fallback selection, non-domination verified across all archetypes, and balance calibration maintained (+2.383 points) (EVT-02, GR-09, GR-10, GR-12).
-  - Accessible `CrisisModal.svelte` with Americana vector news broadcast scene (`ReporterScene.svelte`), red "BREAKING" banner, clout pills, and "DECIDE" stamp button matching `g-crisis.png` (EVT-02, OBS-07).
-  - Statutory and legislative deadlines (`src/engine/deadlines.ts`) telegraphing >= 2 turn countdowns for shutdown and debt ceiling deadlines in Congress with countdown pills and action cards (EVT-04).
-  - Strictly qualitative seasonal and economic risk bands (Low/Elevated/High, 0 percentages) (EVT-05).
-  - Dynamic Oval Office briefing (`src/content/briefing.ts`) permanently replacing placeholder `sample.ts` with context-aware speech bubble, thisTurn card, and dynamic suggestions (EVT-07).
-  - Disaster response approval rally (`disaster_rally`) and unforeseen consequences report (`extractUnforeseenRipples`) in Turn Report (EVT-06, RPT-04).
-  - Playwright visual audit across 1376x768 and 1280x720 viewports capturing screenshots of all screens, deadline banners, and modals with zero outer scroll (OBS-07).
+- **Milestone v0.2 (Playable First Term): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.2`.**
+  - All 8 phases (1 to 8) executed, verified, and audited with 53/53 requirements satisfied.
+  - Archived to `.planning/milestones/v0.2-ROADMAP.md`, `v0.2-REQUIREMENTS.md`, and `v0.2-phases/`.
+- **Milestone v0.3 (Social Policy & Domestic Reform): INITIALIZED AND IN PLANNING.**
+  - Scoped across 4 phases: Phase 9 (Domestic Social Policy Levers), Phase 10 (Demographic & Regional Distribution), Phase 11 (Structural Government Reform & Amendments), Phase 12 (Household Impact Card & Balance).
+  - 11 active requirements defined in `.planning/REQUIREMENTS.md` (SOC-01..05, REF-01..04, HOU-01..02).
+- **Gates:** `pnpm test` 246 passing (42 files) · `pnpm test:e2e` 14 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
+  `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
 ### Open debts (do not lose these)
 
