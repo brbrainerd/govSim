@@ -483,6 +483,28 @@ export const COEFF = {
   tossupThreshold: { value: 1.5, unit: 'pp margin', basis: 'judgement', range: [0.5, 3.0], note: 'Margin threshold for tossup classification.' },
   likelyThreshold: { value: 5.0, unit: 'pp margin', basis: 'judgement', range: [3.0, 8.0], note: 'Margin threshold for likely classification.' },
   safeThreshold: { value: 10.0, unit: 'pp margin', basis: 'judgement', range: [8.0, 15.0], note: 'Margin threshold for safe classification.' },
+  // ---- social policy levers (Phase 9, SOC-01..04) ----
+  acaSubsidyDeficit: { value: 25, unit: '$bn/yr', basis: 'judgement', range: [10, 50], note: 'Deficit outlay per ACA subsidy enhancement point.' },
+  acaCoverageGain: { value: 0.15, unit: 'life expectancy multiplier', basis: 'judgement', range: [0.05, 0.4], note: 'Life expectancy gain from expanded health coverage.' },
+  drugNegotiationSavings: { value: 18, unit: '$bn/yr', basis: 'judgement', range: [5, 40], note: 'Federal Medicare outlay savings from prescription drug price negotiation.' },
+  drugFamilySavings: { value: 15, unit: '$/month', basis: 'judgement', range: [5, 30], note: 'Average family prescription out-of-pocket savings.' },
+  publicOptionDeficit: { value: 12, unit: '$bn/yr', basis: 'judgement', range: [5, 30], note: 'Federal startup and reinsurance costs for public health insurance option.' },
+  publicOptionPremiumRelief: { value: 10, unit: '$/month', basis: 'judgement', range: [3, 25], note: 'Family monthly premium relief from exchange competition.' },
+  borderSecurityCost: { value: 10, unit: '$bn/yr', basis: 'judgement', range: [5, 25], note: 'Federal border enforcement and personnel funding per point.' },
+  visaLaborExpansion: { value: 0.08, unit: '% empPop', basis: 'judgement', range: [0.02, 0.2], note: 'Employment-population ratio boost from high-skilled and agricultural visa quota expansions.' },
+  visaPotentialGrowth: { value: 0.04, unit: '% potential growth', basis: 'judgement', range: [0.01, 0.1], note: 'Annual potential output growth boost from expanded skilled immigrant labor.' },
+  regularizationWageGain: { value: 150, unit: '$/yr', basis: 'judgement', range: [50, 400], note: 'Median income increase from formalization of worker status.' },
+  regularizationPayrollBoost: { value: 14, unit: '$bn/yr', basis: 'judgement', range: [5, 30], note: 'Payroll tax revenue gain from legal status regularization.' },
+  cleanEnergyCreditCost: { value: 30, unit: '$bn/yr', basis: 'judgement', range: [15, 60], note: 'Clean energy investment and production tax expenditure.' },
+  fossilPermittingRevenue: { value: 12, unit: '$bn/yr', basis: 'judgement', range: [4, 25], note: 'Federal royalty and lease revenues from public lands oil and gas permitting.' },
+  fossilPermittingEnergyRelief: { value: 0.06, unit: '% inflation', basis: 'judgement', range: [0.02, 0.15], note: 'Short-term energy CPI deflation from expanded domestic fossil fuel production.' },
+  carbonStandardCost: { value: 8, unit: '$/month', basis: 'judgement', range: [2, 20], note: 'Consumer utility rate passthrough from industrial carbon compliance standards.' },
+  titleIFundingCost: { value: 15, unit: '$bn/yr', basis: 'judgement', range: [5, 35], note: 'Title I federal aid to high-poverty school districts.' },
+  titleIProductivityGain: { value: 0.03, unit: '% potential growth', basis: 'judgement', range: [0.01, 0.08], note: 'Long-term labor productivity and potential growth gain from K-12 education investment.' },
+  studentDebtReliefCost: { value: 20, unit: '$bn/yr', basis: 'judgement', range: [8, 50], note: 'Federal outlays for income-driven student debt relief.' },
+  studentDebtMonthlyRelief: { value: 25, unit: '$/month', basis: 'judgement', range: [10, 60], note: 'Average monthly disposable income relief from student loan payment reductions.' },
+  universalPreKCost: { value: 22, unit: '$bn/yr', basis: 'judgement', range: [10, 45], note: 'Federal matching grants for universal early childhood education.' },
+  universalPreKEmpPop: { value: 0.12, unit: '% empPop', basis: 'judgement', range: [0.04, 0.25], note: 'Parental labor force participation increase enabled by subsidized childcare.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------
