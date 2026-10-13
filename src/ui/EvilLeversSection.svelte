@@ -361,9 +361,9 @@
   }
 
   .metric.kickback {
-    background: var(--paper);
-    color: var(--gold-dark);
-    border: 1px solid var(--gold-dark);
+    background: var(--ink);
+    color: var(--gold);
+    border: 1px solid var(--gold);
   }
 
   .metric.heat {
