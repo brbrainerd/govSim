@@ -8,18 +8,21 @@
     onSelect,
     onExport,
     onImport,
+    onAbout,
   }: {
     turn: number;
     current: ScreenId;
     onSelect: (id: ScreenId) => void;
     onExport?: () => void;
     onImport?: (f: File) => void;
+    onAbout?: () => void;
   } = $props();
 
   const nav = $derived(navFor(turn));
   let fileInput = $state<HTMLInputElement>();
   const DownloadIcon = icons.download;
   const UploadIcon = icons.upload;
+  const InfoIcon = icons.info;
 </script>
 
 <nav aria-label="Screens">
@@ -38,6 +41,12 @@
   </div>
 
   <div class="save-tray">
+    {#if onAbout}
+      <button type="button" class="util-btn" onclick={onAbout} data-testid="nav-about-btn" aria-label="About govSim and Privacy">
+        <InfoIcon size={16} strokeWidth={2.2} aria-hidden="true" />
+        <span>About & Privacy</span>
+      </button>
+    {/if}
     {#if onExport}
       <button type="button" class="util-btn" onclick={onExport} aria-label="Export save file">
         <DownloadIcon size={16} strokeWidth={2.2} aria-hidden="true" />

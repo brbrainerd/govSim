@@ -19,6 +19,8 @@
   import SpeechModal from '../ui/SpeechModal.svelte';
   import FedModal from '../ui/FedModal.svelte';
   import ElectionNightModal from '../ui/ElectionNightModal.svelte';
+  import AboutModal from '../ui/AboutModal.svelte';
+  import ProblemReportModal from '../ui/ProblemReportModal.svelte';
   import EndScreen from './EndScreen.svelte';
   import { getMyth } from '../content/myths';
 
@@ -38,6 +40,8 @@
   let activeMythId = $state<string | null>(null);
   let speechModalOpen = $state<boolean>(false);
   let fedModalOpen = $state<boolean>(false);
+  let aboutModalOpen = $state<boolean>(false);
+  let reportModalOpen = $state<boolean>(false);
 
   const activeMyth = $derived(activeMythId ? getMyth(activeMythId) : null);
 
@@ -59,6 +63,7 @@
         current={session.screen}
         onSelect={go}
         onExport={() => downloadSave(session)}
+        onAbout={() => (aboutModalOpen = true)}
         {onImport}
       />
       {#if screen.id === 'oval'}
@@ -130,6 +135,20 @@
       <FedModal
         {session}
         onClose={() => (fedModalOpen = false)}
+      />
+    {/if}
+
+    {#if aboutModalOpen}
+      <AboutModal
+        onClose={() => (aboutModalOpen = false)}
+        onOpenReport={() => (reportModalOpen = true)}
+      />
+    {/if}
+
+    {#if reportModalOpen}
+      <ProblemReportModal
+        {session}
+        onClose={() => (reportModalOpen = false)}
       />
     {/if}
   </div>
