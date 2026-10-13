@@ -19,6 +19,7 @@ export interface HeatPenalties {
   readonly approvalDelta: number;
   readonly trustDelta: number;
   readonly congressFrictionVotes: number;
+  readonly senateFrictionVotes: number;
 }
 
 /** Default clean state for Evil Mode when initialized or reset. */
@@ -53,6 +54,7 @@ export function calculateHeatPenalties(heat: number): HeatPenalties {
     approvalDelta: clampedHeat === 0 ? 0 : -clampedHeat * C.heatApprovalPenalty,
     trustDelta: clampedHeat === 0 ? 0 : -clampedHeat * C.heatTrustPenalty,
     congressFrictionVotes: Math.round(clampedHeat * C.heatCongressionalFriction),
+    senateFrictionVotes: Math.round(clampedHeat * C.heatSenateFriction),
   };
 }
 

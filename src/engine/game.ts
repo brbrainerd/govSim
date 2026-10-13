@@ -33,6 +33,19 @@ import { getCrisis, isGeopoliticalCrisis } from './crises';
 import { estimateSocial, isSocialBaseline, sanitizeSocial, socialBaseline, type SocialDraft } from './social';
 import { defaultForeignPolicy, resolveForeignPolicy, sanitizeForeignPolicy, type ForeignPolicyState } from './foreign';
 import { defaultTradeState, resolveTrade, sanitizeTradeState, type TradeState, type TradeDraft } from './trade';
+import {
+  calculateHeatDecay,
+  calculateHeatPenalties,
+  defaultEvilState,
+  type EvilState,
+} from './evil';
+import {
+  HEAT_CONVICTION_THRESHOLD,
+  HEAT_IMPEACHMENT_THRESHOLD,
+  HEAT_SPECIAL_COUNSEL_THRESHOLD,
+  MAX_HEAT,
+  MIN_HEAT,
+} from './units';
 
 export { prosperity, type ScoreBreakdown } from './score';
 export { LEGACY_QUARTERS, TOTAL_TURNS };
@@ -40,6 +53,7 @@ export type { ActiveCrisis } from './director';
 export type { SocialDraft } from './social';
 export type { ForeignPolicyState } from './foreign';
 export type { TradeState } from './trade';
+export type { EvilState } from './evil';
 
 /** Real-world starting values (from data/us-2026.json via fromData). */
 export interface Start {
@@ -103,6 +117,7 @@ export interface GameState {
   readonly resolvedGeopoliticalCrises?: readonly string[]; // resolved geopolitical crisis IDs
   readonly foreignPolicy?: ForeignPolicyState; // defense posture, foreign assistance, targeted sanctions (Phase 14, FORPOL-01, FORPOL-02)
   readonly trade?: TradeState; // strategic sector tariffs and bilateral trade agreements (Phase 16, TRADE-01, TRADE-02)
+  readonly evil?: EvilState; // evil mode state (offshore stash, heat, investigations)
 }
 
 /** One thing that happened last turn (a bill passed, failed or was rejected). */
@@ -144,6 +159,7 @@ export function newGame(seed: number, start: Start): GameState {
     resolvedGeopoliticalCrises: [],
     foreignPolicy: defaultForeignPolicy(),
     trade: defaultTradeState(),
+    evil: defaultEvilState(),
     econ: {
       gap: 0,
       growth: start.potential,
@@ -502,11 +518,47 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const zInfl = normal(state.seed, 'macro', state.turn, 'infl');
   const zAppr = normal(state.seed, 'macro', state.turn, 'appr');
 
+  // Evil Mode state resolution (Phase 17, EVIL-01, EVIL-02, EVIL-03)
+  const currentEvil = state.evil ?? defaultEvilState();
+  const rawEvil: unknown = decisions !== null && typeof decisions === 'object' ? (decisions as { evil?: unknown }).evil : undefined;
+  const evilDec = rawEvil !== null && typeof rawEvil === 'object' ? (rawEvil as { siphonBn?: unknown; heatDelta?: unknown }) : undefined;
+  const heatAdd = typeof evilDec?.heatDelta === 'number' && Number.isFinite(evilDec.heatDelta) ? evilDec.heatDelta : 0;
+  const siphon = typeof evilDec?.siphonBn === 'number' && Number.isFinite(evilDec.siphonBn) && evilDec.siphonBn > 0 ? evilDec.siphonBn : 0;
+
+  const decayedHeat = calculateHeatDecay(currentEvil.heat);
+  const nextHeat = Math.max(MIN_HEAT, Math.min(MAX_HEAT, decayedHeat + heatAdd));
+  const evilPenalties = calculateHeatPenalties(nextHeat);
+
+  const nextStash = currentEvil.offshoreStashBn + siphon;
+  const specialCounsel = currentEvil.specialCounselAppointed || nextHeat >= HEAT_SPECIAL_COUNSEL_THRESHOLD;
+  const impeachmentVoted = currentEvil.articlesOfImpeachmentVoted || nextHeat >= HEAT_IMPEACHMENT_THRESHOLD;
+  const convicted = currentEvil.convicted || nextHeat >= HEAT_CONVICTION_THRESHOLD;
+  const investigationsActive = currentEvil.investigationsActive || nextHeat > 0;
+
+  if (!currentEvil.specialCounselAppointed && specialCounsel) {
+    log.push({ kind: 'evil', id: 'special_counsel_appointed', detail: 'House and DOJ appoint special counsel' });
+  }
+  if (!currentEvil.articlesOfImpeachmentVoted && impeachmentVoted) {
+    log.push({ kind: 'evil', id: 'articles_of_impeachment', detail: 'Articles of impeachment passed House committee' });
+  }
+  if (!currentEvil.convicted && convicted) {
+    log.push({ kind: 'evil', id: 'convicted', detail: 'Senate convicts on impeachment charges' });
+  }
+
+  const nextEvil: EvilState = {
+    offshoreStashBn: nextStash,
+    heat: nextHeat,
+    investigationsActive,
+    specialCounselAppointed: specialCounsel,
+    articlesOfImpeachmentVoted: impeachmentVoted,
+    convicted,
+  };
+
   // The engine charges clout from the raw bill; the Session previews with the same function.
   const raw: unknown = decisions !== null && typeof decisions === 'object' ? decisions.bill : undefined;
   const activeRule = nextFilibusterRule ?? state.filibusterRule ?? 'sixty_vote';
   const reformCloutCost = reformResult?.cloutCost ?? 0;
-  const r = raw === undefined ? null : resolveBill(state.clout - filibusterCost - reformCloutCost - amendmentCloutCost, raw, state.houseSeatDelta, state.senateSeatDelta ?? 0, activeRule, state.approval);
+  const r = raw === undefined ? null : resolveBill(state.clout - filibusterCost - reformCloutCost - amendmentCloutCost, raw, state.houseSeatDelta, state.senateSeatDelta ?? 0, activeRule, state.approval, currentEvil.heat);
   const enacted = r && r.valid && r.passed ? r : null;
   const policy = enacted ? enacted.budget : state.policy;
   const before = estimate(state.policy), after = estimate(policy);
@@ -691,6 +743,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (filibusterApprovalPenalty > 0) ap.add('approval:reform', -filibusterApprovalPenalty);
   if (reformResult && reformResult.approvalDelta !== 0) ap.add('approval:reform', reformResult.approvalDelta);
   if (geoEscalationApprovalPenalty > 0) ap.add('event:geopolitical_escalation', -geoEscalationApprovalPenalty);
+  if (evilPenalties.approvalDelta !== 0) ap.add('approval:evil', evilPenalties.approvalDelta);
   const approval = ap.round(ap.clamp(state.approval + ap.sum, ...LIMITS.approval.bounds), RULES.approvalStep.value);
   const tr = new Ledger();
   tr.add('trust:reversion', C.trustAdjust * (s.trust - e.trust));
@@ -700,6 +753,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (reformResult && reformResult.trustDelta !== 0) tr.add('trust:reform', reformResult.trustDelta);
   if (amendmentTrustGain > 0) tr.add('trust:reform', amendmentTrustGain);
   if (geoEscalationTrustPenalty > 0) tr.add('event:geopolitical_escalation', -geoEscalationTrustPenalty);
+  if (evilPenalties.trustDelta !== 0) tr.add('trust:evil', evilPenalties.trustDelta);
   const trust = tr.clamp(e.trust + tr.sum, ...LIMITS.trust.bounds);
 
   const cl = new Ledger();
@@ -776,6 +830,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     resolvedGeopoliticalCrises: resolvedGeoCrises,
     foreignPolicy: nextForeignPolicy,
     trade: nextTrade,
+    evil: nextEvil,
     ...(state.senateSeatDelta !== undefined || state.filibusterRule !== undefined || nextFilibusterRule !== undefined ? { senateSeatDelta: nextSenateSeatDelta ?? 0 } : {}),
     ...(nextFilibusterRule !== undefined && nextFilibusterRule !== 'sixty_vote' ? { filibusterRule: nextFilibusterRule } : {}),
     ...(nextActiveReforms && nextActiveReforms.length > 0 ? { activeReforms: nextActiveReforms } : {}),

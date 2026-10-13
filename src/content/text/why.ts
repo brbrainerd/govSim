@@ -76,6 +76,8 @@ export const WHY_COPY: Record<string, string> = {
   'trade:sectors': 'Tariffs on foreign tech and goods',
   'trade:retaliation': 'Foreign trade counter tariffs',
   'trade:pacts': 'New trade accord export boost',
+  'approval:evil': 'Public backlash from corrupt conduct',
+  'trust:evil': 'Scandal and ethics investigations',
 };
 
 /** Plain-language description of an engine trace source key (GR-06). */
@@ -100,6 +102,9 @@ export function whyText(sourceId: string): string {
   }
   if (sourceId.startsWith('trade:')) {
     return 'Trade accords and tariffs';
+  }
+  if (sourceId.startsWith('evil:')) {
+    return 'Scandal and corrupt conduct fallout';
   }
   return 'Several small factors';
 }

@@ -624,6 +624,7 @@ export const COEFF = {
   heatApprovalPenalty: { value: 0.20, unit: 'approval pts per heat pt', basis: 'judgement', range: [0.05, 0.50], note: 'Quarterly presidential approval penalty per point of accumulated heat.' },
   heatTrustPenalty: { value: 0.30, unit: 'trust pts per heat pt', basis: 'judgement', range: [0.05, 0.60], note: 'Public trust in government erosion per point of accumulated heat.' },
   heatCongressionalFriction: { value: 0.10, unit: 'effective opposition votes per heat pt', basis: 'judgement', range: [0.02, 0.30], note: 'Legislative passage friction in Congress per point of heat.' },
+  heatSenateFriction: { value: 0.03, unit: 'effective senate opposition votes per heat pt', basis: 'judgement', range: [0.01, 0.10], note: 'Senate confirmation and cloture opposition per heat point.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------

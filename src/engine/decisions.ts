@@ -35,18 +35,25 @@ export interface CrisisDecision {
 }
 
 import type { AmendmentId } from './amendments';
+import { calculateHeatPenalties, type EvilDraft } from './evil';
 import type { ForeignPolicyDraft } from './foreign';
 import type { ReformId } from './reforms';
 import type { TradeDraft } from './trade';
 
 export type { AmendmentId } from './amendments';
+export type { EvilDraft } from './evil';
 export type { ForeignPolicyDraft } from './foreign';
 export type { PowerDecisions } from './powers';
 export type { ReformId };
 export type { SocialDraft } from './social';
 export type { TradeDraft } from './trade';
 
-/** Phases 4/5/9/11/14/16 add keys here (crisis, powers, social, filibusterRule, reform, amendment, foreignPolicy, trade). There is deliberately no clout field. */
+export interface EvilDecision {
+  siphonBn?: number;
+  heatDelta?: number;
+}
+
+/** Phases 4/5/9/11/14/16/17 add keys here (crisis, powers, social, filibusterRule, reform, amendment, foreignPolicy, trade, evil). There is deliberately no clout field. */
 export interface Decisions {
   bill?: Bill;
   crisis?: CrisisDecision;
@@ -60,6 +67,7 @@ export interface Decisions {
   amendmentProposal?: AmendmentId;
   amendmentCampaign?: boolean;
   presidentialSide?: 'D' | 'R';
+  evil?: EvilDecision;
 }
 
 export interface CrisisChoiceResult {
@@ -123,6 +131,7 @@ export function resolveBill(
   senateDelta = 0,
   filibusterRule: FilibusterRule = 'sixty_vote',
   approval = C.approvalNeutral,
+  heat = 0,
 ): BillResult {
   const b = isRecord(bill) ? bill : {};
   const ids = knownDeals(b.deals);
@@ -131,13 +140,14 @@ export function resolveBill(
   const social = Object.hasOwn(b, 'social') && b.social !== undefined ? sanitizeSocial(b.social) : undefined;
   const whip = tally(ids, houseDelta, social);
 
+  const heatPenalties = calculateHeatPenalties(heat);
   const isSubstantive = Boolean(social && !isSocialBaseline(social));
   const senateThreshold = isSubstantive ? getSenateClotureThreshold(filibusterRule, approval) : SENATE_SIMPLE_MAJORITY;
   const appeal = billBipartisanAppeal(ids, social);
   const playerSenateSeats = SENATE_BASE_SEATS + senateDelta;
-  const senateVotes = calculateSenateVotes(playerSenateSeats, approval, appeal);
+  const senateVotes = Math.max(0, calculateSenateVotes(playerSenateSeats, approval, appeal) - heatPenalties.senateFrictionVotes);
 
-  const housePassed = whip.total >= TO_PASS;
+  const housePassed = whip.total - heatPenalties.congressFrictionVotes >= TO_PASS;
   const senatePassed = senateVotes >= senateThreshold;
 
   let status: 'passed' | 'failed' | 'filibustered' = 'failed';
