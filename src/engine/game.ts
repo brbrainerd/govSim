@@ -32,12 +32,14 @@ import { scheduleTurnEvents, checkGeopoliticalEscalation, createGeopoliticalActi
 import { getCrisis, isGeopoliticalCrisis } from './crises';
 import { estimateSocial, isSocialBaseline, sanitizeSocial, socialBaseline, type SocialDraft } from './social';
 import { defaultForeignPolicy, resolveForeignPolicy, sanitizeForeignPolicy, type ForeignPolicyState } from './foreign';
+import { defaultTradeState, resolveTrade, sanitizeTradeState, type TradeState, type TradeDraft } from './trade';
 
 export { prosperity, type ScoreBreakdown } from './score';
 export { LEGACY_QUARTERS, TOTAL_TURNS };
 export type { ActiveCrisis } from './director';
 export type { SocialDraft } from './social';
 export type { ForeignPolicyState } from './foreign';
+export type { TradeState } from './trade';
 
 /** Real-world starting values (from data/us-2026.json via fromData). */
 export interface Start {
@@ -100,6 +102,7 @@ export interface GameState {
   readonly activeGeopoliticalCrises?: readonly ActiveCrisis[]; // active multi-turn geopolitical crises (CRISIS-01)
   readonly resolvedGeopoliticalCrises?: readonly string[]; // resolved geopolitical crisis IDs
   readonly foreignPolicy?: ForeignPolicyState; // defense posture, foreign assistance, targeted sanctions (Phase 14, FORPOL-01, FORPOL-02)
+  readonly trade?: TradeState; // strategic sector tariffs and bilateral trade agreements (Phase 16, TRADE-01, TRADE-02)
 }
 
 /** One thing that happened last turn (a bill passed, failed or was rejected). */
@@ -140,6 +143,7 @@ export function newGame(seed: number, start: Start): GameState {
     activeGeopoliticalCrises: [],
     resolvedGeopoliticalCrises: [],
     foreignPolicy: defaultForeignPolicy(),
+    trade: defaultTradeState(),
     econ: {
       gap: 0,
       growth: start.potential,
@@ -518,6 +522,36 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const afterSocial = estimateSocial(nextSocial);
   const socialPolicy = isSocialBaseline(nextSocial) ? undefined : nextSocial;
 
+  // Trade agreements and strategic sector tariffs (Phase 16, TRADE-01, TRADE-02)
+  const rawTrade: unknown = decisions !== null && typeof decisions === 'object' ? (decisions as { trade?: unknown }).trade : undefined;
+  const currentTrade = state.trade ?? defaultTradeState();
+  const availableCloutForTrade = availableCloutForForeign - (forRes ? forRes.cloutSpent : 0);
+  const currentTariffRate = tariffOf(policy);
+  const tradeRes = !legacyRun
+    ? resolveTrade(currentTrade, sanitizeTradeState(rawTrade), Math.max(0, availableCloutForTrade), currentTariffRate)
+    : null;
+  const nextTrade = tradeRes
+    ? { sectorTariffs: tradeRes.sectorTariffs, agreements: tradeRes.agreements }
+    : currentTrade;
+
+  if (tradeRes) {
+    for (const st of tradeRes.sectorTariffs) {
+      if (!currentTrade.sectorTariffs.includes(st)) {
+        log.push({ kind: 'trade', id: 'sector_tariff_enacted', detail: st });
+      }
+    }
+    for (const st of currentTrade.sectorTariffs) {
+      if (!tradeRes.sectorTariffs.includes(st)) {
+        log.push({ kind: 'trade', id: 'sector_tariff_lifted', detail: st });
+      }
+    }
+    for (const ag of tradeRes.agreements) {
+      if (!currentTrade.agreements.includes(ag)) {
+        log.push({ kind: 'trade', id: 'agreement_ratified', detail: ag });
+      }
+    }
+  }
+
   const fiscalImpulse = ((after.deficitBn - before.deficitBn) / BUDGET_WINDOW_YEARS / (e.gdp * BN_PER_TN)) * PERCENT; // % GDP per year
   const tariffChange = tariffOf(policy) - tariffOf(state.policy);
   const debtPctNow = (e.debt / e.gdp) * PERCENT;
@@ -532,6 +566,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   g.add('luck', C.shockGap * zGap);
   for (const m of mods('gap')) g.add(m.source, m.amount);
   if (forRes && forRes.quarterlyGapDelta !== 0) g.add('forpol:sanctions', forRes.quarterlyGapDelta);
+  if (tradeRes && tradeRes.retaliatoryExportDrag !== 0) g.add('trade:retaliation', -tradeRes.retaliatoryExportDrag);
+  if (tradeRes && tradeRes.tradeAgreementExportBoost !== 0) g.add('trade:pacts', tradeRes.tradeAgreementExportBoost);
   if (!legacyRun) {
     for (const crisis of activeGeoCrises) {
       if (crisis.crisisId === 'oil_embargo' || crisis.crisisId === 'shipping_blockade') {
@@ -570,6 +606,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   inf.add('luck', C.shockInfl * zInfl);
   for (const m of mods('inflation')) inf.add(m.source, m.amount);
   if (forRes && forRes.quarterlyInflationDelta !== 0) inf.add('forpol:sanctions', forRes.quarterlyInflationDelta);
+  if (tradeRes && tradeRes.quarterlyInflationDelta !== 0) inf.add('trade:sectors', tradeRes.quarterlyInflationDelta);
   if (!legacyRun) {
     for (const crisis of activeGeoCrises) {
       if (crisis.crisisId === 'oil_embargo') {
@@ -599,7 +636,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const budgetDeficit = after.deficitBn / BUDGET_WINDOW_YEARS / BN_PER_TN; // $tn/yr
   const socialDeficit = afterSocial.deficitBn / BN_PER_TN; // $tn/yr
   const foreignDeficit = forRes ? (forRes.quarterlyDeficitDeltaBn * QUARTERS_PER_YEAR) / BN_PER_TN : 0; // $tn/yr
-  const deficit = (s.deficitPct / PERCENT) * gdp + budgetDeficit + socialDeficit + foreignDeficit + interestDrift; // $tn/yr
+  const tradeDeficit = tradeRes ? (tradeRes.quarterlyDeficitDeltaBn * QUARTERS_PER_YEAR) / BN_PER_TN : 0; // $tn/yr
+  const deficit = (s.deficitPct / PERCENT) * gdp + budgetDeficit + socialDeficit + foreignDeficit + tradeDeficit + interestDrift; // $tn/yr
   const debtMods = mods('debtBn');
   const debt = e.debt + deficit / QUARTERS_PER_YEAR + debtMods.reduce((n, m) => n + m.amount / BN_PER_TN, 0);
 
@@ -610,6 +648,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   dp.add('deficit:budget', budgetDeficit * perQuarter);
   if (socialDeficit !== 0) dp.add('social:budget', socialDeficit * perQuarter);
   if (foreignDeficit !== 0) dp.add('forpol:budget', foreignDeficit * perQuarter);
+  if (tradeDeficit !== 0) dp.add('trade:budget', tradeDeficit * perQuarter);
   dp.add('deficit:interest', interestDrift * perQuarter);
   dp.add('gdp:growth', PERCENT * e.debt * (1 / gdp - 1 / e.gdp)); // a bigger economy dilutes the old debt
   for (const m of debtMods) dp.add(m.source, (m.amount / BN_PER_TN / gdp) * PERCENT);
@@ -681,6 +720,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     if (pRes.cloutGained > 0) cl.add('clout:powers', pRes.cloutGained);
   }
   if (forRes && forRes.cloutSpent > 0) cl.add('clout:powers', -forRes.cloutSpent);
+  if (tradeRes && tradeRes.cloutSpent > 0) cl.add('clout:powers', -tradeRes.cloutSpent);
   if (filibusterCost > 0) cl.add('clout:reform', -filibusterCost);
   if (reformResult && reformResult.cloutCost > 0) cl.add('clout:reform', -reformResult.cloutCost);
   if (amendmentCloutCost > 0) cl.add('clout:reform', -amendmentCloutCost);
@@ -735,6 +775,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     activeGeopoliticalCrises: activeGeoCrises,
     resolvedGeopoliticalCrises: resolvedGeoCrises,
     foreignPolicy: nextForeignPolicy,
+    trade: nextTrade,
     ...(state.senateSeatDelta !== undefined || state.filibusterRule !== undefined || nextFilibusterRule !== undefined ? { senateSeatDelta: nextSenateSeatDelta ?? 0 } : {}),
     ...(nextFilibusterRule !== undefined && nextFilibusterRule !== 'sixty_vote' ? { filibusterRule: nextFilibusterRule } : {}),
     ...(nextActiveReforms && nextActiveReforms.length > 0 ? { activeReforms: nextActiveReforms } : {}),

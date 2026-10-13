@@ -37,14 +37,16 @@ export interface CrisisDecision {
 import type { AmendmentId } from './amendments';
 import type { ForeignPolicyDraft } from './foreign';
 import type { ReformId } from './reforms';
+import type { TradeDraft } from './trade';
 
 export type { AmendmentId } from './amendments';
 export type { ForeignPolicyDraft } from './foreign';
 export type { PowerDecisions } from './powers';
 export type { ReformId };
 export type { SocialDraft } from './social';
+export type { TradeDraft } from './trade';
 
-/** Phases 4/5/9/11/14 add keys here (crisis, powers, social, filibusterRule, reform, amendment, foreignPolicy). There is deliberately no clout field. */
+/** Phases 4/5/9/11/14/16 add keys here (crisis, powers, social, filibusterRule, reform, amendment, foreignPolicy, trade). There is deliberately no clout field. */
 export interface Decisions {
   bill?: Bill;
   crisis?: CrisisDecision;
@@ -52,6 +54,7 @@ export interface Decisions {
   powers?: PowerDecisions;
   social?: SocialDraft;
   foreignPolicy?: ForeignPolicyDraft;
+  trade?: TradeDraft;
   filibusterRule?: FilibusterRule;
   reform?: ReformId;
   amendmentProposal?: AmendmentId;

@@ -9,6 +9,7 @@ import { abs, clamp, round, sqrt } from './detmath';
 import type { GameState } from './game';
 import { normal } from './rng';
 import { isSocialBaseline, socialDev, type SocialDraft } from './social';
+import { calculateRetaliatoryRate } from './trade';
 import {
   BASE_PERCENT,
   DISTRICT_EV,
@@ -201,6 +202,7 @@ export interface PolicyShifts {
   readonly prekShift: number;
   readonly sdrShift: number;
   readonly k12Shift: number;
+  readonly retaliatoryShift?: number;
 }
 
 export function deriveReasons(shifts: PolicyShifts): string[] {
@@ -227,6 +229,10 @@ export function deriveReasons(shifts: PolicyShifts): string[] {
 
   if (shifts.energyShift < -REASON_IMPACT_THRESHOLD) out.push('High inflation impacts energy');
   else if (shifts.energyShift > REASON_IMPACT_THRESHOLD) out.push('Energy sector steady');
+
+  if (shifts.retaliatoryShift !== undefined && shifts.retaliatoryShift < -REASON_IMPACT_THRESHOLD) {
+    out.push('Exporters hurt by foreign retaliatory tariffs');
+  }
 
   if (shifts.natShift > REASON_NATIONAL_THRESHOLD) out.push('Lifted by national popularity');
   else if (shifts.natShift < -REASON_NATIONAL_THRESHOLD) out.push('Dragged by national approval');
@@ -371,7 +377,15 @@ export function calculateElectoralCollege(
     const farmShift = isUnadjusted ? 0 : -tariffDev * exp.farm * C.voterFarmTariffSensitivity;
     const mfgShift = isUnadjusted ? 0 : growthDev * exp.manufacturing * C.voterMfgGrowthSensitivity;
     const energyShift = isUnadjusted ? 0 : -inflDev * exp.energy * C.voterEnergyInflationSensitivity;
-    let totalExposureShift = farmShift + mfgShift + energyShift;
+    const retaliatoryRate =
+      !isUnadjusted && state.trade
+        ? calculateRetaliatoryRate(state.policy.tar ?? state.start.tariff, state.trade.sectorTariffs, state.trade.agreements)
+        : 0;
+    const retaliatoryShift =
+      retaliatoryRate > 0
+        ? -retaliatoryRate * (exp.farm * C.retaliatoryAgWeight + exp.manufacturing * C.retaliatoryMfgWeight) * C.retaliatoryVoterSwing
+        : 0;
+    let totalExposureShift = farmShift + mfgShift + energyShift + retaliatoryShift;
 
     let drugShift = 0;
     let acaShift = 0;
@@ -453,6 +467,7 @@ export function calculateElectoralCollege(
       prekShift,
       sdrShift,
       k12Shift,
+      retaliatoryShift,
     });
 
     computed.push({

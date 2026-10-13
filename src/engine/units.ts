@@ -158,4 +158,14 @@ export const FOREIGN_ASSISTANCE_MIN = 0;
 export const FOREIGN_ASSISTANCE_MAX = 200;
 export const FOREIGN_ASSISTANCE_STEP = 5;
 
+// International Trade & Tariffs (Phase 16, TRADE-01, TRADE-02, TRADE-03)
+export const EXPORT_GDP_SHARE = 0.11;
+export const IMPORT_GDP_SHARE = 0.14;
+export const TARIFF_IMPORT_ELASTICITY = 0.005;
+export const ROUND_TENTHS = 10;
+export const ROUND_HUNDREDTHS = 100;
+export const DEFAULT_GDP_ESTIMATE = 28000;
+export const DEFAULT_TARIFF_RATE = 11;
+
+
 

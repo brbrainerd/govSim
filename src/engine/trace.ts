@@ -128,7 +128,7 @@ export const SOURCES: Record<string, { kind: string }> = {
   'approval:reform': { kind: 'policy' },
 };
 /** Open families added by later phases (events, executive orders, laws, social policies, reforms, foreign policy, geopolitical). */
-export const SOURCE_PREFIXES = ['event:', 'eo:', 'law:', 'social:', 'reform:', 'forpol:', 'geopolitical:'] as const;
+export const SOURCE_PREFIXES = ['event:', 'eo:', 'law:', 'social:', 'reform:', 'forpol:', 'geopolitical:', 'trade:'] as const;
 
 export const isKnownSource = (id: string): boolean =>
   Object.hasOwn(SOURCES, id) || SOURCE_PREFIXES.some((p) => id.startsWith(p));

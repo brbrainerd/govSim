@@ -617,6 +617,8 @@ export const COEFF = {
   retaliatoryExportDrag: { value: 0.04, unit: '% quarterly growth drag per retaliatory pt', basis: 'judgement', range: [0.01, 0.12], note: 'Domestic export contraction drag from reciprocal foreign duties.' },
   retaliatoryAgDrop: { value: 0.50, unit: '% farm export drop per retaliatory pt', basis: 'judgement', range: [0.1, 1.5], note: 'Agricultural commodity export drop from retaliatory farm tariffs.' },
   retaliatoryVoterSwing: { value: 0.40, unit: '% state approval penalty per retaliatory pt', basis: 'judgement', range: [0.1, 1.0], note: 'Approval penalty in export-exposed farm/industrial states from trade war.' },
+  retaliatoryAgWeight: { value: 0.7, unit: 'weight', basis: 'judgement', range: [0.3, 1.0], note: 'Relative exposure of farm sector to trade retaliation.' },
+  retaliatoryMfgWeight: { value: 0.5, unit: 'weight', basis: 'judgement', range: [0.2, 0.9], note: 'Relative exposure of industrial sector to trade retaliation.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------

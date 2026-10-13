@@ -73,6 +73,9 @@ export const WHY_COPY: Record<string, string> = {
   'geopolitical:energy': 'Global oil and energy shock',
   'geopolitical:shipping': 'Shipping lane trade block',
   'geopolitical:supply': 'Foreign supply chain delay',
+  'trade:sectors': 'Tariffs on foreign tech and goods',
+  'trade:retaliation': 'Foreign trade counter tariffs',
+  'trade:pacts': 'New trade accord export boost',
 };
 
 /** Plain-language description of an engine trace source key (GR-06). */
@@ -94,6 +97,9 @@ export function whyText(sourceId: string): string {
   }
   if (sourceId.startsWith('geopolitical:')) {
     return 'International crisis disruption';
+  }
+  if (sourceId.startsWith('trade:')) {
+    return 'Trade accords and tariffs';
   }
   return 'Several small factors';
 }
