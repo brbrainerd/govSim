@@ -21,7 +21,7 @@ import { getCrisis } from './crises';
 import type { Modifier, Scheduled } from './modifiers';
 import type { PowerDecisions } from './powers';
 import { isSocialBaseline, sanitizeSocial, type SocialDraft } from './social';
-import { SENATE_BASE_SEATS, SENATE_SIMPLE_MAJORITY } from './units';
+import { SENATE_BASE_SEATS, SENATE_SIMPLE_MAJORITY, type EvilLeverId } from './units';
 
 export interface Bill {
   budget: BudgetDraft;
@@ -51,6 +51,7 @@ export type { TradeDraft } from './trade';
 export interface EvilDecision {
   siphonBn?: number;
   heatDelta?: number;
+  enactedLevers?: readonly EvilLeverId[];
 }
 
 /** Phases 4/5/9/11/14/16/17 add keys here (crisis, powers, social, filibusterRule, reform, amendment, foreignPolicy, trade, evil). There is deliberately no clout field. */

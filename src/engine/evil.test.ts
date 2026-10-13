@@ -6,6 +6,7 @@ import {
   calculateHeatDecay,
   calculateHeatPenalties,
   defaultEvilState,
+  resolveEvilLevers,
   sanitizeEvilState,
   type EvilState,
 } from './evil';
@@ -184,6 +185,96 @@ describe('Evil Mode Engine (EVIL-01, EVIL-02, EVIL-03)', () => {
       expect(hotBill.passed).toBe(false);
       expect(hotBill.status).toBe('failed');
       expect(hotBill.senateVotes).toBeLessThan(cleanBill.senateVotes);
+    });
+  });
+
+  describe('resolveEvilLevers (LEVER-01, LEVER-02, LEVER-03)', () => {
+    it('returns empty result when no levers are requested', () => {
+      const res = resolveEvilLevers([], 100);
+      expect(res.cloutCost).toBe(0);
+      expect(res.stashDeltaBn).toBe(0);
+      expect(res.heatDelta).toBe(0);
+      expect(res.enactedLevers).toEqual([]);
+      expect(res.logEntries).toEqual([]);
+
+      const resUndef = resolveEvilLevers(undefined, 100);
+      expect(resUndef.cloutCost).toBe(0);
+      expect(resUndef.enactedLevers).toEqual([]);
+    });
+
+    it('resolves siphoning levers with correct kickbacks, heat, and costs', () => {
+      const res = resolveEvilLevers(['crony_contracts', 'sell_tariff_exemptions'], 100);
+      expect(res.cloutCost).toBe(C.evilCronyCloutCost + C.evilTariffCloutCost);
+      expect(res.stashDeltaBn).toBe(C.evilCronyKickbackBn + C.evilTariffKickbackBn);
+      expect(res.heatDelta).toBe(C.evilCronyHeatDelta + C.evilTariffHeatDelta);
+      expect(res.approvalDelta).toBe(-(C.evilCronyApprovalCost + C.evilTariffApprovalCost));
+      expect(res.trustDelta).toBe(-(C.evilCronyTrustCost + C.evilTariffTrustCost));
+      expect(res.enactedLevers).toEqual(['crony_contracts', 'sell_tariff_exemptions']);
+      expect(res.logEntries).toHaveLength(2);
+    });
+
+    it('resolves suppression levers with negative heat and zero stash kickback', () => {
+      const res = resolveEvilLevers(['fire_inspectors_general'], 50);
+      expect(res.cloutCost).toBe(C.evilFireIgCloutCost);
+      expect(res.stashDeltaBn).toBe(0);
+      expect(res.heatDelta).toBe(-C.evilFireIgHeatSuppression);
+      expect(res.trustDelta).toBe(-C.evilFireIgTrustCost);
+      expect(res.enactedLevers).toEqual(['fire_inspectors_general']);
+    });
+
+    it('enforces clout limits and skips unaffordable levers', () => {
+      // Clout is 20: crony_contracts costs 15 (affordable, leaving 5). auction_public_lands costs 20 (unaffordable, skipped).
+      const res = resolveEvilLevers(['crony_contracts', 'auction_public_lands'], 20);
+      expect(res.enactedLevers).toEqual(['crony_contracts']);
+      expect(res.cloutCost).toBe(C.evilCronyCloutCost);
+      expect(res.stashDeltaBn).toBe(C.evilCronyKickbackBn);
+      expect(res.logEntries.some((l) => l.id === 'auction_public_lands_unaffordable')).toBe(true);
+    });
+
+    it('deduplicates duplicate lever requests', () => {
+      const res = resolveEvilLevers(['crony_contracts', 'crony_contracts'], 100);
+      expect(res.enactedLevers).toEqual(['crony_contracts']);
+      expect(res.cloutCost).toBe(C.evilCronyCloutCost);
+    });
+  });
+
+  describe('Corrupt Executive Levers Game Loop Integration (LEVER-01, LEVER-02, LEVER-03)', () => {
+    it('enacts corrupt actions in step(), siphons stash, and charges clout', () => {
+      let state = newGame(1, START);
+      const initialClout = state.clout;
+
+      state = endTurn(state, {
+        evil: {
+          enactedLevers: ['crony_contracts', 'auction_public_lands'],
+        },
+      });
+
+      // Verify offshore stash accumulated kickbacks ($15B + $25B = $40B)
+      expect(state.evil?.offshoreStashBn).toBe(40);
+
+      // Verify heat generated (+14 + +22 = 36)
+      expect(state.evil?.heat).toBe(36);
+
+      // Verify clout ledger term recorded
+      const cloutEvilTerm = state.report.trace.clout?.find((t) => t.source === 'clout:evil_levers');
+      expect(cloutEvilTerm).toBeDefined();
+      expect(cloutEvilTerm?.amount).toBe(-(C.evilCronyCloutCost + C.evilLandCloutCost));
+
+      // Verify approval and trust traces recorded
+      expect(state.report.trace.approval?.some((t) => t.source === 'approval:evil_levers')).toBe(true);
+      expect(state.report.trace.trust?.some((t) => t.source === 'trust:evil_levers')).toBe(true);
+
+      // Now enact watchdog suppression on turn 2
+      const heatBeforeSuppression = state.evil?.heat ?? 0;
+      state = endTurn(state, {
+        evil: {
+          enactedLevers: ['fire_inspectors_general'],
+        },
+      });
+
+      // Heat decayed naturally (-3) and suppressed (-20)
+      const expectedHeat = Math.max(0, heatBeforeSuppression - C.heatDecayQuarterly - C.evilFireIgHeatSuppression);
+      expect(state.evil?.heat).toBeCloseTo(expectedHeat, 4);
     });
   });
 });

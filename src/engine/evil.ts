@@ -2,7 +2,8 @@
 // Governs offshore stash tracking, heat meter dynamics, and institutional/voter friction.
 
 import { C } from './coefficients';
-import { MAX_HEAT, MIN_HEAT } from './units';
+import { MAX_HEAT, MIN_HEAT, type EvilLeverId } from './units';
+import { getEvilLever, isEvilLeverId } from '../data/evil';
 
 export interface EvilState {
   readonly offshoreStashBn: number;
@@ -80,3 +81,91 @@ export function sanitizeEvilState(raw: unknown): EvilState {
     convicted: Boolean(r.convicted),
   };
 }
+
+export interface EvilLeversResult {
+  readonly cloutCost: number;
+  readonly stashDeltaBn: number;
+  readonly heatDelta: number;
+  readonly approvalDelta: number;
+  readonly trustDelta: number;
+  readonly budgetDeltaBn: number;
+  readonly enactedLevers: readonly EvilLeverId[];
+  readonly logEntries: readonly { kind: string; id: string; detail: string; amount?: number }[];
+}
+
+/**
+ * Resolves enacted corrupt executive levers, checking clout affordability and accumulating
+ * stash kickbacks, heat changes, trust/approval fallout, and logging entries.
+ */
+export function resolveEvilLevers(
+  requestedLevers: readonly EvilLeverId[] | undefined,
+  availableClout: number,
+): EvilLeversResult {
+  if (!requestedLevers || requestedLevers.length === 0) {
+    return {
+      cloutCost: 0,
+      stashDeltaBn: 0,
+      heatDelta: 0,
+      approvalDelta: 0,
+      trustDelta: 0,
+      budgetDeltaBn: 0,
+      enactedLevers: [],
+      logEntries: [],
+    };
+  }
+
+  const seen = new Set<EvilLeverId>();
+  let remainingClout = Math.max(0, availableClout);
+  let cloutCost = 0;
+  let stashDeltaBn = 0;
+  let heatDelta = 0;
+  let approvalDelta = 0;
+  let trustDelta = 0;
+  let budgetDeltaBn = 0;
+  const enactedLevers: EvilLeverId[] = [];
+  const logEntries: { kind: string; id: string; detail: string; amount?: number }[] = [];
+
+  for (const id of requestedLevers) {
+    if (!isEvilLeverId(id) || seen.has(id)) continue;
+    seen.add(id);
+
+    const lever = getEvilLever(id);
+    if (!lever) continue;
+
+    if (remainingClout >= lever.cloutCost) {
+      remainingClout -= lever.cloutCost;
+      cloutCost += lever.cloutCost;
+      stashDeltaBn += lever.kickbackBn;
+      heatDelta += lever.heatDelta;
+      approvalDelta -= lever.approvalPenalty;
+      trustDelta -= lever.trustPenalty;
+      budgetDeltaBn += lever.budgetCostBn ?? 0;
+      enactedLevers.push(lever.id);
+
+      logEntries.push({
+        kind: 'evil',
+        id: lever.id,
+        detail: lever.name,
+        amount: lever.kickbackBn > 0 ? lever.kickbackBn : undefined,
+      });
+    } else {
+      logEntries.push({
+        kind: 'evil',
+        id: `${lever.id}_unaffordable`,
+        detail: `Insufficient clout for ${lever.name}`,
+      });
+    }
+  }
+
+  return {
+    cloutCost,
+    stashDeltaBn,
+    heatDelta,
+    approvalDelta,
+    trustDelta,
+    budgetDeltaBn,
+    enactedLevers,
+    logEntries,
+  };
+}
+

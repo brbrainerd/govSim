@@ -78,6 +78,9 @@ export const WHY_COPY: Record<string, string> = {
   'trade:pacts': 'New trade accord export boost',
   'approval:evil': 'Public backlash from corrupt conduct',
   'trust:evil': 'Scandal and ethics investigations',
+  'clout:evil_levers': 'Influence spent on corrupt deals',
+  'approval:evil_levers': 'Voter anger from corrupt deals',
+  'trust:evil_levers': 'Public trust lost from corrupt deals',
 };
 
 /** Plain-language description of an engine trace source key (GR-06). */

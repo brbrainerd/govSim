@@ -37,8 +37,10 @@ import {
   calculateHeatDecay,
   calculateHeatPenalties,
   defaultEvilState,
+  resolveEvilLevers,
   type EvilState,
 } from './evil';
+import type { EvilDecision } from './decisions';
 import {
   HEAT_CONVICTION_THRESHOLD,
   HEAT_IMPEACHMENT_THRESHOLD,
@@ -518,18 +520,23 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const zInfl = normal(state.seed, 'macro', state.turn, 'infl');
   const zAppr = normal(state.seed, 'macro', state.turn, 'appr');
 
-  // Evil Mode state resolution (Phase 17, EVIL-01, EVIL-02, EVIL-03)
+  // Evil Mode state resolution (Phase 17, 18, EVIL-01..03, LEVER-01..03)
   const currentEvil = state.evil ?? defaultEvilState();
   const rawEvil: unknown = decisions !== null && typeof decisions === 'object' ? (decisions as { evil?: unknown }).evil : undefined;
-  const evilDec = rawEvil !== null && typeof rawEvil === 'object' ? (rawEvil as { siphonBn?: unknown; heatDelta?: unknown }) : undefined;
+  const evilDec = rawEvil !== null && typeof rawEvil === 'object' ? (rawEvil as EvilDecision) : undefined;
   const heatAdd = typeof evilDec?.heatDelta === 'number' && Number.isFinite(evilDec.heatDelta) ? evilDec.heatDelta : 0;
   const siphon = typeof evilDec?.siphonBn === 'number' && Number.isFinite(evilDec.siphonBn) && evilDec.siphonBn > 0 ? evilDec.siphonBn : 0;
 
+  const leverResult = resolveEvilLevers(evilDec?.enactedLevers, state.clout);
+  for (const entry of leverResult.logEntries) {
+    log.push(entry);
+  }
+
   const decayedHeat = calculateHeatDecay(currentEvil.heat);
-  const nextHeat = Math.max(MIN_HEAT, Math.min(MAX_HEAT, decayedHeat + heatAdd));
+  const nextHeat = Math.max(MIN_HEAT, Math.min(MAX_HEAT, decayedHeat + heatAdd + leverResult.heatDelta));
   const evilPenalties = calculateHeatPenalties(nextHeat);
 
-  const nextStash = currentEvil.offshoreStashBn + siphon;
+  const nextStash = currentEvil.offshoreStashBn + siphon + leverResult.stashDeltaBn;
   const specialCounsel = currentEvil.specialCounselAppointed || nextHeat >= HEAT_SPECIAL_COUNSEL_THRESHOLD;
   const impeachmentVoted = currentEvil.articlesOfImpeachmentVoted || nextHeat >= HEAT_IMPEACHMENT_THRESHOLD;
   const convicted = currentEvil.convicted || nextHeat >= HEAT_CONVICTION_THRESHOLD;
@@ -558,7 +565,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const raw: unknown = decisions !== null && typeof decisions === 'object' ? decisions.bill : undefined;
   const activeRule = nextFilibusterRule ?? state.filibusterRule ?? 'sixty_vote';
   const reformCloutCost = reformResult?.cloutCost ?? 0;
-  const r = raw === undefined ? null : resolveBill(state.clout - filibusterCost - reformCloutCost - amendmentCloutCost, raw, state.houseSeatDelta, state.senateSeatDelta ?? 0, activeRule, state.approval, currentEvil.heat);
+  const r = raw === undefined ? null : resolveBill(state.clout - filibusterCost - reformCloutCost - amendmentCloutCost - leverResult.cloutCost, raw, state.houseSeatDelta, state.senateSeatDelta ?? 0, activeRule, state.approval, currentEvil.heat);
   const enacted = r && r.valid && r.passed ? r : null;
   const policy = enacted ? enacted.budget : state.policy;
   const before = estimate(state.policy), after = estimate(policy);
@@ -744,6 +751,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (reformResult && reformResult.approvalDelta !== 0) ap.add('approval:reform', reformResult.approvalDelta);
   if (geoEscalationApprovalPenalty > 0) ap.add('event:geopolitical_escalation', -geoEscalationApprovalPenalty);
   if (evilPenalties.approvalDelta !== 0) ap.add('approval:evil', evilPenalties.approvalDelta);
+  if (leverResult.approvalDelta !== 0) ap.add('approval:evil_levers', leverResult.approvalDelta);
   const approval = ap.round(ap.clamp(state.approval + ap.sum, ...LIMITS.approval.bounds), RULES.approvalStep.value);
   const tr = new Ledger();
   tr.add('trust:reversion', C.trustAdjust * (s.trust - e.trust));
@@ -754,6 +762,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (amendmentTrustGain > 0) tr.add('trust:reform', amendmentTrustGain);
   if (geoEscalationTrustPenalty > 0) tr.add('event:geopolitical_escalation', -geoEscalationTrustPenalty);
   if (evilPenalties.trustDelta !== 0) tr.add('trust:evil', evilPenalties.trustDelta);
+  if (leverResult.trustDelta !== 0) tr.add('trust:evil_levers', leverResult.trustDelta);
   const trust = tr.clamp(e.trust + tr.sum, ...LIMITS.trust.bounds);
 
   const cl = new Ledger();
@@ -778,6 +787,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (filibusterCost > 0) cl.add('clout:reform', -filibusterCost);
   if (reformResult && reformResult.cloutCost > 0) cl.add('clout:reform', -reformResult.cloutCost);
   if (amendmentCloutCost > 0) cl.add('clout:reform', -amendmentCloutCost);
+  if (leverResult.cloutCost > 0) cl.add('clout:evil_levers', -leverResult.cloutCost);
   const clout = cl.clamp(state.clout + cl.sum, 0, C.cloutCap);
 
   if (filibusterLog) log.push(filibusterLog);

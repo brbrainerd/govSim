@@ -128,6 +128,9 @@ export const SOURCES: Record<string, { kind: string }> = {
   'approval:reform': { kind: 'policy' },
   'approval:evil': { kind: 'policy' },
   'trust:evil': { kind: 'policy' },
+  'clout:evil_levers': { kind: 'policy' },
+  'approval:evil_levers': { kind: 'policy' },
+  'trust:evil_levers': { kind: 'policy' },
 };
 /** Open families added by later phases (events, executive orders, laws, social policies, reforms, foreign policy, geopolitical, evil mode). */
 export const SOURCE_PREFIXES = ['event:', 'eo:', 'law:', 'social:', 'reform:', 'forpol:', 'geopolitical:', 'trade:', 'evil:'] as const;
