@@ -80,10 +80,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — Wave 1: Pure Engine Dynamics, Senate Filibuster & Coefficients (REF-01)
-- [ ] 11-02-PLAN.md — Wave 2: Judicial & Electoral Reform Engines (REF-02, REF-03)
-- [ ] 11-03-PLAN.md — Wave 3: Constitutional Amendment Engine & State Ratification (REF-04)
-- [ ] 11-04-PLAN.md — Wave 4: UI Implementation, Modals, Accessibility & E2E Validation (REF-01..04)
+- [x] 11-01-PLAN.md — Wave 1: Pure Engine Dynamics, Senate Filibuster & Coefficients (REF-01)
+- [x] 11-02-PLAN.md — Wave 2: Judicial & Electoral Reform Engines (REF-02, REF-03)
+- [x] 11-03-PLAN.md — Wave 3: Constitutional Amendment Engine & State Ratification (REF-04)
+- [x] 11-04-PLAN.md — Wave 4: UI Implementation, Modals, Accessibility & E2E Validation (REF-01..04)
 
 ### Phase 12: Household Impact Card & Balance
 

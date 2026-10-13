@@ -17,10 +17,10 @@ Requirements for Milestone v0.3: Social Policy & Domestic Reform.
 
 ### Structural Government Reform (REF)
 
-- [ ] **REF-01**: Senate filibuster reform levers (maintain 60-vote threshold, talking filibuster requirement, 55-vote threshold, simple majority carve-outs) altering congressional legislative passability.
-- [ ] **REF-02**: Supreme Court and judicial reform options (18-year term limits, statutory code of conduct, bench expansion) with institutional credibility and confirmation battles.
-- [ ] **REF-03**: Electoral reform policies (ranked-choice voting grant incentives, nonpartisan redistricting commissions, small-dollar donor matching) shifting voter participation and competitive seats.
-- [ ] **REF-04**: Constitutional amendment mechanism with high bar requirements: 2/3 House + 2/3 Senate passage, followed by 3/4 state legislature ratifications.
+- [x] **REF-01**: Senate filibuster reform levers (maintain 60-vote threshold, talking filibuster requirement, 55-vote threshold, simple majority carve-outs) altering congressional legislative passability.
+- [x] **REF-02**: Supreme Court and judicial reform options (18-year term limits, statutory code of conduct, bench expansion) with institutional credibility and confirmation battles.
+- [x] **REF-03**: Electoral reform policies (ranked-choice voting grant incentives, nonpartisan redistricting commissions, small-dollar donor matching) shifting voter participation and competitive seats.
+- [x] **REF-04**: Constitutional amendment mechanism with high bar requirements: 2/3 House + 2/3 Senate passage, followed by 3/4 state legislature ratifications.
 
 ### Household Impact Persona (HOU)
 
@@ -45,10 +45,10 @@ Requirements for Milestone v0.3: Social Policy & Domestic Reform.
 | SOC-03 | Phase 9 | Complete |
 | SOC-04 | Phase 9 | Complete |
 | SOC-05 | Phase 10 | Complete |
-| REF-01 | Phase 11 | Pending |
-| REF-02 | Phase 11 | Pending |
-| REF-03 | Phase 11 | Pending |
-| REF-04 | Phase 11 | Pending |
+| REF-01 | Phase 11 | Complete |
+| REF-02 | Phase 11 | Complete |
+| REF-03 | Phase 11 | Complete |
+| REF-04 | Phase 11 | Complete |
 | HOU-01 | Phase 12 | Pending |
 | HOU-02 | Phase 12 | Pending |
 
