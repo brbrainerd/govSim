@@ -505,6 +505,14 @@ export const COEFF = {
   studentDebtMonthlyRelief: { value: 25, unit: '$/month', basis: 'judgement', range: [10, 60], note: 'Average monthly disposable income relief from student loan payment reductions.' },
   universalPreKCost: { value: 22, unit: '$bn/yr', basis: 'judgement', range: [10, 45], note: 'Federal matching grants for universal early childhood education.' },
   universalPreKEmpPop: { value: 0.12, unit: '% empPop', basis: 'judgement', range: [0.04, 0.25], note: 'Parental labor force participation increase enabled by subsidized childcare.' },
+  acaFamilyRelief: { value: 30, unit: '$/month', basis: 'judgement', range: [10, 60], note: 'Monthly family health premium savings from enhanced ACA subsidies.' },
+  visaDeficitSavings: { value: 8, unit: '$bn/yr', basis: 'judgement', range: [2, 20], note: 'Net federal revenue gain from skilled worker visa fees and taxes.' },
+  visaFamilyBenefit: { value: 5, unit: '$/month', basis: 'judgement', range: [1, 15], note: 'Household benefit from lower service costs and agricultural efficiency.' },
+  regularizationFamilyRelief: { value: 10, unit: '$/month', basis: 'judgement', range: [2, 25], note: 'Household income and purchasing power boost from normalized legal wages.' },
+  cleanEnergyFamilyRelief: { value: 10, unit: '$/month', basis: 'judgement', range: [2, 25], note: 'Household savings from subsidized clean energy tax credits.' },
+  fossilPermittingFamilyRelief: { value: 8, unit: '$/month', basis: 'judgement', range: [2, 20], note: 'Household utility and fuel savings from expanded oil and gas supply.' },
+  titleIFamilyRelief: { value: 5, unit: '$/month', basis: 'judgement', range: [1, 15], note: 'Household educational support value from Title I grants.' },
+  universalPreKFamilyRelief: { value: 45, unit: '$/month', basis: 'judgement', range: [20, 100], note: 'Monthly household childcare expense savings from universal pre-K.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------

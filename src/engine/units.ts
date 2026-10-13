@@ -41,3 +41,17 @@ export const HISTORIAN_TRANSFORMATIONAL_THRESHOLD = 10.0;
 export const HISTORIAN_STABILITY_THRESHOLD = 3.0;
 export const HISTORIAN_MIXED_LOW_THRESHOLD = -2.9;
 export const HISTORIAN_CRISIS_LOW_THRESHOLD = -9.9;
+
+export const SOCIAL_INDEX_BASE = 100;
+export const SOCIAL_INDEX_MIN = 50;
+export const SOCIAL_INDEX_MAX = 150;
+export const SOCIAL_INDEX_STEP = 10;
+export const SOCIAL_INDEX_STEP_FINE = 5;
+export const SOCIAL_NARROW_MIN = 70;
+export const SOCIAL_NARROW_MAX = 140;
+export const SOCIAL_PERCENT_MIN = 0;
+export const SOCIAL_PERCENT_MAX = 100;
+export const SOCIAL_PERCENT_STEP = 10;
+export const SOCIAL_BINARY_BASE = 0;
+export const SOCIAL_BINARY_MAX = 1;
+export const SOCIAL_BINARY_STEP = 1;
