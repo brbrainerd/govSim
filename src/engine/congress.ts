@@ -2,6 +2,7 @@
 // ponytail: fixed groups and three deals for one bill; the bloc model replaces this in M1.
 
 import { C, RULES } from './coefficients';
+import { socialDev, type SocialDraft } from './social';
 
 export const HOUSE_SEATS = 435;
 export const TO_PASS = 218;
@@ -105,14 +106,98 @@ export const deals = [
 ] as const satisfies readonly { id: string; title: string; detail: string; cost: number; gain: Partial<Record<GroupId, number>> }[];
 export type DealId = (typeof deals)[number]['id'];
 
-export function tally(done: readonly DealId[], houseDelta = 0) {
+/**
+ * Computes net vote shifts across congressional blocs based on social policy proposals.
+ * Blocs react to ideological alignment:
+ * - Progressives favor public health, green energy, public education, and worker rights.
+ * - Conservatives favor border enforcement, fossil leasing, and fiscal restraint.
+ * - Centrists favor balanced compromises (e.g. clean credits paired with fossil leasing).
+ * - Moderates favor local educational and workforce investments.
+ */
+export function socialWhipShift(draft?: SocialDraft): Record<GroupId, number> {
+  if (!draft) return { pro: 0, mod: 0, cen: 0, con: 0, fre: 0 };
+
+  const aca = socialDev(draft, 'aca');
+  const pharma = socialDev(draft, 'pharma');
+  const pub = socialDev(draft, 'pub');
+  const bor = socialDev(draft, 'bor');
+  const vis = socialDev(draft, 'vis');
+  const reg = socialDev(draft, 'reg');
+  const clean = socialDev(draft, 'clean');
+  const fos = socialDev(draft, 'fos');
+  const carb = socialDev(draft, 'carb');
+  const k12 = socialDev(draft, 'k12');
+  const debt = socialDev(draft, 'debt');
+  const prek = socialDev(draft, 'prek');
+
+  const proShift = Math.round(
+    (aca / 10) * 2 +
+    (pharma / 10) * 1.5 +
+    pub * 3 +
+    (clean / 10) * 2 +
+    (carb / 10) * 2 +
+    (k12 / 10) * 1.5 +
+    (debt / 10) * 2 +
+    prek * 3 +
+    reg * 3 -
+    (fos / 10) * 2.5 -
+    (bor / 10) * 1.5
+  );
+
+  const conShift = Math.round(
+    (bor / 10) * 3 +
+    (fos / 10) * 3 -
+    (aca / 10) * 2 -
+    pub * 4 -
+    (clean / 10) * 2 -
+    (carb / 10) * 2 -
+    (debt / 10) * 3 -
+    prek * 3 -
+    reg * 3
+  );
+
+  const energyBalance = clean > 0 && fos > 0 ? 4 : (clean > 20 && fos === 0) || (fos > 20 && clean === 0) ? -3 : 0;
+  const immBalance = bor > 0 && vis > 0 ? 3 : 0;
+  const cenShift = Math.round(
+    energyBalance +
+    immBalance +
+    (vis / 10) * 2 +
+    (pharma / 10) * 1.5 -
+    (debt / 10) * 2 -
+    prek * 2
+  );
+
+  const modShift = Math.round(
+    (k12 / 10) * 1.5 +
+    prek * 2 +
+    (vis / 10) * 1.5 +
+    (pharma / 10) * 1 -
+    (debt / 10) * 1
+  );
+
+  const freShift = Math.round(
+    (bor / 10) * 1 -
+    (aca > 0 || prek > 0 || debt > 0 || clean > 0 ? 4 : 0)
+  );
+
+  return {
+    pro: proShift,
+    mod: modShift,
+    cen: cenShift,
+    con: conShift,
+    fre: freShift,
+  };
+}
+
+export function tally(done: readonly DealId[], houseDelta = 0, socialDraft?: SocialDraft) {
   const activeGroups = groupsFor(houseDelta);
+  const socialShift = socialWhipShift(socialDraft);
   const byGroup = {} as Record<GroupId, number>;
   let total = 0;
   for (const g of activeGroups) {
-    let y: number = g.yes;
+    let y: number = g.yes + (socialShift[g.id] ?? 0);
     for (const d of deals) if (done.includes(d.id)) y += (d.gain as Partial<Record<GroupId, number>>)[g.id] ?? 0;
-    byGroup[g.id] = Math.min(y, g.seats);
+    byGroup[g.id] = Math.max(0, Math.min(y, g.seats));
     total += byGroup[g.id];
   }
   return { byGroup, total, short: Math.max(0, TO_PASS - total) };
