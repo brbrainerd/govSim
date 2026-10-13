@@ -19,9 +19,9 @@
 
 ### Security Index & Macro Feedback (SEC)
 
-- [ ] **SEC-01**: Pure engine calculates a 0–100 Security Index based on defense readiness, alliance strength, and crisis containment.
-- [ ] **SEC-02**: Security Index drives the 10% Security weight in the Prosperity Index with causal trace explanations in report cards.
-- [ ] **SEC-03**: Geopolitical supply disruptions feed into energy/import deflators and Phillips-curve inflation via registered coefficients.
+- [x] **SEC-01**: Pure engine calculates a 0–100 Security Index based on defense readiness, alliance strength, and crisis containment.
+- [x] **SEC-02**: Security Index drives the 10% Security weight in the Prosperity Index with causal trace explanations in report cards.
+- [x] **SEC-03**: Geopolitical supply disruptions feed into energy/import deflators and Phillips-curve inflation via registered coefficients.
 
 ### International Trade & Tariffs (TRADE)
 
@@ -59,9 +59,9 @@
 | FORPOL-01 | Phase 14 | Complete |
 | FORPOL-02 | Phase 14 | Complete |
 | FORPOL-03 | Phase 14 | Complete |
-| SEC-01 | Phase 15 | Pending |
-| SEC-02 | Phase 15 | Pending |
-| SEC-03 | Phase 15 | Pending |
+| SEC-01 | Phase 15 | Complete |
+| SEC-02 | Phase 15 | Complete |
+| SEC-03 | Phase 15 | Complete |
 | TRADE-01 | Phase 16 | Pending |
 | TRADE-02 | Phase 16 | Pending |
 | TRADE-03 | Phase 16 | Pending |

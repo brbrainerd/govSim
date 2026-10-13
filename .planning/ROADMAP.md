@@ -14,7 +14,7 @@
 
 - [x] **Phase 13: Geopolitical Crises Deck & Resolution Mechanics** (CRISIS-01, CRISIS-02, CRISIS-03)
 - [x] **Phase 14: Foreign Policy & Sanctions Levers** (FORPOL-01, FORPOL-02, FORPOL-03)
-- [ ] **Phase 15: Security Index & Macro Feedback Engine** (SEC-01, SEC-02, SEC-03)
+- [x] **Phase 15: Security Index & Macro Feedback Engine** (SEC-01, SEC-02, SEC-03)
 - [ ] **Phase 16: International Trade & Tariffs Screen** (TRADE-01, TRADE-02, TRADE-03)
 
 ### Phase Details
@@ -47,7 +47,7 @@
   1. Pure engine computes a deterministic 0–100 Security Index reflecting military posture, international crisis containment, and alliance cohesion.
   2. Prosperity Index composite incorporates Security at 10% weight with transparent causal trace line items in the post-turn report card.
   3. Geopolitical supply disruption coefficients register in `C` and directly feed through into the Phillips curve and import deflators.
-**Plans**: TBD (4 plans expected)
+**Plans**: 4 plans (15-01, 15-02, 15-03, 15-04) — completed 2026-10-12
 
 #### Phase 16: International Trade & Tariffs Screen
 **Goal**: Build a dedicated Trade screen with bilateral agreement options, sector-specific strategic tariffs, retaliatory foreign tariff modeling, and state-level voter exposure feedback.
