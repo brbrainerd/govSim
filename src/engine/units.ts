@@ -192,5 +192,10 @@ export const EVIL_LEVER_IDS = [
 
 export type EvilLeverId = (typeof EVIL_LEVER_IDS)[number];
 
+// Kleptocrat Heist Tiers (Phase 20, UI-03)
+export const TIER_PETTY_GRIFTER_MAX = 10;
+export const TIER_GILDED_OLIGARCH_MAX = 25;
+export const TIER_SOVEREIGN_PLUNDERER_MAX = 50;
+
 
 

@@ -3,6 +3,7 @@
   import { clearAutosave, loadAutosave, parseSave, type SaveFile } from './app/save';
   import { decodeRunCode } from './app/share';
   import { Session, type GameOptions } from './app/session.svelte';
+  import { applyTheme } from './design/tokens';
   import { fromData, us } from './data/us';
   import Game from './screens/Game.svelte';
   import NewGame from './screens/NewGame.svelte';
@@ -12,6 +13,10 @@
   let errorMessage = $state<string | null>(null);
   let sharedReplay = $state<{ seed: number; party: string } | null>(null);
   let sharedRunError = $state<string | null>(null);
+
+  $effect(() => {
+    applyTheme(session?.isEvilMode ? 'evil' : 'day');
+  });
 
   onMount(async () => {
     autosave = loadAutosave();

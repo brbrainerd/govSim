@@ -14,8 +14,7 @@
 **Milestone Goal:** Implement the satirical "Evil Mode" kleptocracy gameplay loop where the objective is to maximize an offshore stash while managing an escalating Heat meter to evade congressional investigations, special counsels, and impeachment trials.
 
 - [x] **Phase 17: Evil Mode Engine, Offshore Stash & Heat Meter** (4/4 plans) — completed 2026-10-12
-- [x] **Phase 18: Corrupt Executive Levers & Cronyism** (4/4 plans) — completed 2026-10-12
-- [ ] **Phase 19: Institutional Backlash & Impeachment Trial** (IMPEACH-01, IMPEACH-02, IMPEACH-03)
+- [x] **Phase 19: Institutional Backlash & Impeachment Trial** (4/4 plans) — completed 2026-10-13
 - [ ] **Phase 20: Satirical UI Reskin & Heist End Screens** (UI-01, UI-02, UI-03)
 
 ### Phase Details
@@ -48,7 +47,7 @@
   1. High heat (>60) triggers special counsel appointments and congressional subpoenas that drain presidential clout each quarter.
   2. Critical heat (>80) triggers House impeachment votes using the 435-seat congressional bloc voting model.
   3. Impeachment leads to a Senate conviction trial requiring a 2/3 supermajority; conviction instantly terminates the term and forfeits the entire offshore stash.
-**Plans**: TBD (4 plans expected)
+**Plans**: 4 plans executed (completed 2026-10-13)
 
 #### Phase 20: Satirical UI Reskin & Heist End Screens
 **Goal**: Build the dark Americana poster visual reskin (oxblood, aged gold, ink), live Offshore Stash and Heat Gauge UI components, and specialized victory/conviction end screens.

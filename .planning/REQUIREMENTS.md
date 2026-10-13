@@ -19,9 +19,9 @@
 
 ### Institutional Backlash & Impeachment (IMPEACH)
 
-- [ ] **IMPEACH-01**: High heat levels (>60) trigger special counsel investigations and congressional subpoenas that drain presidential clout each quarter.
-- [ ] **IMPEACH-02**: Critical heat levels (>80) trigger House impeachment votes using the 435-seat congressional bloc voting model.
-- [ ] **IMPEACH-03**: Impeachment leads to a Senate conviction trial requiring a 2/3 supermajority; conviction instantly terminates the term and forfeits the entire offshore stash.
+- [x] **IMPEACH-01**: High heat levels (>60) trigger special counsel investigations and congressional subpoenas that drain presidential clout each quarter.
+- [x] **IMPEACH-02**: Critical heat levels (>80) trigger House impeachment votes using the 435-seat congressional bloc voting model.
+- [x] **IMPEACH-03**: Impeachment leads to a Senate conviction trial requiring a 2/3 supermajority; conviction instantly terminates the term and forfeits the entire offshore stash.
 
 ### Satirical Visual Reskin & Heist End Screens (UI)
 
@@ -48,9 +48,9 @@
 | LEVER-01 | Phase 18 | Complete |
 | LEVER-02 | Phase 18 | Complete |
 | LEVER-03 | Phase 18 | Complete |
-| IMPEACH-01 | Phase 19 | Pending |
-| IMPEACH-02 | Phase 19 | Pending |
-| IMPEACH-03 | Phase 19 | Pending |
+| IMPEACH-01 | Phase 19 | Complete |
+| IMPEACH-02 | Phase 19 | Complete |
+| IMPEACH-03 | Phase 19 | Complete |
 | UI-01 | Phase 20 | Pending |
 | UI-02 | Phase 20 | Pending |
 | UI-03 | Phase 20 | Pending |

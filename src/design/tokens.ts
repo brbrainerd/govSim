@@ -5,6 +5,7 @@ const base = {
   // UI
   paper: '#F4E8CE',
   card: '#FFF8EA',
+  'card-alt': '#F3ECE0',
   ink: '#1F2F55',
   'ink-soft': '#4A5677',
   alert: '#B5402F',
@@ -63,15 +64,21 @@ export const themes = {
     ...base,
     paper: '#1A1410',
     card: '#251C16',
+    'card-alt': '#2E231C',
     ink: '#EADBB8',
     'ink-soft': '#B9A988',
     alert: '#7A1E1E',
     'alert-dark': '#5A1414',
     gold: '#C9A23A',
+    'gold-dark': '#9B7924',
     sky: '#8C7B5A',
     sage: '#6E7F4A',
     'sage-dark': '#8EA064',
     dot: 'rgba(201,162,58,.14)',
+    scrim: 'rgba(0,0,0,.75)',
+    'sage-tint': 'rgba(110,127,74,.2)',
+    'alert-tint': 'rgba(122,30,30,.25)',
+    'ink-tint': 'rgba(234,219,184,.12)',
     'art-wall': '#2B211A',
     'art-sky': '#1B2236',
     'art-curtain': '#7A1E1E',
@@ -82,7 +89,9 @@ export const themes = {
 
 export type ThemeName = keyof typeof themes;
 
-export function applyTheme(name: ThemeName, el: HTMLElement = document.documentElement): void {
-  for (const [k, v] of Object.entries(themes[name])) el.style.setProperty(`--${k}`, v);
-  el.dataset.theme = name;
+export function applyTheme(name: ThemeName, el?: HTMLElement): void {
+  const target = el ?? (typeof document !== 'undefined' ? document.documentElement : undefined);
+  if (!target) return;
+  for (const [k, v] of Object.entries(themes[name])) target.style.setProperty(`--${k}`, v);
+  target.dataset.theme = name;
 }
