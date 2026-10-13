@@ -7,9 +7,9 @@
 
 ### Geopolitical Crises (CRISIS)
 
-- [ ] **CRISIS-01**: Player encounters international crises (oil embargo, foreign debt contagion, shipping strait blockade) with multi-turn countdowns and escalation risks.
-- [ ] **CRISIS-02**: Player can select from three cited diplomatic/economic/military resolution options for each crisis with distinct budget, approval, and risk trade-offs.
-- [ ] **CRISIS-03**: Autopilot runs receive the identical international crisis stream and default to standard response for fair score attribution.
+- [x] **CRISIS-01**: Player encounters international crises (oil embargo, foreign debt contagion, shipping strait blockade) with multi-turn countdowns and escalation risks.
+- [x] **CRISIS-02**: Player can select from three cited diplomatic/economic/military resolution options for each crisis with distinct budget, approval, and risk trade-offs.
+- [x] **CRISIS-03**: Autopilot runs receive the identical international crisis stream and default to standard response for fair score attribution.
 
 ### Foreign Policy Levers (FORPOL)
 
@@ -53,9 +53,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CRISIS-01 | Phase 13 | Pending |
-| CRISIS-02 | Phase 13 | Pending |
-| CRISIS-03 | Phase 13 | Pending |
+| CRISIS-01 | Phase 13 | Complete |
+| CRISIS-02 | Phase 13 | Complete |
+| CRISIS-03 | Phase 13 | Complete |
 | FORPOL-01 | Phase 14 | Pending |
 | FORPOL-02 | Phase 14 | Pending |
 | FORPOL-03 | Phase 14 | Pending |
