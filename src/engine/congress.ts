@@ -39,15 +39,24 @@ export interface MidtermShift {
 }
 
 /**
- * Midterm seat change derived from national approval (D3, VOT-05, GR-18, GR-19).
+ * Midterm seat change derived from national approval and battleground state swing (D3, VOT-05, SOC-05).
  * Losses are strictly bounded to prevent death spirals.
+ * @param approval National presidential approval rating (0..100)
+ * @param battlegroundMarginShift Average margin shift in competitive battleground states (percentage points)
  */
-export function calculateMidtermShift(approval: number): MidtermShift {
+export function calculateMidtermShift(
+  approval: number,
+  battlegroundMarginShift = 0
+): MidtermShift {
   const approvalDelta = approval - 50;
-  const rawHouse = Math.round(approvalDelta * C.midtermApprovalSlope - C.midtermHistoricalPenalty);
+  const rawHouse = Math.round(
+    approvalDelta * C.midtermApprovalSlope -
+      C.midtermHistoricalPenalty +
+      battlegroundMarginShift * 1.5
+  );
   const houseShift = Math.max(-C.midtermMaxHouseLoss, Math.min(C.midtermMaxHouseGain, rawHouse));
 
-  const rawSenate = Math.round(approvalDelta * 0.2 - 2);
+  const rawSenate = Math.round(approvalDelta * 0.2 - 2 + battlegroundMarginShift * 0.3);
   const senateShift = Math.max(-C.midtermMaxSenateLoss, Math.min(C.midtermMaxSenateGain, rawSenate));
 
   return { houseShift, senateShift };

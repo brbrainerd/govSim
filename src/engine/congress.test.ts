@@ -12,13 +12,26 @@ import {
 } from './congress';
 
 describe('congressional groups and midterms', () => {
-  it('conserves 435 House seats across all midterm approval levels', () => {
+  it('conserves 435 House seats across all midterm approval levels and battleground shifts', () => {
     for (let approval = 10; approval <= 90; approval += 5) {
-      const { houseShift } = calculateMidtermShift(approval);
-      const active = groupsFor(houseShift);
-      const totalSeats = active.reduce((sum, g) => sum + g.seats, 0);
-      expect(totalSeats).toBe(HOUSE_SEATS);
+      for (const bgShift of [-10, -3, 0, 3, 10]) {
+        const { houseShift } = calculateMidtermShift(approval, bgShift);
+        const active = groupsFor(houseShift);
+        const totalSeats = active.reduce((sum, g) => sum + g.seats, 0);
+        expect(totalSeats).toBe(HOUSE_SEATS);
+      }
     }
+  });
+
+  it('battleground margin shift mitigates or exacerbates midterm seat changes', () => {
+    const base = calculateMidtermShift(45, 0);
+    const withSwingAdvantage = calculateMidtermShift(45, 4.0);
+    const withSwingPenalty = calculateMidtermShift(45, -4.0);
+
+    expect(withSwingAdvantage.houseShift).toBeGreaterThan(base.houseShift);
+    expect(withSwingPenalty.houseShift).toBeLessThan(base.houseShift);
+    expect(withSwingAdvantage.senateShift).toBeGreaterThanOrEqual(base.senateShift);
+    expect(withSwingPenalty.senateShift).toBeLessThanOrEqual(base.senateShift);
   });
 
   it('calculates default baseline tally correctly (203 total, 15 short)', () => {
