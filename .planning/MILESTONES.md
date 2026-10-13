@@ -1,5 +1,21 @@
 # Milestones
 
+## v0.3 Social Policy & Domestic Reform (Shipped: 2026-10-12)
+
+**Phases completed:** 4 phases, 16 plans, 0 tasks
+
+**Key accomplishments:**
+
+- 09 (Domestic Social Policy Levers)
+- 09 (Domestic Social Policy Levers)
+- 09 (Domestic Social Policy Levers)
+- 09 (Domestic Social Policy Levers)
+- 10-demographic-regional-distribution
+- 10-demographic-regional-distribution
+- v0.3 (Social Policy & Domestic Reform)
+
+---
+
 ## v0.2 Playable First Term (Shipped: 2026-10-12)
 
 **Phases completed:** 8 phases, 40 plans, 9 tasks

@@ -64,12 +64,13 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 - **Milestone v0.2 (Playable First Term): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.2`.**
   - All 8 phases (1 to 8) executed, verified, and audited with 53/53 requirements satisfied.
   - Archived to `.planning/milestones/v0.2-ROADMAP.md`, `v0.2-REQUIREMENTS.md`, and `v0.2-phases/`.
-- **Milestone v0.3 (Social Policy & Domestic Reform): IN PROGRESS.**
-  - Scoped across 4 phases: Phase 9 (Domestic Social Policy Levers), Phase 10 (Demographic & Regional Distribution), Phase 11 (Structural Government Reform & Amendments), Phase 12 (Household Impact Card & Balance).
-  - 11 active requirements defined in `.planning/REQUIREMENTS.md` (SOC-01..05, REF-01..04, HOU-01..02).
+- **Milestone v0.3 (Social Policy & Domestic Reform): COMPLETE & VERIFIED.**
+  - All 4 phases (9 to 12) executed, verified, and audited with 11/11 requirements satisfied (SOC-01..05, REF-01..04, HOU-01..02).
   - **Phase 9 (Domestic Social Policy Levers): COMPLETE.** Engine models for healthcare, immigration, energy/climate, and education with registered coefficients, causal tracing, congressional whip dynamics, and balance calibration.
-  - **Phase 10 (Demographic & Regional Distribution): COMPLETE & VERIFIED.** State exposures for 51 jurisdictions, BEA Regional Price Parity purchasing power index, mean-centered regional transmission, 6 national demographic cohorts, competitive House delegation transmission, Voters screen Coalitions view, State Inspector Local Family Impact card, axe-core clean, zero-scroll audited at 1376×768 & 1280×720. Ready for Phase 11.
-- **Gates:** `pnpm test` 286 passing (46 files) · `pnpm test:e2e` 16 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
+  - **Phase 10 (Demographic & Regional Distribution): COMPLETE & VERIFIED.** State exposures for 51 jurisdictions, BEA Regional Price Parity purchasing power index, mean-centered regional transmission, 6 national demographic cohorts, competitive House delegation transmission, Voters screen Coalitions view, State Inspector Local Family Impact card.
+  - **Phase 11 (Structural Government Reform & Amendments): COMPLETE & VERIFIED.** Senate filibuster reforms (60-vote, talking, 55-vote, simple majority), Supreme Court & judicial reform (18-yr term limits, ethics, bench expansion), electoral reform (RCV grants, redistricting commissions, small-dollar matching), and Article V constitutional amendment mechanism with 2/3 House, 2/3 Senate, and 3/4 state ratifications.
+  - **Phase 12 (Household Impact Card & Balance): COMPLETE & VERIFIED.** "Your Household" card on Oval Office and Economy screens, 4 authentic persona presets, custom household builder, updated balance calibration report (`balance-report.json`, +3.425 headroom, $\le 5$ pp party neutrality), zero axe-core a11y violations, zero page scroll at 1376×768 & 1280×720 viewports.
+- **Gates:** `pnpm test` 330 passing (54 files) · `pnpm test:e2e` 23 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
 ### Open debts (do not lose these)

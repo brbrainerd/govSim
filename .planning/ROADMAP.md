@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v0.2 Playable First Term** — Phases 1-8 (shipped 2026-10-12)
-- 🚧 **v0.3 Social Policy & Domestic Reform** — Phases 9-12 (in progress)
+- ✅ **v0.3 Social Policy & Domestic Reform** — Phases 9-12 (shipped 2026-10-12)
 
 ## Phases
 

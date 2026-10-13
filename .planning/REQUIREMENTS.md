@@ -24,8 +24,8 @@ Requirements for Milestone v0.3: Social Policy & Domestic Reform.
 
 ### Household Impact Persona (HOU)
 
-- [ ] **HOU-01**: "Your Household" card integrated into the Oval Office and Economy screens displaying real-time household budget impacts (groceries, energy bills, health insurance premiums, income tax, wages).
-- [ ] **HOU-02**: Preset household demographic personas (e.g., Rust Belt manufacturing family, Sun Belt retiree, suburban educator couple) and custom configuration (state, income bracket, household size).
+- [x] **HOU-01**: "Your Household" card integrated into the Oval Office and Economy screens displaying real-time household budget impacts (groceries, energy bills, health insurance premiums, income tax, wages).
+- [x] **HOU-02**: Preset household demographic personas (e.g., Rust Belt manufacturing family, Sun Belt retiree, suburban educator couple) and custom configuration (state, income bracket, household size).
 
 ## Out of Scope
 
@@ -49,8 +49,8 @@ Requirements for Milestone v0.3: Social Policy & Domestic Reform.
 | REF-02 | Phase 11 | Complete |
 | REF-03 | Phase 11 | Complete |
 | REF-04 | Phase 11 | Complete |
-| HOU-01 | Phase 12 | Pending |
-| HOU-02 | Phase 12 | Pending |
+| HOU-01 | Phase 12 | Complete |
+| HOU-02 | Phase 12 | Complete |
 
 **Coverage:**
 - v0.3 requirements: 11 total
