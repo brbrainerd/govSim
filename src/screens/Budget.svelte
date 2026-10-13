@@ -4,16 +4,20 @@
   import { describe, estimate, packages, spendLevers, taxLevers, type Lever, type PackageName } from '../engine/budget';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
+  import type { ExplainerId } from '../content/explainers';
+
   let {
     session,
     question,
     go,
     onOpenMyth,
+    onOpenExplainer,
   }: {
     session: Session;
     question: string;
     go: (id: ScreenId) => void;
     onOpenMyth?: (id: string) => void;
+    onOpenExplainer?: (id: ExplainerId) => void;
   } = $props();
 
   const words = $derived(describe(estimate(session.draft.budget)));
@@ -82,7 +86,7 @@
     </div>
   {/snippet}
   {#snippet learn()}
-    <button class="link" disabled title="Coming soon">How a budget becomes law</button>
+    <button type="button" class="link" data-testid="how-it-works-btn" onclick={() => onOpenExplainer?.('budget')}>How a budget becomes law</button>
     <button
       type="button"
       class="ticket"

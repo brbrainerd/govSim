@@ -8,14 +8,22 @@
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import HouseholdBreakdown from '../ui/HouseholdBreakdown.svelte';
 
+  import type { ExplainerId } from '../content/explainers';
+
   let {
     session,
     question,
     go,
+    onOpenMyth,
+    onOpenExplainer,
+    onOpenFed,
   }: {
     session: Session;
     question: string;
     go: (id: ScreenId) => void;
+    onOpenMyth?: (mythId: string) => void;
+    onOpenExplainer?: (explainerId: ExplainerId) => void;
+    onOpenFed?: () => void;
   } = $props();
 
   let showScoresModal = $state(false);
@@ -209,8 +217,8 @@
   {/snippet}
 
   {#snippet learn()}
-    <button class="link" disabled title="Coming soon">How it works</button>
-    <button class="ticket" disabled title="Coming soon">Myth? Lower taxes boost growth?</button>
+    <button type="button" class="link" data-testid="how-it-works-btn" onclick={() => onOpenExplainer?.('economy')}>How it works</button>
+    <button type="button" class="ticket" onclick={() => onOpenMyth?.('supply_side_taxes')}>Myth? Lower taxes boost growth?</button>
   {/snippet}
 
   {#snippet next()}
@@ -232,7 +240,7 @@
         <span class="fed-rate">{fedExplainer.rate}%</span>
       </div>
       <p class="fed-detail">{fedExplainer.rationale}</p>
-      <button class="btn secondary-btn" disabled title="Coming in Phase 5">Pressure the Fed (costs trust)</button>
+      <button type="button" class="btn secondary-btn" onclick={() => onOpenFed?.()}>Pressure the Fed (costs trust)</button>
     </div>
 
     <button

@@ -11,17 +11,21 @@
   import HouseholdCard from '../ui/HouseholdCard.svelte';
   import HouseholdModal from '../ui/HouseholdModal.svelte';
 
+  import type { ExplainerId } from '../content/explainers';
+
   let {
     session,
     question,
     go,
     onOpenMyth,
+    onOpenExplainer,
     onOpenCrisis,
   }: {
     session: Session;
     question: string;
     go: (id: ScreenId) => void;
     onOpenMyth?: (mythId: string) => void;
+    onOpenExplainer?: (explainerId: ExplainerId) => void;
     onOpenCrisis?: (crisis: ActiveCrisis) => void;
   } = $props();
 
@@ -94,8 +98,8 @@
     </div>
   {/snippet}
   {#snippet learn()}
-    <button class="link" disabled title="Coming soon">How it works</button>
-    <button class="ticket" onclick={() => onOpenMyth?.('gas_prices')}>Myth? Can you lower gas prices</button>
+    <button type="button" class="link" data-testid="how-it-works-btn" onclick={() => onOpenExplainer?.('oval_office')}>How it works</button>
+    <button type="button" class="ticket" onclick={() => onOpenMyth?.('gas_prices')}>Myth? Can you lower gas prices</button>
   {/snippet}
   {#snippet next()}
     {#if activeGeopoliticalCrisis}
@@ -210,7 +214,19 @@
     {#each briefingInfo.suggestions as s (s.title)}
       <div class="card option">
         <b>{s.title}</b>
-        <button class="btn" onclick={() => s.target && go(s.target)}>{s.cta}</button>
+        <button
+          type="button"
+          class="btn"
+          onclick={() => {
+            if (s.openCrisis && session.current.activeCrisis) {
+              onOpenCrisis?.(session.current.activeCrisis);
+            } else if (s.mythId) {
+              onOpenMyth?.(s.mythId);
+            } else if (s.target) {
+              go(s.target);
+            }
+          }}
+        >{s.cta}</button>
       </div>
     {/each}
   {/snippet}

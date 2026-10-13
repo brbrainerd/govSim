@@ -10,14 +10,20 @@
     type TradeAgreementId,
   } from '../engine/trade';
 
+  import type { ExplainerId } from '../content/explainers';
+
   let {
     session,
     question,
     go,
+    onOpenMyth,
+    onOpenExplainer,
   }: {
     session: Session;
     question: string;
     go?: (id: ScreenId) => void;
+    onOpenMyth?: (mythId: string) => void;
+    onOpenExplainer?: (explainerId: ExplainerId) => void;
   } = $props();
 
   const tradeBalance = $derived(session.tradeBalance);
@@ -263,6 +269,11 @@
         </div>
       </section>
     </div>
+  {/snippet}
+
+  {#snippet learn()}
+    <button type="button" class="link" data-testid="how-it-works-btn" onclick={() => onOpenExplainer?.('trade')}>How tariffs &amp; trade work</button>
+    <button type="button" class="ticket" onclick={() => onOpenMyth?.('trade_deficits')}>Myth? Foreign nations pay tariffs?</button>
   {/snippet}
 
   {#snippet next()}

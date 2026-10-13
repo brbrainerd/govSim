@@ -23,8 +23,10 @@
   import AboutModal from '../ui/AboutModal.svelte';
   import ProblemReportModal from '../ui/ProblemReportModal.svelte';
   import ImpeachmentModal from '../ui/ImpeachmentModal.svelte';
+  import ExplainerModal from '../ui/ExplainerModal.svelte';
   import EndScreen from './EndScreen.svelte';
   import { getMyth } from '../content/myths';
+  import { getExplainer, type ExplainerId } from '../content/explainers';
 
   let {
     session,
@@ -43,12 +45,14 @@
 
   let activeReviewCrisis = $state<ActiveCrisis | null>(null);
   let activeMythId = $state<string | null>(null);
+  let activeExplainerId = $state<ExplainerId | null>(null);
   let speechModalOpen = $state<boolean>(false);
   let fedModalOpen = $state<boolean>(false);
   let aboutModalOpen = $state<boolean>(false);
   let reportModalOpen = $state<boolean>(false);
 
   const activeMyth = $derived(activeMythId ? getMyth(activeMythId) : null);
+  const activeExplainer = $derived(activeExplainerId ? getExplainer(activeExplainerId) : null);
 
   const displayedCrisis = $derived.by(() => {
     if (activeReviewCrisis) return activeReviewCrisis;
@@ -97,16 +101,25 @@
           question={screen.question}
           {go}
           onOpenMyth={(id) => (activeMythId = id)}
+          onOpenExplainer={(id) => (activeExplainerId = id)}
           onOpenCrisis={(crisis) => { activeReviewCrisis = crisis; }}
         />
       {:else if screen.id === 'economy'}
-        <Economy {session} question={screen.question} {go} />
+        <Economy
+          {session}
+          question={screen.question}
+          {go}
+          onOpenMyth={(id) => (activeMythId = id)}
+          onOpenExplainer={(id) => (activeExplainerId = id)}
+          onOpenFed={() => (fedModalOpen = true)}
+        />
       {:else if screen.id === 'budget'}
         <Budget
           {session}
           question={screen.question}
           {go}
           onOpenMyth={(id) => (activeMythId = id)}
+          onOpenExplainer={(id) => (activeExplainerId = id)}
         />
       {:else if screen.id === 'congress'}
         <Congress {session} question={screen.question} />
@@ -124,6 +137,8 @@
           {session}
           question={screen.question}
           {go}
+          onOpenMyth={(id) => (activeMythId = id)}
+          onOpenExplainer={(id) => (activeExplainerId = id)}
         />
       {:else}
         <Voters
@@ -163,6 +178,18 @@
         onGotIt={() => {
           session.viewMythCard(activeMyth!.id);
           activeMythId = null;
+        }}
+      />
+    {/if}
+
+    {#if activeExplainer}
+      <ExplainerModal
+        explainer={activeExplainer}
+        isFirstView={!session.hasViewedExplainer(activeExplainer.id)}
+        onClose={() => (activeExplainerId = null)}
+        onGotIt={() => {
+          session.viewExplainer(activeExplainer!.id);
+          activeExplainerId = null;
         }}
       />
     {/if}
