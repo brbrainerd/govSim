@@ -68,12 +68,13 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
   - All 4 phases (9 to 12) executed, verified, and audited with 11/11 requirements satisfied (SOC-01..05, REF-01..04, HOU-01..02).
 - **Milestone v0.4 (Foreign Policy & International Crises): COMPLETE & VERIFIED.**
   - All 4 phases (13 to 16) executed, verified, and audited with 12/12 requirements satisfied (CRIS-01..03, SEC-01..03, SANC-01..03, TRD-01..03).
-- **Milestone v0.5 (Satirical "Evil Mode"): COMPLETE & VERIFIED.**
+- **Milestone v0.5 (Satirical "Evil Mode"): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.5`.**
   - All 4 phases (17 to 20) executed, verified, and audited with 12/12 requirements satisfied (EVIL-01..03, LEVER-01..03, IMPEACH-01..03, UI-01..03).
-  - **Phase 17 (Evil Mode Engine, Offshore Stash & Heat Meter): COMPLETE & VERIFIED.** Alternative game mode toggle at New Game, pure deterministic offshore stash accounting, and dynamic 0–100 Heat meter with natural decay and governance friction.
-  - **Phase 18 (Corrupt Executive Levers & Cronyism): COMPLETE & VERIFIED.** Catalog of corrupt actions (no-bid crony contracts, land auctions, tariff exemption sales, library foundation solicitations, firing inspectors general) with kickbacks, clout costs, and heat generation.
-  - **Phase 19 (Institutional Backlash & Impeachment Trial): COMPLETE & VERIFIED.** Special counsel investigations and subpoenas (>60 heat), House impeachment floor votes (>80 heat, 218 threshold), and Senate conviction trial (2/3 supermajority, 67 threshold) with instantaneous asset forfeiture and term termination upon conviction.
-  - **Phase 20 (Satirical UI Reskin & Heist End Screens): COMPLETE & VERIFIED.** Dark Americana poster theme tokens (`oxblood`, `aged gold`, `ink`), live Offshore Stash rosette and Heat Gauge in Oval Office and Status Bar, and specialized EndScreen ranking unconvicted kleptocrats across 6 satirical tiers or chronicling their federal penitentiary downfall upon conviction.
+- **Milestone v0.6 (Completeness, Advisor Agency & Scenarios): INITIALIZED (Phases 21–24).**
+  - **Phase 21:** Complete the Learn Loop & Interactive Explainers (`LEARN-01..03`) — Pending.
+  - **Phase 22:** Smart Advisor Plays, Auto-Whip & Live Household Budgeting (`ADVISOR-01..03`) — Pending.
+  - **Phase 23:** Pacing Controls — Fast-Forward & Staged Decisions Tray (`PACE-01..02`) — Pending.
+  - **Phase 24:** Replayable Starting Scenarios (`SCEN-01..02`) — Pending.
 - **Gates:** `pnpm test` 417 passing (65 files) · `pnpm test:e2e` 51 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
