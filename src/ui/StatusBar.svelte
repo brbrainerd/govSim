@@ -44,9 +44,9 @@
         <span><span class="label">Stash</span><span class="num evil-num">${(state.evil?.offshoreStashBn ?? 0).toFixed(1)}B</span></span>
         <span role="tooltip" id="tip-stash">Personal wealth stashed in anonymous offshore accounts</span>
       </button>
-      <button type="button" class="stat tip evil-stat" class:critical-heat={(state.evil?.heat ?? 0) >= 75} aria-describedby="tip-heat" data-testid="status-heat-meter">
+      <button type="button" class="stat tip evil-stat" class:critical-heat={(state.evil?.heat ?? 0) >= 80} aria-describedby="tip-heat" data-testid="status-heat-meter">
         <span><span class="label">Heat</span><span class="num heat-num">{Math.round(state.evil?.heat ?? 0)}/100</span></span>
-        <span role="tooltip" id="tip-heat">Public outrage and investigative scrutiny (50: Special Counsel, 75: Impeachment, 90: Conviction)</span>
+        <span role="tooltip" id="tip-heat">Public outrage and investigative scrutiny (60: Special Counsel, 80: Impeachment, 67 Senate Votes: Conviction)</span>
       </button>
     {/if}
   </div>
@@ -56,6 +56,18 @@
       <div class="score evil-score" data-testid="evil-mode-indicator">
         <span class="star">⚡</span> <b>SATIRICAL EVIL MODE</b> <span class="star">⚡</span>
       </div>
+      {#if state.evil?.specialCounselAppointed}
+        <button
+          type="button"
+          class="special-counsel-badge tip"
+          aria-describedby="tip-special-counsel"
+          data-testid="status-special-counsel"
+        >
+          <span class="badge-icon" aria-hidden="true">⚠</span>
+          <span>SPECIAL COUNSEL SUBPOENAS ACTIVE (−25 CLOUT/QTR)</span>
+          <span role="tooltip" id="tip-special-counsel">Special counsel and congressional subpoenas drain 25 political clout each quarter</span>
+        </button>
+      {/if}
     {:else}
       <div class="score"><span class="star">★</span> <b class:worse={shown < 0}>{shown < 0 ? '−' : '+'}{Math.abs(shown).toFixed(1)}</b> {shown < 0 ? 'worse' : 'better'} than doing nothing <span class="star">★</span></div>
     {/if}
@@ -113,4 +125,23 @@
   .critical-heat .heat-num { color: var(--alert); font-weight: 800; }
   .evil-score { font: 600 clamp(12px, 0.9vw, 15px) var(--font-ui); color: var(--alert); letter-spacing: 0.04em; }
   .evil-score b { color: var(--alert-dark); }
+  .special-counsel-badge {
+    background: var(--alert);
+    color: var(--paper);
+    font: 700 clamp(10px, 0.75vw, 11px)/1 var(--font-ui);
+    padding: 3px 8px;
+    border-radius: var(--r-sm);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--ink);
+    box-shadow: 1px 1px 0 var(--ink);
+    cursor: help;
+  }
+  .special-counsel-badge .badge-icon {
+    font-size: 11px;
+    color: var(--paper);
+  }
 </style>

@@ -113,6 +113,7 @@ export class Session {
   activeAutopilotElectionOutcome = $state.raw<ElectionOutcome | null>(null);
   electionReasons = $state.raw<readonly string[]>([]);
   reelectionWon = $state<boolean>(false);
+  showingImpeachmentModal = $state<boolean>(false);
   termEnded = $state<boolean>(false);
   unlockedBadges = $state<string[]>([]);
   newlyUnlockedBadges = $state<string[]>([]);
@@ -333,7 +334,7 @@ export class Session {
           s.unlockedBadges.push(id);
         }
       }
-      if (next.turn >= TOTAL_TURNS) {
+      if (next.turn >= TOTAL_TURNS || Boolean(next.evil?.convicted)) {
         s.termEnded = true;
       }
     }
@@ -370,7 +371,7 @@ export class Session {
           s.unlockedBadges.push(id);
         }
       }
-      if (next.turn >= TOTAL_TURNS) {
+      if (next.turn >= TOTAL_TURNS || Boolean(next.evil?.convicted)) {
         s.termEnded = true;
       }
     }
@@ -623,7 +624,14 @@ export class Session {
       this.turn16Snapshot = next;
     }
 
-    if (next.turn >= TOTAL_TURNS) {
+    const hasImpeachmentEvent = next.report.log.some(
+      (l) => l.id === 'articles_of_impeachment' || l.id === 'convicted' || l.id === 'impeachment_acquitted'
+    );
+    if (hasImpeachmentEvent) {
+      this.showingImpeachmentModal = true;
+    }
+
+    if (next.turn >= TOTAL_TURNS || Boolean(next.evil?.convicted)) {
       this.termEnded = true;
     }
 
@@ -643,12 +651,16 @@ export class Session {
     this.newlyUnlockedBadges = brandNew;
     this.unlockedBadges = Array.from(existing);
 
-    if (this.showingElectionNight) {
+    if (this.showingElectionNight || this.showingImpeachmentModal) {
       this.showingReport = false;
     } else {
       this.showingReport = true;
     }
     storeAutosave(this);
+  }
+
+  dismissImpeachmentModal() {
+    this.showingImpeachmentModal = false;
   }
 
   continueAfterElection() {

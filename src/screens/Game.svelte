@@ -22,6 +22,7 @@
   import ElectionNightModal from '../ui/ElectionNightModal.svelte';
   import AboutModal from '../ui/AboutModal.svelte';
   import ProblemReportModal from '../ui/ProblemReportModal.svelte';
+  import ImpeachmentModal from '../ui/ImpeachmentModal.svelte';
   import EndScreen from './EndScreen.svelte';
   import { getMyth } from '../content/myths';
 
@@ -67,7 +68,7 @@
   });
 </script>
 
-{#if session.termEnded}
+{#if session.termEnded && !session.showingImpeachmentModal}
   <EndScreen {session} {onRestart} />
 {:else}
   <div class="app halftone">
@@ -203,6 +204,13 @@
     reasons={session.electionReasons}
     oncontinue={() => session.continueAfterElection()}
     onretry={() => session.retryTurn16()}
+  />
+{/if}
+
+{#if session.showingImpeachmentModal}
+  <ImpeachmentModal
+    evilState={session.current.evil}
+    onClose={() => session.dismissImpeachmentModal()}
   />
 {/if}
 
