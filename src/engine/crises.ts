@@ -3,10 +3,16 @@ import { C } from './coefficients';
 import type { Channel } from './modifiers';
 
 export type CrisisType = 'exogenous' | 'endogenous';
+export type CrisisCategory = 'domestic' | 'geopolitical';
 
 export interface CrisisEffect {
   readonly channel: Channel;
   readonly amount: number;
+}
+
+export interface CrisisPrecedent {
+  readonly citation: string;
+  readonly summary: string;
 }
 
 export interface CrisisOption {
@@ -18,6 +24,7 @@ export interface CrisisOption {
   readonly effects: readonly CrisisEffect[];
   readonly scheduledKind?: string;
   readonly scheduledData?: Record<string, string | number>;
+  readonly precedent?: CrisisPrecedent;
 }
 
 export interface CrisisDefinition {
@@ -26,6 +33,7 @@ export interface CrisisDefinition {
   readonly headline: string;
   readonly description: string;
   readonly type: CrisisType;
+  readonly category?: CrisisCategory;
   readonly explainerTitle: string;
   readonly options: readonly CrisisOption[];
 }
@@ -639,11 +647,225 @@ export const CRISIS_CATALOG: readonly CrisisDefinition[] = [
       },
     ],
   },
+  {
+    id: 'oil_embargo',
+    name: 'Global Oil Supply Embargo',
+    headline: 'Major foreign oil exporting cartel restricts tanker shipments',
+    description: 'Geopolitical conflicts abroad lead major energy exporters to slash output and halt tanker shipments, triggering acute worldwide energy inflation.',
+    type: 'exogenous',
+    category: 'geopolitical',
+    explainerTitle: 'emergency petroleum reserves',
+    options: [
+      {
+        id: 'private_market',
+        label: 'Market Absorption & Conservation Appeal',
+        description: 'Allow market price signals to allocate fuel supplies while urging voluntary private conservation.',
+        cloutCost: 0,
+        autopilot: true,
+        precedent: {
+          citation: '1979 Second Oil Shock market price decontrol',
+          summary: 'Federal energy policy phased out price controls and allowed market mechanisms to rationalize consumption.',
+        },
+        effects: [
+          { channel: 'inflation', amount: C.oilEmbargoInflation },
+          { channel: 'approval', amount: -1 },
+        ],
+      },
+      {
+        id: 'spr_drawdown',
+        label: 'Authorize Strategic Petroleum Reserve Release',
+        description: 'Draw down emergency crude stockpiles to supply domestic refineries and offset wholesale price surges.',
+        cloutCost: C.crisisCloutLow,
+        precedent: {
+          citation: 'Operation Desert Storm SPR Drawdown (1991)',
+          summary: 'Immediate release of federal petroleum reserves dampened speculative oil price spikes during international conflict.',
+        },
+        effects: [
+          { channel: 'inflation', amount: -C.oilEmbargoSprRelief },
+        ],
+      },
+      {
+        id: 'naval_corridor',
+        label: 'Forward Naval Deployment to Guard Tanker Convoys',
+        description: 'Deploy naval carrier battle groups to escort commercial oil tankers through contested international straits.',
+        cloutCost: C.crisisCloutMilitary,
+        precedent: {
+          citation: 'Operation Earnest Will (1987-1988)',
+          summary: 'U.S. Navy reflagged and escorted Kuwaiti tankers through the Persian Gulf during maritime attacks.',
+        },
+        effects: [
+          { channel: 'debtBn', amount: C.straitEscortCostBn },
+          { channel: 'approval', amount: 1 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'strait_blockade',
+    name: 'Maritime Shipping Corridor Blockade',
+    headline: 'Adversary forces threaten critical international maritime choke point',
+    description: 'Naval blockades and anti-ship mining along vital maritime straits strand container ships and disrupt international manufacturing supply chains.',
+    type: 'exogenous',
+    category: 'geopolitical',
+    explainerTitle: 'freedom of navigation',
+    options: [
+      {
+        id: 'commercial_reroute',
+        label: 'Commercial Shipping Rerouting via Cape',
+        description: 'Advise commercial merchant vessels to divert around alternate southern shipping routes at private carrier expense.',
+        cloutCost: 0,
+        autopilot: true,
+        precedent: {
+          citation: 'Red Sea Commercial Shipping Diversions (2024)',
+          summary: 'Major container carriers rerouted cargo around the Cape of Good Hope, adding transit time but avoiding hostile waters.',
+        },
+        effects: [
+          { channel: 'gap', amount: -C.straitBlockadeExportHit },
+        ],
+      },
+      {
+        id: 'port_subsidies',
+        label: 'Domestic Logistics & Port Rerouting Subsidies',
+        description: 'Provide federal transport freight subsidies and expedite alternative rail and port freight corridors.',
+        cloutCost: C.crisisCloutLow,
+        precedent: {
+          citation: 'Supply Chain Resiliency Taskforce (2021)',
+          summary: 'Federal intervention to reroute cargo and subsidize alternative port terminals relieved shipping backlogs.',
+        },
+        effects: [
+          { channel: 'debtBn', amount: C.borderClashDefenseSpendBn },
+        ],
+      },
+      {
+        id: 'naval_convoy',
+        label: 'Multinational Naval Task Force Escort Operation',
+        description: 'Lead an allied naval coalition to escort merchant shipping and deter hostile maritime interdictions.',
+        cloutCost: C.crisisCloutMilitary,
+        precedent: {
+          citation: 'Combined Maritime Forces Task Force 150/153',
+          summary: 'Multinational naval patrols maintained open commercial lanes against asymmetric maritime interdictions.',
+        },
+        effects: [
+          { channel: 'debtBn', amount: C.straitEscortCostBn },
+          { channel: 'approval', amount: 1 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'debt_contagion',
+    name: 'Emerging Market Debt Contagion',
+    headline: 'Foreign sovereign debt default triggers international banking panic',
+    description: 'A cluster of foreign sovereign defaults cascades into international debt markets, freezing commercial credit and threatening US export markets.',
+    type: 'exogenous',
+    category: 'geopolitical',
+    explainerTitle: 'international financial stability',
+    options: [
+      {
+        id: 'domestic_firewall',
+        label: 'Ring-Fence Domestic Financial Institutions',
+        description: 'Impose strict emergency foreign exposure limits on US banks and decline foreign sovereign debt bailouts.',
+        cloutCost: 0,
+        autopilot: true,
+        precedent: {
+          citation: 'Dodd-Frank Foreign Banking Organization Enhanced Prudential Standards',
+          summary: 'Regulatory firewalls insulated domestic depository institutions from foreign sovereign insolvencies.',
+        },
+        effects: [
+          { channel: 'gap', amount: -C.debtContagionGdpHit },
+        ],
+      },
+      {
+        id: 'imf_restructuring',
+        label: 'Coordinate Multilateral Sovereign Debt Restructuring',
+        description: 'Lead G7 and IMF sovereign debt workout to stabilize foreign debtor currencies and reschedule commercial repayments.',
+        cloutCost: C.crisisCloutDiplomatic,
+        precedent: {
+          citation: 'Brady Plan (1989) & HIPC Initiative',
+          summary: 'US-led restructuring converted defaulted commercial bank debt into tradeable, dollar-backed sovereign bonds.',
+        },
+        effects: [
+          { channel: 'trust', amount: 1 },
+        ],
+      },
+      {
+        id: 'bilateral_swap',
+        label: 'Federal Reserve & Treasury Bilateral Credit Line',
+        description: 'Open temporary bilateral currency swap lines and credit guarantees to backstop international banking liquidity.',
+        cloutCost: C.crisisCloutMedium,
+        precedent: {
+          citation: '1995 Mexican Peso Stabilization & Central Bank Swap Lines',
+          summary: 'U.S. Exchange Stabilization Fund provided emergency liquidity lines to halt cross-border financial contagion.',
+        },
+        effects: [
+          { channel: 'debtBn', amount: C.debtContagionBailoutBn },
+          { channel: 'approval', amount: 1 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'border_clashes',
+    name: 'Regional Border Conflict',
+    headline: 'Armed conflict escalates along strategic allied boundary',
+    description: 'Hostilities erupt along a strategic border between a key democratic ally and an authoritarian neighbor, destabilizing the regional security balance.',
+    type: 'exogenous',
+    category: 'geopolitical',
+    explainerTitle: 'strategic deterrence',
+    options: [
+      {
+        id: 'diplomatic_protest',
+        label: 'Issue Formal Diplomatic Protest & Ceasefire Appeal',
+        description: 'Lodge a formal diplomatic protest with the UN Security Council and urge voluntary ceasefire without US resource commitments.',
+        cloutCost: 0,
+        autopilot: true,
+        precedent: {
+          citation: 'UN Security Council Chapter VI Peaceful Settlement Resolutions',
+          summary: 'Non-binding diplomatic appeals established international legal norms without committing sovereign fiscal resources.',
+        },
+        effects: [
+          { channel: 'approval', amount: -1 },
+        ],
+      },
+      {
+        id: 'sanctions_aid',
+        label: 'Punitive Sanctions & Defensive Aid Package',
+        description: 'Impose comprehensive export controls on the aggressor and rush non-lethal defensive logistics to the ally.',
+        cloutCost: C.crisisCloutLow,
+        precedent: {
+          citation: 'Lend-Lease Act (1941) & Countering Adversaries Through Sanctions Act',
+          summary: 'Targeted economic penalties and materiel assistance supported besieged partners without direct force deployment.',
+        },
+        effects: [
+          { channel: 'debtBn', amount: C.borderClashDefenseSpendBn },
+        ],
+      },
+      {
+        id: 'peace_summit',
+        label: 'Presidential Peace Envoy & Ceasefire Summit',
+        description: 'Broker an immediate humanitarian ceasefire and host multilateral peace talks under direct presidential auspices.',
+        cloutCost: C.crisisCloutDiplomatic,
+        precedent: {
+          citation: 'Camp David Accords (1978) & Dayton Agreement (1995)',
+          summary: 'Direct presidential mediation produced durable peace pacts between historic regional belligerents.',
+        },
+        effects: [
+          { channel: 'approval', amount: C.borderClashDiplomaticRally },
+          { channel: 'trust', amount: 1 },
+        ],
+      },
+    ],
+  },
 ];
 
-export const EXOGENOUS_CRISES = CRISIS_CATALOG.filter((c) => c.type === 'exogenous');
+export const EXOGENOUS_CRISES = CRISIS_CATALOG.filter((c) => c.type === 'exogenous' && c.category !== 'geopolitical');
 export const ENDOGENOUS_CRISES = CRISIS_CATALOG.filter((c) => c.type === 'endogenous');
+export const GEOPOLITICAL_CRISES = CRISIS_CATALOG.filter((c) => c.category === 'geopolitical');
 
 export function getCrisis(id: string): CrisisDefinition | undefined {
   return CRISIS_CATALOG.find((c) => c.id === id);
+}
+
+export function isGeopoliticalCrisis(id: string): boolean {
+  return GEOPOLITICAL_CRISES.some((c) => c.id === id);
 }

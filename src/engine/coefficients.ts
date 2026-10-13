@@ -574,6 +574,19 @@ export const COEFF = {
   householdTaxProgressivityMedian: { value: 0.85, unit: 'tax rate elasticity factor', basis: 'judgement', range: [0.5, 1.2], note: 'Effective tax rate sensitivity for median-income tier.' },
   householdTaxProgressivityUpper: { value: 1.25, unit: 'tax rate elasticity factor', basis: 'judgement', range: [0.8, 1.6], note: 'Effective tax rate sensitivity for upper-middle-income tier.' },
   householdTaxProgressivityHigh: { value: 1.65, unit: 'tax rate elasticity factor', basis: 'judgement', range: [1.0, 2.2], note: 'Effective tax rate sensitivity for high-income tier.' },
+  // ---- Geopolitical crisis coefficients (Phase 13, CRISIS-01, CRISIS-02) ----
+  crisisCloutDiplomatic: { value: 15, unit: 'clout', basis: 'judgement', range: [5, 30], note: 'Clout cost for presidential diplomatic accords and crisis envoy mediation.' },
+  crisisCloutMilitary: { value: 25, unit: 'clout', basis: 'judgement', range: [10, 50], note: 'Clout cost for emergency military deployment or naval escort.' },
+  oilEmbargoInflation: { value: 1.2, unit: '% inflation', basis: 'judgement', range: [0.5, 2.5], note: 'Quarterly inflation spike from uncontained global oil supply embargo.' },
+  oilEmbargoSprRelief: { value: 0.8, unit: '% inflation', basis: 'judgement', range: [0.3, 1.5], note: 'Inflation relief from Strategic Petroleum Reserve release.' },
+  straitBlockadeExportHit: { value: 0.5, unit: '% output gap', basis: 'judgement', range: [0.1, 1.2], note: 'Output gap contraction from maritime shipping bottleneck.' },
+  straitEscortCostBn: { value: 15, unit: '$bn/yr', basis: 'judgement', range: [5, 35], note: 'Defense expenditure for naval convoy escorts through critical shipping straits.' },
+  debtContagionGdpHit: { value: 0.6, unit: '% output gap', basis: 'judgement', range: [0.2, 1.5], note: 'Macro drag from foreign sovereign debt contagion and credit crunch.' },
+  debtContagionBailoutBn: { value: 20, unit: '$bn/yr', basis: 'judgement', range: [5, 45], note: 'Federal funding contribution for international debt restructuring and IMF facilities.' },
+  borderClashDefenseSpendBn: { value: 18, unit: '$bn/yr', basis: 'judgement', range: [5, 40], note: 'Emergency security assistance and munitions replenishment for regional border clashes.' },
+  borderClashDiplomaticRally: { value: 2, unit: '% approval', basis: 'judgement', range: [1, 5], note: 'Public approval rally from successful diplomatic ceasefire mediation.' },
+  geopoliticalEscalationPenalty: { value: 4, unit: '% approval', basis: 'judgement', range: [1, 10], note: 'Public approval penalty when an international crisis expires unaddressed.' },
+  geopoliticalEscalationTrust: { value: 3, unit: 'index pts', basis: 'judgement', range: [1, 8], note: 'Public trust loss when an international crisis escalates unmanaged.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------

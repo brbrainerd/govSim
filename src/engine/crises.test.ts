@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { START } from './fixture';
 import { endTurn, newGame, TOTAL_TURNS } from './game';
 import { getExogenousSchedule } from './director';
-import { CRISIS_CATALOG, EXOGENOUS_CRISES, type CrisisOption } from './crises';
+import {
+  CRISIS_CATALOG,
+  EXOGENOUS_CRISES,
+  GEOPOLITICAL_CRISES,
+  getCrisis,
+  isGeopoliticalCrisis,
+  type CrisisOption,
+} from './crises';
 
 describe('crises director (EVT-01, EVT-03, GR-01, GR-02, GR-08)', () => {
   it('GR-01 & GR-02: player with no decisions matches autopilot crisis schedule across 200 seeds', () => {
@@ -145,5 +152,34 @@ describe('crises director (EVT-01, EVT-03, GR-01, GR-02, GR-08)', () => {
         }
       }
     }
+  });
+
+  it('CRISIS-01 & CRISIS-02: geopolitical crisis catalog integrity and precedent citations', () => {
+    expect(GEOPOLITICAL_CRISES).toHaveLength(4);
+
+    const expectedIds = ['oil_embargo', 'strait_blockade', 'debt_contagion', 'border_clashes'];
+    for (const id of expectedIds) {
+      expect(isGeopoliticalCrisis(id)).toBe(true);
+      const def = getCrisis(id);
+      expect(def).toBeDefined();
+      expect(def!.category).toBe('geopolitical');
+      expect(def!.options).toHaveLength(3);
+
+      const auto = def!.options.filter((o) => o.autopilot);
+      expect(auto).toHaveLength(1);
+
+      const free = def!.options.filter((o) => o.cloutCost === 0);
+      expect(free.length).toBeGreaterThanOrEqual(1);
+
+      for (const opt of def!.options) {
+        expect(opt.precedent).toBeDefined();
+        expect(opt.precedent!.citation.length).toBeGreaterThan(5);
+        expect(opt.precedent!.summary.length).toBeGreaterThan(10);
+        expect(opt.effects.length).toBeGreaterThan(0);
+      }
+    }
+
+    expect(isGeopoliticalCrisis('hurricane')).toBe(false);
+    expect(isGeopoliticalCrisis('market_panic')).toBe(false);
   });
 });
