@@ -118,16 +118,16 @@ export function socialWhipShift(draft?: SocialDraft): Record<GroupId, number> {
   if (!draft) return { pro: 0, mod: 0, cen: 0, con: 0, fre: 0 };
 
   const aca = socialDev(draft, 'aca');
-  const pharma = socialDev(draft, 'pharma');
+  const pharma = socialDev(draft, 'drg');
   const pub = socialDev(draft, 'pub');
-  const bor = socialDev(draft, 'bor');
+  const bor = socialDev(draft, 'bdr');
   const vis = socialDev(draft, 'vis');
   const reg = socialDev(draft, 'reg');
-  const clean = socialDev(draft, 'clean');
+  const clean = socialDev(draft, 'cln');
   const fos = socialDev(draft, 'fos');
-  const carb = socialDev(draft, 'carb');
+  const carb = socialDev(draft, 'crb');
   const k12 = socialDev(draft, 'k12');
-  const debt = socialDev(draft, 'debt');
+  const debt = socialDev(draft, 'sdr');
   const prek = socialDev(draft, 'prek');
 
   const proShift = Math.round(

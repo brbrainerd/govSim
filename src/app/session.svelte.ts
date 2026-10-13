@@ -2,6 +2,7 @@ import { fromPackage, packages, type BudgetDraft, type PackageName } from '../en
 import { tally, type DealId } from '../engine/congress';
 import { autopilotDecisions, cloutCost, resolveBill, type CrisisDecision, type Decisions } from '../engine/decisions';
 import { endTurn, newGame, prosperity, scoreVsAutopilot, TOTAL_TURNS, type GameState, type ScoreBreakdown, type Start } from '../engine/game';
+import { socialBaseline, type SocialDraft } from '../engine/social';
 import type { PartyId } from '../content/parties';
 import { getOrder } from '../content/orders';
 import { C } from '../engine/coefficients';
@@ -19,6 +20,7 @@ export interface GameOptions {
 
 interface Draft {
   budget: BudgetDraft;
+  social: SocialDraft;
   pack: PackageName | null;
   sentToCongress: boolean;
   deals: DealId[];
@@ -32,8 +34,9 @@ interface Draft {
 }
 
 /** A new turn's draft starts from the policy already in force. */
-const freshDraft = (policy: BudgetDraft): Draft => ({
+const freshDraft = (policy: BudgetDraft, socialPolicy?: SocialDraft): Draft => ({
   budget: { ...policy },
+  social: { ...(socialPolicy ?? socialBaseline()) },
   pack: null,
   sentToCongress: false,
   deals: [],
@@ -56,7 +59,7 @@ export class Session {
   autopilot = $state.raw<GameState[]>([]);
   inputs = $state.raw<Decisions[]>([]);
   screen = $state<ScreenId>('oval');
-  draft = $state<Draft>(freshDraft(fromPackage('Keep as is')));
+  draft = $state<Draft>(freshDraft(fromPackage('Keep as is'), socialBaseline()));
   showingReport = $state<boolean>(false);
 
   turn16Snapshot = $state.raw<GameState | null>(null);
@@ -71,14 +74,19 @@ export class Session {
 
   current = $derived(this.history[this.history.length - 1]!);
   previous = $derived(this.history[this.history.length - 2] ?? this.current);
+  socialDraft = $derived(this.draft.social);
   /** The raw choices the engine will receive. A bill sent to Congress, or with deals, is voted at Next turn (A8). */
   bill = $derived(
     this.draft.voteCalled || this.draft.sentToCongress || this.draft.deals.length
-      ? { budget: $state.snapshot(this.draft.budget), deals: $state.snapshot(this.draft.deals) }
+      ? {
+          budget: $state.snapshot(this.draft.budget),
+          deals: $state.snapshot(this.draft.deals),
+          social: $state.snapshot(this.draft.social),
+        }
       : null,
   );
   /** Preview and engine charge with the same function (FND-05). */
-  preview = $derived(this.bill ? resolveBill(this.current.clout, this.bill) : null);
+  preview = $derived(this.bill ? resolveBill(this.current.clout, this.bill, this.current.houseSeatDelta) : null);
   crisisCost = $derived(
     this.draft.crisisChoice && this.current.activeCrisis
       ? (this.current.activeCrisis.options.find((o) => o.id === this.draft.crisisChoice!.optionId)?.cloutCost ?? 0)
@@ -157,7 +165,7 @@ export class Session {
       const autoLast = s.autopilot[s.autopilot.length - 1]!;
       s.autopilot = [...s.autopilot, endTurn(autoLast, autopilotDecisions(autoLast))];
       s.inputs = [...s.inputs, input];
-      s.draft = freshDraft(next.policy);
+      s.draft = freshDraft(next.policy, next.socialPolicy);
       const meta = {
         reelectionEV: s.activeElectionOutcome?.playerEV,
         score: s.score.total,
@@ -194,7 +202,7 @@ export class Session {
       const autoLast = s.autopilot[s.autopilot.length - 1]!;
       s.autopilot = [...s.autopilot, endTurn(autoLast, autopilotDecisions(autoLast))];
       s.inputs = [...s.inputs, input];
-      s.draft = freshDraft(next.policy);
+      s.draft = freshDraft(next.policy, next.socialPolicy);
       const meta = {
         reelectionEV: s.activeElectionOutcome?.playerEV,
         score: s.score.total,
@@ -224,6 +232,24 @@ export class Session {
     this.draft.budget[id] = value;
     this.draft.pack = null;
     this.draft.sentToCongress = false;
+  }
+
+  setSocialLever(id: string, value: number) {
+    if (this.over) return;
+    this.draft.social[id] = value;
+    this.draft.sentToCongress = false;
+  }
+
+  resetSocialDraft() {
+    if (this.over) return;
+    this.draft.social = { ...(this.current.socialPolicy ?? socialBaseline()) };
+    this.draft.sentToCongress = false;
+  }
+
+  enactSocial() {
+    if (this.over) return;
+    this.draft.sentToCongress = true;
+    this.draft.voteCalled = true;
   }
 
   /** Affordability uses the engine's cost function against the clout you started the turn with. */
@@ -321,7 +347,7 @@ export class Session {
     this.history = [...this.history, next];
     const autoLast = this.autopilot[this.autopilot.length - 1]!;
     this.autopilot = [...this.autopilot, endTurn(autoLast, autopilotDecisions(autoLast))];
-    this.draft = freshDraft(next.policy);
+    this.draft = freshDraft(next.policy, next.socialPolicy);
 
     if (next.turn === 16 && !this.turn16Snapshot) {
       this.turn16Snapshot = next;
@@ -383,7 +409,7 @@ export class Session {
       this.inputs = this.inputs.slice(0, 15);
       this.autopilot = this.autopilot.slice(0, 16);
     }
-    this.draft = freshDraft(this.current.policy);
+    this.draft = freshDraft(this.current.policy, this.current.socialPolicy);
     this.screen = 'oval';
     this.termEnded = false;
     this.showingElectionNight = false;

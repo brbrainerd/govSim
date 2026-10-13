@@ -46,31 +46,31 @@ describe('congressional groups and midterms', () => {
 describe('social policy whip evaluation (SOC-01..04)', () => {
   it('evaluates ideological sensitivities across blocs', () => {
     // Highly progressive unfinanced bill
-    const progDraft = { prek: 1, debt: 120, clean: 120 };
+    const progDraft = { prek: 1, sdr: 20, cln: 120 };
     const progShift = socialWhipShift(progDraft);
     expect(progShift.con).toBeLessThan(0); // Conservatives strongly resist
     expect(progShift.cen).toBeLessThan(0); // Centrists resist unfinanced spending
 
     // Conservative bill
-    const conDraft = { bor: 120, fos: 120 };
+    const conDraft = { bdr: 120, fos: 120 };
     const conShift = socialWhipShift(conDraft);
     expect(conShift.con).toBeGreaterThan(0); // Conservatives support
     expect(conShift.pro).toBeLessThan(0); // Progressives oppose fossil expansion
 
     // Bipartisan compromise package: clean energy paired with fossil permitting, border paired with visas
-    const compDraft = { clean: 120, fos: 120, bor: 120, vis: 120 };
+    const compDraft = { cln: 120, fos: 120, bdr: 120, vis: 120 };
     const compShift = socialWhipShift(compDraft);
     expect(compShift.cen).toBeGreaterThan(0); // Centrists reward the compromise
     expect(compShift.con).toBeGreaterThan(0); // Conservatives gain on border & fossil
   });
 
   it('tally incorporates socialDraft and clamps each bloc to [0, seats]', () => {
-    const unfinancedRes = tally([], 0, { prek: 1, debt: 150, aca: 140 });
+    const unfinancedRes = tally([], 0, { prek: 1, sdr: 40, aca: 140 });
     // Without deals, heavy entitlement expansion loses votes among con/cen
     expect(unfinancedRes.total).toBeLessThan(203);
 
     // With deals and compromise, passes threshold
-    const balancedRes = tally(['mod', 'cen'], 0, { clean: 120, fos: 120, bor: 120, vis: 120 });
+    const balancedRes = tally(['mod', 'cen'], 0, { cln: 120, fos: 120, bdr: 120, vis: 120 });
     expect(balancedRes.total).toBeGreaterThanOrEqual(TO_PASS);
     expect(balancedRes.short).toBe(0);
   });

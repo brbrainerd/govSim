@@ -4,6 +4,7 @@ import { deals as DEALS, type DealId } from '../engine/congress';
 import type { Decisions } from '../engine/decisions';
 import { endTurn, newGame, type GameState, type Start } from '../engine/game';
 import { stableHash } from '../engine/hash';
+import { getSocialLever, type SocialDraft } from '../engine/social';
 import type { GameOptions } from './session.svelte';
 
 export const MAX_SAVE_SIZE_CHARS = 1_000_000;
@@ -62,7 +63,7 @@ export function validateDecisions(d: unknown): Decisions {
 
   const billKeys = Object.keys(b);
   for (const k of billKeys) {
-    if (k !== 'budget' && k !== 'deals') throw new Error(`Unknown bill property: "${k}"`);
+    if (k !== 'budget' && k !== 'deals' && k !== 'social') throw new Error(`Unknown bill property: "${k}"`);
   }
 
   if (!isRecord(b.budget)) throw new Error('Bill budget must be a plain object');
@@ -79,6 +80,23 @@ export function validateDecisions(d: unknown): Decisions {
     budget[leverId] = val;
   }
 
+  let social: SocialDraft | undefined;
+  if (b.social !== undefined) {
+    if (!isRecord(b.social)) throw new Error('Bill social must be a plain object');
+    social = {};
+    for (const [leverId, val] of Object.entries(b.social)) {
+      const lever = getSocialLever(leverId);
+      if (!lever) throw new Error(`Unknown social lever: "${leverId}"`);
+      if (typeof val !== 'number' || !Number.isFinite(val)) {
+        throw new Error(`Social lever "${leverId}" must be a finite number`);
+      }
+      if (val < lever.min || val > lever.max) {
+        throw new Error(`Social lever "${leverId}" value ${val} out of range [${lever.min}, ${lever.max}]`);
+      }
+      social[leverId] = val;
+    }
+  }
+
   if (!Array.isArray(b.deals)) throw new Error('Bill deals must be an array');
   const deals: DealId[] = [];
   const seenDeals = new Set<string>();
@@ -93,7 +111,7 @@ export function validateDecisions(d: unknown): Decisions {
     deals.push(dealId as DealId);
   }
 
-  return { bill: { budget, deals } };
+  return { bill: { budget, deals, ...(social !== undefined ? { social } : {}) } };
 }
 
 /** Replays the input log from the initial start data and returns the final GameState. */

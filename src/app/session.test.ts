@@ -206,3 +206,36 @@ describe('Session reelection and end of term (ELC-01, ELC-03, ELC-04)', () => {
     expect(s.unlockedBadges.length).toBeGreaterThanOrEqual(initialCount);
   });
 });
+
+describe('Session social policy drafting (SOC-01..04)', () => {
+  it('allows drafting, resetting, and enacting social policies', () => {
+    const s = new Session(7, START, { party: 'D' });
+    expect(s.socialDraft).toBeDefined();
+    expect(s.socialDraft.aca).toBe(100);
+
+    // Modify a lever
+    s.setSocialLever('aca', 120);
+    expect(s.socialDraft.aca).toBe(120);
+
+    // Reset draft
+    s.resetSocialDraft();
+    expect(s.socialDraft.aca).toBe(100);
+
+    // Draft compromise and call vote
+    s.setSocialLever('cln', 120);
+    s.setSocialLever('fos', 120);
+    s.makeDeal('mod');
+    s.makeDeal('cen');
+    s.enactSocial();
+    expect(s.bill).not.toBeNull();
+    expect(s.bill?.social?.cln).toBe(120);
+    expect(s.preview?.valid).toBe(true);
+
+    // Advance turn and verify enactment
+    s.nextTurn();
+    expect(s.current.socialPolicy?.cln).toBe(120);
+    expect(s.current.socialPolicy?.fos).toBe(120);
+    expect(s.socialDraft.cln).toBe(120);
+  });
+});
+
