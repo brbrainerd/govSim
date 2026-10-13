@@ -77,6 +77,14 @@ Plans:
   2. Judicial reforms (18-year term limits, ethics codes) face legal challenges and confirmation political friction.
   3. Constitutional amendment system simulates the 2/3 Congressional and 3/4 state legislature ratification hurdles.
 
+**Plans**: 4 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — Wave 1: Pure Engine Dynamics, Senate Filibuster & Coefficients (REF-01)
+- [ ] 11-02-PLAN.md — Wave 2: Judicial & Electoral Reform Engines (REF-02, REF-03)
+- [ ] 11-03-PLAN.md — Wave 3: Constitutional Amendment Engine & State Ratification (REF-04)
+- [ ] 11-04-PLAN.md — Wave 4: UI Implementation, Modals, Accessibility & E2E Validation (REF-01..04)
+
 ### Phase 12: Household Impact Card & Balance
 
 **Goal**: Ground abstract macro policies in relatable kitchen-table economics through the "Your Household" card and calibrate overall game balance.
