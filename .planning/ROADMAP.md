@@ -41,6 +41,14 @@
   3. Indicator deltas from social policy bills are tracked in `trace.ts` with explicit causal terms and zero unallocated residual leakage.
   4. Unit and property tests prove mathematical determinism and conservation invariance across 500 randomized runs.
 
+**Plans**: 4 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Wave 1: Pure Social Levers, Catalog, and Registered Coefficients (SOC-01..04)
+- [ ] 09-02-PLAN.md — Wave 2: Step() Simulation Dynamics, Ledger Attribution, and Invariants (SOC-01..04)
+- [ ] 09-03-PLAN.md — Wave 3: Congressional Voting Blocs, Decisions, and Session Drafting (SOC-01..04)
+- [ ] 09-04-PLAN.md — Wave 4: Plain-Language Attribution, Balance Calibration, and Verification Suite (SOC-01..04)
+
 ### Phase 10: Demographic & Regional Distribution
 
 **Goal**: Connect domestic social policy decisions to state economies, demographic cohorts, cost of living, and voter sentiment.

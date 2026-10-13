@@ -11,7 +11,7 @@ state_head: a9d0510a821679bb7ec02260ab4deccae36e1eb1
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
+  total_plans: 4
   completed_plans: 0
 current_phase: 9
 current_phase_name: Domestic Social Policy Levers
