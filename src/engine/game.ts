@@ -13,10 +13,12 @@ import { calculateMidtermShift } from './congress';
 import { isKnownSource, Ledger, type Term, type TraceKey } from './trace';
 import { BN_PER_TN, BUDGET_WINDOW_YEARS, LEGACY_QUARTERS, MIDTERM_TURN_1, MIDTERM_TURN_2, MONTHS_PER_YEAR, PERCENT, QUARTERS_PER_YEAR, TOTAL_TURNS } from './units';
 import { scheduleTurnEvents, type ActiveCrisis } from './director';
+import { estimateSocial, isSocialBaseline, sanitizeSocial, socialBaseline, type SocialDraft } from './social';
 
 export { prosperity, type ScoreBreakdown } from './score';
 export { LEGACY_QUARTERS, TOTAL_TURNS };
 export type { ActiveCrisis } from './director';
+export type { SocialDraft } from './social';
 
 /** Real-world starting values (from data/us-2026.json via fromData). */
 export interface Start {
@@ -59,6 +61,7 @@ export interface GameState {
   readonly approval: number;
   readonly clout: number;
   readonly policy: BudgetDraft; // enacted budget levers
+  readonly socialPolicy?: SocialDraft; // enacted social policy levers (Phase 9)
   readonly econ: Econ;
   readonly start: Start;
   readonly report: Report; // what happened last turn
@@ -231,6 +234,18 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const enacted = r && r.valid && r.passed ? r : null;
   const policy = enacted ? enacted.budget : state.policy;
   const before = estimate(state.policy), after = estimate(policy);
+
+  const rawSocial = enacted !== null && (enacted as { social?: SocialDraft }).social !== undefined
+    ? (enacted as { social?: SocialDraft }).social
+    : raw === undefined && decisions !== null && typeof decisions === 'object' && (decisions as { social?: SocialDraft }).social !== undefined
+      ? (decisions as { social?: SocialDraft }).social
+      : undefined;
+  const currentSocial = state.socialPolicy ?? socialBaseline();
+  const nextSocial = rawSocial !== undefined ? sanitizeSocial(rawSocial) : currentSocial;
+  const beforeSocial = estimateSocial(currentSocial);
+  const afterSocial = estimateSocial(nextSocial);
+  const socialPolicy = isSocialBaseline(nextSocial) ? undefined : nextSocial;
+
   const fiscalImpulse = ((after.deficitBn - before.deficitBn) / BUDGET_WINDOW_YEARS / (e.gdp * BN_PER_TN)) * PERCENT; // % GDP per year
   const tariffChange = tariffOf(policy) - tariffOf(state.policy);
   const debtPctNow = (e.debt / e.gdp) * PERCENT;
@@ -251,6 +266,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   gr.add('potential:base', s.potential);
   gr.add('potential:policy', C.potentialMax * tanhPade(after.growth));
   gr.add('potential:crowding', -C.crowdOut * Math.max(0, debtPctNow - s.debtPct));
+  if (afterSocial.potentialGrowth !== 0) gr.add('social:productivity', afterSocial.potentialGrowth);
   for (const m of mods('potential')) gr.add(m.source, m.amount);
   for (const t of g.scaled(QUARTERS_PER_YEAR).terms) gr.add(t.source, t.amount);
   const growth = gr.sum;
@@ -259,12 +275,16 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const un = g.scaled(-C.okun);
   const unemployment = un.settleTo(e.unemployment, clamp(s.unemployment - C.okun * gap, ...LIMITS.unemployment.bounds));
   const em = un.scaled(-C.empPerU);
-  const empPop = em.settleTo(e.empPop, s.empPop - C.empPerU * (unemployment - s.unemployment));
+  const socialLaborDelta = afterSocial.empPopBonus - beforeSocial.empPopBonus;
+  if (socialLaborDelta !== 0) em.add('social:labor', socialLaborDelta);
+  const empPop = em.settleTo(e.empPop, s.empPop - C.empPerU * (unemployment - s.unemployment) + afterSocial.empPopBonus);
 
   const inf = new Ledger();
   inf.add('expectations', C.expectPull * (e.expected - e.inflation));
   inf.add('demand', C.phillips * gap);
   inf.add('tariffs', C.tariffPass * tariffChange);
+  const energyReliefDelta = afterSocial.energyInflationRelief - beforeSocial.energyInflationRelief;
+  if (energyReliefDelta !== 0) inf.add('social:energy', -energyReliefDelta);
   inf.add('luck', C.shockInfl * zInfl);
   for (const m of mods('inflation')) inf.add(m.source, m.amount);
   const inflation = inf.clamp(e.inflation + inf.sum, ...LIMITS.inflation.bounds);
@@ -285,7 +305,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const borrowingCost = (fedRate - s.fedRate) * C.fedPassThrough + C.termPremium * Math.max(0, debtPctNow - s.debtPct) + C.stressPremium * stress;
   const interestDrift = (borrowingCost * e.debt) / PERCENT; // $tn/yr above the starting interest bill
   const budgetDeficit = after.deficitBn / BUDGET_WINDOW_YEARS / BN_PER_TN; // $tn/yr
-  const deficit = (s.deficitPct / PERCENT) * gdp + budgetDeficit + interestDrift; // $tn/yr
+  const socialDeficit = afterSocial.deficitBn / BN_PER_TN; // $tn/yr
+  const deficit = (s.deficitPct / PERCENT) * gdp + budgetDeficit + socialDeficit + interestDrift; // $tn/yr
   const debtMods = mods('debtBn');
   const debt = e.debt + deficit / QUARTERS_PER_YEAR + debtMods.reduce((n, m) => n + m.amount / BN_PER_TN, 0);
 
@@ -294,6 +315,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const dp = new Ledger();
   dp.add('deficit:base', s.deficitPct / QUARTERS_PER_YEAR);
   dp.add('deficit:budget', budgetDeficit * perQuarter);
+  if (socialDeficit !== 0) dp.add('social:budget', socialDeficit * perQuarter);
   dp.add('deficit:interest', interestDrift * perQuarter);
   dp.add('gdp:growth', PERCENT * e.debt * (1 / gdp - 1 / e.gdp)); // a bigger economy dilutes the old debt
   for (const m of debtMods) dp.add(m.source, (m.amount / BN_PER_TN / gdp) * PERCENT);
@@ -301,6 +323,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const inc = new Ledger();
   inc.add('growth', (e.realIncome * (C.incomeGrowthShare * growth)) / (QUARTERS_PER_YEAR * PERCENT));
   if (enacted) inc.add('budget:family', (after.familyMonthly - before.familyMonthly) * MONTHS_PER_YEAR);
+  const socialFamilyDelta = (afterSocial.familyMonthly - beforeSocial.familyMonthly) * MONTHS_PER_YEAR;
+  if (socialFamilyDelta !== 0) inc.add('social:family', socialFamilyDelta);
   const realIncome = inc.clamp(e.realIncome + inc.sum, s.medianIncome * LIMITS.income.bounds[0], s.medianIncome * LIMITS.income.bounds[1]);
 
   // Level effects: indicators move toward a policy-dependent target instead of drifting forever.
@@ -309,6 +333,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   lf.add('health:trend', C.lifeAdjust * C.lifeTrend * state.turn);
   lf.add('health:spending', C.lifeAdjust * C.lifeSpending * (leverDev(policy, 'mcd') + leverDev(policy, 'ssm')));
   lf.add('health:reversion', C.lifeAdjust * (s.lifeExp - e.lifeExp));
+  if (afterSocial.lifeExpBonus !== 0) lf.add('social:health', C.lifeAdjust * afterSocial.lifeExpBonus);
   const lifeExp = e.lifeExp + lf.sum;
   const gn = new Ledger();
   gn.add('tax:income', -C.giniAdjust * C.giniIncomeTax * leverDev(policy, 'inc'));
@@ -377,6 +402,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     approval,
     clout,
     policy,
+    socialPolicy,
     modifiers,
     scheduled,
     activeOrders,

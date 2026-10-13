@@ -8,6 +8,7 @@ import { deals as DEALS, tally, voteOutcome, type DealId } from './congress';
 import { getCrisis } from './crises';
 import type { Modifier, Scheduled } from './modifiers';
 import type { PowerDecisions } from './powers';
+import type { SocialDraft } from './social';
 
 export interface Bill { budget: BudgetDraft; deals: DealId[] }
 
@@ -17,12 +18,14 @@ export interface CrisisDecision {
 }
 
 export type { PowerDecisions } from './powers';
+export type { SocialDraft } from './social';
 
-/** Phases 4/5 add keys here (crisis, powers). There is deliberately no clout field. */
+/** Phases 4/5/9 add keys here (crisis, powers, social). There is deliberately no clout field. */
 export interface Decisions {
   bill?: Bill;
   crisis?: CrisisDecision;
   powers?: PowerDecisions;
+  social?: SocialDraft;
 }
 
 export interface CrisisChoiceResult {

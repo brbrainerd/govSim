@@ -149,6 +149,11 @@ export function getSocialLever(id: string): SocialLever | undefined {
   return socialLevers.find((l) => l.id === id);
 }
 
+/** Returns true if all levers in draft match their baseline values. */
+export function isSocialBaseline(draft: SocialDraft): boolean {
+  return socialLevers.every((l) => (draft[l.id] ?? l.base) === l.base);
+}
+
 /** Deviation of a social lever from its baseline. */
 export function socialDev(draft: SocialDraft, id: string): number {
   const l = getSocialLever(id);

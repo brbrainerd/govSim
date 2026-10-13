@@ -43,3 +43,51 @@ describe('income floor', () => {
     expect(s.econ.realIncome).toBeGreaterThanOrEqual(START.medianIncome * LIMITS.income.bounds[0] - 1e-9);
   });
 });
+
+describe('social policy integration (SOC-01..04)', () => {
+  it('healthcare levers increase life expectancy and family savings', () => {
+    const s0 = newGame(1, START);
+    const s1 = endTurn(s0, { social: { aca: 120, pub: 1 } });
+    expect(s1.econ.lifeExp).toBeGreaterThan(s0.econ.lifeExp);
+    expect(s1.report.trace.lifeExp?.some((t) => t.source === 'social:health')).toBe(true);
+    expect(s1.report.trace.income?.some((t) => t.source === 'social:family')).toBe(true);
+    expect(s1.report.trace.debtPct?.some((t) => t.source === 'social:budget')).toBe(true);
+  });
+
+  it('immigration levers expand employment-population ratio and potential growth', () => {
+    const s0 = newGame(1, START);
+    const baselineNext = endTurn(s0);
+    const s1 = endTurn(s0, { social: { vis: 150 } });
+    expect(s1.econ.empPop).toBeGreaterThan(baselineNext.econ.empPop);
+    expect(s1.report.trace.growth?.some((t) => t.source === 'social:productivity')).toBe(true);
+    expect(s1.report.trace.empPop?.some((t) => t.source === 'social:labor')).toBe(true);
+  });
+
+  it('energy leasing levers reduce energy inflation pressure', () => {
+    const s0 = newGame(1, START);
+    const s1 = endTurn(s0, { social: { fos: 130 } });
+    const energyTerm = s1.report.trace.inflation?.find((t) => t.source === 'social:energy');
+    expect(energyTerm).toBeDefined();
+    expect(energyTerm!.amount).toBeLessThan(0);
+  });
+
+  it('education levers boost long-term growth and parental labor participation', () => {
+    const s0 = newGame(1, START);
+    const baselineNext = endTurn(s0);
+    const s1 = endTurn(s0, { social: { k12: 120, prek: 1 } });
+    expect(s1.econ.empPop).toBeGreaterThan(baselineNext.econ.empPop);
+    expect(s1.report.trace.growth?.some((t) => t.source === 'social:productivity')).toBe(true);
+    expect(s1.report.trace.empPop?.some((t) => t.source === 'social:labor')).toBe(true);
+  });
+
+  it('persists enacted social policies across multiple turns and into legacy', () => {
+    const s0 = newGame(1, START);
+    const s1 = endTurn(s0, { social: { aca: 120, vis: 140 } });
+    expect(s1.socialPolicy?.aca).toBe(120);
+    expect(s1.socialPolicy?.vis).toBe(140);
+    const s2 = endTurn(s1);
+    expect(s2.socialPolicy?.aca).toBe(120);
+    expect(s2.socialPolicy?.vis).toBe(140);
+  });
+});
+
