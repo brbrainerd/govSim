@@ -152,4 +152,10 @@ export const GEOPOLITICAL_TERM1_MAX_TURN = 15;
 export const GEOPOLITICAL_TERM2_START_TURN = 18;
 export const GEOPOLITICAL_TERM2_MAX_TURN = 30;
 
+// Foreign Policy & Sanctions (Phase 14, FORPOL-01, FORPOL-02, FORPOL-03)
+export const FOREIGN_ASSISTANCE_BASE = 100;
+export const FOREIGN_ASSISTANCE_MIN = 0;
+export const FOREIGN_ASSISTANCE_MAX = 200;
+export const FOREIGN_ASSISTANCE_STEP = 5;
+
 

@@ -31,11 +31,13 @@ import { BN_PER_TN, BUDGET_WINDOW_YEARS, LEGACY_QUARTERS, MIDTERM_TURN_1, MIDTER
 import { scheduleTurnEvents, checkGeopoliticalEscalation, createGeopoliticalActiveCrisis, getGeopoliticalSchedule, type ActiveCrisis } from './director';
 import { getCrisis, isGeopoliticalCrisis } from './crises';
 import { estimateSocial, isSocialBaseline, sanitizeSocial, socialBaseline, type SocialDraft } from './social';
+import { defaultForeignPolicy, resolveForeignPolicy, sanitizeForeignPolicy, type ForeignPolicyState } from './foreign';
 
 export { prosperity, type ScoreBreakdown } from './score';
 export { LEGACY_QUARTERS, TOTAL_TURNS };
 export type { ActiveCrisis } from './director';
 export type { SocialDraft } from './social';
+export type { ForeignPolicyState } from './foreign';
 
 /** Real-world starting values (from data/us-2026.json via fromData). */
 export interface Start {
@@ -97,6 +99,7 @@ export interface GameState {
   readonly ratifiedAmendments?: readonly AmendmentId[]; // permanently ratified Article V constitutional amendments
   readonly activeGeopoliticalCrises?: readonly ActiveCrisis[]; // active multi-turn geopolitical crises (CRISIS-01)
   readonly resolvedGeopoliticalCrises?: readonly string[]; // resolved geopolitical crisis IDs
+  readonly foreignPolicy?: ForeignPolicyState; // defense posture, foreign assistance, targeted sanctions (Phase 14, FORPOL-01, FORPOL-02)
 }
 
 /** One thing that happened last turn (a bill passed, failed or was rejected). */
@@ -136,6 +139,7 @@ export function newGame(seed: number, start: Start): GameState {
     houseSeatDelta: 0,
     activeGeopoliticalCrises: [],
     resolvedGeopoliticalCrises: [],
+    foreignPolicy: defaultForeignPolicy(),
     econ: {
       gap: 0,
       growth: start.potential,
@@ -454,6 +458,36 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     }
   }
 
+  // Foreign policy and sanctions resolution (Phase 14, FORPOL-01, FORPOL-02)
+  const rawForeign: unknown = decisions !== null && typeof decisions === 'object' ? (decisions as { foreignPolicy?: unknown }).foreignPolicy : undefined;
+  const currentForeign = state.foreignPolicy ?? defaultForeignPolicy();
+  const availableCloutForForeign = state.clout - (pRes?.valid ? pRes.cloutSpent : 0) - filibusterCost - (reformResult ? reformResult.cloutCost : 0) - amendmentCloutCost;
+  const forRes = !legacyRun
+    ? resolveForeignPolicy(currentForeign, sanitizeForeignPolicy(rawForeign), Math.max(0, availableCloutForForeign))
+    : null;
+  const nextForeignPolicy = forRes
+    ? { defensePosture: forRes.defensePosture, foreignAssistance: forRes.foreignAssistance, activeSanctions: forRes.activeSanctions }
+    : currentForeign;
+
+  if (forRes) {
+    if (forRes.defensePosture !== currentForeign.defensePosture) {
+      log.push({ kind: 'forpol', id: 'defense_posture', detail: forRes.defensePosture });
+    }
+    if (forRes.foreignAssistance !== currentForeign.foreignAssistance) {
+      log.push({ kind: 'forpol', id: 'foreign_assistance', amount: forRes.foreignAssistance });
+    }
+    for (const s of forRes.activeSanctions) {
+      if (!currentForeign.activeSanctions.includes(s)) {
+        log.push({ kind: 'forpol', id: 'sanctions_enacted', detail: s });
+      }
+    }
+    for (const s of currentForeign.activeSanctions) {
+      if (!forRes.activeSanctions.includes(s)) {
+        log.push({ kind: 'forpol', id: 'sanctions_lifted', detail: s });
+      }
+    }
+  }
+
   const active = activeAt(modifiers, state.turn, legacyRun);
   for (const m of active) {
     if (!m.source.startsWith(`${m.tag}:`) || !isKnownSource(m.source)) throw new Error(`modifier ${m.id} has source "${m.source}", which must start with "${m.tag}:"`);
@@ -497,6 +531,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   g.add('fed:drag', -C.rateDrag * (e.fedRate - e.inflation - C.neutralReal));
   g.add('luck', C.shockGap * zGap);
   for (const m of mods('gap')) g.add(m.source, m.amount);
+  if (forRes && forRes.quarterlyGapDelta !== 0) g.add('forpol:sanctions', forRes.quarterlyGapDelta);
   const gap = e.gap + g.sum;
 
   // Growth is a level: potential plus the annualized change in the gap.
@@ -525,6 +560,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (energyReliefDelta !== 0) inf.add('social:energy', -energyReliefDelta);
   inf.add('luck', C.shockInfl * zInfl);
   for (const m of mods('inflation')) inf.add(m.source, m.amount);
+  if (forRes && forRes.quarterlyInflationDelta !== 0) inf.add('forpol:sanctions', forRes.quarterlyInflationDelta);
   const inflation = inf.clamp(e.inflation + inf.sum, ...LIMITS.inflation.bounds);
   const ex = new Ledger();
   ex.add('prices', C.expectAdapt * (inflation - e.expected));
@@ -544,7 +580,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const interestDrift = (borrowingCost * e.debt) / PERCENT; // $tn/yr above the starting interest bill
   const budgetDeficit = after.deficitBn / BUDGET_WINDOW_YEARS / BN_PER_TN; // $tn/yr
   const socialDeficit = afterSocial.deficitBn / BN_PER_TN; // $tn/yr
-  const deficit = (s.deficitPct / PERCENT) * gdp + budgetDeficit + socialDeficit + interestDrift; // $tn/yr
+  const foreignDeficit = forRes ? (forRes.quarterlyDeficitDeltaBn * QUARTERS_PER_YEAR) / BN_PER_TN : 0; // $tn/yr
+  const deficit = (s.deficitPct / PERCENT) * gdp + budgetDeficit + socialDeficit + foreignDeficit + interestDrift; // $tn/yr
   const debtMods = mods('debtBn');
   const debt = e.debt + deficit / QUARTERS_PER_YEAR + debtMods.reduce((n, m) => n + m.amount / BN_PER_TN, 0);
 
@@ -554,6 +591,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   dp.add('deficit:base', s.deficitPct / QUARTERS_PER_YEAR);
   dp.add('deficit:budget', budgetDeficit * perQuarter);
   if (socialDeficit !== 0) dp.add('social:budget', socialDeficit * perQuarter);
+  if (foreignDeficit !== 0) dp.add('forpol:budget', foreignDeficit * perQuarter);
   dp.add('deficit:interest', interestDrift * perQuarter);
   dp.add('gdp:growth', PERCENT * e.debt * (1 / gdp - 1 / e.gdp)); // a bigger economy dilutes the old debt
   for (const m of debtMods) dp.add(m.source, (m.amount / BN_PER_TN / gdp) * PERCENT);
@@ -624,6 +662,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     if (pRes.cloutSpent > 0) cl.add('clout:powers', -pRes.cloutSpent);
     if (pRes.cloutGained > 0) cl.add('clout:powers', pRes.cloutGained);
   }
+  if (forRes && forRes.cloutSpent > 0) cl.add('clout:powers', -forRes.cloutSpent);
   if (filibusterCost > 0) cl.add('clout:reform', -filibusterCost);
   if (reformResult && reformResult.cloutCost > 0) cl.add('clout:reform', -reformResult.cloutCost);
   if (amendmentCloutCost > 0) cl.add('clout:reform', -amendmentCloutCost);
@@ -677,6 +716,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     houseSeatDelta: nextHouseSeatDelta,
     activeGeopoliticalCrises: activeGeoCrises,
     resolvedGeopoliticalCrises: resolvedGeoCrises,
+    foreignPolicy: nextForeignPolicy,
     ...(state.senateSeatDelta !== undefined || state.filibusterRule !== undefined || nextFilibusterRule !== undefined ? { senateSeatDelta: nextSenateSeatDelta ?? 0 } : {}),
     ...(nextFilibusterRule !== undefined && nextFilibusterRule !== 'sixty_vote' ? { filibusterRule: nextFilibusterRule } : {}),
     ...(nextActiveReforms && nextActiveReforms.length > 0 ? { activeReforms: nextActiveReforms } : {}),

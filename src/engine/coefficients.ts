@@ -587,6 +587,16 @@ export const COEFF = {
   borderClashDiplomaticRally: { value: 2, unit: '% approval', basis: 'judgement', range: [1, 5], note: 'Public approval rally from successful diplomatic ceasefire mediation.' },
   geopoliticalEscalationPenalty: { value: 4, unit: '% approval', basis: 'judgement', range: [1, 10], note: 'Public approval penalty when an international crisis expires unaddressed.' },
   geopoliticalEscalationTrust: { value: 3, unit: 'index pts', basis: 'judgement', range: [1, 8], note: 'Public trust loss when an international crisis escalates unmanaged.' },
+  defenseSurgeCostBn: { value: 35, unit: '$bn/yr deficit', basis: 'judgement', range: [15, 60], note: 'Annual operations and personnel readiness surcharge for heightened forward defense surge posture (CBO).' },
+  defensePeacetimeSavingsBn: { value: 25, unit: '$bn/yr deficit savings', basis: 'judgement', range: [10, 50], note: 'Annual deficit reduction from strategic peacetime troop consolidation and readiness drawdown (CBO).' },
+  foreignAssistancePerPoint: { value: 0.45, unit: '$bn/yr per point deviation', basis: 'judgement', range: [0.2, 0.8], note: 'Annual budget impact per point deviation from baseline foreign assistance (base 100 = ~$45B/yr, CRS R43838).' },
+  sanctionAssetFreezeInflation: { value: 0.05, unit: '% inflation', basis: 'judgement', range: [0.01, 0.15], note: 'Marginal domestic CPI inflation from targeted financial asset freezes and compliance frictions.' },
+  sanctionAssetFreezeOutput: { value: 0.03, unit: '% output gap drag', basis: 'judgement', range: [0.01, 0.1], note: 'Slight output gap drag from targeted banking capital restrictions.' },
+  sanctionExportControlsInflation: { value: 0.1, unit: '% inflation', basis: 'judgement', range: [0.02, 0.25], note: 'CPI inflation impact from high-tech export controls and retaliatory supply constraints.' },
+  sanctionExportControlsOutput: { value: 0.08, unit: '% output gap drag', basis: 'judgement', range: [0.02, 0.2], note: 'Output gap contraction from export restrictions on aerospace, chips, and dual-use equipment.' },
+  sanctionEnergyEmbargoInflation: { value: 0.25, unit: '% inflation', basis: 'judgement', range: [0.05, 0.5], note: 'CPI inflation surge from unilateral energy shipping and transaction prohibitions.' },
+  sanctionEnergyEmbargoOutput: { value: 0.15, unit: '% output gap drag', basis: 'judgement', range: [0.05, 0.4], note: 'Domestic output contraction from energy sanctions blowback and reduced trade volumes.' },
+  sanctionCloutCost: { value: 10, unit: 'clout', basis: 'judgement', range: [5, 25], note: 'Clout cost to diplomatic and national security apparatus to enact or maintain unilateral targeted sanctions.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------
