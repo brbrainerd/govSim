@@ -109,5 +109,5 @@ Full phase execution history and plans archived to [.planning/milestones/v0.2-RO
 | 13-16 | v0.4 | 16/16 | Complete | 2026-10-12 |
 | 17. Evil Mode Engine | v0.5 | 4/4 | Complete | 2026-10-12 |
 | 18. Corrupt Executive Levers | v0.5 | 4/4 | Complete | 2026-10-12 |
-| 19. Backlash & Impeachment | v0.5 | 0/4 | In progress | - |
+| 19. Backlash & Impeachment | v0.5 | 4/4 | Complete | 2026-10-13 |
 | 20. Reskin & Heist Screens | v0.5 | 0/4 | Not started | - |

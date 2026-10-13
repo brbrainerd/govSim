@@ -227,6 +227,7 @@
   .mode-option input { width: 18px; height: 18px; accent-color: var(--ink); margin-top: 2px; }
   .mode-option.active-mode { background: var(--gold); }
   .mode-option.evil-option.active-mode { background: var(--alert-tint); border-color: var(--alert); }
+  .mode-option.active-mode .mode-sub { color: var(--ink); }
   .mode-info { display: flex; flex-direction: column; gap: 2px; }
   .mode-info b { font: 700 clamp(15px, 1.2vw, 17px) var(--font-display); color: var(--ink); }
   .mode-sub { font: 500 clamp(12px, 0.9vw, 13px)/1.3 var(--font-body); color: var(--ink-soft); }

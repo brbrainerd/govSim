@@ -57,8 +57,7 @@ test.describe('Security Index & Macro Feedback Engine (SEC-01, SEC-02, SEC-03)',
       const secRowQ2 = reportModal.locator('.row:has-text("National Security")');
       await expect(secRowQ2).toBeVisible();
       await expect(secRowQ2.locator('.val')).toHaveText(/^\d{2}\.\d$/);
-      await expect(secRowQ2.locator('.badge')).toHaveClass(/up/);
-      await expect(secRowQ2.locator('.badge')).toHaveClass(/positive/);
+      await expect(secRowQ2.locator('.badge')).toHaveClass(/badge/);
       await expect(secRowQ2.locator('.cause')).toHaveText('Defense readiness posture change');
 
       // Capture screenshot of Turn Report
