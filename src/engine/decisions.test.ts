@@ -110,3 +110,57 @@ describe('malformed decisions are rejected, never thrown on (01-REVIEW WR-01)', 
     for (const d of [null, 7, 'x']) expect(endTurn(at(120), d as never)).toEqual(endTurn(at(120), {}));
   });
 });
+
+describe('social policy decisions and bill integration (SOC-01..04)', () => {
+  it('resolves bills with social drafts and influences whip count', () => {
+    const budget = fromPackage('Keep as is');
+    const rWithoutSocial = resolveBill(120, { budget, deals: [] });
+    const rWithCompromise = resolveBill(120, {
+      budget,
+      deals: [],
+      social: { cln: 120, fos: 120, bdr: 120, vis: 120 },
+    });
+    expect(rWithCompromise.valid).toBe(true);
+    expect(rWithCompromise.social).toBeDefined();
+    expect(rWithCompromise.social?.cln).toBe(120);
+    expect(rWithCompromise.whip.total).toBeGreaterThan(rWithoutSocial.whip.total);
+  });
+
+  it('sanitizes malformed social policy drafts within bills safely', () => {
+    const budget = fromPackage('Keep as is');
+    const bill = {
+      budget,
+      deals: [],
+      social: {
+        aca: NaN,
+        cln: 999,
+        bdr: -50,
+        prek: 'yes' as unknown as number,
+        unknownField: 42,
+      },
+    };
+    const r = resolveBill(120, bill);
+    expect(r.valid).toBe(true);
+    expect(r.social?.aca).toBe(100); // base fallback
+    expect(r.social?.cln).toBe(150); // clamped to max
+    expect(r.social?.bdr).toBe(70); // clamped to min
+    expect(r.social?.prek).toBe(0); // base fallback
+    expect(r.social).not.toHaveProperty('unknownField');
+  });
+
+  it('enacts social policy via endTurn when bill passes', () => {
+    const budget = fromPackage('Keep as is');
+    const deals: DealId[] = ['mod', 'cen'];
+    const bill: Bill = {
+      budget,
+      deals,
+      social: { aca: 120, vis: 130 },
+    };
+    const state = at(120);
+    const next = endTurn(state, { bill });
+    expect(next.socialPolicy).toBeDefined();
+    expect(next.socialPolicy?.aca).toBe(120);
+    expect(next.socialPolicy?.vis).toBe(130);
+  });
+});
+

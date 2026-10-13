@@ -8,9 +8,13 @@ import { deals as DEALS, tally, voteOutcome, type DealId } from './congress';
 import { getCrisis } from './crises';
 import type { Modifier, Scheduled } from './modifiers';
 import type { PowerDecisions } from './powers';
-import type { SocialDraft } from './social';
+import { sanitizeSocial, type SocialDraft } from './social';
 
-export interface Bill { budget: BudgetDraft; deals: DealId[] }
+export interface Bill {
+  budget: BudgetDraft;
+  deals: DealId[];
+  social?: SocialDraft;
+}
 
 export interface CrisisDecision {
   crisisId: string;
@@ -42,6 +46,7 @@ export interface BillResult {
   valid: boolean;
   reason?: 'unaffordable' | 'invalid';
   budget: BudgetDraft;
+  social?: SocialDraft;
   deals: DealId[];
   spent: number;
   whip: ReturnType<typeof tally>;
@@ -82,14 +87,15 @@ export function resolveBill(clout: number, bill: unknown, houseDelta = 0): BillR
   const b = isRecord(bill) ? bill : {};
   const ids = knownDeals(b.deals);
   const spent = cloutCost(ids);
-  const whip = tally(ids, houseDelta);
   const budget = sanitizeBudget(b.budget);
+  const social = Object.hasOwn(b, 'social') && b.social !== undefined ? sanitizeSocial(b.social) : undefined;
+  const whip = tally(ids, houseDelta, social);
   const rejected = (reason: 'unaffordable' | 'invalid'): BillResult =>
-    ({ valid: false, reason, budget, deals: ids, spent, whip, passed: false, cloutBack: 0, cloutDelta: 0 });
+    ({ valid: false, reason, budget, social, deals: ids, spent, whip, passed: false, cloutBack: 0, cloutDelta: 0 });
   if (!isRecord(bill) || !isRecord(bill.budget) || !Array.isArray(bill.deals)) return rejected('invalid');
   if (spent > clout) return rejected('unaffordable');
   const { passed, cloutBack } = voteOutcome(whip.total, spent);
-  return { valid: true, budget, deals: ids, spent, whip, passed, cloutBack, cloutDelta: cloutBack - spent };
+  return { valid: true, budget, social, deals: ids, spent, whip, passed, cloutBack, cloutDelta: cloutBack - spent };
 }
 
 export function resolveCrisisChoice(
