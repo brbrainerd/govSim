@@ -213,11 +213,21 @@
     <HouseholdCard {session} onExplore={() => (showHouseholdModal = true)} />
     {#each briefingInfo.suggestions as s (s.title)}
       <div class="card option">
-        <b>{s.title}</b>
+        <div class="option-text">
+          <b>{s.title}</b>
+          {#if s.play?.pack}
+            <span class="play-badge" data-testid="advisor-play-badge">Play: {s.play.pack}</span>
+          {:else if s.play?.autoWhip}
+            <span class="play-badge" data-testid="advisor-play-badge">Play: Auto-whip</span>
+          {/if}
+        </div>
         <button
           type="button"
           class="btn"
           onclick={() => {
+            if (s.play) {
+              session.applyAdvisorPlay(s.play);
+            }
             if (s.openCrisis && session.current.activeCrisis) {
               onOpenCrisis?.(session.current.activeCrisis);
             } else if (s.mythId) {
@@ -265,8 +275,10 @@
   .info { display: flex; flex-direction: column; gap: 4px; padding: clamp(8px, 1.2vh, 14px); text-align: center; }
   .info b { font: 700 clamp(17px, 1.4vw, 21px)/1.2 var(--font-display); }
   .info span:last-child { font-size: clamp(12px, 1vw, 15px); color: var(--ink-soft); max-width: 35ch; }
-  .option { display: flex; flex-direction: column; align-items: center; gap: clamp(6px, 0.8vh, 10px); padding: clamp(8px, 1.2vh, 14px) clamp(8px, 1vw, 12px); text-align: center; }
-  .option b { font: 700 clamp(16px, 1.3vw, 20px)/1.15 var(--font-display); max-width: 25ch; }
+  .option { display: flex; flex-direction: column; align-items: center; gap: clamp(4px, 0.6vh, 8px); padding: clamp(6px, 1vh, 12px) clamp(8px, 1vw, 12px); text-align: center; }
+  .option-text { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .option b { font: 700 clamp(15px, 1.25vw, 19px)/1.15 var(--font-display); max-width: 25ch; }
+  .play-badge { font: 700 10px/1.1 var(--font-ui); color: var(--sage-dark); text-transform: uppercase; letter-spacing: 0.04em; }
 
   .geopolitical-alert {
     background: var(--paper-dark);

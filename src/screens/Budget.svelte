@@ -5,6 +5,7 @@
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
   import type { ExplainerId } from '../content/explainers';
+  import HouseholdModal from '../ui/HouseholdModal.svelte';
 
   let {
     session,
@@ -20,13 +21,19 @@
     onOpenExplainer?: (id: ExplainerId) => void;
   } = $props();
 
+  let showHouseholdModal = $state(false);
+
   const words = $derived(describe(estimate(session.draft.budget)));
+  const persona = $derived(session.selectedHouseholdPersona);
+  const netHousehold = $derived(session.householdImpact.netMonthlyDelta);
   const packNames = Object.keys(packages) as PackageName[];
 
-  function valueText(l: Lever, v: number, isTax: boolean) {
-    const d = +(v - l.base).toFixed(1);
-    if (isTax) return `${v}%${d ? (d > 0 ? ` · up ${d}` : ` · down ${-d}`) : ''}`;
-    return d === 0 ? 'Same as now' : `${d > 0 ? '+' : ''}${d}% · ${d > 0 ? 'up' : 'down'}`;
+  function valueText(l: Lever, v: number, isTax: boolean, inForce: number) {
+    const d = +(v - inForce).toFixed(1);
+    const baseDelta = +(inForce - l.base).toFixed(1);
+    const baseSuffix = d === 0 && baseDelta !== 0 ? ` (${baseDelta > 0 ? '+' : ''}${baseDelta}% vs 2026)` : '';
+    if (isTax) return `${v}%${d ? (d > 0 ? ` · up ${d}` : ` · down ${-d}`) : baseSuffix}`;
+    return d === 0 ? `Same as now${baseSuffix}` : `${d > 0 ? '+' : ''}${d}% · ${d > 0 ? 'up' : 'down'}`;
   }
   const pct = (l: Lever, v: number) => ((v - l.min) / (l.max - l.min)) * 100;
 </script>
@@ -35,27 +42,32 @@
   <section class="card group" aria-label={title}>
     <h3>{title} <span>· {sub}</span></h3>
     {#each levers as l (l.id)}
-      {@const v = session.draft.budget[l.id] ?? l.base}
-      {@const changed = v !== l.base}
-      <div class="row" class:changed>
+      {@const inForce = session.current.policy[l.id] ?? l.base}
+      {@const v = session.draft.budget[l.id] ?? inForce}
+      {@const changed = v !== inForce}
+      <div class="row" class:changed data-in-force={inForce}>
         <label for={l.id}>{l.label}</label>
-        <span class="val">{valueText(l, v, isTax)}</span>
+        <span class="val">{valueText(l, v, isTax, inForce)}</span>
         <div class="track" style:--fill="{pct(l, v)}%">
-          <span class="tick" style:left="{pct(l, l.base)}%"></span>
+          {#if inForce !== l.base}
+            <span class="tick base-tick" style:left="{pct(l, l.base)}%" title="2026 baseline"></span>
+          {/if}
+          <span class="tick" style:left="{pct(l, inForce)}%" title="Current policy in force"></span>
           <input id={l.id} type="range" disabled={session.over} min={l.min} max={l.max} step={l.step} value={v}
-            aria-valuetext={valueText(l, v, isTax)}
+            aria-valuetext={valueText(l, v, isTax, inForce)}
             oninput={(e) => session.setLever(l.id, +e.currentTarget.value)} />
         </div>
       </div>
     {/each}
     {#if !isTax}
+      {@const assistInForce = session.current.foreignPolicy?.foreignAssistance ?? 100}
       {@const assist = session.effectiveForeignPolicy.foreignAssistance}
-      {@const changed = assist !== 100}
+      {@const changed = assist !== assistInForce}
       <div class="row foreign-assistance-row" class:changed>
         <label for="foreign-assistance-slider">Foreign Assistance &amp; Aid</label>
-        <span class="val">{assist === 100 ? 'Same as now ($45B/yr, <1%)' : `${assist > 100 ? '+' : ''}${assist - 100}% · ${assist > 100 ? 'up' : 'down'}`}</span>
+        <span class="val">{assist === assistInForce ? 'Same as now ($45B/yr, <1%)' : `${assist > assistInForce ? '+' : ''}${assist - assistInForce}% · ${assist > assistInForce ? 'up' : 'down'}`}</span>
         <div class="track" style:--fill="{(assist / 200) * 100}%">
-          <span class="tick" style:left="50%"></span>
+          <span class="tick" style:left="{(assistInForce / 200) * 100}%"></span>
           <input
             id="foreign-assistance-slider"
             type="range"
@@ -64,7 +76,7 @@
             max={200}
             step={5}
             value={assist}
-            aria-valuetext={assist === 100 ? 'Same as now ($45B/yr, <1%)' : `${assist > 100 ? '+' : ''}${assist - 100}% · ${assist > 100 ? 'up' : 'down'}`}
+            aria-valuetext={assist === assistInForce ? 'Same as now ($45B/yr, <1%)' : `${assist > assistInForce ? '+' : ''}${assist - assistInForce}% · ${assist > assistInForce ? 'up' : 'down'}`}
             oninput={(e) => session.setForeignAssistance(+e.currentTarget.value)}
           />
         </div>
@@ -102,10 +114,22 @@
       <span class="line">{words.economy}</span>
       <span class="fine">Could be off by 30%. Voter reactions not included.</span>
     </div>
-    <div class="card info">
-      <span class="label">Your family</span>
-      <span class="line">Nurse in Ohio</span>
-      <b class="num" class:good={words.familyGood} class:bad={!words.familyGood}>{words.family}</b>
+    <div class="card info family-card" data-testid="budget-household-card">
+      <div class="family-head">
+        <span class="label">Your family</span>
+        <button
+          type="button"
+          class="switch-family-btn"
+          data-testid="budget-switch-household-btn"
+          onclick={() => (showHouseholdModal = true)}
+        >
+          Switch
+        </button>
+      </div>
+      <span class="line" data-testid="budget-household-persona">{persona.name} · {persona.locationState}</span>
+      <b class="num" class:good={netHousehold >= 0} class:bad={netHousehold < 0} data-testid="budget-household-delta">
+        {netHousehold >= 0 ? `+$${netHousehold} a month` : `-$${Math.abs(netHousehold)} a month`}
+      </b>
     </div>
     <div class="card info">
       <span class="label">Route</span>
@@ -119,6 +143,10 @@
     {/if}
   {/snippet}
 </ScreenLayout>
+
+{#if showHouseholdModal}
+  <HouseholdModal {session} onClose={() => (showHouseholdModal = false)} />
+{/if}
 
 <style>
   .packs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(6px, 1vw, 14px); }
@@ -141,6 +169,19 @@
   .track::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 8px; border-radius: 4px; background: var(--ink); }
   .changed .track::before { background: linear-gradient(to right, var(--gold) var(--fill), var(--ink) var(--fill)); }
   .tick { position: absolute; top: 50%; transform: translateY(-50%); width: 3px; height: 18px; margin-left: -1.5px; background: var(--gold-dark); border-radius: 2px; }
+  .base-tick { background: var(--ink-soft); opacity: 0.55; height: 14px; }
+  .family-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .switch-family-btn {
+    padding: 2px 8px;
+    font: 700 11px/1.1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--paper);
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    cursor: pointer;
+  }
   input { position: absolute; inset: 0; width: 100%; margin: 0; appearance: none; background: transparent; cursor: pointer; }
   input::-webkit-slider-thumb { appearance: none; width: clamp(20px, 2.2vh, 26px); height: clamp(20px, 2.2vh, 26px); border-radius: 50%; background: var(--gold); border: 2.5px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); }
   input::-moz-range-thumb { width: clamp(18px, 2vh, 22px); height: clamp(18px, 2vh, 22px); border-radius: 50%; background: var(--gold); border: 2.5px solid var(--ink); }

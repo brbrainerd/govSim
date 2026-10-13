@@ -143,7 +143,20 @@
         {/each}
       </div>
     {/if}
-    <span class="label">Fastest way to pass</span>
+    <div class="whip-head">
+      <span class="label">Fastest way to pass</span>
+      {#if !vote && whip.short > 0 && session.cheapestCoalition.dealsToAdd.length > 0}
+        <button
+          type="button"
+          class="auto-whip-btn"
+          data-testid="auto-whip-btn"
+          disabled={!session.canAutoWhip}
+          onclick={() => session.autoWhipCoalition()}
+        >
+          Auto-whip ({session.cheapestCoalition.dealsToAdd.length} {session.cheapestCoalition.dealsToAdd.length === 1 ? 'deal' : 'deals'}, {session.cheapestCoalition.additionalCost} clout)
+        </button>
+      {/if}
+    </div>
     {#each deals as d (d.id)}
       {@const done = session.draft.deals.includes(d.id)}
       <div class="card deal">
@@ -202,6 +215,21 @@
   .deal b { font: 700 clamp(14px, 1.1vw, 17px)/1.15 var(--font-display); }
   .deal span { font-size: clamp(11px, 0.85vw, 13px); color: var(--ink-soft); }
   .deal .btn { white-space: nowrap; }
+  .whip-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .auto-whip-btn {
+    padding: 3px 8px;
+    font: 700 11px/1.1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--gold);
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    box-shadow: 1px 1px 0 var(--ink);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .auto-whip-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
   .spacer { flex-grow: 1; min-height: 4px; }
   .stamp { align-self: center; flex-shrink: 0; }
