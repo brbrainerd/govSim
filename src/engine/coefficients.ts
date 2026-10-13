@@ -422,6 +422,10 @@ export const COEFF = {
     value: 5, unit: 'clout pts', basis: 'judgement', range: [2, 10],
     note: 'One-time political capital reward for reading a civics myth card.',
   },
+  explainerRewardClout: {
+    value: 1, unit: 'clout pts', basis: 'judgement', range: [1, 3],
+    note: 'One-time political capital curiosity reward for reading a How It Works civic explainer (design §7c).',
+  },
   speechDiminishingFactor: {
     value: 0.5, unit: 'factor', basis: 'judgement', range: [0.2, 0.8],
     note: 'Diminishing returns rate for presidential speeches.',

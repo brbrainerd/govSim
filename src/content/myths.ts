@@ -1,4 +1,4 @@
-// Sourced catalog of civics myth cards (PWR-06, OBS-05, GR-20, GR-21, Pitfall 17).
+// Sourced catalog of civics myth cards (PWR-06, LEARN-02, OBS-05, GR-20, GR-21, Pitfall 17).
 // Focuses strictly on institutional mechanics and constitutional powers, never political values.
 // Spectrum-balanced with |count(challenges=left) - count(challenges=right)| <= 1.
 
@@ -91,6 +91,51 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
     citation: {
       title: 'Congressional Budget Office Federal Budget Overview',
       url: 'https://www.cbo.gov/publication/59767',
+      confirmed: false,
+    },
+  },
+  {
+    id: 'supply_side_taxes',
+    title: 'Do tax cuts pay for themselves',
+    mythStatement: 'Cutting tax rates always grows the economy enough to raise tax revenue.',
+    realitySummary: 'Lower rates boost demand a bit, but they almost always reduce net federal revenue.',
+    flowSteps: ['Tax rate cut', 'Small growth lift', 'Lower tax receipts', 'Larger deficit'],
+    realLevers: ['Pair cuts with spending caps', 'Broaden the tax base', 'Invest in research'],
+    challenges: 'right',
+    target: 'mechanism',
+    citation: {
+      title: 'CBO: How Tax Rate Changes Affect Federal Revenue',
+      url: 'https://www.cbo.gov/publication/53651',
+      confirmed: false,
+    },
+  },
+  {
+    id: 'debt_ceiling_default',
+    title: 'Does the debt limit add spending',
+    mythStatement: 'Raising the debt ceiling authorizes new government spending.',
+    realitySummary: 'The debt limit only lets the Treasury pay bills that Congress already passed.',
+    flowSteps: ['Congress passes laws', 'Bills come due', 'Treasury borrows', 'Obligations paid'],
+    realLevers: ['Pass annual budget bills', 'Reform spending laws', 'Adjust tax rates'],
+    challenges: 'left',
+    target: 'institution',
+    citation: {
+      title: 'U.S. Treasury: Debt Limit Overview',
+      url: 'https://home.treasury.gov/policy-issues/financial-markets-financial-institutions-and-fiscal-service/debt-limit',
+      confirmed: false,
+    },
+  },
+  {
+    id: 'trade_deficits',
+    title: 'Do foreign nations pay tariffs',
+    mythStatement: 'Foreign governments pay the tariffs placed on their exports.',
+    realitySummary: 'American importers pay the border tax and pass most of the cost to buyers.',
+    flowSteps: ['Goods reach port', 'Importer pays duty', 'Store prices rise', 'Foreign trade hits back'],
+    realLevers: ['Target key supply chains', 'Sign trade pacts', 'Support home factories'],
+    challenges: 'left',
+    target: 'mechanism',
+    citation: {
+      title: 'Congressional Research Service: U.S. Tariff Policy (IF11030)',
+      url: 'https://crsreports.congress.gov/product/pdf/IF/IF11030',
       confirmed: false,
     },
   },

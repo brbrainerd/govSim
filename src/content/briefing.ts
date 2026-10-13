@@ -1,4 +1,4 @@
-// Dynamic Oval Office briefing generator (EVT-07, OBS-05).
+// Dynamic Oval Office briefing generator (EVT-07, LEARN-03, OBS-05).
 // Evaluates active crises, impending legislative deadlines, and macro conditions.
 // All copy is strictly nonpartisan, plain language, reading grade <= 9.0.
 
@@ -10,6 +10,8 @@ export interface Suggestion {
   readonly title: string;
   readonly cta: string;
   readonly target: ScreenId | null;
+  readonly mythId?: string;
+  readonly openCrisis?: boolean;
 }
 
 export interface BriefingInfo {
@@ -28,7 +30,7 @@ export interface SessionContext {
 }
 
 /**
- * Generates dynamic Oval Office briefing text, thisTurn alert, and suggestions (EVT-07).
+ * Generates dynamic Oval Office briefing text, thisTurn alert, and suggestions (EVT-07, LEARN-03).
  */
 export function generateBriefing(session: SessionContext): BriefingInfo {
   const current = session.current;
@@ -44,7 +46,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
         detail: 'Relief teams are ready and waiting for your call.',
       },
       suggestions: [
-        { title: 'Respond to crisis', cta: 'Decide now', target: null },
+        { title: 'Respond to crisis', cta: 'Decide now', target: null, openCrisis: true },
         { title: 'Check state of economy', cta: 'Open Economy', target: 'economy' },
         { title: 'Build House coalition', cta: 'Open Congress', target: 'congress' },
       ],
@@ -125,7 +127,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
         suggestions: [
           { title: 'Pass federal budget', cta: 'Open Congress', target: 'congress' },
           { title: 'Set budget priorities', cta: 'Open Budget', target: 'budget' },
-          { title: 'Myth? Shutdown costs', cta: 'Find out', target: null },
+          { title: 'Myth? Shutdown costs', cta: 'Find out', target: null, mythId: 'foreign_aid_deficit' },
         ],
       };
     }
@@ -141,7 +143,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
         suggestions: [
           { title: 'Raise debt limit', cta: 'Open Congress', target: 'congress' },
           { title: 'Review fiscal outlays', cta: 'Open Budget', target: 'budget' },
-          { title: 'Myth? The debt ceiling', cta: 'Find out', target: null },
+          { title: 'Myth? The debt ceiling', cta: 'Find out', target: null, mythId: 'debt_ceiling_default' },
         ],
       };
     }
@@ -159,7 +161,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
       suggestions: [
         { title: 'Track economic recovery', cta: 'Open Economy', target: 'economy' },
         { title: 'Build coalition for reform', cta: 'Open Congress', target: 'congress' },
-        { title: 'Myth? Disaster relief waste', cta: 'Find out', target: null },
+        { title: 'Myth? Disaster relief waste', cta: 'Find out', target: null, mythId: 'rule_by_decree' },
       ],
     };
   }
@@ -175,7 +177,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
       suggestions: [
         { title: 'Check price pressures', cta: 'Open Economy', target: 'economy' },
         { title: 'Trim federal spending', cta: 'Open Budget', target: 'budget' },
-        { title: 'Myth? Lower gas prices', cta: 'Find out', target: null },
+        { title: 'Myth? Lower gas prices', cta: 'Find out', target: null, mythId: 'gas_prices' },
       ],
     };
   }
@@ -191,7 +193,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
       suggestions: [
         { title: 'Review employment trends', cta: 'Open Economy', target: 'economy' },
         { title: 'Fund job training programs', cta: 'Open Budget', target: 'budget' },
-        { title: 'Myth? Presidents create jobs', cta: 'Find out', target: null },
+        { title: 'Myth? Presidents create jobs', cta: 'Find out', target: null, mythId: 'presidential_jobs' },
       ],
     };
   }
@@ -206,7 +208,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
     suggestions: [
       { title: 'Pass a budget', cta: 'Open Budget', target: 'budget' },
       { title: 'Win over Moderates', cta: 'Open Congress', target: 'congress' },
-      { title: 'Myth? Lower gas prices', cta: 'Find out', target: null },
+      { title: 'Myth? Lower gas prices', cta: 'Find out', target: null, mythId: 'gas_prices' },
     ],
   };
 }

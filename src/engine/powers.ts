@@ -202,12 +202,19 @@ export function resolvePowerDecisions(state: GameState, powersInput: unknown): P
   let nextViewedMyths = [...state.viewedMyths];
   let nextSpeechCount = state.speechCountInWindow;
 
-  // 1. One-time myth card reward (PWR-06, Pitfall 17)
+  // 1. One-time myth card or civic explainer reward (PWR-06, LEARN-01, Pitfall 17)
   const mythId = typeof powersInput.viewMyth === 'string' ? powersInput.viewMyth : undefined;
   if (mythId && !nextViewedMyths.includes(mythId)) {
     nextViewedMyths = [...nextViewedMyths, mythId];
-    cloutGained += C.mythRewardClout;
-    log.push({ kind: 'myth', id: mythId, amount: C.mythRewardClout, detail: 'Civics insight bonus' });
+    const isExplainer = mythId.startsWith('explainer:');
+    const reward = isExplainer ? C.explainerRewardClout : C.mythRewardClout;
+    cloutGained += reward;
+    log.push({
+      kind: 'myth',
+      id: mythId,
+      amount: reward,
+      detail: isExplainer ? 'Civic explainer curiosity bonus' : 'Civics insight bonus',
+    });
   }
 
   // 2. Sign executive orders (PWR-01, PWR-02)

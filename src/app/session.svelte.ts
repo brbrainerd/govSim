@@ -243,7 +243,9 @@ export class Session {
   stagedEvilLeversHeatDelta = $derived(this.evilLeversResolution.heatDelta);
   mythReward = $derived(
     this.draft.viewMyth && !this.current.viewedMyths.includes(this.draft.viewMyth)
-      ? C.mythRewardClout
+      ? this.draft.viewMyth.startsWith('explainer:')
+        ? C.explainerRewardClout
+        : C.mythRewardClout
       : 0,
   );
   clout = $derived(
@@ -472,6 +474,15 @@ export class Session {
     if (!this.current.viewedMyths.includes(id)) {
       this.draft.viewMyth = id;
     }
+  }
+
+  viewExplainer(id: string) {
+    this.viewMythCard(`explainer:${id}`);
+  }
+
+  hasViewedExplainer(id: string): boolean {
+    const key = `explainer:${id}`;
+    return this.current.viewedMyths.includes(key) || this.draft.viewMyth === key;
   }
 
   setFilibusterRule(rule: FilibusterRule) {
