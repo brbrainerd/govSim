@@ -4,15 +4,10 @@
 
 **Phases completed:** 4 phases, 16 plans, 0 tasks
 
-**Key accomplishments:**
-
-- 09 (Domestic Social Policy Levers)
-- 09 (Domestic Social Policy Levers)
-- 09 (Domestic Social Policy Levers)
-- 09 (Domestic Social Policy Levers)
-- 10-demographic-regional-distribution
-- 10-demographic-regional-distribution
-- v0.3 (Social Policy & Domestic Reform)
+- Domestic social policy levers: pure engine mechanics, registered coefficients, and Congressional voting bloc dynamics for healthcare, immigration, energy/climate, and education policies.
+- Demographic & regional distribution: state-level regional exposure indices, BEA regional price parities, dynamic voter coalition shifts, and interactive map/table breakdowns.
+- Structural government reform: Senate filibuster options (60-vote, talking, 55-vote, majority), judicial ethics and 18-year term limits, and high-hurdle constitutional amendment ratifications.
+- "Your Household" impact card: 7 kitchen-table budget lines, 4 authentic preset personas, customizable family builder, and 100-seed Monte Carlo game balance calibration (+3.425 headroom, <= 5 pp party neutrality).
 
 ---
 
