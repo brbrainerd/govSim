@@ -22,6 +22,7 @@ import {
   type HouseholdImpactBreakdown,
   type HouseholdPersona,
 } from '../engine/household';
+import type { DefensePosture, ForeignPolicyDraft, ForeignPolicyState, SanctionType } from '../engine/foreign';
 
 /** Choices made at New Game. Kept beside the engine state, never inside it (D4). */
 export interface GameOptions {
@@ -45,6 +46,9 @@ interface Draft {
   reform: ReformId | null;
   amendmentProposal: AmendmentId | null;
   amendmentCampaign: boolean;
+  defensePosture: DefensePosture | null;
+  foreignAssistance: number | null;
+  activeSanctions: SanctionType[] | null;
 }
 
 /** A new turn's draft starts from the policy already in force. */
@@ -65,6 +69,9 @@ const freshDraft = (policy: BudgetDraft, socialPolicy?: SocialDraft): Draft => (
   reform: null,
   amendmentProposal: null,
   amendmentCampaign: false,
+  defensePosture: null,
+  foreignAssistance: null,
+  activeSanctions: null,
 });
 
 /**
@@ -158,13 +165,28 @@ export class Session {
     }
     return cost;
   });
+  foreignCost = $derived.by(() => {
+    let cost = 0;
+    if (this.draft.activeSanctions) {
+      const currentSet = new Set(this.current.foreignPolicy?.activeSanctions ?? []);
+      for (const s of this.draft.activeSanctions) {
+        if (!currentSet.has(s)) cost += C.sanctionCloutCost;
+      }
+    }
+    return cost;
+  });
+  effectiveForeignPolicy = $derived<ForeignPolicyState>({
+    defensePosture: this.draft.defensePosture ?? this.current.foreignPolicy?.defensePosture ?? 'standard',
+    foreignAssistance: this.draft.foreignAssistance ?? this.current.foreignPolicy?.foreignAssistance ?? 100,
+    activeSanctions: this.draft.activeSanctions ?? this.current.foreignPolicy?.activeSanctions ?? [],
+  });
   mythReward = $derived(
     this.draft.viewMyth && !this.current.viewedMyths.includes(this.draft.viewMyth)
       ? C.mythRewardClout
       : 0,
   );
   clout = $derived(
-    this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost - this.reformCost + this.mythReward,
+    this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost - this.reformCost - this.foreignCost + this.mythReward,
   );
   powers = $derived<PowerDecisions | null>(
     this.draft.signedOrders.length > 0 ||
@@ -392,6 +414,26 @@ export class Session {
     this.draft.amendmentCampaign = !this.draft.amendmentCampaign;
   }
 
+  setDefensePosture(posture: DefensePosture) {
+    if (this.over) return;
+    this.draft.defensePosture = posture;
+  }
+
+  setForeignAssistance(level: number) {
+    if (this.over) return;
+    this.draft.foreignAssistance = level;
+  }
+
+  toggleSanction(sanction: SanctionType) {
+    if (this.over) return;
+    const currentList = this.draft.activeSanctions ?? [...(this.current.foreignPolicy?.activeSanctions ?? [])];
+    if (currentList.includes(sanction)) {
+      this.draft.activeSanctions = currentList.filter((s) => s !== sanction);
+    } else {
+      this.draft.activeSanctions = [...currentList, sanction];
+    }
+  }
+
   nextTurn() {
     if (this.termEnded || this.over) return;
 
@@ -419,6 +461,19 @@ export class Session {
     }
     if (this.draft.amendmentCampaign) {
       decisions.amendmentCampaign = true;
+    }
+    const foreignPolicy: ForeignPolicyDraft | undefined =
+      this.draft.defensePosture !== null ||
+      this.draft.foreignAssistance !== null ||
+      this.draft.activeSanctions !== null
+        ? {
+            ...(this.draft.defensePosture !== null ? { defensePosture: this.draft.defensePosture } : {}),
+            ...(this.draft.foreignAssistance !== null ? { foreignAssistance: this.draft.foreignAssistance } : {}),
+            ...(this.draft.activeSanctions !== null ? { activeSanctions: $state.snapshot(this.draft.activeSanctions) } : {}),
+          }
+        : undefined;
+    if (foreignPolicy) {
+      decisions.foreignPolicy = foreignPolicy;
     }
     decisions.presidentialSide = (this.options.party === 'R' ? 'R' : 'D') as 'D' | 'R';
 

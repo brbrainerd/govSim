@@ -91,7 +91,12 @@
       {:else if screen.id === 'economy'}
         <Economy {session} question={screen.question} {go} />
       {:else if screen.id === 'budget'}
-        <Budget {session} question={screen.question} {go} />
+        <Budget
+          {session}
+          question={screen.question}
+          {go}
+          onOpenMyth={(id) => (activeMythId = id)}
+        />
       {:else if screen.id === 'congress'}
         <Congress {session} question={screen.question} />
       {:else if screen.id === 'powers'}

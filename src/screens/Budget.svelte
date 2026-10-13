@@ -4,7 +4,17 @@
   import { describe, estimate, packages, spendLevers, taxLevers, type Lever, type PackageName } from '../engine/budget';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
-  let { session, question, go }: { session: Session; question: string; go: (id: ScreenId) => void } = $props();
+  let {
+    session,
+    question,
+    go,
+    onOpenMyth,
+  }: {
+    session: Session;
+    question: string;
+    go: (id: ScreenId) => void;
+    onOpenMyth?: (id: string) => void;
+  } = $props();
 
   const words = $derived(describe(estimate(session.draft.budget)));
   const packNames = Object.keys(packages) as PackageName[];
@@ -34,6 +44,28 @@
         </div>
       </div>
     {/each}
+    {#if !isTax}
+      {@const assist = session.effectiveForeignPolicy.foreignAssistance}
+      {@const changed = assist !== 100}
+      <div class="row foreign-assistance-row" class:changed>
+        <label for="foreign-assistance-slider">Foreign Assistance &amp; Aid</label>
+        <span class="val">{assist === 100 ? 'Same as now ($45B/yr, <1%)' : `${assist > 100 ? '+' : ''}${assist - 100}% · ${assist > 100 ? 'up' : 'down'}`}</span>
+        <div class="track" style:--fill="{(assist / 200) * 100}%">
+          <span class="tick" style:left="50%"></span>
+          <input
+            id="foreign-assistance-slider"
+            type="range"
+            disabled={session.over}
+            min={0}
+            max={200}
+            step={5}
+            value={assist}
+            aria-valuetext={assist === 100 ? 'Same as now ($45B/yr, <1%)' : `${assist > 100 ? '+' : ''}${assist - 100}% · ${assist > 100 ? 'up' : 'down'}`}
+            oninput={(e) => session.setForeignAssistance(+e.currentTarget.value)}
+          />
+        </div>
+      </div>
+    {/if}
   </section>
 {/snippet}
 
@@ -51,7 +83,13 @@
   {/snippet}
   {#snippet learn()}
     <button class="link" disabled title="Coming soon">How a budget becomes law</button>
-    <button class="ticket" disabled title="Coming soon">Myth? Cut foreign aid to balance it</button>
+    <button
+      type="button"
+      class="ticket"
+      onclick={() => onOpenMyth?.('foreign_aid_deficit')}
+    >
+      Myth? Cut foreign aid to balance it
+    </button>
   {/snippet}
   {#snippet next()}
     <div class="card info" aria-live="polite">

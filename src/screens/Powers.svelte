@@ -8,6 +8,7 @@
   import FedPortrait from '../ui/art/FedPortrait.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import JudicialReformModal from '../ui/JudicialReformModal.svelte';
+  import { SANCTIONS_CATALOG, type DefensePosture, type SanctionType } from '../engine/foreign';
 
   let {
     session,
@@ -28,6 +29,11 @@
   let showingJudicialModal = $state(false);
   const composition = $derived(session.current.courtComposition ?? { conservative: 6, liberal: 3 });
   const isEnacted = (id: string) => Boolean(session.current.activeReforms?.includes(id));
+
+  const foreignState = $derived(session.effectiveForeignPolicy);
+  const activeSanctions = $derived(foreignState.activeSanctions);
+  const isSanctionActive = (id: SanctionType) => activeSanctions.includes(id);
+  const canAffordSanction = (id: SanctionType) => isSanctionActive(id) || session.clout >= 10;
 
   let selectedOrderId = $state<string>(ORDERS_CATALOG[0]!.id);
   const selectedOrder = $derived(getOrder(selectedOrderId) ?? ORDERS_CATALOG[0]!);
@@ -234,6 +240,90 @@
             </div>
           </div>
         </div>
+
+        <!-- Foreign Policy & National Security Card (FORPOL-01, FORPOL-02) -->
+        <div class="institution-card foreign-policy-card" data-testid="foreign-policy-section">
+          <div class="forpol-header">
+            <span class="inst-tag">ARTICLE II SECTION 2 · COMMANDER IN CHIEF &amp; DIPLOMACY</span>
+            <h4 class="inst-name">Defense Posture &amp; Targeted Sanctions</h4>
+          </div>
+
+          <div class="forpol-grid">
+            <!-- Defense Readiness Posture (FORPOL-01) -->
+            <div class="posture-group" data-testid="defense-posture-selector">
+              <span class="group-label">Defense Readiness Posture</span>
+              <div class="posture-options" role="radiogroup" aria-label="Defense Readiness Posture">
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={foreignState.defensePosture === 'peacetime'}
+                  class="btn posture-btn"
+                  class:selected={foreignState.defensePosture === 'peacetime'}
+                  onclick={() => session.setDefensePosture('peacetime')}
+                >
+                  <span class="posture-title">Peacetime Drawdown</span>
+                  <span class="posture-sub">-$25B/yr deficit · Diplomatic focus</span>
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={foreignState.defensePosture === 'standard'}
+                  class="btn posture-btn"
+                  class:selected={foreignState.defensePosture === 'standard'}
+                  onclick={() => session.setDefensePosture('standard')}
+                >
+                  <span class="posture-title">Standard Readiness</span>
+                  <span class="posture-sub">$0 baseline · Steady deterrence</span>
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={foreignState.defensePosture === 'surge'}
+                  class="btn posture-btn"
+                  class:selected={foreignState.defensePosture === 'surge'}
+                  onclick={() => session.setDefensePosture('surge')}
+                >
+                  <span class="posture-title">Forward Surge</span>
+                  <span class="posture-sub">+$35B/yr deficit · High deterrence</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Targeted Economic Sanctions (FORPOL-02) -->
+            <div class="sanctions-group" data-testid="targeted-sanctions-list">
+              <span class="group-label">Targeted Economic Sanctions (OFAC / IEEPA)</span>
+              <div class="sanctions-list">
+                {#each SANCTIONS_CATALOG as sanction (sanction.id)}
+                  {@const active = isSanctionActive(sanction.id)}
+                  {@const affordable = canAffordSanction(sanction.id)}
+                  <div class="sanction-item" class:active>
+                    <div class="sanction-info">
+                      <div class="sanction-title-row">
+                        <b>{sanction.name}</b>
+                        <span class="sanction-cost-pill">10 Clout</span>
+                      </div>
+                      <p class="sanction-desc">{sanction.description}</p>
+                      <div class="sanction-chips">
+                        <span class="fallout-chip inflation">+{sanction.inflationImpact.toFixed(2)}% CPI Inflation</span>
+                        <span class="fallout-chip gdp">{sanction.gapImpact.toFixed(2)}% GDP Trade Drag</span>
+                        <span class="statutory-basis">{sanction.legalBasis}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn sanction-toggle-btn"
+                      class:enacted={active}
+                      disabled={!active && !affordable}
+                      onclick={() => session.toggleSanction(sanction.id)}
+                    >
+                      {active ? '✓ Sanction Active' : 'Enact Sanction'}
+                    </button>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   {/snippet}
@@ -244,6 +334,9 @@
     </button>
     <button class="ticket" onclick={() => onOpenMyth?.('gas_prices')}>
       Myth? Can you lower gas prices
+    </button>
+    <button class="ticket" onclick={() => onOpenMyth?.('foreign_aid_deficit')}>
+      Myth? Does foreign aid cause the deficit
     </button>
   {/snippet}
 
@@ -665,6 +758,201 @@
     line-height: 1.25;
     color: var(--ink-soft);
     margin: 0;
+  }
+
+  /* Foreign Policy Card (FORPOL-01, FORPOL-02) */
+  .foreign-policy-card {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .forpol-header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 2px;
+  }
+
+  .forpol-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 12px;
+  }
+
+  .posture-group,
+  .sanctions-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .group-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .posture-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .posture-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 6px 10px;
+    border: 1.5px solid var(--ink);
+    border-radius: var(--r-sm);
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+    transition: background-color var(--dur-fast);
+  }
+
+  .posture-btn:hover:not(:disabled) {
+    background: var(--card);
+  }
+
+  .posture-btn.selected {
+    background: var(--card);
+    border-color: var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+    outline: 2px solid var(--gold-dark);
+  }
+
+  .posture-title {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .posture-sub {
+    font-family: var(--font-body);
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+
+  .sanctions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .sanction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border: 1.5px solid var(--ink);
+    border-radius: var(--r-sm);
+    background: var(--paper);
+  }
+
+  .sanction-item.active {
+    background: var(--card);
+    border-color: var(--alert);
+  }
+
+  .sanction-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sanction-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--ink);
+  }
+
+  .sanction-cost-pill {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--card);
+    border: 1px solid var(--ink);
+    border-radius: var(--r-sm);
+    padding: 1px 5px;
+    color: var(--ink);
+  }
+
+  .sanction-desc {
+    font-family: var(--font-body);
+    font-size: 11px;
+    line-height: 1.2;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .sanction-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    margin-top: 2px;
+  }
+
+  .fallout-chip {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: var(--r-sm);
+  }
+
+  .fallout-chip.inflation {
+    background: var(--alert-tint);
+    color: var(--alert);
+    border: 1px solid var(--alert);
+  }
+
+  .fallout-chip.gdp {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--ink);
+  }
+
+  .statutory-basis {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    color: var(--ink-soft);
+  }
+
+  .sanction-toggle-btn {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border: 1.5px solid var(--ink);
+    border-radius: var(--r-sm);
+    background: var(--card);
+    color: var(--ink);
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 1px 1px 0 var(--ink);
+  }
+
+  .sanction-toggle-btn.enacted {
+    background: var(--alert-tint);
+    color: var(--alert);
+    border-color: var(--alert);
+    font-weight: 800;
   }
 
   /* Right rail */
