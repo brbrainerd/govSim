@@ -9,8 +9,11 @@ const BANNED_POLITICIANS = [
 ];
 
 describe('civics myth cards catalog (PWR-06, OBS-05, GR-20, GR-21)', () => {
-  it('contains exactly 5 curated myth cards', () => {
-    expect(MYTHS_CATALOG).toHaveLength(5);
+  it('contains 8 curated myth cards including tax, debt ceiling, and trade myths (LEARN-02)', () => {
+    expect(MYTHS_CATALOG).toHaveLength(8);
+    expect(getMyth('supply_side_taxes')).toBeDefined();
+    expect(getMyth('debt_ceiling_default')).toBeDefined();
+    expect(getMyth('trade_deficits')).toBeDefined();
   });
 
   it('provides getMyth lookup by id', () => {

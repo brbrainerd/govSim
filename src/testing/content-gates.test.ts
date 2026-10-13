@@ -58,6 +58,7 @@ describe('content and readability gates (OBS-05, GR-24, GR-25)', () => {
       await import('../content/parties'),
       await import('../content/orders'),
       await import('../content/myths'),
+      await import('../content/explainers'),
     ];
     const rawStrings = mods.flatMap(extractStrings);
     const strings = rawStrings.filter(

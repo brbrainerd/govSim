@@ -56,12 +56,12 @@ export const EXPLAINERS_CATALOG: readonly CivicExplainer[] = [
     id: 'budget',
     title: 'How a budget becomes law',
     tag: 'ARTICLE I SECTION 9 · POWER OF THE PURSE',
-    summary: 'The President proposes a budget plan, but only Congress can tax and spend public money.',
+    summary: 'You send a budget plan, but only Congress can tax and spend public funds.',
     flowSteps: ['White House plan', 'House vote (218)', 'Senate vote (51)', 'Signed into law'],
     takeaways: [
       'Budget bills can pass the Senate with 51 votes under fast-track rules.',
-      'Tax cuts or new spending add to the deficit unless offset elsewhere.',
-      'Passing a budget on time avoids a costly government shutdown.',
+      'Tax cuts or new spending add to the debt unless paid for elsewhere.',
+      'Passing a budget on time stops a costly government shutdown.',
     ],
     citation: {
       title: 'Congressional Budget Act of 1974 (CBO Overview)',
@@ -73,12 +73,12 @@ export const EXPLAINERS_CATALOG: readonly CivicExplainer[] = [
     id: 'trade',
     title: 'How tariffs and trade work',
     tag: 'SECTION 301 & 232 · TRADE LAW',
-    summary: 'Trade laws let the President tax imports for national security or unfair foreign trade.',
+    summary: 'Trade laws let you tax imports for national defense or unfair foreign trade.',
     flowSteps: ['Import duty set', 'Border tax paid', 'Supply chain shifts', 'Partner response'],
     takeaways: [
-      'Tariffs protect home factories but raise prices on imported goods.',
-      'Trading partners often hit back with duties on American farm and tech exports.',
-      'Trade pacts lower barriers and boost export jobs at the cost of Clout.',
+      'Tariffs shield home plants but raise store prices on goods from abroad.',
+      'Trade partners often hit back with duties on our farm and tech goods.',
+      'Trade pacts cut fees and boost export jobs at the cost of Clout.',
     ],
     citation: {
       title: 'U.S. International Trade Commission: Tariff Overview',

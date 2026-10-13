@@ -7,9 +7,9 @@
 
 ### Complete Learn Loop & Interactive Explainers (LEARN)
 
-- [ ] **LEARN-01**: Replace all disabled "Coming soon" Learn strip buttons across Oval Office, Economy, and Budget with interactive "How it works" civic explainer modals that award a one-time +1 Clout curiosity bonus.
-- [ ] **LEARN-02**: Add the missing Learn strip to the Trade screen and expand the Myth card deck (`supply_side_taxes`, `debt_ceiling_default`, `trade_deficits`) with cited institutional facts.
-- [ ] **LEARN-03**: Wire Chief of Staff suggestion actions on the Oval Office (`"Decide now"` and `"Find out"`) so crisis and myth suggestions directly open the corresponding Crisis or Myth modal instead of being no-ops.
+- [x] **LEARN-01**: Replace all disabled "Coming soon" Learn strip buttons across Oval Office, Economy, and Budget with interactive "How it works" civic explainer modals that award a one-time +1 Clout curiosity bonus.
+- [x] **LEARN-02**: Add the missing Learn strip to the Trade screen and expand the Myth card deck (`supply_side_taxes`, `debt_ceiling_default`, `trade_deficits`) with cited institutional facts.
+- [x] **LEARN-03**: Wire Chief of Staff suggestion actions on the Oval Office (`"Decide now"` and `"Find out"`) so crisis and myth suggestions directly open the corresponding Crisis or Myth modal instead of being no-ops.
 
 ### Smart Advisor Plays, Auto-Whip & Live Household Budgeting (ADVISOR)
 
@@ -40,9 +40,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LEARN-01 | Phase 21 | Pending |
-| LEARN-02 | Phase 21 | Pending |
-| LEARN-03 | Phase 21 | Pending |
+| LEARN-01 | Phase 21 | Complete |
+| LEARN-02 | Phase 21 | Complete |
+| LEARN-03 | Phase 21 | Complete |
 | ADVISOR-01 | Phase 22 | Pending |
 | ADVISOR-02 | Phase 22 | Pending |
 | ADVISOR-03 | Phase 22 | Pending |

@@ -183,6 +183,12 @@ describe('dynamic briefing generator (EVT-07, OBS-05)', () => {
         expect(lower).not.toContain('democrat');
         expect(lower).not.toContain('republican');
       }
+
+      for (const s of b.suggestions) {
+        if (s.target === null) {
+          expect(Boolean(s.openCrisis || s.mythId), `Suggestion "${s.title}" has null target without openCrisis or mythId`).toBe(true);
+        }
+      }
     }
   });
 });

@@ -236,6 +236,27 @@ describe('presidential executive powers (PWR-01..PWR-07)', () => {
     expect(secondRewardLog).toBeUndefined();
   });
 
+  it('civic explainers award +1 Clout curiosity bonus exactly once per game (LEARN-01)', () => {
+    let state = newGame(12, START);
+    state = endTurn(state, {
+      powers: {
+        viewMyth: 'explainer:oval_office',
+      },
+    });
+    expect(state.viewedMyths).toContain('explainer:oval_office');
+    const rewardLog = state.report.log.find((l) => l.kind === 'myth' && l.id === 'explainer:oval_office');
+    expect(rewardLog).toBeDefined();
+    expect(rewardLog?.amount).toBe(C.explainerRewardClout);
+
+    state = endTurn(state, {
+      powers: {
+        viewMyth: 'explainer:oval_office',
+      },
+    });
+    const secondLog = state.report.log.find((l) => l.kind === 'myth' && l.id === 'explainer:oval_office');
+    expect(secondLog).toBeUndefined();
+  });
+
   it('clout stops at cloutCap so hoarding is not a viable strategy (PWR-07, GR-10)', () => {
     let state = newGame(99, START);
     // Run multiple turns doing nothing to accumulate clout from approval

@@ -14,7 +14,7 @@
 
 **Milestone Goal:** Eliminate every remaining "Coming soon" stub and disconnected UI loop, elevate day-to-day gameplay feel with one-click Advisor Plays, Congress Auto-Whip, and Fast-Forward pacing controls from `docs/design.md`, and multiply replayability with selectable starting scenarios.
 
-- [ ] **Phase 21: Complete the Learn Loop & Interactive Explainers** — Interactive "How it works" explainers (+1 Clout reward), Trade Learn strip, 3 new Myth cards, and wired Oval Office modal triggers
+- [x] **Phase 21: Complete the Learn Loop & Interactive Explainers** (3/3 plans) — completed 2026-10-13
 - [ ] **Phase 22: Smart Advisor Plays, Auto-Whip & Live Household Budgeting** — One-click Chief of Staff plays, Congress Auto-Whip cheapest coalition solver, live Household Persona binding on Budget, and policy-in-force vs baseline slider deltas
 - [ ] **Phase 23: Pacing Controls — Fast-Forward & Staged Decisions Tray** — Top-bar Staged Decisions indicator and safe "Skip to Next Event" fast-forward with automatic crisis/deadline interrupts
 - [ ] **Phase 24: Replayable Starting Scenarios** — Selectable Starting Scenarios at New Game (*2026 Baseline*, *70s Stagflation Shock*, *Debt Ceiling Brinkmanship*, *Global Trade War*) with scenario briefings and Legacy Report badges
@@ -32,7 +32,7 @@
   2. `Trade.svelte` includes a complete `{#snippet learn()}` strip, and `src/content/myths.ts` adds cited myth cards for `supply_side_taxes`, `debt_ceiling_default`, and `trade_deficits`.
   3. Clicking `"Decide now"` or `"Find out"` on Oval Office Chief of Staff suggestion cards opens the active Crisis modal or target Myth modal directly when `target` is a modal action.
 
-**Plans**: TBD
+**Plans**: 3 plans executed (completed 2026-10-13)
 
 #### Phase 22: Smart Advisor Plays, Auto-Whip & Live Household Budgeting
 
@@ -130,7 +130,7 @@ Full phase execution history and plans archived to [.planning/milestones/v0.2-RO
 | 9-12 | v0.3 | 16/16 | Complete | 2026-10-12 |
 | 13-16 | v0.4 | 16/16 | Complete | 2026-10-12 |
 | 17-20 | v0.5 | 16/16 | Complete | 2026-10-13 |
-| 21. Complete the Learn Loop & Interactive Explainers | v0.6 | 0/0 | Not started | - |
+| 21. Complete the Learn Loop & Interactive Explainers | v0.6 | 3/3 | Complete | 2026-10-13 |
 | 22. Smart Advisor Plays, Auto-Whip & Live Household Budgeting | v0.6 | 0/0 | Not started | - |
 | 23. Pacing Controls — Fast-Forward & Staged Decisions Tray | v0.6 | 0/0 | Not started | - |
 | 24. Replayable Starting Scenarios | v0.6 | 0/0 | Not started | - |

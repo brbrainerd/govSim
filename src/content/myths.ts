@@ -97,10 +97,10 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   {
     id: 'supply_side_taxes',
     title: 'Do tax cuts pay for themselves',
-    mythStatement: 'Cutting tax rates always grows the economy enough to raise tax revenue.',
-    realitySummary: 'Lower rates boost demand a bit, but they almost always reduce net federal revenue.',
-    flowSteps: ['Tax rate cut', 'Small growth lift', 'Lower tax receipts', 'Larger deficit'],
-    realLevers: ['Pair cuts with spending caps', 'Broaden the tax base', 'Invest in research'],
+    mythStatement: 'Cutting tax rates always grows the economy enough to raise tax cash.',
+    realitySummary: 'Lower rates boost growth a bit, but they still bring in less tax cash.',
+    flowSteps: ['Tax rate cut', 'Small growth lift', 'Less tax cash', 'Larger debt'],
+    realLevers: ['Pair cuts with spending caps', 'Broaden the tax base', 'Fund new research'],
     challenges: 'right',
     target: 'mechanism',
     citation: {
@@ -112,9 +112,9 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   {
     id: 'debt_ceiling_default',
     title: 'Does the debt limit add spending',
-    mythStatement: 'Raising the debt ceiling authorizes new government spending.',
-    realitySummary: 'The debt limit only lets the Treasury pay bills that Congress already passed.',
-    flowSteps: ['Congress passes laws', 'Bills come due', 'Treasury borrows', 'Obligations paid'],
+    mythStatement: 'Raising the debt limit approves new government spending.',
+    realitySummary: 'The debt limit only lets the nation pay bills that Congress already passed.',
+    flowSteps: ['Congress passes laws', 'Bills come due', 'Nation borrows', 'Past bills paid'],
     realLevers: ['Pass annual budget bills', 'Reform spending laws', 'Adjust tax rates'],
     challenges: 'left',
     target: 'institution',
@@ -127,10 +127,10 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   {
     id: 'trade_deficits',
     title: 'Do foreign nations pay tariffs',
-    mythStatement: 'Foreign governments pay the tariffs placed on their exports.',
-    realitySummary: 'American importers pay the border tax and pass most of the cost to buyers.',
-    flowSteps: ['Goods reach port', 'Importer pays duty', 'Store prices rise', 'Foreign trade hits back'],
-    realLevers: ['Target key supply chains', 'Sign trade pacts', 'Support home factories'],
+    mythStatement: 'Foreign states pay the tariffs placed on their goods.',
+    realitySummary: 'Home buyers and importers pay the border tax through higher store prices.',
+    flowSteps: ['Goods reach port', 'Buyer pays duty', 'Store prices rise', 'Partners hit back'],
+    realLevers: ['Target key supply chains', 'Sign trade pacts', 'Back home plants'],
     challenges: 'left',
     target: 'mechanism',
     citation: {
