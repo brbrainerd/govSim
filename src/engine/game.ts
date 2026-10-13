@@ -532,6 +532,15 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   g.add('luck', C.shockGap * zGap);
   for (const m of mods('gap')) g.add(m.source, m.amount);
   if (forRes && forRes.quarterlyGapDelta !== 0) g.add('forpol:sanctions', forRes.quarterlyGapDelta);
+  if (!legacyRun) {
+    for (const crisis of activeGeoCrises) {
+      if (crisis.crisisId === 'oil_embargo' || crisis.crisisId === 'shipping_blockade') {
+        g.add('geopolitical:supply', -C.geopoliticalSupplyOutputDrag);
+      } else if (crisis.crisisId === 'debt_contagion') {
+        g.add('geopolitical:supply', -C.debtContagionGdpHit);
+      }
+    }
+  }
   const gap = e.gap + g.sum;
 
   // Growth is a level: potential plus the annualized change in the gap.
@@ -561,6 +570,15 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   inf.add('luck', C.shockInfl * zInfl);
   for (const m of mods('inflation')) inf.add(m.source, m.amount);
   if (forRes && forRes.quarterlyInflationDelta !== 0) inf.add('forpol:sanctions', forRes.quarterlyInflationDelta);
+  if (!legacyRun) {
+    for (const crisis of activeGeoCrises) {
+      if (crisis.crisisId === 'oil_embargo') {
+        inf.add('geopolitical:energy', C.geopoliticalEnergyInflation);
+      } else if (crisis.crisisId === 'shipping_blockade') {
+        inf.add('geopolitical:shipping', C.geopoliticalShippingInflation);
+      }
+    }
+  }
   const inflation = inf.clamp(e.inflation + inf.sum, ...LIMITS.inflation.bounds);
   const ex = new Ledger();
   ex.add('prices', C.expectAdapt * (inflation - e.expected));

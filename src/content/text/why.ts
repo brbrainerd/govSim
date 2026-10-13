@@ -68,6 +68,11 @@ export const WHY_COPY: Record<string, string> = {
   'clout:reform': 'Effort spent on reform rules',
   'trust:reform': 'Public trust from rule changes',
   'approval:reform': 'Voter views on rule changes',
+  'forpol:sanctions': 'Trade sanctions on foreign targets',
+  'forpol:budget': 'Defense and foreign aid funding',
+  'geopolitical:energy': 'Global oil and energy shock',
+  'geopolitical:shipping': 'Shipping lane trade block',
+  'geopolitical:supply': 'Foreign supply chain delay',
 };
 
 /** Plain-language description of an engine trace source key (GR-06). */
@@ -83,6 +88,12 @@ export function whyText(sourceId: string): string {
   }
   if (sourceId.startsWith('law:')) {
     return 'Passed legislation in force';
+  }
+  if (sourceId.startsWith('forpol:')) {
+    return 'Foreign policy decisions';
+  }
+  if (sourceId.startsWith('geopolitical:')) {
+    return 'International crisis disruption';
   }
   return 'Several small factors';
 }
