@@ -1,0 +1,48 @@
+{
+  "format": "govsim",
+  "v": 1,
+  "engine": "0.2",
+  "seed": 42,
+  "start": {
+    "gdp": 32.563,
+    "potential": 1.8,
+    "unemployment": 4.2,
+    "empPop": 59.2,
+    "inflation": 3.4,
+    "fedRate": 4,
+    "medianIncome": 87460,
+    "gini": 0.49,
+    "lifeExp": 79,
+    "debtPct": 101,
+    "deficitPct": 6.111230537726867,
+    "tariff": 11,
+    "trust": 17,
+    "crime": 327.6
+  },
+  "options": {
+    "party": "D"
+  },
+  "inputs": [
+    {
+      "bill": {
+        "budget": {
+          "bus": 23
+        },
+        "deals": []
+      }
+    },
+    {},
+    {
+      "bill": {
+        "budget": {
+          "bus": 23,
+          "rds": 120
+        },
+        "deals": [
+          "mod"
+        ]
+      }
+    }
+  ],
+  "check": "0856695f47dfdc"
+}

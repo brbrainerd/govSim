@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Session } from '../app/session.svelte';
   import { downloadSave } from '../app/save';
+  import { createShareUrl } from '../app/share';
   import {
     classifyHistorianVerdict,
     simulateTenYearLegacy,
@@ -23,6 +24,29 @@
   let activeTab = $state<TabId>('overview');
   let activeIndicator = $state<IndicatorId>('gdpGrowth');
   let showTable = $state(false);
+
+  let shareStatus = $state<'idle' | 'copied' | 'error'>('idle');
+  let shareUrl = $state<string>('');
+  let shareInputVisible = $state<boolean>(false);
+
+  async function handleShare() {
+    try {
+      const url = await createShareUrl(session);
+      shareUrl = url;
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        shareStatus = 'copied';
+        setTimeout(() => {
+          shareStatus = 'idle';
+        }, 2500);
+      } else {
+        shareInputVisible = true;
+      }
+    } catch {
+      shareInputVisible = true;
+      shareStatus = 'error';
+    }
+  }
 
   const autoFinal = $derived(session.autopilot[session.autopilot.length - 1]!);
   const legacyData = $derived(simulateTenYearLegacy(session.current, autoFinal));
@@ -435,6 +459,29 @@
             >
               RETRY FROM TURN 16
             </button>
+          {/if}
+
+          <button
+            type="button"
+            class="share-btn"
+            class:copied={shareStatus === 'copied'}
+            data-testid="share-record-btn"
+            onclick={handleShare}
+          >
+            {shareStatus === 'copied' ? 'COPIED REPLAY LINK!' : 'SHARE PRESIDENTIAL RECORD'}
+          </button>
+
+          {#if shareInputVisible && shareUrl}
+            <div class="share-fallback">
+              <input
+                type="text"
+                readonly
+                value={shareUrl}
+                class="share-input"
+                data-testid="share-url-input"
+                onclick={(e) => (e.currentTarget as HTMLInputElement).select()}
+              />
+            </div>
           {/if}
 
           <button
@@ -864,7 +911,7 @@
     text-transform: uppercase;
   }
 
-  .retry-btn, .export-btn {
+  .retry-btn, .export-btn, .share-btn {
     padding: 10px 14px;
     background: var(--card);
     color: var(--ink);
@@ -874,6 +921,30 @@
     letter-spacing: 0.04em;
     cursor: pointer;
     text-transform: uppercase;
+    transition: background 0.15s ease;
+  }
+
+  .share-btn {
+    background: var(--gold-soft);
+  }
+
+  .share-btn.copied {
+    background: var(--sage);
+    color: var(--paper);
+  }
+
+  .share-fallback {
+    margin-top: 4px;
+  }
+
+  .share-input {
+    width: 100%;
+    padding: 6px 8px;
+    font: 500 11px monospace;
+    border: 1.5px solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    box-sizing: border-box;
   }
 
   .badges-grid {

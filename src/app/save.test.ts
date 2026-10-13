@@ -1,3 +1,4 @@
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { fromData, us } from '../data/us';
 import { endTurn, newGame, type Decisions } from '../engine/game';
@@ -179,5 +180,34 @@ describe('save system and trust boundary (OBS-01, OBS-02, GR-31, GR-34)', () => 
 
     clearAutosave(storage);
     expect(loadAutosave(storage)).toBeNull();
+  });
+
+  it('validates v: 1 frozen compatibility fixture (GR-33)', () => {
+    let state = newGame(seed, start);
+    const inputs: Decisions[] = [
+      { bill: { budget: { bus: 23 }, deals: [] } },
+      {},
+      { bill: { budget: { bus: 23, rds: 120 }, deals: ['mod'] } },
+    ];
+    for (const input of inputs) {
+      state = endTurn(state, input);
+    }
+    const sessionLike = {
+      current: state,
+      options: { party: 'D' as const },
+      inputs,
+    };
+    const json = serializeSave(sessionLike);
+    const fixturePath = 'tests/fixtures/v1-save.json';
+    if (!existsSync(fixturePath)) {
+      writeFileSync(fixturePath, json, 'utf8');
+    }
+    const fixtureContent = readFileSync(fixturePath, 'utf8');
+    const parsed = parseSave(fixtureContent);
+    expect(parsed.format).toBe('govsim');
+    expect(parsed.v).toBe(1);
+    expect(parsed.engine).toBe('0.2');
+    const replayed = replaySave(parsed);
+    expect(stableHash(replayed)).toBe(parsed.check);
   });
 });

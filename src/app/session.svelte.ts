@@ -141,19 +141,73 @@ export class Session {
   static fromSave(save: SaveFile): Session {
     const s = new Session(save.seed, save.start, save.options);
     for (const input of save.inputs) {
+      if (s.current.turn === 16) {
+        s.turn16Snapshot = s.current;
+        const party = (s.options.party === 'R' ? 'R' : 'D') as 'D' | 'R';
+        const outcome = resolveReelection(s.current, party);
+        const autoOutcome = resolveReelection(s.autopilot[s.autopilot.length - 1]!, party);
+        const reasons = extractElectionReasons(s.current, outcome, party);
+        s.activeElectionOutcome = outcome;
+        s.activeAutopilotElectionOutcome = autoOutcome;
+        s.electionReasons = reasons;
+        s.reelectionWon = outcome.winner === 'player';
+      }
       const next = endTurn(s.current, input);
       s.history = [...s.history, next];
       const autoLast = s.autopilot[s.autopilot.length - 1]!;
       s.autopilot = [...s.autopilot, endTurn(autoLast, autopilotDecisions(autoLast))];
       s.inputs = [...s.inputs, input];
       s.draft = freshDraft(next.policy);
-      for (const id of evaluateBadges(next, s.history)) {
+      const meta = {
+        reelectionEV: s.activeElectionOutcome?.playerEV,
+        score: s.score.total,
+      };
+      for (const id of evaluateBadges(next, s.history, meta)) {
         if (!s.unlockedBadges.includes(id)) {
           s.unlockedBadges.push(id);
         }
       }
+      if (next.turn >= TOTAL_TURNS) {
+        s.termEnded = true;
+      }
     }
     storeAutosave(s);
+    return s;
+  }
+
+  static fromRun(run: { seed: number; party: 'D' | 'R'; inputs: readonly Decisions[] }, start: Start): Session {
+    const s = new Session(run.seed, start, { party: run.party });
+    for (const input of run.inputs) {
+      if (s.current.turn === 16) {
+        s.turn16Snapshot = s.current;
+        const party = (s.options.party === 'R' ? 'R' : 'D') as 'D' | 'R';
+        const outcome = resolveReelection(s.current, party);
+        const autoOutcome = resolveReelection(s.autopilot[s.autopilot.length - 1]!, party);
+        const reasons = extractElectionReasons(s.current, outcome, party);
+        s.activeElectionOutcome = outcome;
+        s.activeAutopilotElectionOutcome = autoOutcome;
+        s.electionReasons = reasons;
+        s.reelectionWon = outcome.winner === 'player';
+      }
+      const next = endTurn(s.current, input);
+      s.history = [...s.history, next];
+      const autoLast = s.autopilot[s.autopilot.length - 1]!;
+      s.autopilot = [...s.autopilot, endTurn(autoLast, autopilotDecisions(autoLast))];
+      s.inputs = [...s.inputs, input];
+      s.draft = freshDraft(next.policy);
+      const meta = {
+        reelectionEV: s.activeElectionOutcome?.playerEV,
+        score: s.score.total,
+      };
+      for (const id of evaluateBadges(next, s.history, meta)) {
+        if (!s.unlockedBadges.includes(id)) {
+          s.unlockedBadges.push(id);
+        }
+      }
+      if (next.turn >= TOTAL_TURNS) {
+        s.termEnded = true;
+      }
+    }
     return s;
   }
 

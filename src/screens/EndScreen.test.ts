@@ -103,4 +103,19 @@ describe('EndScreen component (ELC-04, ELC-05, GR-04)', () => {
     expect(html).toContain('data-testid="tab-milestones"');
     expect(html).toContain('Milestones');
   });
+
+  it('renders Share Presidential Record button (REL-03)', () => {
+    const session = new Session(42, START, { party: 'D' });
+    session.termEnded = true;
+
+    const { html } = render(EndScreen, {
+      props: {
+        session,
+        onRestart: () => {},
+      },
+    });
+
+    expect(html).toContain('data-testid="share-record-btn"');
+    expect(html).toContain('SHARE PRESIDENTIAL RECORD');
+  });
 });
