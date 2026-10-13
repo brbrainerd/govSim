@@ -7,7 +7,7 @@ describe('screen registry', () => {
   it('groups the rail Home → See → Act and unlocks over year 1', () => {
     const nav = navFor(1);
     expect(nav.map((g) => g.label)).toEqual(['Home', 'See', 'Act']);
-    expect(nav.flatMap((g) => g.screens.filter((s) => s.locked).map((s) => s.id))).toEqual(['voters', 'powers']);
+    expect(nav.flatMap((g) => g.screens.filter((s) => s.locked).map((s) => s.id))).toEqual(['voters', 'powers', 'trade']);
     expect(navFor(3).flatMap((g) => g.screens).every((s) => !s.locked)).toBe(true);
     expect(navFor(1, true).flatMap((g) => g.screens).every((s) => !s.locked)).toBe(true);
   });

@@ -1,5 +1,5 @@
 // The one icon set (design.md §10): names used by the registry map to Lucide components here.
-import { Banknote, Download, Info, Landmark, PenLine, Star, TrendingUp, Upload, Users } from '@lucide/svelte';
+import { Banknote, Download, Globe, Info, Landmark, PenLine, Star, TrendingUp, Upload, Users } from '@lucide/svelte';
 
 export const icons = {
   star: Star,
@@ -11,5 +11,6 @@ export const icons = {
   download: Download,
   upload: Upload,
   info: Info,
+  globe: Globe,
 };
 export type IconName = keyof typeof icons;

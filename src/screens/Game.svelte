@@ -8,6 +8,7 @@
   import Economy from './Economy.svelte';
   import OvalOffice from './OvalOffice.svelte';
   import Powers from './Powers.svelte';
+  import Trade from './Trade.svelte';
   import Voters from './Voters.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import StatusBar from '../ui/StatusBar.svelte';
@@ -107,6 +108,12 @@
           onOpenMyth={(id) => (activeMythId = id)}
           onOpenSpeech={() => (speechModalOpen = true)}
           onOpenFed={() => (fedModalOpen = true)}
+        />
+      {:else if screen.id === 'trade'}
+        <Trade
+          {session}
+          question={screen.question}
+          {go}
         />
       {:else}
         <Voters

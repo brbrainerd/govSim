@@ -17,6 +17,7 @@ export const screens = [
   { id: 'budget', label: 'Budget', icon: 'money', group: 'act', unlockTurn: 1, question: 'How should we tax and spend?' },
   { id: 'congress', label: 'Congress', icon: 'capitol', group: 'act', unlockTurn: 1, question: 'Can we pass the bill?' },
   { id: 'powers', label: 'Your Powers', icon: 'pen', group: 'act', unlockTurn: 2, question: 'What can you do without Congress?' },
+  { id: 'trade', label: 'Trade & Tariffs', icon: 'globe', group: 'act', unlockTurn: 2, question: 'How should America trade with the world?' },
 ] as const satisfies readonly { id: string; label: string; icon: IconName; group: GroupId; unlockTurn: number; question: string }[];
 
 export type Screen = (typeof screens)[number];

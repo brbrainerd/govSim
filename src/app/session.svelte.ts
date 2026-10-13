@@ -23,6 +23,16 @@ import {
   type HouseholdPersona,
 } from '../engine/household';
 import type { DefensePosture, ForeignPolicyDraft, ForeignPolicyState, SanctionType } from '../engine/foreign';
+import {
+  SECTOR_TARIFFS_CATALOG,
+  TRADE_AGREEMENTS_CATALOG,
+  calculateTradeBalance,
+  type SectorTariffId,
+  type TradeAgreementId,
+  type TradeBalanceSummary,
+  type TradeDraft,
+  type TradeState,
+} from '../engine/trade';
 
 /** Choices made at New Game. Kept beside the engine state, never inside it (D4). */
 export interface GameOptions {
@@ -49,6 +59,8 @@ interface Draft {
   defensePosture: DefensePosture | null;
   foreignAssistance: number | null;
   activeSanctions: SanctionType[] | null;
+  sectorTariffs: SectorTariffId[] | null;
+  tradeAgreements: TradeAgreementId[] | null;
 }
 
 /** A new turn's draft starts from the policy already in force. */
@@ -72,6 +84,8 @@ const freshDraft = (policy: BudgetDraft, socialPolicy?: SocialDraft): Draft => (
   defensePosture: null,
   foreignAssistance: null,
   activeSanctions: null,
+  sectorTariffs: null,
+  tradeAgreements: null,
 });
 
 /**
@@ -175,18 +189,42 @@ export class Session {
     }
     return cost;
   });
+  tradeCost = $derived.by(() => {
+    let cost = 0;
+    if (this.draft.tradeAgreements) {
+      const currentSet = new Set(this.current.trade?.agreements ?? []);
+      for (const a of this.draft.tradeAgreements) {
+        if (!currentSet.has(a)) {
+          const def = TRADE_AGREEMENTS_CATALOG.find((p) => p.id === a);
+          if (def) cost += def.cloutCost;
+        }
+      }
+    }
+    return cost;
+  });
   effectiveForeignPolicy = $derived<ForeignPolicyState>({
     defensePosture: this.draft.defensePosture ?? this.current.foreignPolicy?.defensePosture ?? 'standard',
     foreignAssistance: this.draft.foreignAssistance ?? this.current.foreignPolicy?.foreignAssistance ?? 100,
     activeSanctions: this.draft.activeSanctions ?? this.current.foreignPolicy?.activeSanctions ?? [],
   });
+  effectiveTrade = $derived<TradeState>({
+    sectorTariffs: this.draft.sectorTariffs ?? this.current.trade?.sectorTariffs ?? [],
+    agreements: this.draft.tradeAgreements ?? this.current.trade?.agreements ?? [],
+  });
+  tradeBalance = $derived<TradeBalanceSummary>(
+    calculateTradeBalance(
+      this.draft.budget.tar ?? this.current.policy.tar ?? 11,
+      this.effectiveTrade,
+      this.current.econ.gdp,
+    ),
+  );
   mythReward = $derived(
     this.draft.viewMyth && !this.current.viewedMyths.includes(this.draft.viewMyth)
       ? C.mythRewardClout
       : 0,
   );
   clout = $derived(
-    this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost - this.reformCost - this.foreignCost + this.mythReward,
+    this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost - this.reformCost - this.foreignCost - this.tradeCost + this.mythReward,
   );
   powers = $derived<PowerDecisions | null>(
     this.draft.signedOrders.length > 0 ||
@@ -434,6 +472,30 @@ export class Session {
     }
   }
 
+  toggleSectorTariff(id: SectorTariffId) {
+    if (this.over) return;
+    const currentList = this.draft.sectorTariffs ?? [...(this.current.trade?.sectorTariffs ?? [])];
+    if (currentList.includes(id)) {
+      this.draft.sectorTariffs = currentList.filter((s) => s !== id);
+    } else {
+      this.draft.sectorTariffs = [...currentList, id];
+    }
+  }
+
+  toggleTradeAgreement(id: TradeAgreementId) {
+    if (this.over) return;
+    const currentList = this.draft.tradeAgreements ?? [...(this.current.trade?.agreements ?? [])];
+    if (currentList.includes(id)) {
+      this.draft.tradeAgreements = currentList.filter((a) => a !== id);
+    } else {
+      const def = TRADE_AGREEMENTS_CATALOG.find((p) => p.id === id);
+      const cost = def ? def.cloutCost : 0;
+      if (this.clout >= cost) {
+        this.draft.tradeAgreements = [...currentList, id];
+      }
+    }
+  }
+
   nextTurn() {
     if (this.termEnded || this.over) return;
 
@@ -474,6 +536,16 @@ export class Session {
         : undefined;
     if (foreignPolicy) {
       decisions.foreignPolicy = foreignPolicy;
+    }
+    const tradeDraft: TradeDraft | undefined =
+      this.draft.sectorTariffs !== null || this.draft.tradeAgreements !== null
+        ? {
+            ...(this.draft.sectorTariffs !== null ? { sectorTariffs: $state.snapshot(this.draft.sectorTariffs) } : {}),
+            ...(this.draft.tradeAgreements !== null ? { agreements: $state.snapshot(this.draft.tradeAgreements) } : {}),
+          }
+        : undefined;
+    if (tradeDraft) {
+      decisions.trade = tradeDraft;
     }
     decisions.presidentialSide = (this.options.party === 'R' ? 'R' : 'D') as 'D' | 'R';
 
