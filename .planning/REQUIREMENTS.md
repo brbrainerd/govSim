@@ -33,7 +33,7 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 
 - [x] **RPT-01**: After each turn the player sees a report card: 8 indicators plus approval and clout, each with value, unit, arrow, word and top cause, plus luck and "vs doing nothing"
 - [x] **RPT-02**: The headline score everywhere is the projected final score (same function as the end screen), with "Now" and "In 10 years" underneath
-- [ ] **RPT-03**: Player earns about 12 badges for reaching real policy milestones
+- [x] **RPT-03**: Player earns about 12 badges for reaching real policy milestones
 - [x] **RPT-04**: The report card names 1–2 effects the player didn't see coming, with their causes
 - [x] **ECO-01**: Economy screen charts you vs doing nothing for growth, jobs, prices and debt plus all 8 scores, each with a table fallback
 - [x] **ECO-02**: Economy screen shows the Fed rate with a plain explanation of why the Fed moved and a "why it's happening" panel from the engine trace
@@ -50,37 +50,37 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 
 ### Your Powers
 
-- [ ] **PWR-01**: Player can sign or revoke about 10 cited executive orders, each showing clout cost and a court-risk band
-- [ ] **PWR-02**: Challenged orders get a named court ruling 1–3 turns later, decided by a keyed draw against a 6–3 court
-- [ ] **PWR-03**: Player can nominate a Fed chair when the seat opens (Senate confirmation threshold) and can pressure the Fed at a credibility cost
-- [ ] **PWR-04**: Player can nominate a justice when a Supreme Court seat opens
-- [ ] **PWR-05**: Player can give a speech to a chosen audience, with diminishing returns
-- [ ] **PWR-06**: Player can open 5 spectrum-balanced, cited myth cards; the first visit to each gives a small reward
-- [ ] **PWR-07**: Clout has a cap so hoarding is not a strategy
+- [x] **PWR-01**: Player can sign or revoke about 10 cited executive orders, each showing clout cost and a court-risk band
+- [x] **PWR-02**: Challenged orders get a named court ruling 1–3 turns later, decided by a keyed draw against a 6–3 court
+- [x] **PWR-03**: Player can nominate a Fed chair when the seat opens (Senate confirmation threshold) and can pressure the Fed at a credibility cost
+- [x] **PWR-04**: Player can nominate a justice when a Supreme Court seat opens
+- [x] **PWR-05**: Player can give a speech to a chosen audience, with diminishing returns
+- [x] **PWR-06**: Player can open 5 spectrum-balanced, cited myth cards; the first visit to each gives a small reward
+- [x] **PWR-07**: Clout has a cap so hoarding is not a strategy
 
 ### Voters & Electoral College
 
-- [ ] **VOT-01**: Voters screen shows a map of the 50 states plus DC and the Maine/Nebraska districts in player-relative colours, keyboard-focusable, with a sortable table fallback
-- [ ] **VOT-02**: Player can open a state to see support, change, electoral votes and reasons; swing states and the tipping-point state are listed
-- [ ] **VOT-03**: An Electoral College bar to 270 shows the current projection, with an honest range from about Year 3
-- [ ] **VOT-04**: Both parties start with equal reelection odds (within 5 points over 300 seeds)
-- [ ] **VOT-05**: Midterms at Year 2 and Year 6 change House and Senate seats from approval, with a bounded penalty
-- [ ] **VOT-06**: Data adds sourced Maine/Nebraska district margins, per-state House delegations and per-state exposure (farm, manufacturing, energy)
+- [x] **VOT-01**: Voters screen shows a map of the 50 states plus DC and the Maine/Nebraska districts in player-relative colours, keyboard-focusable, with a sortable table fallback
+- [x] **VOT-02**: Player can open a state to see support, change, electoral votes and reasons; swing states and the tipping-point state are listed
+- [x] **VOT-03**: An Electoral College bar to 270 shows the current projection, with an honest range from about Year 3
+- [x] **VOT-04**: Both parties start with equal reelection odds (within 5 points over 300 seeds)
+- [x] **VOT-05**: Midterms at Year 2 and Year 6 change House and Senate seats from approval, with a bounded penalty
+- [x] **VOT-06**: Data adds sourced Maine/Nebraska district margins, per-state House delegations and per-state exposure (farm, manufacturing, energy)
 
 ### Election & end of term
 
-- [ ] **ELC-01**: Reelection at the end of Year 4 is decided by the Electoral College, including a House contingent election on a tie; autopilot's own result is shown
-- [ ] **ELC-02**: Election night reveal is skippable and has a reduced-motion version
-- [ ] **ELC-03**: After the result, a why-you-won/lost card from the engine trace, with retry from the start of the turn
-- [ ] **ELC-04**: Winning continues to a second term ending at turn 32; losing goes to the end screen
-- [ ] **ELC-05**: End screen shows the score vs doing nothing, the 10-year legacy and a historian verdict tier
+- [x] **ELC-01**: Reelection at the end of Year 4 is decided by the Electoral College, including a House contingent election on a tie; autopilot's own result is shown
+- [x] **ELC-02**: Election night reveal is skippable and has a reduced-motion version
+- [x] **ELC-03**: After the result, a why-you-won/lost card from the engine trace, with retry from the start of the turn
+- [x] **ELC-04**: Winning continues to a second term ending at turn 32; losing goes to the end screen
+- [x] **ELC-05**: End screen shows the score vs doing nothing, the 10-year legacy and a historian verdict tier
 
 ### Release & distribution
 
 - [x] **REL-01**: Repo has LICENSE (MIT), LICENSE-ASSETS (CC BY 4.0), TRADEMARKS.md, CONTRIBUTING.md with DCO, and generated third-party notices
-- [ ] **REL-02**: Player can open an About / Privacy / Credits screen; PRIVACY.md states that nothing is collected and what server logs exist
-- [ ] **REL-03**: Player can copy a share-your-run code that replays their game for someone else
-- [ ] **REL-04**: Player can copy a "report a problem" bundle (local error log + run code) after seeing its contents; nothing is sent automatically
+- [x] **REL-02**: Player can open an About / Privacy / Credits screen; PRIVACY.md states that nothing is collected and what server logs exist
+- [x] **REL-03**: Player can copy a share-your-run code that replays their game for someone else
+- [x] **REL-04**: Player can copy a "report a problem" bundle (local error log + run code) after seeing its contents; nothing is sent automatically
 - [x] **REL-05**: Pushing to main builds a Docker image (static app + `/api/health`) to GHCR and, after CI is green, auto-promotes it to Coolify on Hetzner by SHA with health verification and rollback
 - [x] **REL-06**: Large assets are served from Cloudflare R2 and allowed by the CSP; the site lives on a private subdomain until a public link is shared
 
@@ -126,41 +126,41 @@ Decisions applied (research/SUMMARY.md): D1 term-relative calendar · D2 exogeno
 | OBS-06 | Phase 2 | Complete |
 | OBS-07 | Phase 2 | Complete |
 | OBS-08 | Phase 2 | Complete |
-| RPT-01 | Phase 3 | Pending |
-| RPT-02 | Phase 3 | Pending |
-| RPT-03 | Phase 8 | Pending |
-| RPT-04 | Phase 4 | Pending |
-| ECO-01 | Phase 3 | Pending |
-| ECO-02 | Phase 3 | Pending |
-| EVT-01 | Phase 4 | Pending |
-| EVT-02 | Phase 4 | Pending |
-| EVT-03 | Phase 4 | Pending |
-| EVT-04 | Phase 4 | Pending |
-| EVT-05 | Phase 4 | Pending |
-| EVT-06 | Phase 4 | Pending |
-| EVT-07 | Phase 4 | Pending |
-| PWR-01 | Phase 5 | Pending |
-| PWR-02 | Phase 5 | Pending |
-| PWR-03 | Phase 5 | Pending |
-| PWR-04 | Phase 5 | Pending |
-| PWR-05 | Phase 5 | Pending |
-| PWR-06 | Phase 5 | Pending |
-| PWR-07 | Phase 5 | Pending |
-| VOT-01 | Phase 6 | Pending |
-| VOT-02 | Phase 6 | Pending |
-| VOT-03 | Phase 6 | Pending |
-| VOT-04 | Phase 6 | Pending |
-| VOT-05 | Phase 6 | Pending |
-| VOT-06 | Phase 6 | Pending |
-| ELC-01 | Phase 7 | Pending |
-| ELC-02 | Phase 7 | Pending |
-| ELC-03 | Phase 7 | Pending |
-| ELC-04 | Phase 7 | Pending |
-| ELC-05 | Phase 7 | Pending |
+| RPT-01 | Phase 3 | Complete |
+| RPT-02 | Phase 3 | Complete |
+| RPT-03 | Phase 8 | Complete |
+| RPT-04 | Phase 4 | Complete |
+| ECO-01 | Phase 3 | Complete |
+| ECO-02 | Phase 3 | Complete |
+| EVT-01 | Phase 4 | Complete |
+| EVT-02 | Phase 4 | Complete |
+| EVT-03 | Phase 4 | Complete |
+| EVT-04 | Phase 4 | Complete |
+| EVT-05 | Phase 4 | Complete |
+| EVT-06 | Phase 4 | Complete |
+| EVT-07 | Phase 4 | Complete |
+| PWR-01 | Phase 5 | Complete |
+| PWR-02 | Phase 5 | Complete |
+| PWR-03 | Phase 5 | Complete |
+| PWR-04 | Phase 5 | Complete |
+| PWR-05 | Phase 5 | Complete |
+| PWR-06 | Phase 5 | Complete |
+| PWR-07 | Phase 5 | Complete |
+| VOT-01 | Phase 6 | Complete |
+| VOT-02 | Phase 6 | Complete |
+| VOT-03 | Phase 6 | Complete |
+| VOT-04 | Phase 6 | Complete |
+| VOT-05 | Phase 6 | Complete |
+| VOT-06 | Phase 6 | Complete |
+| ELC-01 | Phase 7 | Complete |
+| ELC-02 | Phase 7 | Complete |
+| ELC-03 | Phase 7 | Complete |
+| ELC-04 | Phase 7 | Complete |
+| ELC-05 | Phase 7 | Complete |
 | REL-01 | Phase 1 | Complete |
-| REL-02 | Phase 8 | Pending |
-| REL-03 | Phase 8 | Pending |
-| REL-04 | Phase 8 | Pending |
+| REL-02 | Phase 8 | Complete |
+| REL-03 | Phase 8 | Complete |
+| REL-04 | Phase 8 | Complete |
 | REL-05 | Phase 2 | Complete |
 | REL-06 | Phase 2 | Complete |
 
