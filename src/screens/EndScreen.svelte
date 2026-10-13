@@ -7,6 +7,9 @@
     simulateTenYearLegacy,
     type QuarterlyLegacyPoint,
   } from '../engine/election';
+  import { classifyKleptocratVerdict } from '../engine/evil-endgame';
+  import { getEvilLever } from '../data/evil';
+  import type { EvilLeverId } from '../engine/units';
   import { BADGES } from '../content/badges';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
@@ -18,7 +21,7 @@
     onRestart?: () => void;
   } = $props();
 
-  type TabId = 'overview' | 'economy' | 'legislation' | 'voters' | 'milestones';
+  type TabId = 'overview' | 'economy' | 'legislation' | 'voters' | 'milestones' | 'extraction';
   type IndicatorId = 'gdpGrowth' | 'debtPct' | 'unemployment' | 'inflation';
 
   let activeTab = $state<TabId>('overview');
@@ -51,6 +54,30 @@
   const autoFinal = $derived(session.autopilot[session.autopilot.length - 1]!);
   const legacyData = $derived(simulateTenYearLegacy(session.current, autoFinal));
   const verdict = $derived(classifyHistorianVerdict(legacyData.scoreVsAutopilot));
+  const evilVerdict = $derived(
+    session.isEvilMode
+      ? classifyKleptocratVerdict({
+          state: session.current,
+          reelectionLost: !session.reelectionWon && session.current.turn >= 16 && !session.current.evil?.convicted,
+        })
+      : null,
+  );
+
+  const allEnactedEvilLevers = $derived.by(() => {
+    if (!session.isEvilMode) return [];
+    const leverCounts = new Map<EvilLeverId, number>();
+    for (const input of session.inputs) {
+      if (input.evil?.enactedLevers) {
+        for (const id of input.evil.enactedLevers) {
+          leverCounts.set(id, (leverCounts.get(id) ?? 0) + 1);
+        }
+      }
+    }
+    return Array.from(leverCounts.entries()).map(([id, count]) => ({
+      lever: getEvilLever(id)!,
+      count,
+    }));
+  });
 
   const yearsCompleted = $derived(session.history.length > 16 ? 8 : 4);
   const totalTurnsPlayed = $derived(session.history.length);
@@ -121,22 +148,37 @@
   <!-- Zone 1: Status (Top Bar) -->
   <header class="end-header">
     <div class="header-left">
-      <span class="presidency-title">PRESIDENTIAL LEGACY REVIEW</span>
-      <span class="term-badge">{yearsCompleted} Years Completed</span>
+      <span class="presidency-title">{session.isEvilMode ? 'KLEPTOCRATIC HEIST REVIEW' : 'PRESIDENTIAL LEGACY REVIEW'}</span>
+      <span class="term-badge">{session.current.evil?.convicted ? 'Term Terminated (Convicted)' : `${yearsCompleted} Years Completed`}</span>
     </div>
     <div class="header-stats">
-      <div class="stat-pill">
-        <span class="stat-lbl">Final Approval</span>
-        <span class="stat-num">{session.current.approval}%</span>
-      </div>
-      <div class="stat-pill">
-        <span class="stat-lbl">Final Clout</span>
-        <span class="stat-num">{session.clout}</span>
-      </div>
-      <div class="score-pill">
-        <span class="stat-lbl">Score vs Doing Nothing</span>
-        <span class="stat-num highlight" data-testid="headline-score">{formatDelta(legacyData.scoreVsAutopilot.total)}</span>
-      </div>
+      {#if session.isEvilMode}
+        <div class="stat-pill" data-testid="end-offshore-stash">
+          <span class="stat-lbl">Offshore Stash</span>
+          <span class="stat-num evil-gold">${(session.current.evil?.offshoreStashBn ?? 0).toFixed(1)}B</span>
+        </div>
+        <div class="stat-pill" data-testid="end-heat-meter">
+          <span class="stat-lbl">Final Heat</span>
+          <span class="stat-num">{Math.round(session.current.evil?.heat ?? 0)}/100</span>
+        </div>
+        <div class="score-pill">
+          <span class="stat-lbl">Heist Outcome</span>
+          <span class="stat-num highlight" data-testid="headline-score">{evilVerdict?.tier ?? 'Kleptocrat'}</span>
+        </div>
+      {:else}
+        <div class="stat-pill">
+          <span class="stat-lbl">Final Approval</span>
+          <span class="stat-num">{session.current.approval}%</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-lbl">Final Clout</span>
+          <span class="stat-num">{session.clout}</span>
+        </div>
+        <div class="score-pill">
+          <span class="stat-lbl">Score vs Doing Nothing</span>
+          <span class="stat-num highlight" data-testid="headline-score">{formatDelta(legacyData.scoreVsAutopilot.total)}</span>
+        </div>
+      {/if}
     </div>
   </header>
 
@@ -144,6 +186,17 @@
     <!-- Zone 2: Where (Left Navigation) -->
     <nav class="end-nav" aria-label="Presidential Record Sections">
       <span class="nav-heading">Presidential Record</span>
+      {#if session.isEvilMode}
+        <button
+          type="button"
+          class="nav-tab evil-nav-tab"
+          class:active={activeTab === 'extraction'}
+          onclick={() => (activeTab = 'extraction')}
+          data-testid="tab-extraction"
+        >
+          <span>Extraction Ledger</span>
+        </button>
+      {/if}
       <button
         type="button"
         class="nav-tab"
@@ -188,28 +241,85 @@
     </nav>
 
     <!-- Zone 3 & 4: What (Main) & Next Step -->
-    <ScreenLayout question="What is your lasting legacy?">
+    <ScreenLayout question={session.isEvilMode ? "What became of your plunder?" : "What is your lasting legacy?"}>
       {#snippet main()}
         <!-- Headline score breakdown -->
-        <div class="score-card card">
-          <div class="score-main">
-            <span class="score-lead">Net Prosperity Impact</span>
-            <span class="score-value">{formatDelta(legacyData.scoreVsAutopilot.total)}</span>
-            <span class="score-tagline">better than doing nothing across 10 years</span>
-          </div>
-          <div class="score-components">
-            <div class="score-comp">
-              <span class="comp-label">At Term End</span>
-              <span class="comp-val">{formatDelta(legacyData.scoreVsAutopilot.now)}</span>
+        {#if session.isEvilMode}
+          {@const isConvicted = Boolean(session.current.evil?.convicted)}
+          {@const stash = session.current.evil?.offshoreStashBn ?? 0}
+          <div class="score-card card evil-score-card" data-testid="evil-score-card">
+            <div class="score-main">
+              <span class="score-lead">{isConvicted ? 'Asset Seizure & Forfeiture' : 'Total Offshore Loot Siphoned'}</span>
+              <span class="score-value evil-gold">${stash.toFixed(1)}B</span>
+              <span class="score-tagline">
+                {isConvicted
+                  ? 'All corrupt kickbacks forfeited to the federal judiciary upon Senate conviction'
+                  : 'Laundered into numbered accounts across non-extradition offshore jurisdictions'}
+              </span>
             </div>
-            <div class="score-comp">
-              <span class="comp-label">10-Year Echo</span>
-              <span class="comp-val">{formatDelta(legacyData.scoreVsAutopilot.later)}</span>
+            <div class="score-components">
+              <div class="score-comp">
+                <span class="comp-label">Investigation Heat</span>
+                <span class="comp-val">{Math.round(session.current.evil?.heat ?? 0)}/100</span>
+              </div>
+              <div class="score-comp">
+                <span class="comp-label">Senate Trial Votes</span>
+                <span class="comp-val">{session.current.evil?.senateConvictionVotes ?? 0}/100</span>
+              </div>
             </div>
           </div>
-        </div>
+        {:else}
+          <div class="score-card card">
+            <div class="score-main">
+              <span class="score-lead">Net Prosperity Impact</span>
+              <span class="score-value">{formatDelta(legacyData.scoreVsAutopilot.total)}</span>
+              <span class="score-tagline">better than doing nothing across 10 years</span>
+            </div>
+            <div class="score-components">
+              <div class="score-comp">
+                <span class="comp-label">At Term End</span>
+                <span class="comp-val">{formatDelta(legacyData.scoreVsAutopilot.now)}</span>
+              </div>
+              <div class="score-comp">
+                <span class="comp-label">10-Year Echo</span>
+                <span class="comp-val">{formatDelta(legacyData.scoreVsAutopilot.later)}</span>
+              </div>
+            </div>
+          </div>
+        {/if}
 
-        {#if activeTab === 'overview' || activeTab === 'economy'}
+        {#if activeTab === 'extraction'}
+          <div class="record-panel card" data-testid="extraction-ledger-panel">
+            <h3 class="panel-h">Kleptocratic Extraction Ledger</h3>
+            <p class="panel-sub">Catalog of corrupt executive powers and siphoning operations executed during your tenure.</p>
+            {#if allEnactedEvilLevers.length === 0}
+              <div class="empty-ledger">
+                <p>No corrupt levers were enacted. You left office with standard administrative records.</p>
+              </div>
+            {:else}
+              <div class="record-list">
+                {#each allEnactedEvilLevers as item (item.lever.id)}
+                  <div class="record-item extraction-item" data-testid="extraction-item-{item.lever.id}">
+                    <div class="extraction-main">
+                      <span class="rec-label">{item.lever.name} ({item.count}×)</span>
+                      <span class="extraction-desc">{item.lever.description}</span>
+                    </div>
+                    <div class="extraction-impacts">
+                      {#if item.lever.kickbackBn > 0}
+                        <span class="impact-stash">+${(item.lever.kickbackBn * item.count).toFixed(1)}B Loot</span>
+                      {/if}
+                      {#if item.lever.heatDelta !== 0}
+                        <span class="impact-heat" class:heat-down={item.lever.heatDelta < 0}>
+                          {item.lever.heatDelta > 0 ? `+${item.lever.heatDelta * item.count}` : `${item.lever.heatDelta * item.count}`} Heat
+                        </span>
+                      {/if}
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {:else if activeTab === 'overview' || activeTab === 'economy'}
           <!-- 10-Year Legacy Simulation Trajectory -->
           <div class="chart-panel card">
             <div class="chart-header">
@@ -424,19 +534,39 @@
 
       {#snippet next()}
         <!-- Zone 4: Historian Verdict Card -->
-        <div class="verdict-card card" data-testid="historian-verdict-card">
-          <div class="verdict-badge-wrap">
-            <span class="verdict-tag">HISTORIAN ASSESSMENT</span>
-            <span
-              class="verdict-tier tier-{verdict.tier.toLowerCase().replace(/\s+/g, '-')}"
-              data-testid="verdict-tier"
-            >
-              {verdict.tier}
-            </span>
+        {#if session.isEvilMode && evilVerdict}
+          <div class="verdict-card card evil-verdict-card" data-testid="historian-verdict-card">
+            <div class="verdict-badge-wrap">
+              <span class="verdict-tag">KLEPTOCRACY ASSESSMENT</span>
+              <span
+                class="verdict-tier tier-{evilVerdict.tier.toLowerCase().replace(/\s+/g, '-')}"
+                data-testid="verdict-tier"
+              >
+                {evilVerdict.tier}
+              </span>
+            </div>
+            <h3 class="verdict-title">{evilVerdict.title}</h3>
+            <p class="verdict-summary">{evilVerdict.summary}</p>
+            <div class="epilogue-block">
+              <span class="epilogue-tag">POST-PRESIDENCY EPILOGUE</span>
+              <p class="epilogue-text" data-testid="kleptocrat-epilogue">{evilVerdict.epilogue}</p>
+            </div>
           </div>
-          <h3 class="verdict-title">{verdict.title}</h3>
-          <p class="verdict-summary">{verdict.summary}</p>
-        </div>
+        {:else}
+          <div class="verdict-card card" data-testid="historian-verdict-card">
+            <div class="verdict-badge-wrap">
+              <span class="verdict-tag">HISTORIAN ASSESSMENT</span>
+              <span
+                class="verdict-tier tier-{verdict.tier.toLowerCase().replace(/\s+/g, '-')}"
+                data-testid="verdict-tier"
+              >
+                {verdict.tier}
+              </span>
+            </div>
+            <h3 class="verdict-title">{verdict.title}</h3>
+            <p class="verdict-summary">{verdict.summary}</p>
+          </div>
+        {/if}
 
         <!-- Action Buttons -->
         <div class="actions-panel">
@@ -1031,5 +1161,100 @@
 
   .crit-tag {
     font-weight: 700;
+  }
+
+  .evil-gold {
+    color: var(--gold);
+  }
+
+  .evil-score-card {
+    border-color: var(--gold);
+    border-left: 6px solid var(--gold);
+  }
+
+  .evil-verdict-card {
+    border-color: var(--gold);
+  }
+
+  .evil-verdict-card .verdict-tier {
+    background: var(--gold-dark);
+    color: var(--card);
+    border-color: var(--gold);
+  }
+
+  .epilogue-block {
+    margin-top: 8px;
+    padding: 8px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    border-radius: var(--r-sm);
+  }
+
+  .epilogue-tag {
+    display: block;
+    font: 700 10px var(--font-ui);
+    color: var(--ink-soft);
+    letter-spacing: 0.08em;
+    margin-bottom: 2px;
+  }
+
+  .epilogue-text {
+    margin: 0;
+    font: 500 12px/1.3 var(--font-body);
+    color: var(--ink);
+  }
+
+  .extraction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .extraction-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .extraction-desc {
+    font: 400 12px var(--font-body);
+    color: var(--ink-soft);
+  }
+
+  .extraction-impacts {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .impact-stash {
+    font: 700 13px var(--font-ui);
+    color: var(--gold-dark);
+    padding: 2px 6px;
+    background: var(--paper);
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+  }
+
+  .impact-heat {
+    font: 700 13px var(--font-ui);
+    color: var(--alert);
+    padding: 2px 6px;
+    background: var(--paper);
+    border: 1px solid var(--alert);
+    border-radius: 4px;
+  }
+
+  .impact-heat.heat-down {
+    color: var(--sage-dark);
+    border-color: var(--sage);
+  }
+
+  .empty-ledger {
+    padding: 16px;
+    text-align: center;
+    color: var(--ink-soft);
+    font: 500 14px var(--font-body);
   }
 </style>

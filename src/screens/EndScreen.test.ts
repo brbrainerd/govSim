@@ -118,4 +118,77 @@ describe('EndScreen component (ELC-04, ELC-05, GR-04)', () => {
     expect(html).toContain('data-testid="share-record-btn"');
     expect(html).toContain('SHARE PRESIDENTIAL RECORD');
   });
+
+  it('renders Evil Mode Heist Review for unconvicted kleptocrat (UI-03)', () => {
+    const session = new Session(42, START, { party: 'D', evilMode: true });
+    session.termEnded = true;
+    session.current = {
+      ...session.current,
+      evil: {
+        offshoreStashBn: 35.0,
+        heat: 42,
+        investigationsActive: false,
+        specialCounselAppointed: false,
+        articlesOfImpeachmentVoted: false,
+        convicted: false,
+      },
+    };
+
+    const { html } = render(EndScreen, {
+      props: {
+        session,
+        onRestart: () => {},
+      },
+    });
+
+    expect(html).toContain('KLEPTOCRATIC HEIST REVIEW');
+    expect(html).toContain('What became of your plunder?');
+    expect(html).toContain('data-testid="end-offshore-stash"');
+    expect(html).toContain('$35.0B');
+    expect(html).toContain('data-testid="end-heat-meter"');
+    expect(html).toContain('42/100');
+    expect(html).toContain('data-testid="evil-score-card"');
+    expect(html).toContain('Total Offshore Loot Siphoned');
+    expect(html).toContain('data-testid="tab-extraction"');
+    expect(html).toContain('Extraction Ledger');
+    expect(html).toContain('KLEPTOCRACY ASSESSMENT');
+    expect(html).toContain('data-testid="verdict-tier"');
+    expect(html).toContain('Sovereign Plunderer');
+    expect(html).toContain('data-testid="kleptocrat-epilogue"');
+  });
+
+  it('renders Evil Mode Conviction Downfall screen upon Senate trial conviction (UI-03)', () => {
+    const session = new Session(42, START, { party: 'D', evilMode: true });
+    session.termEnded = true;
+    session.current = {
+      ...session.current,
+      evil: {
+        offshoreStashBn: 0.0,
+        heat: 95,
+        investigationsActive: true,
+        specialCounselAppointed: true,
+        articlesOfImpeachmentVoted: true,
+        houseImpeachmentVotes: 235,
+        senateConvictionVotes: 69,
+        convicted: true,
+        termEnded: true,
+      },
+    };
+
+    const { html } = render(EndScreen, {
+      props: {
+        session,
+        onRestart: () => {},
+      },
+    });
+
+    expect(html).toContain('Term Terminated (Convicted)');
+    expect(html).toContain('Asset Seizure &amp; Forfeiture');
+    expect(html).toContain('$0.0B');
+    expect(html).toContain('data-testid="verdict-tier"');
+    expect(html).toContain('Disgraced Convict');
+    expect(html).toContain('data-testid="kleptocrat-epilogue"');
+    expect(html).toContain('federal facility');
+  });
 });
+
