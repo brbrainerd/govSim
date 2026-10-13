@@ -25,9 +25,9 @@
 
 ### Satirical Visual Reskin & Heist End Screens (UI)
 
-- [ ] **UI-01**: Satirical visual reskin applying a dark Americana theme (oxblood, aged gold, ink) when Evil Mode is active.
-- [ ] **UI-02**: Live Offshore Stash counter and Heat Gauge integrated into the status bar and Oval Office / Situation Room.
-- [ ] **UI-03**: Specialized End Screens ranking unconvicted players by their offshore heist tier, or detailing their downfall upon conviction or electoral rejection.
+- [x] **UI-01**: Satirical visual reskin applying a dark Americana theme (oxblood, aged gold, ink) when Evil Mode is active.
+- [x] **UI-02**: Live Offshore Stash counter and Heat Gauge integrated into the status bar and Oval Office / Situation Room.
+- [x] **UI-03**: Specialized End Screens ranking unconvicted players by their offshore heist tier, or detailing their downfall upon conviction or electoral rejection.
 
 ## Out of Scope
 
@@ -51,9 +51,9 @@
 | IMPEACH-01 | Phase 19 | Complete |
 | IMPEACH-02 | Phase 19 | Complete |
 | IMPEACH-03 | Phase 19 | Complete |
-| UI-01 | Phase 20 | Pending |
-| UI-02 | Phase 20 | Pending |
-| UI-03 | Phase 20 | Pending |
+| UI-01 | Phase 20 | Complete |
+| UI-02 | Phase 20 | Complete |
+| UI-03 | Phase 20 | Complete |
 
 **Coverage:**
 - v0.5 requirements: 12 total

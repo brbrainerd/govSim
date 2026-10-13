@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- 🚧 **v0.5 Satirical "Evil Mode"** — Phases 17-20 (in progress)
+- ✅ **v0.5 Satirical "Evil Mode"** — Phases 17-20 (shipped 2026-10-13)
 - ✅ **v0.4 Foreign Policy & International Crises** — Phases 13-16 (shipped 2026-10-12)
 - ✅ **v0.3 Social Policy & Domestic Reform** — Phases 9-12 (shipped 2026-10-12)
 - ✅ **v0.2 Playable First Term** — Phases 1-8 (shipped 2026-10-12)
@@ -14,8 +14,9 @@
 **Milestone Goal:** Implement the satirical "Evil Mode" kleptocracy gameplay loop where the objective is to maximize an offshore stash while managing an escalating Heat meter to evade congressional investigations, special counsels, and impeachment trials.
 
 - [x] **Phase 17: Evil Mode Engine, Offshore Stash & Heat Meter** (4/4 plans) — completed 2026-10-12
+- [x] **Phase 18: Corrupt Executive Levers & Cronyism** (4/4 plans) — completed 2026-10-12
 - [x] **Phase 19: Institutional Backlash & Impeachment Trial** (4/4 plans) — completed 2026-10-13
-- [ ] **Phase 20: Satirical UI Reskin & Heist End Screens** (UI-01, UI-02, UI-03)
+- [x] **Phase 20: Satirical UI Reskin & Heist End Screens** (4/4 plans) — completed 2026-10-13
 
 ### Phase Details
 
@@ -109,4 +110,4 @@ Full phase execution history and plans archived to [.planning/milestones/v0.2-RO
 | 17. Evil Mode Engine | v0.5 | 4/4 | Complete | 2026-10-12 |
 | 18. Corrupt Executive Levers | v0.5 | 4/4 | Complete | 2026-10-12 |
 | 19. Backlash & Impeachment | v0.5 | 4/4 | Complete | 2026-10-13 |
-| 20. Reskin & Heist Screens | v0.5 | 0/4 | Not started | - |
+| 20. Reskin & Heist Screens | v0.5 | 4/4 | Complete | 2026-10-13 |

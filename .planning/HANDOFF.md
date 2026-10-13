@@ -59,18 +59,22 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 
 ## 3. Current state (update this section at the end of every session)
 
-**As of 2026-10-12, branch `game-pivot`** (not pushed; GitHub default branch is `master`; `git log -5` for the latest commits).
+**As of 2026-10-13, branch `game-pivot`** (not pushed; GitHub default branch is `master`; `git log -5` for the latest commits).
 
 - **Milestone v0.2 (Playable First Term): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.2`.**
   - All 8 phases (1 to 8) executed, verified, and audited with 53/53 requirements satisfied.
   - Archived to `.planning/milestones/v0.2-ROADMAP.md`, `v0.2-REQUIREMENTS.md`, and `v0.2-phases/`.
 - **Milestone v0.3 (Social Policy & Domestic Reform): COMPLETE & VERIFIED.**
   - All 4 phases (9 to 12) executed, verified, and audited with 11/11 requirements satisfied (SOC-01..05, REF-01..04, HOU-01..02).
-  - **Phase 9 (Domestic Social Policy Levers): COMPLETE.** Engine models for healthcare, immigration, energy/climate, and education with registered coefficients, causal tracing, congressional whip dynamics, and balance calibration.
-  - **Phase 10 (Demographic & Regional Distribution): COMPLETE & VERIFIED.** State exposures for 51 jurisdictions, BEA Regional Price Parity purchasing power index, mean-centered regional transmission, 6 national demographic cohorts, competitive House delegation transmission, Voters screen Coalitions view, State Inspector Local Family Impact card.
-  - **Phase 11 (Structural Government Reform & Amendments): COMPLETE & VERIFIED.** Senate filibuster reforms (60-vote, talking, 55-vote, simple majority), Supreme Court & judicial reform (18-yr term limits, ethics, bench expansion), electoral reform (RCV grants, redistricting commissions, small-dollar matching), and Article V constitutional amendment mechanism with 2/3 House, 2/3 Senate, and 3/4 state ratifications.
-  - **Phase 12 (Household Impact Card & Balance): COMPLETE & VERIFIED.** "Your Household" card on Oval Office and Economy screens, 4 authentic persona presets, custom household builder, updated balance calibration report (`balance-report.json`, +3.425 headroom, $\le 5$ pp party neutrality), zero axe-core a11y violations, zero page scroll at 1376×768 & 1280×720 viewports.
-- **Gates:** `pnpm test` 330 passing (54 files) · `pnpm test:e2e` 23 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
+- **Milestone v0.4 (Foreign Policy & International Crises): COMPLETE & VERIFIED.**
+  - All 4 phases (13 to 16) executed, verified, and audited with 12/12 requirements satisfied (CRIS-01..03, SEC-01..03, SANC-01..03, TRD-01..03).
+- **Milestone v0.5 (Satirical "Evil Mode"): COMPLETE & VERIFIED.**
+  - All 4 phases (17 to 20) executed, verified, and audited with 12/12 requirements satisfied (EVIL-01..03, LEVER-01..03, IMPEACH-01..03, UI-01..03).
+  - **Phase 17 (Evil Mode Engine, Offshore Stash & Heat Meter): COMPLETE & VERIFIED.** Alternative game mode toggle at New Game, pure deterministic offshore stash accounting, and dynamic 0–100 Heat meter with natural decay and governance friction.
+  - **Phase 18 (Corrupt Executive Levers & Cronyism): COMPLETE & VERIFIED.** Catalog of corrupt actions (no-bid crony contracts, land auctions, tariff exemption sales, library foundation solicitations, firing inspectors general) with kickbacks, clout costs, and heat generation.
+  - **Phase 19 (Institutional Backlash & Impeachment Trial): COMPLETE & VERIFIED.** Special counsel investigations and subpoenas (>60 heat), House impeachment floor votes (>80 heat, 218 threshold), and Senate conviction trial (2/3 supermajority, 67 threshold) with instantaneous asset forfeiture and term termination upon conviction.
+  - **Phase 20 (Satirical UI Reskin & Heist End Screens): COMPLETE & VERIFIED.** Dark Americana poster theme tokens (`oxblood`, `aged gold`, `ink`), live Offshore Stash rosette and Heat Gauge in Oval Office and Status Bar, and specialized EndScreen ranking unconvicted kleptocrats across 6 satirical tiers or chronicling their federal penitentiary downfall upon conviction.
+- **Gates:** `pnpm test` 417 passing (65 files) · `pnpm test:e2e` 51 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
 ### Open debts (do not lose these)
