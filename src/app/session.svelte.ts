@@ -16,6 +16,12 @@ import type { ScreenId } from './screens';
 import { FILIBUSTER_RULES_CATALOG, type FilibusterRule } from '../engine/congress';
 import { REFORMS_CATALOG, type ReformId } from '../engine/reforms';
 import { AMENDMENTS_CATALOG, type AmendmentId } from '../engine/amendments';
+import {
+  calculateHouseholdImpact,
+  DEFAULT_HOUSEHOLD_PERSONA,
+  type HouseholdImpactBreakdown,
+  type HouseholdPersona,
+} from '../engine/household';
 
 /** Choices made at New Game. Kept beside the engine state, never inside it (D4). */
 export interface GameOptions {
@@ -83,10 +89,19 @@ export class Session {
   termEnded = $state<boolean>(false);
   unlockedBadges = $state<string[]>([]);
   newlyUnlockedBadges = $state<string[]>([]);
+  selectedHouseholdPersona = $state<HouseholdPersona>(DEFAULT_HOUSEHOLD_PERSONA);
 
   current = $derived(this.history[this.history.length - 1]!);
   previous = $derived(this.history[this.history.length - 2] ?? this.current);
   socialDraft = $derived(this.draft.social);
+  householdImpact = $derived<HouseholdImpactBreakdown>(
+    calculateHouseholdImpact(
+      this.selectedHouseholdPersona,
+      this.current,
+      this.draft.budget,
+      this.draft.social,
+    ),
+  );
   /** The raw choices the engine will receive. A bill sent to Congress, or with deals, is voted at Next turn (A8). */
   bill = $derived(
     this.draft.voteCalled || this.draft.sentToCongress || this.draft.deals.length
@@ -506,5 +521,13 @@ export class Session {
 
   closeReport() {
     this.showingReport = false;
+  }
+
+  resetDraft() {
+    this.draft = freshDraft(this.current.policy, this.current.socialPolicy);
+  }
+
+  setHouseholdPersona(persona: HouseholdPersona): void {
+    this.selectedHouseholdPersona = persona;
   }
 }

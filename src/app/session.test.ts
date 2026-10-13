@@ -239,3 +239,25 @@ describe('Session social policy drafting (SOC-01..04)', () => {
   });
 });
 
+describe('Session household persona and impact (HOU-01, HOU-02)', () => {
+  it('initializes with default persona and updates dynamically with draft changes', () => {
+    const s = new Session(7, START, { party: 'D' });
+    expect(s.selectedHouseholdPersona.id).toBe('rust_belt_manufacturing');
+    expect(s.householdImpact.netMonthlyDelta).toBe(0);
+
+    // Draft a tariff increase -> groceries increase, net impact drops
+    s.setLever('tar', 25);
+    expect(s.householdImpact.groceriesDelta).toBeGreaterThan(0);
+    expect(s.householdImpact.netMonthlyDelta).toBeLessThan(0);
+
+    // Switch persona to retiree
+    const retiree = { ...s.selectedHouseholdPersona, id: 'retiree', composition: 'senior' as const };
+    s.setHouseholdPersona(retiree);
+    expect(s.selectedHouseholdPersona.id).toBe('retiree');
+
+    // Reset draft
+    s.resetDraft();
+    expect(s.householdImpact.netMonthlyDelta).toBe(0);
+  });
+});
+

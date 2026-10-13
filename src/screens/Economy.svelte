@@ -6,6 +6,7 @@
   import MiniChart from '../ui/art/MiniChart.svelte';
   import Overlay from '../ui/Overlay.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
+  import HouseholdBreakdown from '../ui/HouseholdBreakdown.svelte';
 
   let {
     session,
@@ -18,6 +19,7 @@
   } = $props();
 
   let showScoresModal = $state(false);
+  let viewMode = $state<'macro' | 'household'>('macro');
 
   // Time series extraction
   const growthSeries = $derived(session.history.map((s) => s.econ.growth));
@@ -126,51 +128,84 @@
 
 <ScreenLayout {question}>
   {#snippet main()}
-    <div class="chart-grid">
-      <MiniChart
-        title="Growth"
-        currentValue={`${currEcon.growth.toFixed(1)}% ${growthDir.word}`}
-        valueColor={growthDir.dir === 'up' ? 'var(--sage-dark)' : growthDir.dir === 'down' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
-        lineColor="var(--sky)"
-        youSeries={growthSeries}
-        autoSeries={autoGrowthSeries}
-        unit="%"
-        zeroBased={true}
-      />
-
-      <MiniChart
-        title="Jobs"
-        currentValue={`${currEcon.empPop.toFixed(1)}% ${empPopDir.word}`}
-        valueColor={empPopDir.dir === 'up' ? 'var(--sage-dark)' : empPopDir.dir === 'down' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
-        lineColor="var(--sage)"
-        youSeries={empPopSeries}
-        autoSeries={autoEmpPopSeries}
-        unit="%"
-        zeroBased={false}
-      />
-
-      <MiniChart
-        title="Prices"
-        currentValue={`${currEcon.inflation.toFixed(1)}% ${inflationDir.word}`}
-        valueColor={inflationDir.dir === 'down' ? 'var(--sage-dark)' : inflationDir.dir === 'up' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
-        lineColor="var(--alert)"
-        youSeries={inflationSeries}
-        autoSeries={autoInflationSeries}
-        unit="%"
-        zeroBased={true}
-      />
-
-      <MiniChart
-        title="Debt"
-        currentValue={`${((currEcon.debt / currEcon.gdp) * 100).toFixed(0)}% ${debtPctDir.word}`}
-        valueColor={debtPctDir.dir === 'down' ? 'var(--sage-dark)' : debtPctDir.dir === 'up' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
-        lineColor="var(--gold-dark)"
-        youSeries={debtPctSeries}
-        autoSeries={autoDebtPctSeries}
-        unit="%"
-        zeroBased={false}
-      />
+    <div class="economy-nav-bar">
+      <div class="switcher-group" role="radiogroup" aria-label="Economy View Modes">
+        <button
+          type="button"
+          class="switch-btn"
+          class:active={viewMode === 'macro'}
+          role="radio"
+          aria-checked={viewMode === 'macro'}
+          onclick={() => (viewMode = 'macro')}
+          data-testid="tab-macro"
+        >
+          Macro Indicators
+        </button>
+        <button
+          type="button"
+          class="switch-btn"
+          class:active={viewMode === 'household'}
+          role="radio"
+          aria-checked={viewMode === 'household'}
+          onclick={() => (viewMode = 'household')}
+          data-testid="tab-household"
+        >
+          Your Household
+        </button>
+      </div>
     </div>
+
+    {#if viewMode === 'macro'}
+      <div class="chart-grid">
+        <MiniChart
+          title="Growth"
+          currentValue={`${currEcon.growth.toFixed(1)}% ${growthDir.word}`}
+          valueColor={growthDir.dir === 'up' ? 'var(--sage-dark)' : growthDir.dir === 'down' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
+          lineColor="var(--sky)"
+          youSeries={growthSeries}
+          autoSeries={autoGrowthSeries}
+          unit="%"
+          zeroBased={true}
+        />
+
+        <MiniChart
+          title="Jobs"
+          currentValue={`${currEcon.empPop.toFixed(1)}% ${empPopDir.word}`}
+          valueColor={empPopDir.dir === 'up' ? 'var(--sage-dark)' : empPopDir.dir === 'down' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
+          lineColor="var(--sage)"
+          youSeries={empPopSeries}
+          autoSeries={autoEmpPopSeries}
+          unit="%"
+          zeroBased={false}
+        />
+
+        <MiniChart
+          title="Prices"
+          currentValue={`${currEcon.inflation.toFixed(1)}% ${inflationDir.word}`}
+          valueColor={inflationDir.dir === 'down' ? 'var(--sage-dark)' : inflationDir.dir === 'up' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
+          lineColor="var(--alert)"
+          youSeries={inflationSeries}
+          autoSeries={autoInflationSeries}
+          unit="%"
+          zeroBased={true}
+        />
+
+        <MiniChart
+          title="Debt"
+          currentValue={`${((currEcon.debt / currEcon.gdp) * 100).toFixed(0)}% ${debtPctDir.word}`}
+          valueColor={debtPctDir.dir === 'down' ? 'var(--sage-dark)' : debtPctDir.dir === 'up' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
+          lineColor="var(--gold-dark)"
+          youSeries={debtPctSeries}
+          autoSeries={autoDebtPctSeries}
+          unit="%"
+          zeroBased={false}
+        />
+      </div>
+    {:else}
+      <div class="household-view-wrap">
+        <HouseholdBreakdown {session} />
+      </div>
+    {/if}
   {/snippet}
 
   {#snippet learn()}
@@ -256,6 +291,47 @@
 {/if}
 
 <style>
+  .economy-nav-bar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+  }
+
+  .switcher-group {
+    display: inline-flex;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+  }
+
+  .switch-btn {
+    border: none;
+    background: none;
+    padding: 5px 14px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--ink-soft);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .switch-btn.active {
+    background: var(--ink);
+    color: var(--card);
+  }
+
+  .household-view-wrap {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
   .chart-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

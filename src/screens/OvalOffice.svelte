@@ -7,6 +7,8 @@
   import OvalOfficeScene from '../ui/art/OvalOfficeScene.svelte';
   import Rosette from '../ui/art/Rosette.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
+  import HouseholdCard from '../ui/HouseholdCard.svelte';
+  import HouseholdModal from '../ui/HouseholdModal.svelte';
 
   let {
     session,
@@ -19,6 +21,8 @@
     go: (id: ScreenId) => void;
     onOpenMyth?: (mythId: string) => void;
   } = $props();
+
+  let showHouseholdModal = $state(false);
 
   const tiles = $derived(headline(session.history));
   const index = $derived(Math.round(session.index));
@@ -66,6 +70,7 @@
   {/snippet}
   {#snippet next()}
     <div class="card info"><span class="label">This turn</span><b>{briefingInfo.thisTurn.title}</b><span>{briefingInfo.thisTurn.detail}</span></div>
+    <HouseholdCard {session} onExplore={() => (showHouseholdModal = true)} />
     {#each briefingInfo.suggestions as s (s.title)}
       <div class="card option">
         <b>{s.title}</b>
@@ -74,6 +79,10 @@
     {/each}
   {/snippet}
 </ScreenLayout>
+
+{#if showHouseholdModal}
+  <HouseholdModal {session} onClose={() => (showHouseholdModal = false)} />
+{/if}
 
 <style>
   .stage { position: relative; height: clamp(170px, 30vh, 310px); padding: clamp(6px, 1vh, 10px); min-height: 0; flex-shrink: 1; }
