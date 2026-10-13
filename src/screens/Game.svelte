@@ -18,9 +18,19 @@
   import MythModal from '../ui/MythModal.svelte';
   import SpeechModal from '../ui/SpeechModal.svelte';
   import FedModal from '../ui/FedModal.svelte';
+  import ElectionNightModal from '../ui/ElectionNightModal.svelte';
+  import EndScreen from './EndScreen.svelte';
   import { getMyth } from '../content/myths';
 
-  let { session, onImport }: { session: Session; onImport?: (f: File) => void } = $props();
+  let {
+    session,
+    onImport,
+    onRestart,
+  }: {
+    session: Session;
+    onImport?: (f: File) => void;
+    onRestart?: () => void;
+  } = $props();
   const screen = $derived(screenById(session.screen));
   const go = (id: typeof session.screen) => (session.screen = id);
 
@@ -38,88 +48,102 @@
   );
 </script>
 
-<div class="app halftone">
-  <StatusBar state={session.current} clout={session.clout} title={screen.label} score={session.score} party={PARTIES.find((p) => p.id === session.options.party)!.name} onNextTurn={() => session.nextTurn()} />
-  <div class="zones">
-    <Rail
-      turn={session.current.turn}
-      current={session.screen}
-      onSelect={go}
-      onExport={() => downloadSave(session)}
-      {onImport}
-    />
-    {#if screen.id === 'oval'}
-      <OvalOffice {session} question={screen.question} {go} onOpenMyth={(id) => (activeMythId = id)} />
-    {:else if screen.id === 'economy'}
-      <Economy {session} question={screen.question} {go} />
-    {:else if screen.id === 'budget'}
-      <Budget {session} question={screen.question} {go} />
-    {:else if screen.id === 'congress'}
-      <Congress {session} question={screen.question} />
-    {:else if screen.id === 'powers'}
-      <Powers
-        {session}
-        question={screen.question}
-        {go}
-        onOpenMyth={(id) => (activeMythId = id)}
-        onOpenSpeech={() => (speechModalOpen = true)}
-        onOpenFed={() => (fedModalOpen = true)}
+{#if session.termEnded}
+  <EndScreen {session} {onRestart} />
+{:else}
+  <div class="app halftone">
+    <StatusBar state={session.current} clout={session.clout} title={screen.label} score={session.score} party={PARTIES.find((p) => p.id === session.options.party)!.name} onNextTurn={() => session.nextTurn()} />
+    <div class="zones">
+      <Rail
+        turn={session.current.turn}
+        current={session.screen}
+        onSelect={go}
+        onExport={() => downloadSave(session)}
+        {onImport}
       />
-    {:else}
-      <Voters
+      {#if screen.id === 'oval'}
+        <OvalOffice {session} question={screen.question} {go} onOpenMyth={(id) => (activeMythId = id)} />
+      {:else if screen.id === 'economy'}
+        <Economy {session} question={screen.question} {go} />
+      {:else if screen.id === 'budget'}
+        <Budget {session} question={screen.question} {go} />
+      {:else if screen.id === 'congress'}
+        <Congress {session} question={screen.question} />
+      {:else if screen.id === 'powers'}
+        <Powers
+          {session}
+          question={screen.question}
+          {go}
+          onOpenMyth={(id) => (activeMythId = id)}
+          onOpenSpeech={() => (speechModalOpen = true)}
+          onOpenFed={() => (fedModalOpen = true)}
+        />
+      {:else}
+        <Voters
+          {session}
+          question={screen.question}
+          {go}
+          onOpenMyth={(id) => (activeMythId = id)}
+          onOpenSpeech={() => (speechModalOpen = true)}
+        />
+      {/if}
+    </div>
+
+    {#if session.showingReport}
+      <Overlay title="Quarterly Turn Report" onClose={() => session.closeReport()}>
+        {#snippet children()}
+          <TurnReport {session} onClose={() => session.closeReport()} />
+        {/snippet}
+      </Overlay>
+    {/if}
+
+    {#if showCrisisModal && session.current.activeCrisis}
+      <CrisisModal
+        crisis={session.current.activeCrisis}
         {session}
-        question={screen.question}
-        {go}
-        onOpenMyth={(id) => (activeMythId = id)}
-        onOpenSpeech={() => (speechModalOpen = true)}
+        onClose={() => {
+          dismissedCrisisTurn = session.current.turn;
+        }}
+      />
+    {/if}
+
+    {#if activeMyth}
+      <MythModal
+        myth={activeMyth}
+        isFirstView={!session.current.viewedMyths.includes(activeMyth.id)}
+        onClose={() => (activeMythId = null)}
+        onGotIt={() => {
+          session.viewMythCard(activeMyth!.id);
+          activeMythId = null;
+        }}
+      />
+    {/if}
+
+    {#if speechModalOpen}
+      <SpeechModal
+        {session}
+        onClose={() => (speechModalOpen = false)}
+      />
+    {/if}
+
+    {#if fedModalOpen}
+      <FedModal
+        {session}
+        onClose={() => (fedModalOpen = false)}
       />
     {/if}
   </div>
+{/if}
 
-  {#if session.showingReport}
-    <Overlay title="Quarterly Turn Report" onClose={() => session.closeReport()}>
-      {#snippet children()}
-        <TurnReport {session} onClose={() => session.closeReport()} />
-      {/snippet}
-    </Overlay>
-  {/if}
-
-  {#if showCrisisModal && session.current.activeCrisis}
-    <CrisisModal
-      crisis={session.current.activeCrisis}
-      {session}
-      onClose={() => {
-        dismissedCrisisTurn = session.current.turn;
-      }}
-    />
-  {/if}
-
-  {#if activeMyth}
-    <MythModal
-      myth={activeMyth}
-      isFirstView={!session.current.viewedMyths.includes(activeMyth.id)}
-      onClose={() => (activeMythId = null)}
-      onGotIt={() => {
-        session.viewMythCard(activeMyth!.id);
-        activeMythId = null;
-      }}
-    />
-  {/if}
-
-  {#if speechModalOpen}
-    <SpeechModal
-      {session}
-      onClose={() => (speechModalOpen = false)}
-    />
-  {/if}
-
-  {#if fedModalOpen}
-    <FedModal
-      {session}
-      onClose={() => (fedModalOpen = false)}
-    />
-  {/if}
-</div>
+{#if session.showingElectionNight && session.activeElectionOutcome && session.activeAutopilotElectionOutcome}
+  <ElectionNightModal
+    outcome={session.activeElectionOutcome}
+    autopilotOutcome={session.activeAutopilotElectionOutcome}
+    reasons={session.electionReasons}
+    oncontinue={() => session.continueAfterElection()}
+    onretry={() => session.retryTurn16()}
+  />
+{/if}
 
 <style>
   .app { height: 100dvh; max-height: 100dvh; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }

@@ -46,7 +46,14 @@
 </script>
 
 {#if session}
-  <Game {session} onImport={handleImport} />
+  <Game
+    {session}
+    onImport={handleImport}
+    onRestart={() => {
+      clearAutosave();
+      session = null;
+    }}
+  />
 {:else}
   <NewGame
     {autosave}

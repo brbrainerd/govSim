@@ -354,7 +354,10 @@ export function simulateTenYearLegacy(
  * Classifies the 10-year presidential record into 5 nonpartisan historian verdict tiers (ELC-05).
  * Based strictly on objective outcome bands, never on ideology.
  */
-export function classifyHistorianVerdict(scoreVsAutopilotTotal: number): HistorianVerdict {
+export function classifyHistorianVerdict(
+  score: number | ScoreBreakdown,
+): HistorianVerdict {
+  const scoreVsAutopilotTotal = typeof score === 'number' ? score : score.total;
   if (scoreVsAutopilotTotal >= HISTORIAN_TRANSFORMATIONAL_THRESHOLD) {
     return {
       tier: 'Transformational',

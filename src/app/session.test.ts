@@ -155,3 +155,40 @@ describe('Session persistence and save restore (OBS-01, OBS-02)', () => {
     expect(s.current.activeOrders).not.toContain('eo_hiring_freeze');
   });
 });
+
+describe('Session reelection and end of term (ELC-01, ELC-03, ELC-04)', () => {
+  it('triggers election outcome at turn 16 and snapshots state for retry', () => {
+    const s = new Session(42, START, { party: 'D' });
+    for (let i = 1; i < 16; i++) s.nextTurn();
+    expect(s.current.turn).toBe(16);
+    expect(s.turn16Snapshot).toBeDefined();
+    expect(s.turn16Snapshot?.turn).toBe(16);
+
+    // Advance through election
+    s.nextTurn();
+    expect(s.showingElectionNight).toBe(true);
+    expect(s.activeElectionOutcome).toBeDefined();
+    expect(s.activeAutopilotElectionOutcome).toBeDefined();
+    expect(s.electionReasons.length).toBeGreaterThan(0);
+
+    // Can retry turn 16
+    s.retryTurn16();
+    expect(s.current.turn).toBe(16);
+    expect(s.showingElectionNight).toBe(false);
+    expect(s.activeElectionOutcome).toBeNull();
+  });
+
+  it('finalizes term on loss via continueAfterElection', () => {
+    const s = new Session(7, START, { party: 'D' });
+    for (let i = 1; i < 16; i++) s.nextTurn();
+    s.nextTurn();
+    expect(s.showingElectionNight).toBe(true);
+    expect(s.reelectionWon).toBe(false);
+
+    s.continueAfterElection();
+    expect(s.showingElectionNight).toBe(false);
+    expect(s.termEnded).toBe(true);
+    expect(s.current.turn).toBe(16);
+    expect(s.over).toBe(true);
+  });
+});

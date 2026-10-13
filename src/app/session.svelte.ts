@@ -6,6 +6,8 @@ import type { PartyId } from '../content/parties';
 import { getOrder } from '../content/orders';
 import { C } from '../engine/coefficients';
 import { speechCost, type PowerDecisions } from '../engine/powers';
+import { extractElectionReasons, resolveReelection, type ElectionOutcome } from '../engine/election';
+import { ELECTION_TURN_1 } from '../engine/units';
 import { storeAutosave, type SaveFile } from './save';
 import type { ScreenId } from './screens';
 
@@ -55,6 +57,14 @@ export class Session {
   screen = $state<ScreenId>('oval');
   draft = $state<Draft>(freshDraft(fromPackage('Keep as is')));
   showingReport = $state<boolean>(false);
+
+  turn16Snapshot = $state.raw<GameState | null>(null);
+  showingElectionNight = $state<boolean>(false);
+  activeElectionOutcome = $state.raw<ElectionOutcome | null>(null);
+  activeAutopilotElectionOutcome = $state.raw<ElectionOutcome | null>(null);
+  electionReasons = $state.raw<readonly string[]>([]);
+  reelectionWon = $state<boolean>(false);
+  termEnded = $state<boolean>(false);
 
   current = $derived(this.history[this.history.length - 1]!);
   previous = $derived(this.history[this.history.length - 2] ?? this.current);
@@ -115,7 +125,7 @@ export class Session {
   /** Headline: how much better than doing nothing (same seed, same shocks). */
   vsNothing = $derived(this.score.total);
   /** The term has ended: every action is a no-op and the UI shows the term as over. */
-  over = $derived(this.current.turn >= TOTAL_TURNS);
+  over = $derived(this.current.turn >= TOTAL_TURNS || this.termEnded);
 
   constructor(seed: number, start: Start, readonly options: GameOptions) {
     this.history = [newGame(seed, start)];
@@ -215,6 +225,8 @@ export class Session {
   }
 
   nextTurn() {
+    if (this.termEnded || this.over) return;
+
     const decisions: Decisions = {};
     if (this.bill) decisions.bill = this.bill;
     if (this.draft.crisisChoice) {
@@ -223,6 +235,23 @@ export class Session {
     if (this.powers) {
       decisions.powers = $state.snapshot(this.powers);
     }
+
+    if (this.current.turn === 16) {
+      if (!this.turn16Snapshot) {
+        this.turn16Snapshot = this.current;
+      }
+      const party = (this.options.party === 'R' ? 'R' : 'D') as 'D' | 'R';
+      const outcome = resolveReelection(this.current, party);
+      const autoOutcome = resolveReelection(this.autopilot[this.autopilot.length - 1]!, party);
+      const reasons = extractElectionReasons(this.current, outcome, party);
+
+      this.activeElectionOutcome = outcome;
+      this.activeAutopilotElectionOutcome = autoOutcome;
+      this.electionReasons = reasons;
+      this.reelectionWon = outcome.winner === 'player';
+      this.showingElectionNight = true;
+    }
+
     const next = endTurn(this.current, decisions);
     if (next === this.current) return;
     this.inputs = [...this.inputs, decisions];
@@ -230,7 +259,53 @@ export class Session {
     const autoLast = this.autopilot[this.autopilot.length - 1]!;
     this.autopilot = [...this.autopilot, endTurn(autoLast, autopilotDecisions(autoLast))];
     this.draft = freshDraft(next.policy);
+
+    if (next.turn === 16 && !this.turn16Snapshot) {
+      this.turn16Snapshot = next;
+    }
+
+    if (next.turn >= TOTAL_TURNS) {
+      this.termEnded = true;
+    }
+
     this.showingReport = true;
+    storeAutosave(this);
+  }
+
+  continueAfterElection() {
+    this.showingElectionNight = false;
+    if (!this.reelectionWon) {
+      this.termEnded = true;
+      if (this.history.length > 16) {
+        this.history = this.history.slice(0, 16);
+        this.inputs = this.inputs.slice(0, 15);
+      }
+      storeAutosave(this);
+    }
+  }
+
+  retryTurn16() {
+    if (!this.turn16Snapshot) return;
+    const targetTurn = 16;
+    const idx = this.history.findIndex((s) => s.turn === targetTurn);
+    if (idx >= 0) {
+      this.history = this.history.slice(0, idx + 1);
+      this.inputs = this.inputs.slice(0, idx);
+      this.autopilot = this.autopilot.slice(0, idx + 1);
+    } else {
+      this.history = [...this.history.slice(0, 15), this.turn16Snapshot];
+      this.inputs = this.inputs.slice(0, 15);
+      this.autopilot = this.autopilot.slice(0, 16);
+    }
+    this.draft = freshDraft(this.current.policy);
+    this.screen = 'oval';
+    this.termEnded = false;
+    this.showingElectionNight = false;
+    this.showingReport = false;
+    this.reelectionWon = false;
+    this.activeElectionOutcome = null;
+    this.activeAutopilotElectionOutcome = null;
+    this.electionReasons = [];
     storeAutosave(this);
   }
 
