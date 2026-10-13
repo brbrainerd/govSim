@@ -3,14 +3,16 @@ gsd_state_version: "1.0"
 milestone: v0.4
 milestone_name: Foreign Policy & International Crises
 status: planning
-last_updated: "2026-10-13T04:23:54.443Z"
+last_updated: "2026-10-13T04:25:00.000Z"
 last_activity: 2026-10-12
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
-  total_plans: 0
+  total_plans: 16
   completed_plans: 0
   percent: 0
+current_phase: 13
+current_phase_name: Geopolitical Crises Deck & Resolution Mechanics
 ---
 
 # Project State
@@ -20,14 +22,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-12)
 
 **Core value:** A player can make real presidential tradeoffs against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
-**Current focus:** Milestone v0.3 complete — Social Policy & Domestic Reform
+**Current focus:** Milestone v0.4 — Foreign Policy & International Crises
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Phase 13: Geopolitical Crises Deck & Resolution Mechanics (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-10-12 — Milestone v0.4 started
+Status: Ready to plan Phase 13
+Last activity: 2026-10-12 — Milestone v0.4 roadmap defined (Phases 13-16)
 
 ## Performance Metrics
 
@@ -113,4 +115,4 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Plan Phase 13: `/gsd-plan-phase 13`
