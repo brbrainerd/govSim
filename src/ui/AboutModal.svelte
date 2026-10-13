@@ -200,7 +200,7 @@
   .privacy-badge {
     align-self: flex-start;
     padding: 2px 8px;
-    background: var(--sage);
+    background: var(--ink);
     color: var(--paper);
     font: 700 11px var(--font-label);
     letter-spacing: 0.06em;

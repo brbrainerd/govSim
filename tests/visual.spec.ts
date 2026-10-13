@@ -59,7 +59,22 @@ test.describe('viewport fitting and visual baselines (OBS-07)', () => {
       await assertNoOuterScroll('Oval Office');
       await page.screenshot({ path: `.playwright-screenshots/oval-${vp.width}x${vp.height}.png` });
 
-      // 2b. Myth modal
+      // 2a. About & Privacy modal (REL-02, OBS-07)
+      const aboutBtn = page.locator('[data-testid="nav-about-btn"]');
+      await aboutBtn.click();
+      await expect(page.locator('[data-testid="about-modal"]')).toBeVisible();
+      await assertNoOuterScroll('About Modal');
+      await page.screenshot({ path: `.playwright-screenshots/about-${vp.width}x${vp.height}.png` });
+
+      // 2b. Problem Report modal (REL-04, OBS-07)
+      await page.locator('[data-testid="about-report-btn"]').click();
+      await expect(page.locator('[data-testid="problem-modal"]')).toBeVisible();
+      await assertNoOuterScroll('Problem Report Modal');
+      await page.screenshot({ path: `.playwright-screenshots/problem-report-${vp.width}x${vp.height}.png` });
+      await page.keyboard.press('Escape');
+      await expect(page.locator('[data-testid="problem-modal"]')).not.toBeVisible();
+
+      // 2c. Myth modal
       await page.locator('button.ticket:has-text("Myth? Can you lower gas prices")').click();
       await expect(page.locator('div[role="dialog"]')).toBeVisible();
       await assertNoOuterScroll('Myth Modal');
@@ -184,7 +199,16 @@ test.describe('viewport fitting and visual baselines (OBS-07)', () => {
         await assertNoOuterScroll('End Screen');
         const startNewBtn = page.locator('[data-testid="start-new-presidency-btn"]');
         await assertButtonInViewport(startNewBtn, 'Start New Presidency button');
+        const shareBtn = page.locator('[data-testid="share-record-btn"]');
+        await assertButtonInViewport(shareBtn, 'Share Presidential Record button');
         await page.screenshot({ path: `.playwright-screenshots/endscreen-${vp.width}x${vp.height}.png` });
+
+        // Milestones tab visual check (RPT-03, OBS-07)
+        const milestonesTab = page.locator('[data-testid="tab-milestones"]');
+        await milestonesTab.click();
+        await expect(page.locator('[data-testid="badges-grid"]')).toBeVisible();
+        await assertNoOuterScroll('End Screen Milestones Tab');
+        await page.screenshot({ path: `.playwright-screenshots/endscreen-milestones-${vp.width}x${vp.height}.png` });
       } else {
         // Won election: close turn report if showing
         if (await page.locator('button.stamp:has-text("Continue term")').isVisible()) {

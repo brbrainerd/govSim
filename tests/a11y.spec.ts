@@ -181,6 +181,37 @@ test.describe('accessibility audits (OBS-07, D6)', () => {
       const endAxe = await new AxeBuilder({ page }).analyze();
       const endSevere = endAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
       expect(endSevere, `EndScreen a11y violations: ${JSON.stringify(endSevere, null, 2)}`).toEqual([]);
+
+      // Milestones tab audit (RPT-03, OBS-07)
+      const milestonesTab = page.locator('[data-testid="tab-milestones"]');
+      if (await milestonesTab.isVisible()) {
+        await milestonesTab.click();
+        await expect(page.locator('[data-testid="badges-grid"]')).toBeVisible();
+        const milestonesAxe = await new AxeBuilder({ page }).analyze();
+        const milestonesSevere = milestonesAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+        expect(milestonesSevere, `Milestones tab a11y violations: ${JSON.stringify(milestonesSevere, null, 2)}`).toEqual([]);
+      }
     }
+  });
+
+  test('About modal and Problem Report modal have zero serious or critical violations (REL-02, REL-04)', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('input[name="party"][value="D"]').check();
+    await page.locator('button.stamp:has-text("START THE TERM")').click();
+    await expect(page.locator('.app')).toBeVisible();
+
+    // 1. Audit About & Privacy modal
+    await page.locator('[data-testid="nav-about-btn"]').click();
+    await expect(page.locator('[data-testid="about-modal"]')).toBeVisible();
+    const aboutAxe = await new AxeBuilder({ page }).analyze();
+    const aboutSevere = aboutAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(aboutSevere, `About modal a11y violations: ${JSON.stringify(aboutSevere, null, 2)}`).toEqual([]);
+
+    // 2. Audit Problem Report modal
+    await page.locator('[data-testid="about-report-btn"]').click();
+    await expect(page.locator('[data-testid="problem-modal"]')).toBeVisible();
+    const problemAxe = await new AxeBuilder({ page }).analyze();
+    const problemSevere = problemAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(problemSevere, `Problem Report modal a11y violations: ${JSON.stringify(problemSevere, null, 2)}`).toEqual([]);
   });
 });

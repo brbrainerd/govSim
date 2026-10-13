@@ -393,7 +393,8 @@
             <p class="panel-sub">
               {session.unlockedBadges.length} of 12 milestones unlocked across budget, crises, powers, and elections.
             </p>
-            <div class="badges-grid" data-testid="badges-grid">
+            <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+            <div class="badges-grid" data-testid="badges-grid" role="region" aria-label="Policy milestones and badges" tabindex="0">
               {#each BADGES as badge (badge.id)}
                 {@const isUnlocked = session.unlockedBadges.includes(badge.id)}
                 <div
@@ -988,7 +989,7 @@
     font: 700 10px var(--font-label);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--ink-soft);
+    color: var(--ink);
   }
 
   .badge-status-pill {
@@ -996,14 +997,14 @@
     padding: 1px 6px;
     border-radius: 3px;
     background: var(--card-alt);
-    color: var(--ink-soft);
-    border: 1px solid var(--ink-soft);
+    color: var(--ink);
+    border: 1px solid var(--ink);
   }
 
   .badge-status-pill.earned {
-    background: var(--sage);
-    color: var(--card);
-    border-color: var(--sage);
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
   }
 
   .badge-title {
@@ -1023,7 +1024,7 @@
     display: flex;
     gap: 4px;
     font: 500 11px var(--font-ui);
-    color: var(--ink-soft);
+    color: var(--ink);
     border-top: 1px dotted var(--rule);
     padding-top: 6px;
   }

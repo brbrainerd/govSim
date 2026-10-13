@@ -5,6 +5,7 @@ import { baseline, spendLevers, taxLevers, type BudgetDraft } from './budget';
 import { autopilotDecisions, type Decisions } from './decisions';
 import { enact, START } from './fixture';
 import { endTurn, finalScore, newGame, projectedScore, scoreVsAutopilot, TOTAL_TURNS, type GameState } from './game';
+import { resolveReelection } from './election';
 
 const base = baseline();
 const strategies: Record<string, BudgetDraft | null> = {
@@ -25,6 +26,15 @@ const seeds = Array.from({ length: 40 }, (_, i) => i + 1);
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
 const final = (name: string) => seeds.map((sd) => run(sd, strategies[name]!).at(-1)!);
 const avgIndex = (name: string) => mean(final(name).map((s) => finalScore(s).total));
+
+function pickSensibleCrisisOption(state: GameState): Decisions {
+  if (!state.activeCrisis) return {};
+  const crisis = state.activeCrisis;
+  const affordable = crisis.options.filter((o) => o.cloutCost <= state.clout);
+  const active = affordable.filter((o) => o.cloutCost > 0 && o.cloutCost <= 25);
+  const choice = active[0] ?? affordable[0];
+  return choice ? { crisis: { crisisId: crisis.crisisId, optionId: choice.id } } : {};
+}
 
 describe('balance', () => {
   it('keeps every indicator in a plausible range for every strategy and seed', () => {
@@ -136,15 +146,6 @@ describe('balance', () => {
   it('verifies crisis balance calibration (GR-10, GR-12)', () => {
     const seeds100 = Array.from({ length: 100 }, (_, i) => i + 1);
 
-    function pickSensibleCrisisOption(state: GameState): Decisions {
-      if (!state.activeCrisis) return {};
-      const crisis = state.activeCrisis;
-      const affordable = crisis.options.filter((o) => o.cloutCost <= state.clout);
-      const active = affordable.filter((o) => o.cloutCost > 0 && o.cloutCost <= 25);
-      const choice = active[0] ?? affordable[0];
-      return choice ? { crisis: { crisisId: crisis.crisisId, optionId: choice.id } } : {};
-    }
-
     function runSensibleWithCrises(seed: number): GameState {
       let s = newGame(seed, START);
       for (let t = 1; t < TOTAL_TURNS; t++) {
@@ -237,5 +238,88 @@ describe('balance', () => {
 
     expect(sensMean).toBeGreaterThan(speechMean);
     expect(sensMean).toBeGreaterThan(hoardMean);
+  });
+
+  it('validates training (seeds 1-40) and validation (seeds 41-80) sets against degenerate bots and reelection calibration (GR-10, GR-11, GR-15)', () => {
+    const trainingSeeds = Array.from({ length: 40 }, (_, i) => i + 1);
+    const validationSeeds = Array.from({ length: 40 }, (_, i) => i + 41);
+
+    function runHoard(seed: number): GameState[] {
+      const out = [newGame(seed, START)];
+      for (let t = 1; t < TOTAL_TURNS; t++) {
+        out.push(endTurn(out[t - 1]!, {}));
+      }
+      return out;
+    }
+
+    function runSpam(seed: number): GameState[] {
+      const out = [newGame(seed, START)];
+      for (let t = 1; t < TOTAL_TURNS; t++) {
+        const dec: Decisions = {
+          powers: {
+            speech: { audience: 'general' },
+            pressureFed: true,
+            signOrders: t === 1 ? ['eo-infrastructure-fast-track'] : undefined,
+          },
+        };
+        if (t === 1) {
+          dec.bill = enact(strategies.maxDeficit!).bill;
+        }
+        out.push(endTurn(out[t - 1]!, dec));
+      }
+      return out;
+    }
+
+    function runSensible(seed: number): GameState[] {
+      let s = newGame(seed, START);
+      const out = [s];
+      for (let t = 1; t < TOTAL_TURNS; t++) {
+        const dec: Decisions = t === 1 ? enact(strategies.sensible!) : {};
+        if (s.activeCrisis) {
+          const cDec = pickSensibleCrisisOption(s);
+          if (cDec.crisis) dec.crisis = cDec.crisis;
+        }
+        if (s.clout >= 35 && s.speechCountInWindow === 0) {
+          dec.powers = { speech: { audience: 'general' } };
+        }
+        s = endTurn(s, dec);
+        out.push(s);
+      }
+      return out;
+    }
+
+    for (const [setName, seedGroup] of [
+      ['training', trainingSeeds],
+      ['validation', validationSeeds],
+    ] as const) {
+      const sensFinals = seedGroup.map((sd) => runSensible(sd).at(-1)!);
+      const autoFinals = seedGroup.map((sd) => run(sd, null).at(-1)!);
+      const hoardFinals = seedGroup.map((sd) => runHoard(sd).at(-1)!);
+      const spamFinals = seedGroup.map((sd) => runSpam(sd).at(-1)!);
+
+      const sensScores = sensFinals.map((s) => finalScore(s).total);
+      const autoScores = autoFinals.map((s) => finalScore(s).total);
+      const hoardScores = hoardFinals.map((s) => finalScore(s).total);
+      const spamScores = spamFinals.map((s) => finalScore(s).total);
+
+      const sensMean = mean(sensScores);
+      const autoMean = mean(autoScores);
+      const hoardMean = mean(hoardScores);
+      const spamMean = mean(spamScores);
+
+      const headroom = sensMean - autoMean;
+      expect(headroom, `${setName} sensible headroom`).toBeGreaterThanOrEqual(2.0);
+      expect(headroom, `${setName} sensible headroom`).toBeLessThanOrEqual(10.0);
+
+      expect(sensMean, `${setName} beats hoard`).toBeGreaterThan(hoardMean);
+      expect(sensMean, `${setName} beats spam`).toBeGreaterThan(spamMean);
+
+      // Reelection rate check at Turn 16
+      const s16List = seedGroup.map((sd) => runSensible(sd)[15]!);
+      const winsD = s16List.filter((s) => resolveReelection(s, 'D').winner === 'player').length;
+      const rateD = winsD / seedGroup.length;
+      expect(rateD, `${setName} D reelection rate`).toBeGreaterThanOrEqual(0.40);
+      expect(rateD, `${setName} D reelection rate`).toBeLessThanOrEqual(0.85);
+    }
   });
 });
