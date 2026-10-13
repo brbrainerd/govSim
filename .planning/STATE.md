@@ -1,21 +1,16 @@
 ---
 gsd_state_version: "1.0"
-milestone: v0.3
-milestone_name: Social Policy & Domestic Reform
-status: Awaiting next milestone
-stopped_at: Milestone v0.3 complete (all 4 phases executed and verified)
-last_updated: "2026-10-13T04:18:21.397Z"
+milestone: v0.4
+milestone_name: Foreign Policy & International Crises
+status: planning
+last_updated: "2026-10-13T04:23:54.443Z"
 last_activity: 2026-10-12
-last_activity_desc: Milestone v0.3 completed and archived
-state_head: 1a52dc5364a961db0fa6975099116ade9740862d
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 16
-  completed_plans: 16
-  percent: 100
-current_phase: 12
-current_phase_name: Household Impact Card & Balance
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -29,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-10-12)
 
 ## Current Position
 
-Phase: Milestone v0.3 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-10-12 — Milestone v0.3 completed and archived
+Status: Defining requirements
+Last activity: 2026-10-12 — Milestone v0.4 started
 
 ## Performance Metrics
 

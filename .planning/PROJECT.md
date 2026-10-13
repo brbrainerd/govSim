@@ -43,11 +43,13 @@ against an honest, explainable model of the current US, and always understand *w
 
 ### Active
 
-(None currently — ready to initialize next milestone with `/gsd-new-milestone`.)
+- [ ] Global crisis & geopolitical events deck (oil supply shocks, international conflicts, treaty crises) — v0.4
+- [ ] Foreign policy levers & presidential powers (diplomatic postures, sanctions, defense posture/readiness, foreign aid myth card) — v0.4
+- [ ] Security Index & macro feedback integration (10% Security Prosperity weight, defense multiplier, import/energy inflation pass-through) — v0.4
+- [ ] International trade & tariff dynamics (bilateral trade negotiations, currency/cost pass-through, retaliatory spirals) — v0.4
 
 ### Out of Scope
 
-- Foreign policy, military, international crises — design M3 (planned for Milestone v0.4)
 - Evil mode — design M4 (planned for Milestone v0.5)
 - Audio, voice narration — decided no audio (A5)
 - Live news feed — needs a server, partisan risk (E5)
@@ -83,9 +85,32 @@ against an honest, explainable model of the current US, and always understand *w
 | High-hurdle amendment ratifications | Simulates 2/3 Congress and 3/4 state legislature approvals with realistic pacing | ✓ Good |
 | 100-seed party neutrality regression | Ensures symmetric policy yields symmetric reelection odds within 5 pp | ✓ Good |
 
-## Current Milestone: Complete (v0.3 Social Policy & Domestic Reform)
+## Current Milestone: v0.4 Foreign Policy & International Crises
 
-Milestone v0.3 is shipped and archived. Run `/gsd-new-milestone` to start the next milestone.
+**Goal:** Introduce international diplomacy, defense posture, global crises, and foreign trade mechanics to complete the presidential toolkit and drive the Security Index.
+
+**Target features:**
+- Global crisis deck & geopolitical event engine (oil shocks, trade conflicts, alliance tensions)
+- Foreign policy levers & presidential powers (diplomatic posture, sanctions, defense posture/readiness, foreign aid myth card)
+- Security Index integration & macro feedback (10% Security Prosperity weight, defense budget multipliers, import/energy inflation)
+- Trade & tariff dynamics (bilateral agreements, retaliatory spirals, export/import cost impacts)
+
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
 
 ---
-*Last updated: 2026-10-12 after shipping milestone v0.3*
+*Last updated: 2026-10-12 for Milestone v0.4 initialization*
