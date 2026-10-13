@@ -129,6 +129,14 @@ test.describe('accessibility audits (OBS-07, D6)', () => {
     const votersTableAxe = await new AxeBuilder({ page }).analyze();
     const votersTableSevere = votersTableAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     expect(votersTableSevere, `Voters Table View a11y violations: ${JSON.stringify(votersTableSevere, null, 2)}`).toEqual([]);
+
+    // 9c. Voters Coalitions View (SOC-05)
+    await page.locator('.switch-btn:has-text("Coalitions")').click();
+    await expect(page.locator('.coalitions-wrapper')).toBeVisible();
+
+    const votersCoalitionsAxe = await new AxeBuilder({ page }).analyze();
+    const votersCoalitionsSevere = votersCoalitionsAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(votersCoalitionsSevere, `Voters Coalitions View a11y violations: ${JSON.stringify(votersCoalitionsSevere, null, 2)}`).toEqual([]);
   });
 
   test('Election Night modal, result card, and EndScreen have zero serious or critical violations (OBS-07)', async ({ page }) => {

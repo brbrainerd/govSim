@@ -1,7 +1,9 @@
 <script lang="ts">
   import type { Session } from '../app/session.svelte';
   import type { ScreenId } from '../app/screens';
-  import { calculateElectoralCollege, type StateVoterState } from '../engine/voters';
+  import { getStateExposure } from '../data/electoral';
+  import { calculateDemographicCoalitions } from '../engine/cohorts';
+  import { calculateElectoralCollege, calculateStateFamilyRelief, type StateVoterState } from '../engine/voters';
   import USMap from '../ui/art/USMap.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
@@ -16,13 +18,42 @@
   const { session, question, go, onOpenMyth, onOpenSpeech }: Props = $props();
 
   const summary = $derived(calculateElectoralCollege(session.current, session.options.party));
+  const cohorts = $derived(calculateDemographicCoalitions(session.current, session.options.party));
 
-  let viewMode = $state<'map' | 'table'>('map');
+  let viewMode = $state<'map' | 'table' | 'coalitions'>('map');
   let selectedId = $state<string | null>(null);
 
   // Default selection to tipping point or Pennsylvania
   const currentSelectedId = $derived(selectedId ?? summary.tippingPointCode ?? 'PA');
   const selectedUnit = $derived<StateVoterState | undefined>(summary.units[currentSelectedId]);
+  const stateExposure = $derived(getStateExposure(currentSelectedId));
+  const familyRelief = $derived(calculateStateFamilyRelief(currentSelectedId, session.current.socialPolicy));
+
+  const salienceTags = $derived.by(() => {
+    if (!stateExposure) return [];
+    const tags: string[] = [];
+    if (stateExposure.seniorShare >= 0.20) {
+      tags.push(`Seniors ${(stateExposure.seniorShare * 100).toFixed(1)}%`);
+    }
+    if (stateExposure.uninsuredRate >= 0.12) {
+      tags.push(`Uninsured ${(stateExposure.uninsuredRate * 100).toFixed(1)}%`);
+    }
+    if (stateExposure.borderState) {
+      tags.push('Border State');
+    }
+    if (stateExposure.fossilEnergy >= 0.08) {
+      tags.push('Energy Producer');
+    } else if (stateExposure.cleanEnergyGrowth >= 0.25) {
+      tags.push('Clean Energy Corridor');
+    }
+    if (stateExposure.farm >= 0.04) {
+      tags.push('Ag Exporter');
+    }
+    if (stateExposure.studentDebtShare >= 0.18) {
+      tags.push(`Student Debt ${(stateExposure.studentDebtShare * 100).toFixed(1)}%`);
+    }
+    return tags;
+  });
 
   // Table sorting
   type SortKey = 'name' | 'ev' | 'support' | 'margin' | 'outlook';
@@ -78,7 +109,7 @@
     <div class="voters-main" data-testid="voters-screen">
       <!-- Mode Toggle Header -->
       <div class="main-header">
-        <div class="view-switcher" role="radiogroup" aria-label="Map or Table View">
+        <div class="view-switcher" role="radiogroup" aria-label="Voters View Mode">
           <button
             type="button"
             class="switch-btn"
@@ -99,6 +130,16 @@
           >
             Table View
           </button>
+          <button
+            type="button"
+            class="switch-btn"
+            class:active={viewMode === 'coalitions'}
+            role="radio"
+            aria-checked={viewMode === 'coalitions'}
+            onclick={() => (viewMode = 'coalitions')}
+          >
+            Coalitions
+          </button>
         </div>
 
         <div class="meta-status">
@@ -111,7 +152,7 @@
         </div>
       </div>
 
-      <!-- Main Canvas: Map or Table -->
+      <!-- Main Canvas: Map, Table, or Coalitions -->
       <div class="display-area">
         {#if viewMode === 'map'}
           <div class="map-wrapper">
@@ -122,7 +163,7 @@
               onSelect={(code) => (selectedId = code)}
             />
           </div>
-        {:else}
+        {:else if viewMode === 'table'}
           <div class="table-wrapper" role="region" aria-label="Electoral College States Table">
             <table class="states-table">
               <thead>
@@ -183,6 +224,71 @@
                 {/each}
               </tbody>
             </table>
+          </div>
+        {:else if viewMode === 'coalitions'}
+          <div class="coalitions-wrapper" role="region" aria-label="Demographic Coalitions Overview">
+            <div class="coalitions-header">
+              <h3 class="coalitions-title">National Demographic Coalitions</h3>
+              <p class="coalitions-subtitle">
+                How macroeconomic trajectory and domestic social policies resonate across voter blocs (SOC-05).
+              </p>
+            </div>
+
+            <div class="cohorts-grid">
+              {#each cohorts as cohort (cohort.id)}
+                <div class="cohort-card" data-testid={`cohort-${cohort.id}`}>
+                  <div class="cohort-header">
+                    <span class="cohort-name">{cohort.name}</span>
+                    <span class="cohort-share">{cohort.sharePct}% of electorate</span>
+                  </div>
+
+                  <div class="cohort-meter-row">
+                    <div class="cohort-metric">
+                      <span class="cohort-pct">{cohort.supportPct.toFixed(1)}%</span>
+                      <span class="cohort-trend" class:trend-up={cohort.supportDelta >= 0} class:trend-down={cohort.supportDelta < 0}>
+                        {cohort.supportDelta >= 0 ? '▲ +' : '▼ '}{cohort.supportDelta.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div
+                      class="cohort-bar-track"
+                      role="progressbar"
+                      aria-valuenow={cohort.supportPct}
+                      aria-valuemin={15}
+                      aria-valuemax={85}
+                      aria-label={`${cohort.name} support`}
+                    >
+                      <div
+                        class="cohort-bar-fill"
+                        class:lead-pos={cohort.supportPct >= 50}
+                        class:lead-neg={cohort.supportPct < 50}
+                        style="width: {cohort.supportPct}%;"
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div class="cohort-drivers">
+                    {#if cohort.topPositiveDriver}
+                      <div class="driver-item driver-positive">
+                        <span class="driver-tag">✓</span>
+                        <span class="driver-text">{cohort.topPositiveDriver}</span>
+                      </div>
+                    {/if}
+                    {#if cohort.topNegativeDriver}
+                      <div class="driver-item driver-negative">
+                        <span class="driver-tag">✗</span>
+                        <span class="driver-text">{cohort.topNegativeDriver}</span>
+                      </div>
+                    {/if}
+                    {#if !cohort.topPositiveDriver && !cohort.topNegativeDriver}
+                      <div class="driver-item driver-neutral">
+                        <span class="driver-tag">•</span>
+                        <span class="driver-text">Sentiment aligned with national baseline</span>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+              {/each}
+            </div>
           </div>
         {/if}
       </div>
@@ -268,6 +374,39 @@
                 {selectedUnit.supportDelta >= 0 ? '+' : ''}{selectedUnit.supportDelta.toFixed(1)}% vs baseline
               </span>
             </div>
+          </div>
+
+          <!-- Demographic Salience Badges -->
+          {#if salienceTags.length > 0}
+            <div class="salience-tags-row">
+              {#each salienceTags as tag}
+                <span class="salience-tag">{tag}</span>
+              {/each}
+            </div>
+          {/if}
+
+          <!-- Local Family Impact (SOC-05) -->
+          <div class="local-impact-box" data-testid="local-family-impact">
+            <div class="impact-header">
+              <span class="impact-label">LOCAL FAMILY IMPACT</span>
+              <span class="impact-val" class:lead-pos={familyRelief > 0} class:lead-neg={familyRelief < 0}>
+                {familyRelief >= 0 ? '+' : ''}${familyRelief} / mo
+              </span>
+            </div>
+            <p class="rpp-note">
+              {#if stateExposure?.rpp}
+                Price parity index: <b>{stateExposure.rpp.toFixed(1)}</b>
+                {#if stateExposure.rpp < 95}
+                  (lower living costs stretch relief dollars)
+                {:else if stateExposure.rpp > 105}
+                  (higher living costs dampen relief impact)
+                {:else}
+                  (matches national price parity)
+                {/if}
+              {:else}
+                National price parity benchmark: 100.0
+              {/if}
+            </p>
           </div>
 
           <div class="reasons-section">
@@ -393,6 +532,153 @@
     width: 100%;
     height: 100%;
     overflow-y: auto;
+  }
+
+  /* Coalitions View (SOC-05) */
+  .coalitions-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-sizing: border-box;
+  }
+
+  .coalitions-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .coalitions-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--ink);
+  }
+
+  .coalitions-subtitle {
+    margin: 0;
+    font-size: 12px;
+    font-family: var(--font-body);
+    color: var(--ink-soft);
+  }
+
+  .cohorts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+  }
+
+  .cohort-card {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    border-radius: var(--r-sm);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+
+  .cohort-card:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  .cohort-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .cohort-name {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--ink);
+  }
+
+  .cohort-share {
+    font-size: 11px;
+    font-family: var(--font-condensed);
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  .cohort-meter-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .cohort-metric {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .cohort-pct {
+    font-size: 20px;
+    font-family: var(--font-ui);
+    font-weight: bold;
+    color: var(--ink);
+  }
+
+  .cohort-trend {
+    font-size: 11px;
+    font-family: var(--font-ui);
+    font-weight: bold;
+  }
+
+  .cohort-bar-track {
+    height: 8px;
+    background: var(--card);
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .cohort-bar-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+  }
+
+  .cohort-drivers {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 2px;
+    font-size: 11px;
+    font-family: var(--font-body);
+  }
+
+  .driver-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.3;
+  }
+
+  .driver-tag {
+    font-weight: bold;
+    font-family: var(--font-ui);
+    flex-shrink: 0;
+  }
+
+  .driver-positive {
+    color: var(--sage-dark);
+  }
+
+  .driver-negative {
+    color: var(--alert-dark);
+  }
+
+  .driver-neutral {
+    color: var(--ink-soft);
   }
 
   .states-table {
@@ -647,12 +933,16 @@
     flex-direction: column;
     gap: 12px;
     height: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding-right: 2px;
   }
 
   .inspector-card {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    padding: 12px;
   }
 
   .inspector-header {
@@ -756,6 +1046,62 @@
     color: var(--alert-dark);
   }
 
+  .salience-tags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .salience-tag {
+    font-size: 10px;
+    font-family: var(--font-condensed);
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    color: var(--ink);
+  }
+
+  .local-impact-box {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    border-radius: var(--r-sm);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .impact-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .impact-label {
+    font-size: 10px;
+    font-family: var(--font-ui);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ink-soft);
+  }
+
+  .impact-val {
+    font-size: 13px;
+    font-family: var(--font-ui);
+    font-weight: bold;
+  }
+
+  .rpp-note {
+    margin: 0;
+    font-size: 11px;
+    font-family: var(--font-body);
+    color: var(--ink-soft);
+    line-height: 1.3;
+  }
+
   .reasons-section {
     display: flex;
     flex-direction: column;
@@ -786,6 +1132,7 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    padding: 10px 12px;
   }
 
   .card-caption {

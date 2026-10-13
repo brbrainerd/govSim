@@ -32,14 +32,17 @@ describe('Voters screen component (VOT-01..VOT-03)', () => {
       },
     });
 
-    // Inspector card shows support metric and reasons list
+    // Inspector card shows support metric, local family impact, and reasons list
     expect(html).toContain('inspector-card');
     expect(html).toContain('support-pct');
+    expect(html).toContain('data-testid="local-family-impact"');
+    expect(html).toContain('LOCAL FAMILY IMPACT');
+    expect(html).toContain('Price parity index:');
     expect(html).toContain('WHY VOTERS FEEL THIS WAY');
     expect(html).toContain('reason-item');
   });
 
-  it('renders sortable table fallback with 56 electoral units (VOT-01)', () => {
+  it('renders sortable table fallback and coalitions view switcher (VOT-01, SOC-05)', () => {
     const session = new Session(1, START, { party: 'D' });
     const { html } = render(Voters, {
       props: {
@@ -48,9 +51,10 @@ describe('Voters screen component (VOT-01..VOT-03)', () => {
       },
     });
 
-    // Has Map View and Table View switcher buttons
+    // Has Map View, Table View, and Coalitions switcher buttons
     expect(html).toContain('Map View');
     expect(html).toContain('Table View');
+    expect(html).toContain('Coalitions');
   });
 
   it('renders honest projection whiskers in Year 3+ (turn >= 9) (VOT-03)', () => {

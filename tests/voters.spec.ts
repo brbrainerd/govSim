@@ -59,6 +59,12 @@ test.describe('Voters screen and Electoral College E2E (VOT-01..VOT-06)', () => 
     await expect(inspector.locator('.state-title')).toContainText('Maine 2nd');
     await expect(inspector.locator('.state-ev-pill')).toHaveText('1 EV');
 
+    // Verify Local Family Impact card (SOC-05)
+    const impactCard = inspector.locator('[data-testid="local-family-impact"]');
+    await expect(impactCard).toBeVisible();
+    await expect(impactCard.locator('.impact-label:has-text("LOCAL FAMILY IMPACT")')).toBeVisible();
+    await expect(impactCard.locator('.rpp-note')).toContainText('Price parity index:');
+
     // 6. Switch to Table View and test sorting (VOT-01)
     await page.locator('.switch-btn:has-text("Table View")').click();
     await expect(page.locator('.states-table')).toBeVisible();
@@ -70,6 +76,17 @@ test.describe('Voters screen and Electoral College E2E (VOT-01..VOT-06)', () => 
     await evHeader.click();
     // First row should have high EV (California 54) or low EV
     await expect(rows.first()).toBeVisible();
+
+    // 7. Switch to Coalitions View and verify 6 cohorts (SOC-05)
+    await page.locator('.switch-btn:has-text("Coalitions")').click();
+    await expect(page.locator('.coalitions-wrapper')).toBeVisible();
+    await expect(page.locator('.coalitions-title:has-text("National Demographic Coalitions")')).toBeVisible();
+    for (const cohortId of ['seniors', 'working_class', 'young_families', 'college_educated', 'immigrant', 'energy_ag']) {
+      const cohortCard = page.locator(`[data-testid="cohort-${cohortId}"]`);
+      await expect(cohortCard).toBeVisible();
+      await expect(cohortCard.locator('.cohort-pct')).toBeVisible();
+      await expect(cohortCard.locator('.cohort-share')).toBeVisible();
+    }
 
     // Switch back to Map View
     await page.locator('.switch-btn:has-text("Map View")').click();
