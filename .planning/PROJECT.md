@@ -10,8 +10,8 @@ Open source. Full design: `docs/design.md`.
 
 ## Core Value
 
-A player can make real presidential tradeoffs (budget, Congress, executive powers) against an honest,
-explainable model of the current US, and always understand *why* the country got better or worse.
+A player can make real presidential tradeoffs (budget, Congress, executive powers, social policy, structural reforms)
+against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
 
 ## Requirements
 
@@ -35,29 +35,30 @@ explainable model of the current US, and always understand *why* the country got
 - ✓ Year 4 Fall election night reveal, contingent House tie resolution, causal trace debrief, second term extension — v0.2
 - ✓ End screen: score vs do-nothing, 10-year legacy projection, and historian verdict tier — v0.2
 - ✓ 12 policy milestone badges, balance harness calibration over 80 seeds, About/Privacy/Credits modal, and zero-egress problem report bundle — v0.2
+- ✓ Domestic social policy levers (healthcare, immigration, energy/climate, education) with pure engine deltas and registered coefficients — v0.3
+- ✓ Demographic and regional distribution: state-level exposure indices, BEA regional price parity, and voter coalition shifts — v0.3
+- ✓ Structural government reform: Senate filibuster options, judicial ethics & 18-year term limits, electoral reforms, and 3/4 state amendment ratifications — v0.3
+- ✓ "Your Household" impact card: 7 kitchen-table budget lines, 4 authentic preset personas, and custom family/state builder — v0.3
+- ✓ Extended 100-seed Monte Carlo game balance calibration (+3.425 headroom, party neutrality $\le 5$ pp) — v0.3
 
 ### Active
 
-- [ ] Domestic social policy tracks: Healthcare, immigration, energy & climate, and education policy levers with causal traces (SOC-01)
-- [ ] Demographic & state-level distributional impacts on cost of living, jobs, and voter sentiment (SOC-02)
-- [ ] Structural reform track: Filibuster modification, SCOTUS term limits, and campaign finance rules (REF-01)
-- [ ] Constitutional amendment mechanics with 2/3 Congressional and 3/4 state legislature ratification hurdles (REF-02)
-- [ ] "Your Household" impact card: preset or custom personas showing kitchen-table economic effects (HOU-01)
+(None currently — ready to initialize next milestone with `/gsd-new-milestone`.)
 
 ### Out of Scope
 
-- Foreign policy, military, international crises — design M3
-- Evil mode — design M4
+- Foreign policy, military, international crises — design M3 (planned for Milestone v0.4)
+- Evil mode — design M4 (planned for Milestone v0.5)
 - Audio, voice narration — decided no audio (A5)
 - Live news feed — needs a server, partisan risk (E5)
 - Real officeholders — fictional people only (Q6)
 
 ## Context
 
-- Shipped Milestone v0.2 ("Playable First Term") with 246 unit tests, 14 Playwright E2E tests, zero axe violations, and clean token guardrails.
+- Shipped Milestone v0.3 ("Social Policy & Domestic Reform") with 330 unit tests across 54 files, 23 Playwright E2E tests, zero axe violations, and clean token guardrails.
 - Pure client application (TypeScript + Svelte 5 runes + Vite), zero backend dependencies, zero telemetry.
-- Visual direction C (Americana poster) + best of A; tokens SSOT, zero outer viewport scrolling.
-- Balance calibrated across training (1–40) and validation (41–80) seeds; sensible play reliably beats do-nothing by 2–10 index points.
+- Visual direction C (Americana poster) + best of A; tokens SSOT, zero outer viewport scrolling across 1376×768 and 1280×720 viewports.
+- Balance calibrated across 100 seeds; sensible play reliably beats do-nothing by +3.425 index points with $\le 5$ percentage points party neutrality.
 
 ## Constraints
 
@@ -78,11 +79,13 @@ explainable model of the current US, and always understand *why* the country got
 | Keyed stateless RNG streams | Guarantees identical shocks for autopilot regardless of player decisions | ✓ Good |
 | Pure arithmetic-only engine (`tanhPade`) | Avoids transcendental Math precision drift across browsers | ✓ Good |
 | Native deflate-raw URL hash replay | Shareable runs with zero server storage and zero egress | ✓ Good |
-| Bully pulpit speech in sensible bot | Calibrates reelection rates to 40%–85% across training and validation seeds | ✓ Good |
+| Regional Price Parity Indexing | Uses authentic BEA RPP indices to ground inflation in state-level costs of living | ✓ Good |
+| High-hurdle amendment ratifications | Simulates 2/3 Congress and 3/4 state legislature approvals with realistic pacing | ✓ Good |
+| 100-seed party neutrality regression | Ensures symmetric policy yields symmetric reelection odds within 5 pp | ✓ Good |
 
-## Current Milestone: In Planning (v0.3 Social Policy & Domestic Reform)
+## Current Milestone: Complete (v0.3 Social Policy & Domestic Reform)
 
-Focus: Expand presidential governance to domestic social policy (healthcare, immigration, energy, education), structural government reforms, and kitchen-table impact via the "Your Household" card.
+Milestone v0.3 is shipped and archived. Run `/gsd-new-milestone` to start the next milestone.
 
 ---
-*Last updated: 2026-10-12 after starting milestone v0.3 cycle*
+*Last updated: 2026-10-12 after shipping milestone v0.3*
