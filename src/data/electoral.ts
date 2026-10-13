@@ -67,5 +67,5 @@ export function getStateExposure(stateCode: string): StateDemographicExposure | 
     return STATE_EXPOSURES[stateCode];
   }
   const base = stateCode.split('-')[0];
-  return STATE_EXPOSURES[base];
+  return base ? STATE_EXPOSURES[base] : undefined;
 }

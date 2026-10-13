@@ -55,3 +55,14 @@ export const SOCIAL_PERCENT_STEP = 10;
 export const SOCIAL_BINARY_BASE = 0;
 export const SOCIAL_BINARY_MAX = 1;
 export const SOCIAL_BINARY_STEP = 1;
+
+export const RPP_BASE_INDEX = 100;
+export const FAMILY_RELIEF_UNIT_DOLLARS = 10;
+
+export const SENIOR_COHORT_SHARE = 0.20;
+export const WORKING_CLASS_COHORT_SHARE = 0.26;
+export const YOUNG_FAMILY_COHORT_SHARE = 0.22;
+export const COLLEGE_COHORT_SHARE = 0.24;
+export const IMMIGRANT_COHORT_SHARE = 0.15;
+export const ENERGY_AG_COHORT_SHARE = 0.08;
+
