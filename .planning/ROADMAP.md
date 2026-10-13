@@ -9,7 +9,7 @@
 
 ## Phases
 
-### 🚧 v0.5 Satirical "Evil Mode" (In Progress)
+### ✅ v0.5 Satirical "Evil Mode" (Complete)
 
 **Milestone Goal:** Implement the satirical "Evil Mode" kleptocracy gameplay loop where the objective is to maximize an offshore stash while managing an escalating Heat meter to evade congressional investigations, special counsels, and impeachment trials.
 
@@ -59,7 +59,7 @@
   2. Offshore stash counter and Heat Gauge permanently displayed in the top status bar and Situation Room.
   3. End screen ranks unconvicted players by their offshore heist tier, or details their downfall upon conviction.
   4. Fully audited with headless Playwright across 1376×768 and 1280×720 viewports with zero a11y violations.
-**Plans**: TBD (4 plans expected)
+**Plans**: 4 plans executed (completed 2026-10-13)
 
 ---
 
