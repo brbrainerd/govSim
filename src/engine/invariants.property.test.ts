@@ -8,6 +8,7 @@ import { deals as DEALS, type DealId } from './congress';
 import { START } from './fixture';
 import { endTurn, newGame, type Decisions, type GameState } from './game';
 import { stableHash } from './hash';
+import { socialLevers, type SocialDraft } from './social';
 
 const allLevers = [...taxLevers, ...spendLevers];
 const dealIds = DEALS.map((d) => d.id as DealId);
@@ -22,6 +23,16 @@ const arbBudget = fc.record(
   ),
 ) as fc.Arbitrary<BudgetDraft>;
 
+// Arbitrary social policy generator picking values within valid lever ranges
+const arbSocial = fc.record(
+  Object.fromEntries(
+    socialLevers.map((l) => [
+      l.id,
+      fc.float({ min: l.min, max: l.max, noNaN: true }),
+    ]),
+  ),
+) as fc.Arbitrary<SocialDraft>;
+
 // Arbitrary deals generator picking a unique subset of known deals
 const arbDeals = fc.subarray(dealIds);
 
@@ -33,6 +44,16 @@ const arbDecisions: fc.Arbitrary<Decisions> = fc.oneof(
       budget: arbBudget,
       deals: arbDeals,
     }),
+  }),
+  fc.record({
+    social: arbSocial,
+  }),
+  fc.record({
+    bill: fc.record({
+      budget: arbBudget,
+      deals: arbDeals,
+    }),
+    social: arbSocial,
   }),
 );
 
