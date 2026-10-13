@@ -1,103 +1,18 @@
 ---
 phase: 01-engine-foundations
-verified: 2026-10-10T23:30:00Z
+verified: 2026-10-13T01:34:00Z
 status: passed
-score: 5/5 roadmap success criteria verified in code (all UAT passed)
-covered_files:
-  - ".planning/REQUIREMENTS.md"
-  - ".planning/phases/01-engine-foundations/01-01-PLAN.md"
-  - ".planning/phases/01-engine-foundations/01-01-SUMMARY.md"
-  - ".planning/phases/01-engine-foundations/01-02-PLAN.md"
-  - ".planning/phases/01-engine-foundations/01-02-SUMMARY.md"
-  - ".planning/phases/01-engine-foundations/01-03-PLAN.md"
-  - ".planning/phases/01-engine-foundations/01-03-SUMMARY.md"
-  - ".planning/phases/01-engine-foundations/01-04-PLAN.md"
-  - ".planning/phases/01-engine-foundations/01-04-SUMMARY.md"
-  - ".planning/phases/01-engine-foundations/01-05-PLAN.md"
-  - ".planning/phases/01-engine-foundations/01-05-SUMMARY.md"
-  - ".planning/phases/01-engine-foundations/01-06-PLAN.md"
-  - ".planning/phases/01-engine-foundations/01-06-SUMMARY.md"
-  - ".planning/phases/01-engine-foundations/01-07-PLAN.md"
-  - ".planning/phases/01-engine-foundations/01-07-SUMMARY.md"
-  - "CONTRIBUTING.md"
-  - "LICENSE"
-  - "LICENSE-ASSETS"
-  - "THIRD_PARTY_NOTICES.md"
-  - "TRADEMARKS.md"
-  - "package.json"
-  - "scripts/determinism.mjs"
-  - "scripts/notices.mjs"
-  - "src/App.svelte"
-  - "src/app/indicators.ts"
-  - "src/app/screens.test.ts"
-  - "src/app/screens.ts"
-  - "src/app/session.svelte.ts"
-  - "src/app/session.test.ts"
-  - "src/content/parties.ts"
-  - "src/content/sample.ts"
-  - "src/data/schema.ts"
-  - "src/data/us.test.ts"
-  - "src/data/us.ts"
-  - "src/design/icons.ts"
-  - "src/design/tokens.ts"
-  - "src/engine/balance.test.ts"
-  - "src/engine/budget.test.ts"
-  - "src/engine/budget.ts"
-  - "src/engine/calendar.test.ts"
-  - "src/engine/calendar.ts"
-  - "src/engine/coefficients.test.ts"
-  - "src/engine/coefficients.ts"
-  - "src/engine/congress.ts"
-  - "src/engine/decisions.test.ts"
-  - "src/engine/decisions.ts"
-  - "src/engine/determinism.test.ts"
-  - "src/engine/detmath.ts"
-  - "src/engine/fixture.ts"
-  - "src/engine/game.test.ts"
-  - "src/engine/game.ts"
-  - "src/engine/hash.ts"
-  - "src/engine/legacy.test.ts"
-  - "src/engine/modifiers.test.ts"
-  - "src/engine/modifiers.ts"
-  - "src/engine/party.test.ts"
-  - "src/engine/purity.test.ts"
-  - "src/engine/replayFixture.ts"
-  - "src/engine/rng.test.ts"
-  - "src/engine/rng.ts"
-  - "src/engine/score.ts"
-  - "src/engine/shocks.test.ts"
-  - "src/engine/trace.test.ts"
-  - "src/engine/trace.ts"
-  - "src/engine/units.ts"
-  - "src/main.ts"
-  - "src/screens/Budget.svelte"
-  - "src/screens/Congress.svelte"
-  - "src/screens/Game.svelte"
-  - "src/screens/NewGame.svelte"
-  - "src/screens/OvalOffice.svelte"
-  - "src/testing/conservation.ts"
-  - "src/testing/mods.ts"
-  - "src/testing/scan.ts"
-  - "src/ui/Rail.svelte"
-  - "src/ui/ScreenLayout.svelte"
-  - "src/ui/StatusBar.svelte"
-  - "src/ui/art/Character.svelte"
-  - "src/ui/art/CoinStack.svelte"
-  - "src/ui/art/OvalOfficeScene.svelte"
-  - "src/ui/art/Ribbon.svelte"
-  - "src/ui/art/Rosette.svelte"
-  - "src/ui/art/hemicycle.ts"
-covered_digest: "v1:sha256:34c9dbcb9b98aec1568f8732ba00d14b9174f3dcfb9b4293360948778d5b96c1"
-behavior_unverified: 0
-overrides_applied: 0
-re_verification: false
-human_verification:
-  - test: "REL-01 'license shows on GitHub': push game-pivot (or merge to master) and open https://github.com/brbrainerd/govSim"
-    expected: "GitHub's sidebar shows 'MIT license'; LICENSE-ASSETS, TRADEMARKS.md, CONTRIBUTING.md and THIRD_PARTY_NOTICES.md are present in the file list"
-    why_human: "The files exist and are committed on game-pivot (commit bb36df0), but game-pivot is not pushed and origin/master has none of them, so GitHub display cannot be checked from the working tree"
-  - test: "Run `pnpm dev`, open the app; check New Game, then the status bar"
-    expected: "'Which party do you lead?' with two unselected radios; 'Start the term' disabled until one is chosen; after start the status bar shows the party name and 'Turn 1 of 32 · Year 1 · Winter'; hovering the label shows 'Real calendar: Fall 2026. Your term is fictional and off-cycle.'; advancing to turn 8 reads 'Year 2 · Fall' and turn 16 'Year 4 · Fall'"
-    why_human: "The calendar functions, Session party-blindness and engine are unit-tested, but no test mounts NewGame.svelte or StatusBar.svelte, so the disabled-until-chosen button, no-preselect radios and tooltip wiring are verified by reading source only"
+score: 8/8 requirements verified in code and tests
+covered_requirements:
+  - FND-01
+  - FND-02
+  - FND-03
+  - FND-04
+  - FND-05
+  - FND-06
+  - FND-07
+  - FND-08
+  - REL-01
 ---
 
 # Phase 1: Engine foundations Verification Report

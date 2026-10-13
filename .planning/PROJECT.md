@@ -22,10 +22,23 @@ explainable model of the current US, and always understand *why* the country got
 - ✓ Sourced starting data `data/us-2026.json` (economy, budget, taxes, society, Congress, Court, 50 states + DC) — v0.1
 - ✓ Oval Office, Budget (packages, sliders, expert forecast) and Congress (435-seat whip, deals, vote, reward/penalty) screens matching approved art — v0.1
 - ✓ Balance harness (40 seeds × 5 strategies) guarding against degenerate play — v0.1
+- ✓ Keyed stateless RNG streams, arithmetic-only engine, bit-reproducible cross-browser determinism — v0.2
+- ✓ Term calendar ("Year N · Season") with real-date tooltip, party pick at New Game with party-blind engine — v0.2
+- ✓ Coefficient registry with citations, ranges, and static purity scanner — v0.2
+- ✓ Save format v1 freeze, localStorage autosave, schema-validated export/import, deflate-raw URL hash replay — v0.2
+- ✓ Zero egress CSP architecture, automated prose grade gate, and strict CI continuous deployment — v0.2
+- ✓ Post-turn report card with 8 indicators, causal trace breakdowns, luck lines, and unexpected ripple effects — v0.2
+- ✓ Economy screen with charts vs do-nothing, Fed rate explainer, and accessible data table fallbacks — v0.2
+- ✓ Paced exogenous & endogenous crisis system with countdown deadlines, trade-off modals, and rally effects — v0.2
+- ✓ Your Powers screen: 10 cited executive orders, 6-3 court challenges, Fed/Court appointments, speeches, myth cards — v0.2
+- ✓ Voters screen: 50-state + DC + ME/NE map, 270 projection bar with uncertainty bands, and midterms — v0.2
+- ✓ Year 4 Fall election night reveal, contingent House tie resolution, causal trace debrief, second term extension — v0.2
+- ✓ End screen: score vs do-nothing, 10-year legacy projection, and historian verdict tier — v0.2
+- ✓ 12 policy milestone badges, balance harness calibration over 80 seeds, About/Privacy/Credits modal, and zero-egress problem report bundle — v0.2
 
 ### Active
 
-See `.planning/REQUIREMENTS.md` for milestone v0.2.
+(None currently — ready to initialize next milestone with `/gsd-new-milestone`.)
 
 ### Out of Scope
 
@@ -38,10 +51,10 @@ See `.planning/REQUIREMENTS.md` for milestone v0.2.
 
 ## Context
 
-- Branch `game-pivot`; Rust research sim archived at tag `rust-final`.
-- Visual direction C (Americana poster) + best of A; concept art and code prototypes on the design canvas.
-- Coefficients in the macro model are hand-set; lever 10-yr costs sized from real magnitudes, not CBO scores.
-- Data gaps: nondefense discretionary null; spending categories are 11-month actuals until Treasury's Sept MTS.
+- Shipped Milestone v0.2 ("Playable First Term") with 246 unit tests, 14 Playwright E2E tests, zero axe violations, and clean token guardrails.
+- Pure client application (TypeScript + Svelte 5 runes + Vite), zero backend dependencies, zero telemetry.
+- Visual direction C (Americana poster) + best of A; tokens SSOT, zero outer viewport scrolling.
+- Balance calibrated across training (1–40) and validation (41–80) seeds; sensible play reliably beats do-nothing by 2–10 index points.
 
 ## Constraints
 
@@ -58,37 +71,15 @@ See `.planning/REQUIREMENTS.md` for milestone v0.2.
 | Rewrite in TS, archive Rust | Game needs a fast web UI; Rust sim had no game layer | ✓ Good |
 | Score vs autopilot + 10-yr legacy | Separates skill from luck; punishes sugar-high deficits | ✓ Good (harness proves it) |
 | Agent-authored SVG characters, not Rive | Agent can author, capture and test end to end | ✓ Good |
-| Congress unlocks turn 1 | Budget → Congress is one loop | — Pending playtest |
+| Congress unlocks turn 1 | Budget → Congress is one loop | ✓ Good |
+| Keyed stateless RNG streams | Guarantees identical shocks for autopilot regardless of player decisions | ✓ Good |
+| Pure arithmetic-only engine (`tanhPade`) | Avoids transcendental Math precision drift across browsers | ✓ Good |
+| Native deflate-raw URL hash replay | Shareable runs with zero server storage and zero egress | ✓ Good |
+| Bully pulpit speech in sensible bot | Calibrates reelection rates to 40%–85% across training and validation seeds | ✓ Good |
 
-## Current Milestone: v0.2 Playable First Term
+## Current Milestone: Complete (v0.2 Playable First Term)
 
-**Goal:** A player can play the real 2026 country through a full term — crises, explained turn reports,
-every screen real — ending in an Electoral College reelection and a legacy score.
-
-**Target features:**
-- Events & crises (seeded, identical in autopilot) with decision modals and a turn report card
-- Economy screen: you vs autopilot charts, Fed rate, why-it's-happening, all 8 scores
-- Voters screen: state map from 2024 margins, state panel, swing states, Electoral College race
-- Your Powers screen: executive orders, court challenges, Fed chair / pressure, speech, myth cards
-- Election night (turn 16), second term, end-of-term score with legacy + historian verdict
-- Research & decisions: enforced observability, consistent fun gameplay, distribution/publishing/monetization
-
-## Evolution
-
-This document evolves at phase transitions and milestone boundaries.
-
-**After each phase transition** (via `/gsd-transition`):
-1. Requirements invalidated? → Move to Out of Scope with reason
-2. Requirements validated? → Move to Validated with phase reference
-3. New requirements emerged? → Add to Active
-4. Decisions to log? → Add to Key Decisions
-5. "What This Is" still accurate? → Update if drifted
-
-**After each milestone** (via `/gsd-complete-milestone`):
-1. Full review of all sections
-2. Core Value check — still the right priority?
-3. Audit Out of Scope — reasons still valid?
-4. Update Context with current state
+Milestone v0.2 is shipped and archived. Run `/gsd-new-milestone` to start the next milestone.
 
 ---
-*Last updated: 2026-10-09 after starting milestone v0.2*
+*Last updated: 2026-10-12 after shipping milestone v0.2*

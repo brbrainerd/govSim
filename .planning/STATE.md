@@ -2,20 +2,19 @@
 gsd_state_version: "1.0"
 milestone: v0.2
 milestone_name: Playable First Term
-current_phase: 8
-current_phase_name: Balance, hardening & release
-status: complete
+status: Awaiting next milestone
 stopped_at: Milestone v0.2 complete (all 8 phases executed and verified)
-last_updated: "2026-10-13T01:31:00.000Z"
+last_updated: "2026-10-13T01:38:26.564Z"
 last_activity: 2026-10-12
-last_activity_desc: Phase 8 (all 4 plans) complete and verified with 14 Playwright E2E tests, 246 unit tests, and axe audits
-state_head: 6ae7fab
+last_activity_desc: Milestone v0.2 completed and archived
+state_head: 2a66685ff9d3648a5d5676a6b4549cf61b536f8b
 progress:
   total_phases: 8
   completed_phases: 8
-  total_plans: 39
+  total_plans: 40
   completed_plans: 39
-  percent: 100
+current_phase: 8
+current_phase_name: Balance, hardening & release
 ---
 
 # Project State
@@ -29,12 +28,10 @@ See: .planning/PROJECT.md (updated 2026-10-09)
 
 ## Current Position
 
-Phase: 8 — Balance, hardening & release
-Plan: 08-04 Complete
-Status: Milestone v0.2 Complete (100%)
-Last activity: 2026-10-12 — Phase 8 execution complete, all plans and verification passing
-
-Progress: [██████████] 100%
+Phase: Milestone v0.2 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-10-12 — Milestone v0.2 completed and archived
 
 ## Performance Metrics
 
@@ -117,3 +114,7 @@ Items acknowledged and deferred at milestone close, most recent first:
 Last session: 2026-10-11T06:12:10.361Z
 Stopped at: Phase 1 complete, ready to plan Phase 2
 Resume file: None
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone
