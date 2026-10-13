@@ -64,11 +64,12 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 - **Milestone v0.2 (Playable First Term): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.2`.**
   - All 8 phases (1 to 8) executed, verified, and audited with 53/53 requirements satisfied.
   - Archived to `.planning/milestones/v0.2-ROADMAP.md`, `v0.2-REQUIREMENTS.md`, and `v0.2-phases/`.
-- **Milestone v0.3 (Social Policy & Domestic Reform): INITIALIZED AND IN PLANNING.**
+- **Milestone v0.3 (Social Policy & Domestic Reform): IN PROGRESS.**
   - Scoped across 4 phases: Phase 9 (Domestic Social Policy Levers), Phase 10 (Demographic & Regional Distribution), Phase 11 (Structural Government Reform & Amendments), Phase 12 (Household Impact Card & Balance).
   - 11 active requirements defined in `.planning/REQUIREMENTS.md` (SOC-01..05, REF-01..04, HOU-01..02).
-  - **Phase 9 (Domestic Social Policy Levers): PLANNED.** Research completed (`09-RESEARCH.md`) and 4 execution plans created (`09-01..04`) across 4 waves covering pure catalog, engine dynamics, congressional voting, and attribution/verification. Ready for `/gsd-execute-phase 9`.
-- **Gates:** `pnpm test` 246 passing (42 files) · `pnpm test:e2e` 14 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
+  - **Phase 9 (Domestic Social Policy Levers): COMPLETE.** Engine models for healthcare, immigration, energy/climate, and education with registered coefficients, causal tracing, congressional whip dynamics, and balance calibration.
+  - **Phase 10 (Demographic & Regional Distribution): COMPLETE & VERIFIED.** State exposures for 51 jurisdictions, BEA Regional Price Parity purchasing power index, mean-centered regional transmission, 6 national demographic cohorts, competitive House delegation transmission, Voters screen Coalitions view, State Inspector Local Family Impact card, axe-core clean, zero-scroll audited at 1376×768 & 1280×720. Ready for Phase 11.
+- **Gates:** `pnpm test` 286 passing (46 files) · `pnpm test:e2e` 16 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
 ### Open debts (do not lose these)

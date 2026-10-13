@@ -24,7 +24,7 @@
 ### Milestone v0.3: Social Policy & Domestic Reform
 
 - [x] **Phase 9: Domestic Social Policy Levers** - Healthcare, immigration, energy/climate, and education models, pure engine levers, cited coefficients, causal traces (SOC-01, SOC-02, SOC-03, SOC-04) — completed 2026-10-12
-- [ ] **Phase 10: Demographic & Regional Distribution** - Sector exposure, state-level cost-of-living impacts, and voter coalition shifts (SOC-05)
+- [x] **Phase 10: Demographic & Regional Distribution** - Sector exposure, state-level cost-of-living impacts, and voter coalition shifts (SOC-05) — completed 2026-10-12
 - [ ] **Phase 11: Structural Government Reform & Amendments** - Senate filibuster reforms, judicial reform, electoral rules, and constitutional amendment hurdles (REF-01, REF-02, REF-03, REF-04)
 - [ ] **Phase 12: Household Impact Card & Balance** - "Your Household" card on Oval Office and Economy screens, persona presets, custom builder, balance calibration pass, and E2E verification (HOU-01, HOU-02)
 
@@ -62,10 +62,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 10-01-PLAN.md — Wave 1: State Demographic & Regional Exposure Dataset (SOC-05)
-- [ ] 10-02-PLAN.md — Wave 2: Pure Engine Dynamics — Regional Transmission & Local Cost of Living (SOC-05)
-- [ ] 10-03-PLAN.md — Wave 3: Demographic Cohorts & Congressional Delegation Shifts (SOC-05)
-- [ ] 10-04-PLAN.md — Wave 4: UI Implementation & Accessible Voter Breakdown (SOC-05)
+- [x] 10-01-PLAN.md — Wave 1: State Demographic & Regional Exposure Dataset (SOC-05)
+- [x] 10-02-PLAN.md — Wave 2: Pure Engine Dynamics — Regional Transmission & Local Cost of Living (SOC-05)
+- [x] 10-03-PLAN.md — Wave 3: Demographic Cohorts & Congressional Delegation Shifts (SOC-05)
+- [x] 10-04-PLAN.md — Wave 4: UI Implementation & Accessible Voter Breakdown (SOC-05)
 
 ### Phase 11: Structural Government Reform & Amendments
 
