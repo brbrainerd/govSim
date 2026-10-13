@@ -597,6 +597,17 @@ export const COEFF = {
   sanctionEnergyEmbargoInflation: { value: 0.25, unit: '% inflation', basis: 'judgement', range: [0.05, 0.5], note: 'CPI inflation surge from unilateral energy shipping and transaction prohibitions.' },
   sanctionEnergyEmbargoOutput: { value: 0.15, unit: '% output gap drag', basis: 'judgement', range: [0.05, 0.4], note: 'Domestic output contraction from energy sanctions blowback and reduced trade volumes.' },
   sanctionCloutCost: { value: 10, unit: 'clout', basis: 'judgement', range: [5, 25], note: 'Clout cost to diplomatic and national security apparatus to enact or maintain unilateral targeted sanctions.' },
+  // ---- Security index & macro feedback coefficients (Phase 15, SEC-01, SEC-02, SEC-03) ----
+  securityBaseline: { value: 50.0, unit: 'index pts', basis: 'judgement', range: [40.0, 60.0], note: 'Neutral baseline value for the 0-100 Security Index at game inception.' },
+  securityDefenseSurgeBonus: { value: 8.0, unit: 'index pts', basis: 'judgement', range: [3.0, 15.0], note: 'Security index boost from forward military surge readiness posture.' },
+  securityDefensePeacetimePenalty: { value: 10.0, unit: 'index pts', basis: 'judgement', range: [4.0, 18.0], note: 'Security index deduction from peacetime troop drawdown.' },
+  securityForeignAidScale: { value: 0.05, unit: 'index pts per aid pt deviation', basis: 'judgement', range: [0.01, 0.15], note: 'Security index effect per point deviation from baseline foreign assistance (100 base).' },
+  securityActiveCrisisPenalty: { value: 12.0, unit: 'index pts per active crisis', basis: 'judgement', range: [5.0, 25.0], note: 'Security index penalty per uncontained international crisis.' },
+  securitySanctionBonus: { value: 2.5, unit: 'index pts per sanction', basis: 'judgement', range: [1.0, 6.0], note: 'Deterrence credibility added to security index per active targeted sanction.' },
+  securityCrimeScale: { value: 25.0, unit: 'index pts per 100% crime deviation', basis: 'judgement', range: [10.0, 50.0], note: 'Domestic public safety contribution to the overall Security Index.' },
+  geopoliticalEnergyInflation: { value: 0.25, unit: '% quarterly inflation', basis: 'judgement', range: [0.05, 0.6], note: 'Cost-push CPI inflation from active international energy supply disruptions (SEC-03).' },
+  geopoliticalShippingInflation: { value: 0.15, unit: '% quarterly inflation', basis: 'judgement', range: [0.03, 0.4], note: 'Cost-push CPI inflation from active shipping strait choke points (SEC-03).' },
+  geopoliticalSupplyOutputDrag: { value: 0.20, unit: '% output gap drag', basis: 'judgement', range: [0.05, 0.5], note: 'Output gap contraction from active geopolitical supply chain bottlenecks (SEC-03).' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------
