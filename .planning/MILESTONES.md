@@ -1,5 +1,16 @@
 # Milestones
 
+## v0.5 Satirical 'Evil Mode' (Shipped: 2026-10-13)
+
+**Phases completed:** 4 phases, 16 plans, 0 tasks
+
+- Evil Mode opt-in & pure engine foundations: alternative kleptocracy game mode toggle at New Game, pure deterministic offshore stash accumulator ($B), and dynamic 0–100 Heat meter with natural decay, evidence leaks, and institutional legislative friction.
+- Corrupt executive levers: catalog of corrupt presidential directives (awarding no-bid crony contracts, fire-sale land/asset auctions, tariff exemption sales, library foundation slush fund solicitations, and watchdog purges) with direct kickbacks, clout costs, and heat generation.
+- Institutional backlash & impeachment: special counsel appointments and congressional subpoenas (>60 heat) draining 25 clout/quarter, House impeachment floor votes (>80 heat, 218 threshold), and Senate conviction trial (2/3 supermajority, 67 threshold) with instantaneous asset forfeiture to $0.0B and term termination.
+- Satirical UI reskin & heist end screens: dark Americana poster theme palette (oxblood, aged gold, ink), live Oval Office Offshore Stash rosette and Heat Gauge, Kleptocratic Heist Review EndScreen with Extraction Ledger, 6-tier satirical kleptocrat ranking (or federal penitentiary downfall), and WCAG AA contrast compliance across all viewports.
+
+---
+
 ## v0.4 Foreign Policy & International Crises (Shipped: 2026-10-12)
 
 **Phases completed:** 4 phases, 16 plans, 0 tasks

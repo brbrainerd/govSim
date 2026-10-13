@@ -4,14 +4,14 @@
 
 A browser strategy game where you play a fictional President of the United States, inaugurated into the
 real, present-day country (sourced 2026 data). One goal: leave America as prosperous as possible — scored
-against "doing nothing" on the same seed plus a 10-year legacy. Satirical "evil mode" comes later. It is
-also a civics teacher: accurate mechanics, myth cards, plain language, nonpartisan, for teens 14+ and adults.
+against "doing nothing" on the same seed plus a 10-year legacy. A satirical "Evil Mode" offers an alternative
+kleptocratic gameplay loop where players maximize their personal offshore stash while managing public heat.
+It is also a civics teacher: accurate mechanics, myth cards, plain language, nonpartisan, for teens 14+ and adults.
 Open source. Full design: `docs/design.md`.
 
 ## Core Value
 
-A player can make real presidential tradeoffs (budget, Congress, executive powers, social policy, structural reforms)
-against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
+A player can make real presidential tradeoffs (budget, Congress, executive powers, social policy, structural reforms, foreign policy, or satirical kleptocracy) against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
 
 ## Requirements
 
@@ -44,24 +44,30 @@ against an honest, explainable model of the current US, and always understand *w
 - ✓ Presidential foreign policy controls: defense posture slider, foreign assistance adjustments, targeted economic sanctions, and foreign aid myth card — v0.4
 - ✓ Pure deterministic 0–100 Security Index driving 10% of the composite Prosperity Index with causal trace line items — v0.4
 - ✓ International Trade & Tariffs screen: strategic sector tariffs (chips, minerals, clean energy) citing Sec 301/232, bilateral trade accords, and state export vulnerability matrix — v0.4
+- ✓ Satirical Evil Mode opt-in toggle, pure deterministic offshore stash accumulator ($B), and 0–100 Heat meter — v0.5
+- ✓ Corrupt executive levers: no-bid crony contracts, land auctions, tariff exemption sales, library foundation slush fund, watchdog purges — v0.5
+- ✓ Institutional backlash & impeachment: special counsel appointments/subpoenas, House impeachment floor vote, Senate conviction trial with full asset forfeiture — v0.5
+- ✓ Dark Americana visual reskin (oxblood, aged gold, ink), live Oval Office stash rosette/heat gauge, Kleptocratic Heist Review EndScreen, and 6-tier satirical verdicts — v0.5
 
 ### Active
 
-- [ ] Milestone v0.5 scope definition (Satirical "Evil Mode" & alternative win/loss states)
+(None currently active — ready for next milestone requirements definition)
 
 ### Out of Scope
 
-- Evil mode — design M4 (planned for Milestone v0.5)
 - Audio, voice narration — decided no audio (A5)
 - Live news feed — needs a server, partisan risk (E5)
 - Real officeholders — fictional people only (Q6)
+- Tactical direct military combat sim — civilian strategy only
+- Nuclear war annihilation sandbox — terminal instant-lose without pedagogical value
 
 ## Context
 
-- Shipped Milestone v0.4 ("Foreign Policy & International Crises") with 363 unit tests across 59 files, 36 Playwright E2E tests, zero axe violations, and clean token guardrails.
+- Shipped Milestone v0.5 ("Satirical 'Evil Mode'") with 417 unit tests across 65 files, 51 Playwright E2E tests, zero axe violations, and clean token guardrails.
 - Pure client application (TypeScript + Svelte 5 runes + Vite), zero backend dependencies, zero telemetry.
-- Visual direction C (Americana poster) + best of A; tokens SSOT, zero outer viewport scrolling across 1376×768 and 1280×720 viewports.
-- Balance calibrated across 100 seeds; sensible play reliably beats do-nothing by +3.425 index points with $\le 5$ percentage points party neutrality.
+- Visual direction C (Americana poster) with dual theme tokens (Day Americana and Dark Oxblood/Gold/Ink for Evil Mode).
+- Zero outer viewport scrolling across 1376×768 and 1280×720 viewports.
+- Determinism verified 8/8 bit-for-bit across Node, Chromium, Firefox, WebKit (minified and unminified).
 
 ## Constraints
 
@@ -88,15 +94,18 @@ against an honest, explainable model of the current US, and always understand *w
 | Deterministic Geopolitical Crisis Deck | Keyed RNG stream 8 with cited diplomatic/military triads and multi-turn escalation | ✓ Good |
 | Security Index Composite | Pure arithmetic 0–100 index driving 10% of Prosperity Index with causal trace explanations | ✓ Good |
 | Sector Tariffs & Bilateral Accords | Models Sec 301/232 statutory authorities, inflation pass-through, and trade mitigation | ✓ Good |
+| Evil Mode Parallel Game Engine | Pure arithmetic offshore stash and heat tracking while keeping standard mode nonpartisan | ✓ Good |
+| Authentic Impeachment Thresholds | 218 House majority and 67 Senate conviction threshold with 100% asset forfeiture | ✓ Good |
+| Satirical Kleptocrat Verdict Tiers | 6-tier classification ranking unconvicted plunderers or federal prison downfall | ✓ Good |
 
-## Completed Milestone: v0.4 Foreign Policy & International Crises (Shipped 2026-10-12)
+## Completed Milestone: v0.5 Satirical "Evil Mode" (Shipped 2026-10-13)
 
-**Goal:** Introduce international diplomacy, defense posture, global crises, and foreign trade mechanics to complete the presidential toolkit and drive the Security Index.
+**Goal:** Implement the satirical "Evil Mode" kleptocracy gameplay loop where the objective is to maximize an offshore stash while managing an escalating Heat meter to evade congressional investigations, special counsels, and impeachment trials.
 **Delivered:**
-- 4-archetype Geopolitical Crises Deck with countdowns and cited precedents (CRISIS-01, CRISIS-02, CRISIS-03)
-- Defense posture dial, foreign assistance slider, targeted sanctions, and foreign aid civics myth card (FORPOL-01, FORPOL-02, FORPOL-03)
-- Security Index & macroeconomic feedback engine with report card attributions (SEC-01, SEC-02, SEC-03)
-- Dedicated Trade & Tariffs screen with sector tariffs, bilateral accords, and state export vulnerability matrix (TRADE-01, TRADE-02, TRADE-03)
+- Alternative game mode toggle at New Game, pure deterministic offshore stash accumulator ($B), and dynamic 0–100 Heat meter (EVIL-01, EVIL-02, EVIL-03)
+- Corrupt executive levers: no-bid crony contracts, land auctions, tariff exemption sales, library foundation slush funds, and watchdog purges (LEVER-01, LEVER-02, LEVER-03)
+- Institutional backlash: special counsel investigations, House impeachment votes, and Senate conviction trials with immediate asset forfeiture (IMPEACH-01, IMPEACH-02, IMPEACH-03)
+- Satirical visual reskin: dark Americana theme (oxblood, aged gold, ink), live Oval Office stash rosette/heat gauge, Kleptocratic Heist Review EndScreen, and 6-tier satirical verdicts (UI-01, UI-02, UI-03)
 
 ## Evolution
 
@@ -116,4 +125,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-12 for Milestone v0.4 initialization*
+*Last updated: 2026-10-13 after v0.5 milestone*
