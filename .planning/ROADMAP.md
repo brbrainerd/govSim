@@ -59,6 +59,14 @@ Plans:
   2. Voters screen reflects demographic coalition movement based on active social policy laws.
   3. Interactive breakdowns explain why each state shifted.
 
+**Plans**: 4 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Wave 1: State Demographic & Regional Exposure Dataset (SOC-05)
+- [ ] 10-02-PLAN.md — Wave 2: Pure Engine Dynamics — Regional Transmission & Local Cost of Living (SOC-05)
+- [ ] 10-03-PLAN.md — Wave 3: Demographic Cohorts & Congressional Delegation Shifts (SOC-05)
+- [ ] 10-04-PLAN.md — Wave 4: UI Implementation & Accessible Voter Breakdown (SOC-05)
+
 ### Phase 11: Structural Government Reform & Amendments
 
 **Goal**: Allow players to pursue high-leverage institutional and constitutional reforms with realistic political friction and high procedural hurdles.
