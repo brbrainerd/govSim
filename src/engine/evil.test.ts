@@ -5,6 +5,8 @@ import { resolveBill } from './decisions';
 import {
   calculateHeatDecay,
   calculateHeatPenalties,
+  calculateHouseImpeachmentVote,
+  calculateSenateTrialVote,
   defaultEvilState,
   resolveEvilLevers,
   sanitizeEvilState,
@@ -12,7 +14,17 @@ import {
 } from './evil';
 import { START } from './fixture';
 import { endTurn, newGame } from './game';
-import { MAX_HEAT, MIN_HEAT } from './units';
+import {
+  HEAT_IMPEACHMENT_THRESHOLD,
+  HOUSE_IMPEACHMENT_THRESHOLD,
+  HOUSE_OPPOSITION_BASE_SEATS,
+  HOUSE_TOTAL_SEATS,
+  MAX_HEAT,
+  MIN_HEAT,
+  SENATE_BASE_SEATS,
+  SENATE_CONVICTION_THRESHOLD,
+  SENATE_TOTAL_SEATS,
+} from './units';
 
 describe('Evil Mode Engine (EVIL-01, EVIL-02, EVIL-03)', () => {
   describe('defaultEvilState', () => {
@@ -278,4 +290,114 @@ describe('Evil Mode Engine (EVIL-01, EVIL-02, EVIL-03)', () => {
       expect(state.evil?.heat).toBeCloseTo(expectedHeat, 4);
     });
   });
+
+  describe('calculateHouseImpeachmentVote (IMPEACH-02)', () => {
+    it('returns opposition base seats at neutral conditions', () => {
+      const votes = calculateHouseImpeachmentVote(0, 0, 50);
+      expect(votes).toBe(HOUSE_OPPOSITION_BASE_SEATS);
+      expect(votes).toBeLessThan(HOUSE_IMPEACHMENT_THRESHOLD);
+    });
+
+    it('adjusts base votes by midterm seat change', () => {
+      // Net gain for president (+10) reduces opposition base (213 - 10 = 203)
+      expect(calculateHouseImpeachmentVote(10, 0, 50)).toBe(203);
+      // Net loss for president (-10) increases opposition base (213 + 10 = 223 >= 218)
+      expect(calculateHouseImpeachmentVote(-10, 0, 50)).toBe(223);
+    });
+
+    it('accumulates defection votes from heat above 80 and approval below 45', () => {
+      // Heat 85 (5 pts above 80) * 1.2 = 6 votes
+      // Approval 40 (5 pts below 45) * 0.8 = 4 votes
+      // 213 + 6 + 4 = 223
+      const votes = calculateHouseImpeachmentVote(0, 85, 40);
+      expect(votes).toBe(223);
+      expect(votes).toBeGreaterThanOrEqual(HOUSE_IMPEACHMENT_THRESHOLD);
+    });
+
+    it('clamps votes strictly between 0 and 435', () => {
+      expect(calculateHouseImpeachmentVote(300, 0, 90)).toBeGreaterThanOrEqual(0);
+      expect(calculateHouseImpeachmentVote(-300, 100, 10)).toBeLessThanOrEqual(HOUSE_TOTAL_SEATS);
+    });
+  });
+
+  describe('calculateSenateTrialVote (IMPEACH-03)', () => {
+    it('returns 50 base opposition senators at neutral conditions', () => {
+      const votes = calculateSenateTrialVote(0, 0, 50);
+      expect(votes).toBe(SENATE_BASE_SEATS);
+      expect(votes).toBeLessThan(SENATE_CONVICTION_THRESHOLD);
+    });
+
+    it('adjusts base senators by midterm Senate seat change', () => {
+      expect(calculateSenateTrialVote(4, 0, 50)).toBe(46);
+      expect(calculateSenateTrialVote(-4, 0, 50)).toBe(54);
+    });
+
+    it('requires two-thirds supermajority (67 votes) driven by critical heat and disapproval', () => {
+      // Heat 84 (below 85) -> 0 crossover votes
+      // Approval 40 -> (45 - 40) * 0.6 = 3 votes -> 50 + 3 = 53 (Acquitted)
+      expect(calculateSenateTrialVote(0, 84, 40)).toBe(53);
+
+      // Catastrophic scandal: Heat 95 (10 pts above 85) * 1.0 = 10 votes
+      // Approval 25 (20 pts below 45) * 0.6 = 12 votes
+      // 50 + 10 + 12 = 72 >= 67 (Convicted)
+      const convictionVotes = calculateSenateTrialVote(0, 95, 25);
+      expect(convictionVotes).toBe(72);
+      expect(convictionVotes).toBeGreaterThanOrEqual(SENATE_CONVICTION_THRESHOLD);
+    });
+
+    it('clamps trial votes strictly between 0 and 100', () => {
+      expect(calculateSenateTrialVote(60, 0, 90)).toBeGreaterThanOrEqual(0);
+      expect(calculateSenateTrialVote(-60, 100, 10)).toBeLessThanOrEqual(SENATE_TOTAL_SEATS);
+    });
+  });
+
+  describe('House & Senate Impeachment Game Loop Integration (IMPEACH-02, IMPEACH-03)', () => {
+    it('acquits president in Senate when heat passes House threshold but stays below conviction supermajority', () => {
+      let state = newGame(1, START);
+      // Enact corrupt levers and siphon funds to generate stash and heat ~83
+      state = endTurn(state, {
+        evil: {
+          siphonBn: 20.0,
+          heatDelta: 84,
+        },
+      });
+
+      // House passes Articles of Impeachment (votes >= 218)
+      expect(state.evil?.articlesOfImpeachmentVoted).toBe(true);
+      expect(state.evil?.houseImpeachmentVotes).toBeGreaterThanOrEqual(HOUSE_IMPEACHMENT_THRESHOLD);
+      expect(state.report.log.some((l) => l.id === 'articles_of_impeachment')).toBe(true);
+
+      // Senate acquits (votes < 67)
+      expect(state.evil?.convicted).toBe(false);
+      expect(state.evil?.senateConvictionVotes).toBeLessThan(SENATE_CONVICTION_THRESHOLD);
+      expect(state.report.log.some((l) => l.id === 'impeachment_acquitted')).toBe(true);
+
+      // Offshore stash remains intact because acquitted
+      expect(state.evil?.offshoreStashBn).toBe(20.0);
+      expect(state.evil?.termEnded).toBeFalsy();
+    });
+
+    it('convicts president, ends term, and completely forfeits offshore stash when Senate supermajority is reached', () => {
+      let state = newGame(1, START);
+      // Push heat and low approval to trigger full conviction
+      state = endTurn(state, {
+        evil: {
+          siphonBn: 50.0,
+          heatDelta: 98,
+        },
+      });
+
+      // Impeached and Convicted
+      expect(state.evil?.articlesOfImpeachmentVoted).toBe(true);
+      expect(state.evil?.houseImpeachmentVotes).toBeGreaterThanOrEqual(HOUSE_IMPEACHMENT_THRESHOLD);
+      expect(state.evil?.convicted).toBe(true);
+      expect(state.evil?.senateConvictionVotes).toBeGreaterThanOrEqual(SENATE_CONVICTION_THRESHOLD);
+      expect(state.evil?.termEnded).toBe(true);
+
+      // Forfeiture: offshore stash wiped to $0.0B
+      expect(state.evil?.offshoreStashBn).toBe(0);
+      expect(state.report.log.some((l) => l.id === 'convicted')).toBe(true);
+    });
+  });
 });
+

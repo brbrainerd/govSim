@@ -2,7 +2,18 @@
 // Governs offshore stash tracking, heat meter dynamics, and institutional/voter friction.
 
 import { C } from './coefficients';
-import { MAX_HEAT, MIN_HEAT, type EvilLeverId } from './units';
+import {
+  HEAT_IMPEACHMENT_THRESHOLD,
+  HOUSE_OPPOSITION_BASE_SEATS,
+  HOUSE_TOTAL_SEATS,
+  IMPEACHMENT_APPROVAL_THRESHOLD,
+  MAX_HEAT,
+  MIN_HEAT,
+  SENATE_BASE_SEATS,
+  SENATE_CRITICAL_HEAT_THRESHOLD,
+  SENATE_TOTAL_SEATS,
+  type EvilLeverId,
+} from './units';
 import { getEvilLever, isEvilLeverId } from '../data/evil';
 
 export interface EvilState {
@@ -12,6 +23,9 @@ export interface EvilState {
   readonly specialCounselAppointed: boolean;
   readonly articlesOfImpeachmentVoted: boolean;
   readonly convicted: boolean;
+  readonly houseImpeachmentVotes?: number;
+  readonly senateConvictionVotes?: number;
+  readonly termEnded?: boolean;
 }
 
 export type EvilDraft = Partial<EvilState>;
@@ -60,6 +74,51 @@ export function calculateHeatPenalties(heat: number): HeatPenalties {
 }
 
 /**
+ * Calculates deterministic House of Representatives vote tally on Articles of Impeachment.
+ * Requires 218 votes to adopt. Opposition base votes are adjusted by net midterm seat change,
+ * plus defection votes driven by heat above threshold and low approval.
+ */
+export function calculateHouseImpeachmentVote(
+  houseSeatDelta: number = 0,
+  heat: number = 0,
+  approval: number = C.approvalNeutral,
+): number {
+  const safeHeat = Math.max(MIN_HEAT, Math.min(MAX_HEAT, Number.isFinite(heat) ? heat : MIN_HEAT));
+  const safeApproval = Number.isFinite(approval) ? approval : C.approvalNeutral;
+  const safeDelta = Number.isFinite(houseSeatDelta) ? houseSeatDelta : 0;
+
+  const baseOppositionVotes = HOUSE_OPPOSITION_BASE_SEATS - safeDelta;
+  const heatDefections = Math.max(0, safeHeat - HEAT_IMPEACHMENT_THRESHOLD) * C.impeachmentHouseHeatSlope;
+  const approvalDefections = Math.max(0, IMPEACHMENT_APPROVAL_THRESHOLD - safeApproval) * C.impeachmentHouseApprovalSlope;
+
+  const totalVotes = Math.round(baseOppositionVotes + heatDefections + approvalDefections);
+  return Math.max(0, Math.min(HOUSE_TOTAL_SEATS, totalVotes));
+}
+
+/**
+ * Calculates deterministic Senate conviction trial vote tally.
+ * Requires 67 votes (two-thirds supermajority of 100 seats) to convict and remove from office.
+ * Opposition base senators are adjusted by net midterm Senate seat change, plus crossover
+ * defectors driven by critical heat above 85 and low public approval.
+ */
+export function calculateSenateTrialVote(
+  senateSeatDelta: number = 0,
+  heat: number = 0,
+  approval: number = C.approvalNeutral,
+): number {
+  const safeHeat = Math.max(MIN_HEAT, Math.min(MAX_HEAT, Number.isFinite(heat) ? heat : MIN_HEAT));
+  const safeApproval = Number.isFinite(approval) ? approval : C.approvalNeutral;
+  const safeDelta = Number.isFinite(senateSeatDelta) ? senateSeatDelta : 0;
+
+  const baseOppositionVotes = SENATE_BASE_SEATS - safeDelta;
+  const heatCrossovers = Math.max(0, safeHeat - SENATE_CRITICAL_HEAT_THRESHOLD) * C.convictionSenateHeatSlope;
+  const approvalCrossovers = Math.max(0, IMPEACHMENT_APPROVAL_THRESHOLD - safeApproval) * C.convictionSenateApprovalSlope;
+
+  const totalVotes = Math.round(baseOppositionVotes + heatCrossovers + approvalCrossovers);
+  return Math.max(0, Math.min(SENATE_TOTAL_SEATS, totalVotes));
+}
+
+/**
  * Sanitizes untrusted or serialized EvilState data, guaranteeing type safety and valid bounds.
  */
 export function sanitizeEvilState(raw: unknown): EvilState {
@@ -72,14 +131,25 @@ export function sanitizeEvilState(raw: unknown): EvilState {
     : 0;
   const rawHeat = typeof r.heat === 'number' && Number.isFinite(r.heat) ? r.heat : 0;
   const heat = Math.max(MIN_HEAT, Math.min(MAX_HEAT, rawHeat));
-  return {
+  const houseVotes = typeof r.houseImpeachmentVotes === 'number' && Number.isFinite(r.houseImpeachmentVotes)
+    ? Math.max(0, Math.min(HOUSE_TOTAL_SEATS, Math.round(r.houseImpeachmentVotes)))
+    : undefined;
+  const senateVotes = typeof r.senateConvictionVotes === 'number' && Number.isFinite(r.senateConvictionVotes)
+    ? Math.max(0, Math.min(SENATE_TOTAL_SEATS, Math.round(r.senateConvictionVotes)))
+    : undefined;
+
+  const state: EvilState = {
     offshoreStashBn: stash,
     heat,
     investigationsActive: Boolean(r.investigationsActive),
     specialCounselAppointed: Boolean(r.specialCounselAppointed),
     articlesOfImpeachmentVoted: Boolean(r.articlesOfImpeachmentVoted),
     convicted: Boolean(r.convicted),
+    ...(r.termEnded !== undefined ? { termEnded: Boolean(r.termEnded) } : {}),
+    ...(houseVotes !== undefined ? { houseImpeachmentVotes: houseVotes } : {}),
+    ...(senateVotes !== undefined ? { senateConvictionVotes: senateVotes } : {}),
   };
+  return state;
 }
 
 export interface EvilLeversResult {

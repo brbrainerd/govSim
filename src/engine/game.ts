@@ -36,6 +36,8 @@ import { defaultTradeState, resolveTrade, sanitizeTradeState, type TradeState, t
 import {
   calculateHeatDecay,
   calculateHeatPenalties,
+  calculateHouseImpeachmentVote,
+  calculateSenateTrialVote,
   defaultEvilState,
   resolveEvilLevers,
   type EvilState,
@@ -45,8 +47,12 @@ import {
   HEAT_CONVICTION_THRESHOLD,
   HEAT_IMPEACHMENT_THRESHOLD,
   HEAT_SPECIAL_COUNSEL_THRESHOLD,
+  HOUSE_IMPEACHMENT_THRESHOLD,
+  HOUSE_TOTAL_SEATS,
   MAX_HEAT,
   MIN_HEAT,
+  SENATE_CONVICTION_THRESHOLD,
+  SENATE_TOTAL_SEATS,
 } from './units';
 
 export { prosperity, type ScoreBreakdown } from './score';
@@ -536,20 +542,72 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const nextHeat = Math.max(MIN_HEAT, Math.min(MAX_HEAT, decayedHeat + heatAdd + leverResult.heatDelta));
   const evilPenalties = calculateHeatPenalties(nextHeat);
 
-  const nextStash = currentEvil.offshoreStashBn + siphon + leverResult.stashDeltaBn;
+  let nextStash = currentEvil.offshoreStashBn + siphon + leverResult.stashDeltaBn;
   const specialCounsel = currentEvil.specialCounselAppointed || nextHeat >= HEAT_SPECIAL_COUNSEL_THRESHOLD;
-  const impeachmentVoted = currentEvil.articlesOfImpeachmentVoted || nextHeat >= HEAT_IMPEACHMENT_THRESHOLD;
-  const convicted = currentEvil.convicted || nextHeat >= HEAT_CONVICTION_THRESHOLD;
   const investigationsActive = currentEvil.investigationsActive || nextHeat > 0;
+
+  let houseVotes = currentEvil.houseImpeachmentVotes;
+  let senateVotes = currentEvil.senateConvictionVotes;
+  let impeachmentVoted = currentEvil.articlesOfImpeachmentVoted;
+  let convicted = currentEvil.convicted;
+
+  if (!impeachmentVoted && nextHeat >= HEAT_IMPEACHMENT_THRESHOLD) {
+    const scandalApproval = state.approval + evilPenalties.approvalDelta;
+    houseVotes = calculateHouseImpeachmentVote(state.houseSeatDelta, nextHeat, scandalApproval);
+    if (houseVotes >= HOUSE_IMPEACHMENT_THRESHOLD) {
+      impeachmentVoted = true;
+      log.push({
+        kind: 'evil',
+        id: 'articles_of_impeachment',
+        detail: `Articles of impeachment adopted by House (${houseVotes}-${HOUSE_TOTAL_SEATS - houseVotes})`,
+        amount: houseVotes,
+      });
+
+      senateVotes = calculateSenateTrialVote(state.senateSeatDelta ?? 0, nextHeat, scandalApproval);
+      if (senateVotes >= SENATE_CONVICTION_THRESHOLD) {
+        convicted = true;
+        log.push({
+          kind: 'evil',
+          id: 'convicted',
+          detail: `Senate convicts on impeachment charges (${senateVotes}-${SENATE_TOTAL_SEATS - senateVotes}) — removed from office; offshore stash forfeited to DOJ`,
+          amount: senateVotes,
+        });
+      } else {
+        log.push({
+          kind: 'evil',
+          id: 'impeachment_acquitted',
+          detail: `Senate acquits on impeachment charges (${senateVotes}-${SENATE_TOTAL_SEATS - senateVotes}) — two-thirds supermajority not reached`,
+          amount: senateVotes,
+        });
+      }
+    } else {
+      log.push({
+        kind: 'evil',
+        id: 'impeachment_failed_house',
+        detail: `Articles of impeachment defeated on House floor (${houseVotes}-${HOUSE_TOTAL_SEATS - houseVotes})`,
+        amount: houseVotes,
+      });
+    }
+  } else if (impeachmentVoted && !convicted && nextHeat >= HEAT_IMPEACHMENT_THRESHOLD) {
+    const scandalApproval = state.approval + evilPenalties.approvalDelta;
+    senateVotes = calculateSenateTrialVote(state.senateSeatDelta ?? 0, nextHeat, scandalApproval);
+    if (senateVotes >= SENATE_CONVICTION_THRESHOLD) {
+      convicted = true;
+      log.push({
+        kind: 'evil',
+        id: 'convicted',
+        detail: `Senate convicts on impeachment charges (${senateVotes}-${SENATE_TOTAL_SEATS - senateVotes}) — removed from office; offshore stash forfeited to DOJ`,
+        amount: senateVotes,
+      });
+    }
+  }
+
+  if (convicted) {
+    nextStash = 0;
+  }
 
   if (!currentEvil.specialCounselAppointed && specialCounsel) {
     log.push({ kind: 'evil', id: 'special_counsel_appointed', detail: 'House and DOJ appoint special counsel' });
-  }
-  if (!currentEvil.articlesOfImpeachmentVoted && impeachmentVoted) {
-    log.push({ kind: 'evil', id: 'articles_of_impeachment', detail: 'Articles of impeachment passed House committee' });
-  }
-  if (!currentEvil.convicted && convicted) {
-    log.push({ kind: 'evil', id: 'convicted', detail: 'Senate convicts on impeachment charges' });
   }
 
   const nextEvil: EvilState = {
@@ -559,6 +617,9 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     specialCounselAppointed: specialCounsel,
     articlesOfImpeachmentVoted: impeachmentVoted,
     convicted,
+    ...(houseVotes !== undefined ? { houseImpeachmentVotes: houseVotes } : {}),
+    ...(senateVotes !== undefined ? { senateConvictionVotes: senateVotes } : {}),
+    ...(convicted ? { termEnded: true } : {}),
   };
 
   // The engine charges clout from the raw bill; the Session previews with the same function.

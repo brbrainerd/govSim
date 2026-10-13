@@ -663,6 +663,10 @@ export const COEFF = {
   // ---- Institutional Backlash & Impeachment coefficients (Phase 19, IMPEACH-01, IMPEACH-02, IMPEACH-03) ----
   specialCounselCloutDrain: { value: 15, unit: 'clout per quarter', basis: 'judgement', range: [5, 30], note: 'Ongoing quarterly clout drain from defending against special counsel investigations.' },
   subpoenaCloutDrain: { value: 10, unit: 'clout per quarter', basis: 'judgement', range: [5, 20], note: 'Ongoing quarterly clout spent complying with or stonewalling congressional oversight subpoenas.' },
+  impeachmentHouseHeatSlope: { value: 1.2, unit: 'votes per heat pt', basis: 'judgement', range: [0.2, 3.0], note: 'House defection votes to impeach per heat point above 80.' },
+  impeachmentHouseApprovalSlope: { value: 0.8, unit: 'votes per % approval deficit', basis: 'judgement', range: [0.1, 2.0], note: 'House defection votes to impeach per percentage point approval drops below 45%.' },
+  convictionSenateHeatSlope: { value: 1.0, unit: 'senators per heat pt', basis: 'judgement', range: [0.3, 2.5], note: 'Senate crossover conviction votes per point of critical heat above 85.' },
+  convictionSenateApprovalSlope: { value: 0.6, unit: 'senators per % approval deficit', basis: 'judgement', range: [0.1, 1.5], note: 'Senate crossover conviction votes per percentage point approval drops below 45%.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------
