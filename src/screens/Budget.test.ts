@@ -20,5 +20,8 @@ describe('Budget screen component (FORPOL-01, FORPOL-03)', () => {
     expect(html).toContain('Same as now ($45B/yr, &lt;1%)');
     expect(html).toContain('foreign-assistance-slider');
     expect(html).toContain('Myth? Cut foreign aid to balance it');
+    expect(html).toContain('data-testid="budget-household-persona"');
+    expect(html).toContain('Rust Belt Manufacturing Family · OH');
+    expect(html).not.toContain('Nurse in Ohio');
   });
 });

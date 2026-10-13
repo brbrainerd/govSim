@@ -13,9 +13,9 @@
 
 ### Smart Advisor Plays, Auto-Whip & Live Household Budgeting (ADVISOR)
 
-- [ ] **ADVISOR-01**: Upgrade Chief of Staff policy suggestions into one-click "Advisor Plays" that navigate to the target screen and optionally pre-fill recommended slider packages.
-- [ ] **ADVISOR-02**: Add a one-click "Auto-Whip Cheapest Path" helper in Congress that selects the lowest-Clout combination of bloc deals needed to reach 218 House / 51 (or 60) Senate votes.
-- [ ] **ADVISOR-03**: Connect the Budget screen impact card to the player's active `selectedHouseholdPersona` (replacing hardcoded "Nurse in Ohio") and display slider changes against both policy-in-force and the 2026 baseline.
+- [x] **ADVISOR-01**: Upgrade Chief of Staff policy suggestions into one-click "Advisor Plays" that navigate to the target screen and optionally pre-fill recommended slider packages.
+- [x] **ADVISOR-02**: Add a one-click "Auto-Whip Cheapest Path" helper in Congress that selects the lowest-Clout combination of bloc deals needed to reach 218 House / 51 (or 60) Senate votes.
+- [x] **ADVISOR-03**: Connect the Budget screen impact card to the player's active `selectedHouseholdPersona` (replacing hardcoded "Nurse in Ohio") and display slider changes against both policy-in-force and the 2026 baseline.
 
 ### Turn Pacing & Staged Decisions (PACE)
 
@@ -43,9 +43,9 @@
 | LEARN-01 | Phase 21 | Complete |
 | LEARN-02 | Phase 21 | Complete |
 | LEARN-03 | Phase 21 | Complete |
-| ADVISOR-01 | Phase 22 | Pending |
-| ADVISOR-02 | Phase 22 | Pending |
-| ADVISOR-03 | Phase 22 | Pending |
+| ADVISOR-01 | Phase 22 | Complete |
+| ADVISOR-02 | Phase 22 | Complete |
+| ADVISOR-03 | Phase 22 | Complete |
 | PACE-01 | Phase 23 | Pending |
 | PACE-02 | Phase 23 | Pending |
 | SCEN-01 | Phase 24 | Pending |

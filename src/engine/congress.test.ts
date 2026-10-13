@@ -5,6 +5,7 @@ import {
   calculateSenateVotes,
   deals,
   FILIBUSTER_RULES_CATALOG,
+  findCheapestCoalition,
   getSenateClotureThreshold,
   groups,
   groupsFor,
@@ -198,6 +199,24 @@ describe('Senate filibuster reform & cloture rules (REF-01)', () => {
     expect(broadBipartisan.senateVotes).toBe(60);
     expect(broadBipartisan.status).toBe('passed');
     expect(broadBipartisan.passed).toBe(true);
+  });
+
+  it('finds the cheapest coalition of deals to reach 218 House votes (ADVISOR-02)', () => {
+    // Baseline tally([]) has 203 votes (15 short of 218).
+    // mod (+12 -> 215, 20 clout) + spc (+6 -> 221, 10 clout) = 30 clout for 221 votes,
+    // whereas cen (+9 -> 212, 15 clout) + spc (+6 -> 218, 10 clout) = 25 clout for 218 votes!
+    const cheapest = findCheapestCoalition([], 0);
+    expect(cheapest.reachable).toBe(true);
+    expect(cheapest.dealsToAdd).toEqual(['cen', 'spc']);
+    expect(cheapest.additionalCost).toBe(25);
+    expect(cheapest.projectedVotes).toBeGreaterThanOrEqual(TO_PASS);
+
+    // If 'mod' is already staged (215 votes, 3 short), cheapest remaining deal is 'spc' (10 clout)
+    const afterMod = findCheapestCoalition(['mod'], 0);
+    expect(afterMod.reachable).toBe(true);
+    expect(afterMod.dealsToAdd).toEqual(['spc']);
+    expect(afterMod.additionalCost).toBe(10);
+    expect(afterMod.projectedVotes).toBeGreaterThanOrEqual(TO_PASS);
   });
 });
 

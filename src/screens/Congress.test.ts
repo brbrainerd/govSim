@@ -20,5 +20,7 @@ describe('Congress screen component (REF-01, REF-04)', () => {
     expect(html).toContain('data-testid="open-amendment-modal"');
     expect(html).toContain('Article V Amendments');
     expect(html).toContain('218 needed');
+    expect(html).toContain('data-testid="auto-whip-btn"');
+    expect(html).toContain('Auto-whip (2 deals, 25 clout)');
   });
 });

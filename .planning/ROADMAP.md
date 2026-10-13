@@ -15,7 +15,7 @@
 **Milestone Goal:** Eliminate every remaining "Coming soon" stub and disconnected UI loop, elevate day-to-day gameplay feel with one-click Advisor Plays, Congress Auto-Whip, and Fast-Forward pacing controls from `docs/design.md`, and multiply replayability with selectable starting scenarios.
 
 - [x] **Phase 21: Complete the Learn Loop & Interactive Explainers** (3/3 plans) — completed 2026-10-13
-- [ ] **Phase 22: Smart Advisor Plays, Auto-Whip & Live Household Budgeting** — One-click Chief of Staff plays, Congress Auto-Whip cheapest coalition solver, live Household Persona binding on Budget, and policy-in-force vs baseline slider deltas
+- [x] **Phase 22: Smart Advisor Plays, Auto-Whip & Live Household Budgeting** (3/3 plans) — completed 2026-10-13
 - [ ] **Phase 23: Pacing Controls — Fast-Forward & Staged Decisions Tray** — Top-bar Staged Decisions indicator and safe "Skip to Next Event" fast-forward with automatic crisis/deadline interrupts
 - [ ] **Phase 24: Replayable Starting Scenarios** — Selectable Starting Scenarios at New Game (*2026 Baseline*, *70s Stagflation Shock*, *Debt Ceiling Brinkmanship*, *Global Trade War*) with scenario briefings and Legacy Report badges
 
@@ -45,7 +45,7 @@
   2. Congress displays the cheapest Clout path to passing the current bill and provides a one-click `"Auto-whip cheapest coalition"` button that stages those deals automatically.
   3. `Budget.svelte` renders the active `session.selectedHouseholdPersona` (and net kitchen-table impact from `session.householdImpact`) instead of a hardcoded `"Nurse in Ohio"` card, and distinguishes slider changes vs policy-in-force (`session.current.policy`) from changes vs the 2026 baseline.
 
-**Plans**: TBD
+**Plans**: 3 plans executed (completed 2026-10-13)
 
 #### Phase 23: Pacing Controls — Fast-Forward & Staged Decisions Tray
 
