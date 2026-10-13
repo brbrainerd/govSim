@@ -174,5 +174,17 @@ export const HEAT_SPECIAL_COUNSEL_THRESHOLD = 50;
 export const HEAT_IMPEACHMENT_THRESHOLD = 75;
 export const HEAT_CONVICTION_THRESHOLD = 90;
 
+// Corrupt Executive Levers Constants (Phase 18, LEVER-01, LEVER-02, LEVER-03)
+export const EVIL_LEVER_IDS = [
+  'crony_contracts',
+  'auction_public_lands',
+  'sell_tariff_exemptions',
+  'solicit_library_donations',
+  'fire_inspectors_general',
+  'pressure_justice_department',
+] as const;
+
+export type EvilLeverId = (typeof EVIL_LEVER_IDS)[number];
+
 
 
