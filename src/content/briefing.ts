@@ -1,10 +1,17 @@
-// Dynamic Oval Office briefing generator (EVT-07, LEARN-03, OBS-05).
+// Dynamic Oval Office briefing generator (EVT-07, LEARN-03, ADVISOR-01, OBS-05).
 // Evaluates active crises, impending legislative deadlines, and macro conditions.
 // All copy is strictly nonpartisan, plain language, reading grade <= 9.0.
 
 import type { ScreenId } from '../app/screens';
+import type { PackageName } from '../engine/budget';
 import { getImminentDeadlines } from '../engine/deadlines';
 import type { GameState } from '../engine/game';
+
+export interface AdvisorPlay {
+  readonly pack?: PackageName;
+  readonly autoWhip?: boolean;
+  readonly sendToCongress?: boolean;
+}
 
 export interface Suggestion {
   readonly title: string;
@@ -12,6 +19,7 @@ export interface Suggestion {
   readonly target: ScreenId | null;
   readonly mythId?: string;
   readonly openCrisis?: boolean;
+  readonly play?: AdvisorPlay;
 }
 
 export interface BriefingInfo {
@@ -30,7 +38,7 @@ export interface SessionContext {
 }
 
 /**
- * Generates dynamic Oval Office briefing text, thisTurn alert, and suggestions (EVT-07, LEARN-03).
+ * Generates dynamic Oval Office briefing text, thisTurn alert, and suggestions (EVT-07, LEARN-03, ADVISOR-01).
  */
 export function generateBriefing(session: SessionContext): BriefingInfo {
   const current = session.current;
@@ -48,7 +56,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
       suggestions: [
         { title: 'Respond to crisis', cta: 'Decide now', target: null, openCrisis: true },
         { title: 'Check state of economy', cta: 'Open Economy', target: 'economy' },
-        { title: 'Build House coalition', cta: 'Open Congress', target: 'congress' },
+        { title: 'Build House coalition', cta: 'Open Congress', target: 'congress', play: { autoWhip: true } },
       ],
     };
   }
@@ -66,7 +74,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
         },
         suggestions: [
           { title: 'Suppress watchdogs', cta: 'Open Powers', target: 'powers' },
-          { title: 'Rally House votes', cta: 'Open Congress', target: 'congress' },
+          { title: 'Rally House votes', cta: 'Open Congress', target: 'congress', play: { autoWhip: true } },
           { title: 'Review your loot', cta: 'Open Economy', target: 'economy' },
         ],
       };
@@ -95,7 +103,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
         suggestions: [
           { title: 'Enact corrupt levers', cta: 'Open Powers', target: 'powers' },
           { title: 'Auction public assets', cta: 'Open Powers', target: 'powers' },
-          { title: 'Set budget outlays', cta: 'Open Budget', target: 'budget' },
+          { title: 'Set budget outlays', cta: 'Open Budget', target: 'budget', play: { pack: 'Tax cut' } },
         ],
       };
     }
@@ -108,7 +116,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
       suggestions: [
         { title: 'Award no-bid contracts', cta: 'Open Powers', target: 'powers' },
         { title: 'Auction public assets', cta: 'Open Powers', target: 'powers' },
-        { title: 'Review budget funds', cta: 'Open Budget', target: 'budget' },
+        { title: 'Review budget funds', cta: 'Open Budget', target: 'budget', play: { pack: 'Tax cut' } },
       ],
     };
   }
@@ -125,8 +133,8 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
           detail: 'Pass a federal budget before funds run out.',
         },
         suggestions: [
-          { title: 'Pass federal budget', cta: 'Open Congress', target: 'congress' },
-          { title: 'Set budget priorities', cta: 'Open Budget', target: 'budget' },
+          { title: 'Pass federal budget', cta: 'Open Congress', target: 'congress', play: { autoWhip: true } },
+          { title: 'Set budget priorities', cta: 'Open Budget', target: 'budget', play: { pack: 'Keep as is' } },
           { title: 'Myth? Shutdown costs', cta: 'Find out', target: null, mythId: 'foreign_aid_deficit' },
         ],
       };
@@ -141,8 +149,8 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
           detail: 'Raise the debt limit to avoid a default.',
         },
         suggestions: [
-          { title: 'Raise debt limit', cta: 'Open Congress', target: 'congress' },
-          { title: 'Review fiscal outlays', cta: 'Open Budget', target: 'budget' },
+          { title: 'Raise debt limit', cta: 'Open Congress', target: 'congress', play: { autoWhip: true } },
+          { title: 'Review fiscal outlays', cta: 'Open Budget', target: 'budget', play: { pack: 'Balance the budget' } },
           { title: 'Myth? The debt ceiling', cta: 'Find out', target: null, mythId: 'debt_ceiling_default' },
         ],
       };
@@ -160,7 +168,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
       },
       suggestions: [
         { title: 'Track economic recovery', cta: 'Open Economy', target: 'economy' },
-        { title: 'Build coalition for reform', cta: 'Open Congress', target: 'congress' },
+        { title: 'Build coalition for reform', cta: 'Open Congress', target: 'congress', play: { autoWhip: true } },
         { title: 'Myth? Disaster relief waste', cta: 'Find out', target: null, mythId: 'rule_by_decree' },
       ],
     };
@@ -176,7 +184,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
       },
       suggestions: [
         { title: 'Check price pressures', cta: 'Open Economy', target: 'economy' },
-        { title: 'Trim federal spending', cta: 'Open Budget', target: 'budget' },
+        { title: 'Trim federal spending', cta: 'Open Budget', target: 'budget', play: { pack: 'Balance the budget' } },
         { title: 'Myth? Lower gas prices', cta: 'Find out', target: null, mythId: 'gas_prices' },
       ],
     };
@@ -192,7 +200,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
       },
       suggestions: [
         { title: 'Review employment trends', cta: 'Open Economy', target: 'economy' },
-        { title: 'Fund job training programs', cta: 'Open Budget', target: 'budget' },
+        { title: 'Fund job training programs', cta: 'Open Budget', target: 'budget', play: { pack: 'Infrastructure push' } },
         { title: 'Myth? Presidents create jobs', cta: 'Find out', target: null, mythId: 'presidential_jobs' },
       ],
     };
@@ -206,8 +214,8 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
       detail: 'Work with leaders in Congress to fund your plans.',
     },
     suggestions: [
-      { title: 'Pass a budget', cta: 'Open Budget', target: 'budget' },
-      { title: 'Win over Moderates', cta: 'Open Congress', target: 'congress' },
+      { title: 'Pass a budget', cta: 'Open Budget', target: 'budget', play: { pack: 'Infrastructure push' } },
+      { title: 'Win over Moderates', cta: 'Open Congress', target: 'congress', play: { autoWhip: true } },
       { title: 'Myth? Lower gas prices', cta: 'Find out', target: null, mythId: 'gas_prices' },
     ],
   };

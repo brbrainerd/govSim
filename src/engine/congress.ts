@@ -321,3 +321,70 @@ export function voteOutcome(total: number, spent: number) {
   const passed = total >= TO_PASS;
   return { passed, cloutBack: passed ? RULES.voteReward.value : Math.floor(spent / RULES.refundDivisor.value) };
 }
+
+export interface CheapestCoalitionResult {
+  readonly dealsToAdd: readonly DealId[];
+  readonly totalDeals: readonly DealId[];
+  readonly additionalCost: number;
+  readonly projectedVotes: number;
+  readonly reachable: boolean;
+}
+
+/**
+ * Finds the lowest-Clout combination of additional deals needed to reach 218 House votes (ADVISOR-02, design §7b).
+ */
+export function findCheapestCoalition(
+  alreadyDeals: readonly DealId[] = [],
+  houseDelta = 0,
+  socialDraft?: SocialDraft,
+  heatFrictionVotes = 0,
+): CheapestCoalitionResult {
+  const remaining = deals.map((d) => d.id).filter((id) => !alreadyDeals.includes(id));
+  const subsets: DealId[][] = [[]];
+  for (const id of remaining) {
+    const len = subsets.length;
+    for (let i = 0; i < len; i++) {
+      subsets.push([...subsets[i]!, id]);
+    }
+  }
+
+  let bestAdd: DealId[] | null = null;
+  let bestCost = Number.POSITIVE_INFINITY;
+  let bestVotes = -1;
+
+  for (const add of subsets) {
+    const combined: DealId[] = [...alreadyDeals, ...add];
+    const whip = tally(combined, houseDelta, socialDraft);
+    const effectiveVotes = Math.max(0, whip.total - heatFrictionVotes);
+    const addCost = add.reduce((sum, id) => sum + (deals.find((d) => d.id === id)?.cost ?? 0), 0);
+
+    if (effectiveVotes >= TO_PASS) {
+      if (addCost < bestCost || (addCost === bestCost && effectiveVotes > bestVotes)) {
+        bestAdd = add;
+        bestCost = addCost;
+        bestVotes = effectiveVotes;
+      }
+    }
+  }
+
+  if (bestAdd !== null) {
+    return {
+      dealsToAdd: bestAdd,
+      totalDeals: [...alreadyDeals, ...bestAdd],
+      additionalCost: bestCost,
+      projectedVotes: bestVotes,
+      reachable: true,
+    };
+  }
+
+  const allCombined: DealId[] = [...alreadyDeals, ...remaining];
+  const maxWhip = tally(allCombined, houseDelta, socialDraft);
+  const maxCost = remaining.reduce((sum, id) => sum + (deals.find((d) => d.id === id)?.cost ?? 0), 0);
+  return {
+    dealsToAdd: remaining,
+    totalDeals: allCombined,
+    additionalCost: maxCost,
+    projectedVotes: Math.max(0, maxWhip.total - heatFrictionVotes),
+    reachable: false,
+  };
+}

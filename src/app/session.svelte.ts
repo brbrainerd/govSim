@@ -1,9 +1,10 @@
 import { fromPackage, packages, type BudgetDraft, type PackageName } from '../engine/budget';
-import { tally, type DealId } from '../engine/congress';
+import { findCheapestCoalition, tally, type DealId } from '../engine/congress';
 import { autopilotDecisions, cloutCost, resolveBill, type CrisisDecision, type Decisions } from '../engine/decisions';
 import { endTurn, newGame, prosperity, scoreVsAutopilot, TOTAL_TURNS, type GameState, type ScoreBreakdown, type Start } from '../engine/game';
 import { socialBaseline, type SocialDraft } from '../engine/social';
 import type { PartyId } from '../content/parties';
+import type { AdvisorPlay } from '../content/briefing';
 import { getOrder } from '../content/orders';
 import { C } from '../engine/coefficients';
 import { speechCost, type PowerDecisions } from '../engine/powers';
@@ -35,7 +36,7 @@ import {
 } from '../engine/trade';
 import { type EvilLeverId } from '../engine/units';
 import { getEvilLever } from '../data/evil';
-import { resolveEvilLevers } from '../engine/evil';
+import { calculateHeatPenalties, resolveEvilLevers } from '../engine/evil';
 
 /** Choices made at New Game. Kept beside the engine state, never inside it (D4). */
 export interface GameOptions {
@@ -266,7 +267,15 @@ export class Session {
         }
       : null,
   );
-  whip = $derived(this.preview?.whip ?? tally([]));
+  whip = $derived(this.preview?.whip ?? tally(this.draft.deals, this.current.houseSeatDelta, this.draft.social));
+  cheapestCoalition = $derived(
+    findCheapestCoalition(
+      this.draft.deals,
+      this.current.houseSeatDelta,
+      this.draft.social,
+      calculateHeatPenalties(this.current.evil?.heat ?? 0).congressFrictionVotes,
+    ),
+  );
   vote = $derived(
     this.draft.voteCalled && this.preview
       ? { total: this.preview.whip.total, passed: this.preview.passed, cloutBack: this.preview.cloutBack }
@@ -279,6 +288,12 @@ export class Session {
   vsNothing = $derived(this.score.total);
   /** The term has ended: every action is a no-op and the UI shows the term as over. */
   over = $derived(this.current.turn >= TOTAL_TURNS || this.termEnded);
+  canAutoWhip = $derived(
+    !this.over &&
+    !this.draft.voteCalled &&
+    this.cheapestCoalition.dealsToAdd.length > 0 &&
+    cloutCost(this.cheapestCoalition.totalDeals) <= this.current.clout,
+  );
   /** Evil Mode helpers (Phase 17, EVIL-01, EVIL-02) */
   isEvilMode = $derived(Boolean(this.options.evilMode));
   offshoreStashBn = $derived(this.current.evil?.offshoreStashBn ?? 0);
@@ -420,6 +435,28 @@ export class Session {
 
   makeDeal(id: DealId) {
     if (this.canDeal(id)) this.draft.deals.push(id);
+  }
+
+  autoWhipCoalition() {
+    if (!this.canAutoWhip) return;
+    for (const id of this.cheapestCoalition.dealsToAdd) {
+      if (!this.draft.deals.includes(id)) {
+        this.draft.deals.push(id);
+      }
+    }
+  }
+
+  applyAdvisorPlay(play: AdvisorPlay) {
+    if (this.over) return;
+    if (play.pack) {
+      this.pickPackage(play.pack);
+    }
+    if (play.sendToCongress) {
+      this.sendToCongress();
+    }
+    if (play.autoWhip) {
+      this.autoWhipCoalition();
+    }
   }
 
   sendToCongress() {
