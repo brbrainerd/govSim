@@ -234,20 +234,20 @@ Plans:
   4. Winning continues into a second term ending at turn 32; losing goes to the end screen with the legacy projected from turn 16
   5. The end screen shows the score vs doing nothing (same function as the headline), the 10-year legacy and a historian verdict tier keyed on outcome bands, never on ideology
 
-**Plans**: 0/4 plans executed
+**Plans**: 4/4 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 07-01-PLAN.md — Pure election resolution, 12th Amendment contingent election, and 10-year legacy simulation (ELC-01, ELC-03, ELC-05, GR-04, GR-15)
+- [x] 07-01-PLAN.md — Pure election resolution, 12th Amendment contingent election, and 10-year legacy simulation (ELC-01, ELC-03, ELC-05, GR-04, GR-15)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 07-02-PLAN.md — Election night reveal modal, live 270 tally, skip/reduced motion, and contingent modal (ELC-01, ELC-02, ELC-03, GR-37)
+- [x] 07-02-PLAN.md — Election night reveal modal, live 270 tally, skip/reduced motion, and contingent modal (ELC-01, ELC-02, ELC-03, GR-37)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 07-03-PLAN.md — Session lifecycle integration, turn 16 retry, second term continuation, and End Screen (ELC-04, ELC-05)
+- [x] 07-03-PLAN.md — Session lifecycle integration, turn 16 retry, second term continuation, and End Screen (ELC-04, ELC-05)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 07-04-PLAN.md — E2E tests, axe-core audits, and visual viewport fitting (ELC-01..ELC-05, OBS-07)
+- [x] 07-04-PLAN.md — E2E tests, axe-core audits, and visual viewport fitting (ELC-01..ELC-05, OBS-07)
 **UI hint**: yes
 **Research flag**: Yes. Forecast error model and calibration (GR-37).
 
@@ -276,10 +276,10 @@ Phases execute in numeric order: 1 → 2 → 3 → (4 ∥ 5) → 6 → 7 → 8. 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Engine foundations | 7/7 | Complete    | 2026-10-12 |
-| 2. Saves, guardrails & continuous deploy | 0/TBD | Not started | - |
-| 3. Turn report & Economy | 0/TBD | Not started | - |
-| 4. Events & crises | 0/TBD | Not started | - |
-| 5. Your Powers | 0/TBD | Not started | - |
-| 6. Voters & Electoral College | 0/4 | In progress | - |
-| 7. Election & end of term | 0/TBD | Not started | - |
+| 2. Saves, guardrails & continuous deploy | 6/6 | Complete | 2026-10-12 |
+| 3. Turn report & Economy | 5/5 | Complete | 2026-10-12 |
+| 4. Events & crises | 5/5 | Complete | 2026-10-12 |
+| 5. Your Powers | 4/4 | Complete | 2026-10-12 |
+| 6. Voters & Electoral College | 4/4 | Complete | 2026-10-12 |
+| 7. Election & end of term | 4/4 | Complete | 2026-10-12 |
 | 8. Balance, hardening & release | 0/TBD | Not started | - |
