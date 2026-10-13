@@ -4,18 +4,18 @@ milestone: v0.2
 milestone_name: Playable First Term
 current_phase: 8
 current_phase_name: Balance, hardening & release
-status: ready_to_plan
-stopped_at: Phase 7 complete; ready to plan Phase 8
-last_updated: "2026-10-13T01:10:00.000Z"
+status: ready_to_execute
+stopped_at: Phase 8 planned (08-01 to 08-04 created); ready to execute Wave 1
+last_updated: "2026-10-13T01:15:00.000Z"
 last_activity: 2026-10-12
-last_activity_desc: Phase 7 complete; Playwright E2E and visual tests green; ready for Phase 8
-state_head: 67542a2
+last_activity_desc: Phase 8 UI spec and 4 execution plans complete; ready for Wave 1 execution
+state_head: 8985fbc
 progress:
   total_phases: 8
   completed_phases: 7
-  total_plans: 36
+  total_plans: 39
   completed_plans: 35
-  percent: 97
+  percent: 90
 ---
 
 # Project State
@@ -30,11 +30,11 @@ See: .planning/PROJECT.md (updated 2026-10-09)
 ## Current Position
 
 Phase: 8 — Balance, hardening & release
-Plan: Ready to plan Phase 8
-Status: Ready to plan
-Last activity: 2026-10-12 — Phase 7 execution and verification complete
+Plan: Ready to execute 08-01-PLAN.md (Wave 1)
+Status: Ready to execute
+Last activity: 2026-10-12 — Phase 8 UI spec and 4 execution plans complete
 
-Progress: [█████████░] 97%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
