@@ -7,9 +7,9 @@
 
 ### Evil Mode Game Engine & Heat Mechanics (EVIL)
 
-- [ ] **EVIL-01**: Player can toggle "Evil Mode" at New Game, setting the primary objective to maximizing an offshore stash ($B) while evading conviction.
-- [ ] **EVIL-02**: Pure engine computes a dynamic 0–100 Heat meter driven by corrupt actions, leaking evidence, and media scrutiny, with slow natural decay.
-- [ ] **EVIL-03**: Heat level applies escalating penalties to public trust, voter approval, and congressional legislative friction.
+- [x] **EVIL-01**: Player can toggle "Evil Mode" at New Game, setting the primary objective to maximizing an offshore stash ($B) while evading conviction.
+- [x] **EVIL-02**: Pure engine computes a dynamic 0–100 Heat meter driven by corrupt actions, leaking evidence, and media scrutiny, with slow natural decay.
+- [x] **EVIL-03**: Heat level applies escalating penalties to public trust, voter approval, and congressional legislative friction.
 
 ### Corrupt Executive Levers & Cronyism (LEVER)
 
@@ -42,9 +42,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EVIL-01 | Phase 17 | Pending |
-| EVIL-02 | Phase 17 | Pending |
-| EVIL-03 | Phase 17 | Pending |
+| EVIL-01 | Phase 17 | Complete |
+| EVIL-02 | Phase 17 | Complete |
+| EVIL-03 | Phase 17 | Complete |
 | LEVER-01 | Phase 18 | Pending |
 | LEVER-02 | Phase 18 | Pending |
 | LEVER-03 | Phase 18 | Pending |
