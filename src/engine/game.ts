@@ -788,6 +788,10 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (reformResult && reformResult.cloutCost > 0) cl.add('clout:reform', -reformResult.cloutCost);
   if (amendmentCloutCost > 0) cl.add('clout:reform', -amendmentCloutCost);
   if (leverResult.cloutCost > 0) cl.add('clout:evil_levers', -leverResult.cloutCost);
+  if (specialCounsel) {
+    const drain = C.specialCounselCloutDrain + C.subpoenaCloutDrain;
+    cl.add('clout:special_counsel', -drain);
+  }
   const clout = cl.clamp(state.clout + cl.sum, 0, C.cloutCap);
 
   if (filibusterLog) log.push(filibusterLog);

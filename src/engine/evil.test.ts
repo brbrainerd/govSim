@@ -137,25 +137,26 @@ describe('Evil Mode Engine (EVIL-01, EVIL-02, EVIL-03)', () => {
     it('accumulates stash and heat via decisions, and triggers institutional thresholds', () => {
       let state = newGame(1, START);
 
-      // Siphon funds and add heat
-      state = endTurn(state, { evil: { siphonBn: 15.0, heatDelta: 55 } });
+      // Siphon funds and add heat to trigger Special Counsel (>60 heat)
+      state = endTurn(state, { evil: { siphonBn: 15.0, heatDelta: 65 } });
       expect(state.evil?.offshoreStashBn).toBe(15.0);
-      expect(state.evil?.heat).toBe(55);
+      expect(state.evil?.heat).toBe(65);
       expect(state.evil?.specialCounselAppointed).toBe(true);
       expect(state.evil?.articlesOfImpeachmentVoted).toBe(false);
       expect(state.report.log.some((l) => l.id === 'special_counsel_appointed')).toBe(true);
 
-      // Heat penalties reflected in approval and trust trace
+      // Heat penalties reflected in approval and trust trace, and special counsel clout drain
       expect(state.report.trace.approval?.some((t) => t.source === 'approval:evil')).toBe(true);
       expect(state.report.trace.trust?.some((t) => t.source === 'trust:evil')).toBe(true);
+      expect(state.report.trace.clout?.some((t) => t.source === 'clout:special_counsel')).toBe(true);
 
-      // Escalate heat to impeachment threshold
-      state = endTurn(state, { evil: { heatDelta: 25 } });
+      // Escalate heat to impeachment threshold (>80 heat)
+      state = endTurn(state, { evil: { heatDelta: 20 } });
       expect(state.evil?.articlesOfImpeachmentVoted).toBe(true);
       expect(state.report.log.some((l) => l.id === 'articles_of_impeachment')).toBe(true);
 
-      // Escalate to conviction
-      state = endTurn(state, { evil: { heatDelta: 20 } });
+      // Escalate to conviction (>90 heat)
+      state = endTurn(state, { evil: { heatDelta: 15 } });
       expect(state.evil?.convicted).toBe(true);
       expect(state.report.log.some((l) => l.id === 'convicted')).toBe(true);
     });

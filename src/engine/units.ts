@@ -170,9 +170,11 @@ export const DEFAULT_TARIFF_RATE = 11;
 // Evil Mode & Corrupt Governance Constants (Phase 17, EVIL-01, EVIL-02, EVIL-03)
 export const MAX_HEAT = 100;
 export const MIN_HEAT = 0;
-export const HEAT_SPECIAL_COUNSEL_THRESHOLD = 50;
-export const HEAT_IMPEACHMENT_THRESHOLD = 75;
+export const HEAT_SPECIAL_COUNSEL_THRESHOLD = 60;
+export const HEAT_IMPEACHMENT_THRESHOLD = 80;
 export const HEAT_CONVICTION_THRESHOLD = 90;
+export const SENATE_CONVICTION_THRESHOLD = 67;
+export const HOUSE_IMPEACHMENT_THRESHOLD = 218;
 
 // Corrupt Executive Levers Constants (Phase 18, LEVER-01, LEVER-02, LEVER-03)
 export const EVIL_LEVER_IDS = [

@@ -660,6 +660,9 @@ export const COEFF = {
   evilDojCloutCost: { value: 35, unit: 'clout', basis: 'judgement', range: [20, 60], note: 'Severe political capital expenditure to bend federal law enforcement priorities.' },
   evilDojTrustCost: { value: 9.0, unit: 'trust pts', basis: 'judgement', range: [3.0, 20.0], note: 'Catastrophic institutional trust fallout from overt politicization of justice.' },
   evilDojApprovalCost: { value: 5.5, unit: 'approval pts', basis: 'judgement', range: [2.0, 12.0], note: 'Broad public condemnation of interfering in criminal corruption inquiries.' },
+  // ---- Institutional Backlash & Impeachment coefficients (Phase 19, IMPEACH-01, IMPEACH-02, IMPEACH-03) ----
+  specialCounselCloutDrain: { value: 15, unit: 'clout per quarter', basis: 'judgement', range: [5, 30], note: 'Ongoing quarterly clout drain from defending against special counsel investigations.' },
+  subpoenaCloutDrain: { value: 10, unit: 'clout per quarter', basis: 'judgement', range: [5, 20], note: 'Ongoing quarterly clout spent complying with or stonewalling congressional oversight subpoenas.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------
