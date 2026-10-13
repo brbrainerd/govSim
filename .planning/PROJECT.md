@@ -38,13 +38,16 @@ explainable model of the current US, and always understand *why* the country got
 
 ### Active
 
-(None currently — ready to initialize next milestone with `/gsd-new-milestone`.)
+- [ ] Domestic social policy tracks: Healthcare, immigration, energy & climate, and education policy levers with causal traces (SOC-01)
+- [ ] Demographic & state-level distributional impacts on cost of living, jobs, and voter sentiment (SOC-02)
+- [ ] Structural reform track: Filibuster modification, SCOTUS term limits, and campaign finance rules (REF-01)
+- [ ] Constitutional amendment mechanics with 2/3 Congressional and 3/4 state legislature ratification hurdles (REF-02)
+- [ ] "Your Household" impact card: preset or custom personas showing kitchen-table economic effects (HOU-01)
 
 ### Out of Scope
 
 - Foreign policy, military, international crises — design M3
 - Evil mode — design M4
-- Social policy & Reform track — design M2
 - Audio, voice narration — decided no audio (A5)
 - Live news feed — needs a server, partisan risk (E5)
 - Real officeholders — fictional people only (Q6)
@@ -77,9 +80,9 @@ explainable model of the current US, and always understand *why* the country got
 | Native deflate-raw URL hash replay | Shareable runs with zero server storage and zero egress | ✓ Good |
 | Bully pulpit speech in sensible bot | Calibrates reelection rates to 40%–85% across training and validation seeds | ✓ Good |
 
-## Current Milestone: Complete (v0.2 Playable First Term)
+## Current Milestone: In Planning (v0.3 Social Policy & Domestic Reform)
 
-Milestone v0.2 is shipped and archived. Run `/gsd-new-milestone` to start the next milestone.
+Focus: Expand presidential governance to domestic social policy (healthcare, immigration, energy, education), structural government reforms, and kitchen-table impact via the "Your Household" card.
 
 ---
-*Last updated: 2026-10-12 after shipping milestone v0.2*
+*Last updated: 2026-10-12 after starting milestone v0.3 cycle*

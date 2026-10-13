@@ -1,37 +1,37 @@
 ---
 gsd_state_version: "1.0"
-milestone: v0.2
-milestone_name: Playable First Term
-status: Awaiting next milestone
-stopped_at: Milestone v0.2 complete (all 8 phases executed and verified)
-last_updated: "2026-10-13T01:38:26.564Z"
+milestone: v0.3
+milestone_name: Social Policy & Domestic Reform
+status: planning
+stopped_at: Initialized Milestone v0.3 planning
+last_updated: "2026-10-13T01:41:00.000Z"
 last_activity: 2026-10-12
-last_activity_desc: Milestone v0.2 completed and archived
-state_head: 2a66685ff9d3648a5d5676a6b4549cf61b536f8b
+last_activity_desc: Initialized Milestone v0.3 cycle (Social Policy & Domestic Reform)
+state_head: a9d0510a821679bb7ec02260ab4deccae36e1eb1
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 40
-  completed_plans: 39
-current_phase: 8
-current_phase_name: Balance, hardening & release
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+current_phase: 9
+current_phase_name: Domestic Social Policy Levers
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-09)
+See: .planning/PROJECT.md (updated 2026-10-12)
 
 **Core value:** A player can make real presidential tradeoffs against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
-**Current focus:** Milestone v0.2 complete — Playable First Term
+**Current focus:** Milestone v0.3 — Social Policy & Domestic Reform
 
 ## Current Position
 
-Phase: Milestone v0.2 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-10-12 — Milestone v0.2 completed and archived
+Phase: Phase 9 — Domestic Social Policy Levers
+Plan: Ready to plan
+Status: Milestone v0.3 initialized (Phases 9-12 scoped)
+Last activity: 2026-10-12 — Initialized Milestone v0.3 planning
 
 ## Performance Metrics
 
