@@ -112,4 +112,22 @@ describe('trace', () => {
     });
     expect(bad.slice(0, 10)).toEqual([]);
   });
+
+  it('accepts social policy sources and social: prefix', () => {
+    expect(isKnownSource('social:budget')).toBe(true);
+    expect(isKnownSource('social:health')).toBe(true);
+    expect(isKnownSource('social:aca')).toBe(true);
+    expect(isKnownSource('social:pharma')).toBe(true);
+    expect(isKnownSource('social:puboption')).toBe(true);
+    expect(isKnownSource('social:border')).toBe(true);
+    expect(isKnownSource('social:visas')).toBe(true);
+    expect(isKnownSource('social:legalization')).toBe(true);
+    expect(isKnownSource('social:clean_energy')).toBe(true);
+    expect(isKnownSource('social:fossil_leasing')).toBe(true);
+    expect(isKnownSource('social:carbon_std')).toBe(true);
+    expect(isKnownSource('social:title_i')).toBe(true);
+    expect(isKnownSource('social:student_debt')).toBe(true);
+    expect(isKnownSource('social:prek')).toBe(true);
+    expect(isKnownSource('social:custom_policy')).toBe(true);
+  });
 });

@@ -148,3 +148,54 @@ export function sanitizeSocial(d: unknown): SocialDraft {
 export function getSocialLever(id: string): SocialLever | undefined {
   return socialLevers.find((l) => l.id === id);
 }
+
+/** Deviation of a social lever from its baseline. */
+export function socialDev(draft: SocialDraft, id: string): number {
+  const l = getSocialLever(id);
+  if (!l) return 0;
+  return (draft[id] ?? l.base) - l.base;
+}
+
+export interface SocialForecast {
+  readonly deficitBn: number; // total annual deficit delta $bn (+ = more deficit)
+  readonly familyMonthly: number; // total monthly family financial impact $
+  readonly potentialGrowth: number; // long-run annual potential growth delta %
+  readonly lifeExpBonus: number; // life expectancy delta
+  readonly energyInflationRelief: number; // energy CPI inflation dampening %
+  readonly empPopBonus: number; // labor force participation delta %
+}
+
+/** Pure forecast of domestic social policy impacts. */
+export function estimateSocial(draft: SocialDraft): SocialForecast {
+  let deficitBn = 0;
+  let familyMonthly = 0;
+  for (const l of socialLevers) {
+    const d = socialDev(draft, l.id);
+    const units = d / l.step;
+    deficitBn += units * l.deficitBn;
+    familyMonthly += units * l.family;
+  }
+
+  const acaDev = socialDev(draft, 'aca') / SOCIAL_INDEX_STEP_FINE;
+  const pubDev = socialDev(draft, 'pub');
+  const lifeExpBonus = (acaDev + pubDev) * C.acaCoverageGain;
+
+  const visDev = socialDev(draft, 'vis') / SOCIAL_INDEX_STEP;
+  const k12Dev = socialDev(draft, 'k12') / SOCIAL_INDEX_STEP_FINE;
+  const potentialGrowth = visDev * C.visaPotentialGrowth + k12Dev * C.titleIProductivityGain;
+
+  const prekDev = socialDev(draft, 'prek');
+  const empPopBonus = visDev * C.visaLaborExpansion + prekDev * C.universalPreKEmpPop;
+
+  const fosDev = socialDev(draft, 'fos') / SOCIAL_INDEX_STEP;
+  const energyInflationRelief = fosDev * C.fossilPermittingEnergyRelief;
+
+  return {
+    deficitBn,
+    familyMonthly,
+    potentialGrowth,
+    lifeExpBonus,
+    energyInflationRelief,
+    empPopBonus,
+  };
+}

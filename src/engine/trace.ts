@@ -105,9 +105,27 @@ export const SOURCES: Record<string, { kind: string }> = {
   'clout:reward': { kind: 'policy' },
   'clout:refund': { kind: 'policy' },
   'fed:credibility': { kind: 'fed' },
+  'social:budget': { kind: 'policy' },
+  'social:family': { kind: 'policy' },
+  'social:health': { kind: 'policy' },
+  'social:energy': { kind: 'policy' },
+  'social:labor': { kind: 'policy' },
+  'social:productivity': { kind: 'policy' },
+  'social:aca': { kind: 'policy' },
+  'social:pharma': { kind: 'policy' },
+  'social:puboption': { kind: 'policy' },
+  'social:border': { kind: 'policy' },
+  'social:visas': { kind: 'policy' },
+  'social:legalization': { kind: 'policy' },
+  'social:clean_energy': { kind: 'policy' },
+  'social:fossil_leasing': { kind: 'policy' },
+  'social:carbon_std': { kind: 'policy' },
+  'social:title_i': { kind: 'policy' },
+  'social:student_debt': { kind: 'policy' },
+  'social:prek': { kind: 'policy' },
 };
-/** Open families added by later phases (events, executive orders, laws). */
-export const SOURCE_PREFIXES = ['event:', 'eo:', 'law:'] as const;
+/** Open families added by later phases (events, executive orders, laws, social policies). */
+export const SOURCE_PREFIXES = ['event:', 'eo:', 'law:', 'social:'] as const;
 
 export const isKnownSource = (id: string): boolean =>
   Object.hasOwn(SOURCES, id) || SOURCE_PREFIXES.some((p) => id.startsWith(p));
