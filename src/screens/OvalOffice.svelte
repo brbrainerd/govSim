@@ -53,12 +53,31 @@
       <div class="bubble" role="status">{briefingInfo.bubble}</div>
     </div>
     <div class="doing">
-      <div class="doing-head"><h3>How America is doing</h3><a href="#economy" onclick={(e) => { e.preventDefault(); go('economy'); }}>See all 8</a></div>
+      <div class="doing-head">
+        <h3>{session.isEvilMode ? 'How the loot is doing' : 'How America is doing'}</h3>
+        <a href="#economy" onclick={(e) => { e.preventDefault(); go('economy'); }}>See all 8</a>
+      </div>
       <div class="tiles">
-        <div class="score">
-          <Rosette size={96} />
-          <div class="score-text"><b>{index}</b><span>/ 100</span><em class:down={change < 0}>{change === 0 ? 'no change' : change > 0 ? `up ${change} ▲` : `down ${-change} ▼`}</em></div>
-        </div>
+        {#if session.isEvilMode}
+          {@const stash = session.current.evil?.offshoreStashBn ?? 0}
+          {@const prevStash = session.previous?.evil?.offshoreStashBn ?? 0}
+          {@const stashDelta = stash - prevStash}
+          <div class="score evil-stash-score" data-testid="oval-offshore-stash">
+            <Rosette size={96} />
+            <div class="score-text">
+              <b>${stash.toFixed(1)}B</b>
+              <span>Offshore Stash</span>
+              <em class="stash-delta">
+                {stashDelta > 0 ? `+$${stashDelta.toFixed(1)}B ▲` : 'no change'}
+              </em>
+            </div>
+          </div>
+        {:else}
+          <div class="score">
+            <Rosette size={96} />
+            <div class="score-text"><b>{index}</b><span>/ 100</span><em class:down={change < 0}>{change === 0 ? 'no change' : change > 0 ? `up ${change} ▲` : `down ${-change} ▼`}</em></div>
+          </div>
+        {/if}
         {#each tiles as t (t.label)}
           {@const s = spark(t.trend)}
           <div class="card tile">
@@ -102,6 +121,87 @@
           onclick={() => onOpenCrisis?.(activeGeopoliticalCrisis)}
         >
           Review Crisis Options
+        </button>
+      </div>
+    {/if}
+    {#if session.isEvilMode}
+      {@const evil = session.current.evil}
+      {@const heat = Math.round(evil?.heat ?? 0)}
+      {@const stash = evil?.offshoreStashBn ?? 0}
+      {@const isImminent = heat >= 80}
+      {@const isSpecialCounsel = Boolean(evil?.specialCounselAppointed || heat >= 60)}
+      <div class="card evil-situation-card" class:urgent={isImminent} data-testid="evil-situation-card">
+        <div class="evil-card-header">
+          <span class="evil-intel-tag">
+            <span class="evil-intel-icon" aria-hidden="true">⚡</span>
+            KLEPTOCRATIC INTEL
+          </span>
+          <span
+            class="evil-heat-pill"
+            class:heat-critical={isImminent}
+            class:heat-warning={isSpecialCounsel && !isImminent}
+            data-testid="oval-heat-pill"
+          >
+            Heat: {heat}/100
+          </span>
+        </div>
+
+        <div
+          class="heat-gauge-wrap"
+          role="progressbar"
+          aria-valuenow={heat}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Investigation Heat Gauge"
+        >
+          <div class="heat-gauge-track">
+            <div
+              class="heat-gauge-fill"
+              style="width: {Math.min(100, Math.max(0, heat))}%"
+              class:fill-critical={isImminent}
+              class:fill-warning={isSpecialCounsel && !isImminent}
+            ></div>
+            <div class="heat-marker threshold-sc" style="left: 60%" title="Special Counsel (60 Heat)"></div>
+            <div class="heat-marker threshold-impeach" style="left: 80%" title="Impeachment (80 Heat)"></div>
+          </div>
+          <div class="heat-gauge-labels">
+            <span>0</span>
+            <span class="threshold-label" style="left: 60%">60</span>
+            <span class="threshold-label" style="left: 80%">80</span>
+            <span>100</span>
+          </div>
+        </div>
+
+        <div class="evil-status-callout">
+          {#if isImminent}
+            <b class="status-alert critical-alert">CRITICAL: Impeachment Vote Imminent (218 House Votes)</b>
+          {:else if isSpecialCounsel}
+            <b class="status-alert warning-alert">WARNING: Special Counsel Active (−25 Clout/Qtr)</b>
+          {:else if heat >= 35}
+            <span class="status-text">Watchdogs Snooping: Evidence leaking slowly</span>
+          {:else}
+            <span class="status-text">Investigations Dormant: Extraction proceeding cleanly</span>
+          {/if}
+        </div>
+
+        <div class="evil-card-stats">
+          <div class="stat-mini">
+            <span class="stat-mini-label">Offshore Loot</span>
+            <span class="stat-mini-val" data-testid="oval-stash-val">${stash.toFixed(1)}B</span>
+          </div>
+          <div class="stat-mini">
+            <span class="stat-mini-label">Watchdog Probes</span>
+            <span class="stat-mini-val">{evil?.specialCounselAppointed ? 'Investigated' : 'Evading Probes'}</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="btn corrupt-levers-btn"
+          data-testid="goto-corrupt-levers-btn"
+          onclick={() => go('powers')}
+        >
+          Enact Corrupt Levers
         </button>
       </div>
     {/if}
@@ -224,5 +324,172 @@
 
   .review-crisis-btn:hover {
     background: var(--alert-dark);
+  }
+
+  .evil-situation-card {
+    background: var(--card);
+    border: 2px solid var(--gold);
+    border-left: 6px solid var(--gold);
+    padding: clamp(8px, 1.2vh, 12px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .evil-situation-card.urgent {
+    border-color: var(--alert);
+    border-left-color: var(--alert);
+  }
+
+  .evil-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .evil-intel-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font: 700 11px var(--font-ui);
+    letter-spacing: 0.08em;
+    color: var(--gold-dark);
+    text-transform: uppercase;
+  }
+
+  .evil-intel-icon {
+    font-size: 13px;
+  }
+
+  .evil-heat-pill {
+    font: 700 12px var(--font-ui);
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    color: var(--ink);
+  }
+
+  .evil-heat-pill.heat-warning {
+    border-color: var(--gold);
+    background: var(--gold-dark);
+    color: var(--card);
+  }
+
+  .evil-heat-pill.heat-critical {
+    border-color: var(--alert);
+    background: var(--alert);
+    color: var(--card);
+  }
+
+  .heat-gauge-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .heat-gauge-track {
+    position: relative;
+    height: 10px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .heat-gauge-fill {
+    height: 100%;
+    background: var(--gold);
+    transition: width 0.3s ease;
+  }
+
+  .heat-gauge-fill.fill-warning {
+    background: var(--gold-dark);
+  }
+
+  .heat-gauge-fill.fill-critical {
+    background: var(--alert);
+  }
+
+  .heat-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--ink);
+    opacity: 0.6;
+  }
+
+  .heat-gauge-labels {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    font: 600 10px var(--font-ui);
+    color: var(--ink-soft);
+  }
+
+  .threshold-label {
+    position: absolute;
+    transform: translateX(-50%);
+  }
+
+  .evil-status-callout {
+    font: 600 12px/1.2 var(--font-ui);
+    padding: 4px 6px;
+    background: var(--paper);
+    border-radius: 4px;
+  }
+
+  .status-alert.critical-alert {
+    color: var(--alert);
+    font-weight: 700;
+  }
+
+  .status-alert.warning-alert {
+    color: var(--gold-dark);
+    font-weight: 700;
+  }
+
+  .evil-card-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  .stat-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .stat-mini-label {
+    font: 600 11px var(--font-ui);
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+
+  .stat-mini-val {
+    font: 700 15px var(--font-ui);
+    color: var(--ink);
+  }
+
+  .corrupt-levers-btn {
+    width: 100%;
+    margin-top: 2px;
+    background: var(--alert);
+    border-color: var(--alert-dark);
+    color: var(--card);
+  }
+
+  .corrupt-levers-btn:hover {
+    filter: brightness(1.1);
+  }
+
+  .evil-stash-score .stash-delta {
+    color: var(--gold);
+    font-style: normal;
   }
 </style>

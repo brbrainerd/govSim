@@ -140,6 +140,10 @@ describe('dynamic briefing generator (EVT-07, OBS-05)', () => {
       { current: { ...base, econ: { ...base.econ, inflation: 4.2 } } },
       { current: { ...base, econ: { ...base.econ, unemployment: 5.2 } } },
       { current: base },
+      { current: base, isEvilMode: true },
+      { current: { ...base, evil: { heat: 40, offshoreStashBn: 5, investigationsActive: false, specialCounselAppointed: false, articlesOfImpeachmentVoted: false, convicted: false } }, isEvilMode: true },
+      { current: { ...base, evil: { heat: 65, offshoreStashBn: 12, investigationsActive: true, specialCounselAppointed: true, articlesOfImpeachmentVoted: false, convicted: false } }, isEvilMode: true },
+      { current: { ...base, evil: { heat: 85, offshoreStashBn: 20, investigationsActive: true, specialCounselAppointed: true, articlesOfImpeachmentVoted: true, convicted: false } }, isEvilMode: true },
     ];
 
     for (const ctx of scenarios) {

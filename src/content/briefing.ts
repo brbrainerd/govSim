@@ -24,6 +24,7 @@ export interface BriefingInfo {
 export interface SessionContext {
   readonly current: GameState;
   readonly previous?: GameState;
+  readonly isEvilMode?: boolean;
 }
 
 /**
@@ -46,6 +47,66 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
         { title: 'Respond to crisis', cta: 'Decide now', target: null },
         { title: 'Check state of economy', cta: 'Open Economy', target: 'economy' },
         { title: 'Build House coalition', cta: 'Open Congress', target: 'congress' },
+      ],
+    };
+  }
+
+  // 2. Satirical Evil Mode kleptocracy priorities
+  if (session.isEvilMode) {
+    const evil = current.evil;
+    const heat = evil?.heat ?? 0;
+    if (heat >= 80) {
+      return {
+        bubble: 'Impeachment looms. House leaders want you out.',
+        thisTurn: {
+          title: 'Impeachment threat',
+          detail: 'Public outrage is at peak levels. Purge watchdogs or face a vote.',
+        },
+        suggestions: [
+          { title: 'Suppress watchdogs', cta: 'Open Powers', target: 'powers' },
+          { title: 'Rally House votes', cta: 'Open Congress', target: 'congress' },
+          { title: 'Review your loot', cta: 'Open Economy', target: 'economy' },
+        ],
+      };
+    }
+    if (evil?.specialCounselAppointed || heat >= 60) {
+      return {
+        bubble: 'A special counsel is digging in. Clout is draining.',
+        thisTurn: {
+          title: 'Special counsel active',
+          detail: 'Probes drain 25 clout each turn. Deflect or stop them.',
+        },
+        suggestions: [
+          { title: 'Fire investigators', cta: 'Open Powers', target: 'powers' },
+          { title: 'Sell exemptions', cta: 'Open Powers', target: 'powers' },
+          { title: 'Track trade deals', cta: 'Open Trade', target: 'trade' },
+        ],
+      };
+    }
+    if (heat >= 35) {
+      return {
+        bubble: 'Watchdogs are snooping. Secret deals are leaking.',
+        thisTurn: {
+          title: 'Scandal simmering',
+          detail: 'Leaks are driving up heat. Choose your next moves with care.',
+        },
+        suggestions: [
+          { title: 'Enact corrupt levers', cta: 'Open Powers', target: 'powers' },
+          { title: 'Auction public assets', cta: 'Open Powers', target: 'powers' },
+          { title: 'Set budget outlays', cta: 'Open Budget', target: 'budget' },
+        ],
+      };
+    }
+    return {
+      bubble: 'Who can we squeeze this turn? The vault is open.',
+      thisTurn: {
+        title: 'Corrupt deals underway',
+        detail: 'Send public cash to secret bank vaults.',
+      },
+      suggestions: [
+        { title: 'Award no-bid contracts', cta: 'Open Powers', target: 'powers' },
+        { title: 'Auction public assets', cta: 'Open Powers', target: 'powers' },
+        { title: 'Review budget funds', cta: 'Open Budget', target: 'budget' },
       ],
     };
   }
