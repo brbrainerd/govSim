@@ -84,4 +84,25 @@ export const SENATE_SIMPLE_MAJORITY = 51;
 export const SENATE_TOTAL_SEATS = 100;
 export const SENATE_BASE_SEATS = 50;
 
+// Judicial & Electoral Reform Constants (REF-02, REF-03)
+export const BENCH_EXPANSION_SEATS = 2;
+export const RCV_GRANT_BN = 2.5;
+export const REDISTRICTING_GRANT_BN = 0.5;
+export const MATCHING_GRANT_BN = 4.5;
+export const BENCH_STARTING_CONSERVATIVE = 6;
+export const BENCH_STARTING_LIBERAL = 3;
+
+export const REFORM_CLOUT_TERM_LIMITS = 25;
+export const REFORM_CLOUT_ETHICS = 20;
+export const REFORM_CLOUT_EXPANSION = 40;
+export const REFORM_CLOUT_RCV = 15;
+export const REFORM_CLOUT_REDISTRICTING = 20;
+export const REFORM_CLOUT_MATCHING = 25;
+
+export const COURT_UPHOLD_FLOOR = 0.05;
+export const COURT_UPHOLD_CEIL = 0.95;
+
+
+
+
 

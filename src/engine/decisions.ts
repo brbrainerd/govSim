@@ -34,16 +34,20 @@ export interface CrisisDecision {
   optionId: string;
 }
 
+import type { ReformId } from './reforms';
+
 export type { PowerDecisions } from './powers';
+export type { ReformId };
 export type { SocialDraft } from './social';
 
-/** Phases 4/5/9/11 add keys here (crisis, powers, social, filibusterRule). There is deliberately no clout field. */
+/** Phases 4/5/9/11 add keys here (crisis, powers, social, filibusterRule, reform). There is deliberately no clout field. */
 export interface Decisions {
   bill?: Bill;
   crisis?: CrisisDecision;
   powers?: PowerDecisions;
   social?: SocialDraft;
   filibusterRule?: FilibusterRule;
+  reform?: ReformId;
 }
 
 export interface CrisisChoiceResult {

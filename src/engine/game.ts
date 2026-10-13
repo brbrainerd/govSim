@@ -10,6 +10,14 @@ import { resolvePowerDecisions } from './powers';
 import { normal } from './rng';
 import { prosperity, type ScoreBreakdown } from './score';
 import { calculateMidtermShift, FILIBUSTER_RULES_CATALOG, type FilibusterRule } from './congress';
+import {
+  REFORMS_CATALOG,
+  resolveElectoralReform,
+  resolveJudicialReform,
+  type ElectoralReformId,
+  type JudicialReformId,
+  type ReformId,
+} from './reforms';
 import { isKnownSource, Ledger, type Term, type TraceKey } from './trace';
 import { BN_PER_TN, BUDGET_WINDOW_YEARS, LEGACY_QUARTERS, MIDTERM_TURN_1, MIDTERM_TURN_2, MONTHS_PER_YEAR, PERCENT, QUARTERS_PER_YEAR, TOTAL_TURNS } from './units';
 import { scheduleTurnEvents, type ActiveCrisis } from './director';
@@ -74,6 +82,8 @@ export interface GameState {
   readonly houseSeatDelta: number; // net seat change from midterms (default 0)
   readonly senateSeatDelta?: number; // net Senate seat change from midterms (default 0)
   readonly filibusterRule?: FilibusterRule; // active Senate filibuster rule (default sixty_vote)
+  readonly activeReforms?: readonly string[]; // IDs of enacted structural reforms
+  readonly courtComposition?: { readonly conservative: number; readonly liberal: number }; // Supreme Court bench composition
 }
 
 /** One thing that happened last turn (a bill passed, failed or was rejected). */
@@ -250,6 +260,30 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     }
   }
 
+  // Structural judicial and electoral reforms (Phase 11, REF-02, REF-03)
+  const rawReform: unknown = decisions !== null && typeof decisions === 'object' ? (decisions as { reform?: unknown }).reform : undefined;
+  let nextActiveReforms = state.activeReforms ? [...state.activeReforms] : undefined;
+  let nextCourtComposition = state.courtComposition;
+  let reformResult: ReturnType<typeof resolveJudicialReform> | null = null;
+  if (!legacyRun && typeof rawReform === 'string' && Object.hasOwn(REFORMS_CATALOG, rawReform)) {
+    const reformId = rawReform as ReformId;
+    const cat = REFORMS_CATALOG[reformId].category;
+    if (cat === 'judicial') {
+      reformResult = resolveJudicialReform(state, reformId as JudicialReformId, state.seed);
+    } else if (cat === 'electoral') {
+      reformResult = resolveElectoralReform(state, reformId as ElectoralReformId);
+    }
+    if (reformResult) {
+      if (reformResult.valid && reformResult.status === 'enacted') {
+        if (!nextActiveReforms) nextActiveReforms = [];
+        nextActiveReforms.push(reformId);
+        if (reformResult.courtShift) {
+          nextCourtComposition = reformResult.courtShift;
+        }
+      }
+    }
+  }
+
   const active = activeAt(modifiers, state.turn, legacyRun);
   for (const m of active) {
     if (!m.source.startsWith(`${m.tag}:`) || !isKnownSource(m.source)) throw new Error(`modifier ${m.id} has source "${m.source}", which must start with "${m.tag}:"`);
@@ -263,7 +297,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   // The engine charges clout from the raw bill; the Session previews with the same function.
   const raw: unknown = decisions !== null && typeof decisions === 'object' ? decisions.bill : undefined;
   const activeRule = nextFilibusterRule ?? state.filibusterRule ?? 'sixty_vote';
-  const r = raw === undefined ? null : resolveBill(state.clout - filibusterCost, raw, state.houseSeatDelta, state.senateSeatDelta ?? 0, activeRule, state.approval);
+  const reformCloutCost = reformResult?.cloutCost ?? 0;
+  const r = raw === undefined ? null : resolveBill(state.clout - filibusterCost - reformCloutCost, raw, state.houseSeatDelta, state.senateSeatDelta ?? 0, activeRule, state.approval);
   const enacted = r && r.valid && r.passed ? r : null;
   const policy = enacted ? enacted.budget : state.policy;
   const before = estimate(state.policy), after = estimate(policy);
@@ -389,12 +424,14 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   ap.add('luck', C.shockApproval * zAppr);
   for (const m of mods('approval')) ap.add(m.source, m.amount);
   if (filibusterApprovalPenalty > 0) ap.add('approval:reform', -filibusterApprovalPenalty);
+  if (reformResult && reformResult.approvalDelta !== 0) ap.add('approval:reform', reformResult.approvalDelta);
   const approval = ap.round(ap.clamp(state.approval + ap.sum, ...LIMITS.approval.bounds), RULES.approvalStep.value);
   const tr = new Ledger();
   tr.add('trust:reversion', C.trustAdjust * (s.trust - e.trust));
   tr.add('trust:approval', C.trustAdjust * C.trustApproval * (approval - C.approvalNeutral));
   for (const m of mods('trust')) tr.add(m.source, m.amount);
   if (filibusterTrustPenalty > 0) tr.add('trust:reform', -filibusterTrustPenalty);
+  if (reformResult && reformResult.trustDelta !== 0) tr.add('trust:reform', reformResult.trustDelta);
   const trust = tr.clamp(e.trust + tr.sum, ...LIMITS.trust.bounds);
 
   const cl = new Ledger();
@@ -412,9 +449,11 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     if (pRes.cloutGained > 0) cl.add('clout:powers', pRes.cloutGained);
   }
   if (filibusterCost > 0) cl.add('clout:reform', -filibusterCost);
+  if (reformResult && reformResult.cloutCost > 0) cl.add('clout:reform', -reformResult.cloutCost);
   const clout = cl.clamp(state.clout + cl.sum, 0, C.cloutCap);
 
   if (filibusterLog) log.push(filibusterLog);
+  if (reformResult) log.push(...reformResult.log);
   if (r) log.push(r.valid ? { kind: 'bill', id: r.status, amount: r.whip.total } : { kind: 'bill', id: 'rejected', detail: r.reason });
 
   let nextHouseSeatDelta = state.houseSeatDelta ?? 0;
@@ -450,6 +489,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     houseSeatDelta: nextHouseSeatDelta,
     ...(state.senateSeatDelta !== undefined || state.filibusterRule !== undefined || nextFilibusterRule !== undefined ? { senateSeatDelta: nextSenateSeatDelta ?? 0 } : {}),
     ...(nextFilibusterRule !== undefined && nextFilibusterRule !== 'sixty_vote' ? { filibusterRule: nextFilibusterRule } : {}),
+    ...(nextActiveReforms && nextActiveReforms.length > 0 ? { activeReforms: nextActiveReforms } : {}),
+    ...(nextCourtComposition ? { courtComposition: nextCourtComposition } : {}),
     econ: nextEcon,
     activeCrisis: state.activeCrisis,
     report: {

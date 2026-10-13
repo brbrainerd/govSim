@@ -536,6 +536,19 @@ export const COEFF = {
   filibusterNuclearCloutCost: { value: 35, unit: 'clout', basis: 'judgement', range: [15, 60], note: 'Clout cost to invoke nuclear option.' },
   filibusterFiftyFiveCloutCost: { value: 20, unit: 'clout', basis: 'judgement', range: [10, 40], note: 'Clout cost to pass 55-vote threshold reform.' },
   filibusterTalkingCloutCost: { value: 15, unit: 'clout', basis: 'judgement', range: [5, 30], note: 'Clout cost to restore talking filibuster.' },
+  // ---- judicial reform coefficients (Phase 11, REF-02) ----
+  courtTermLimitChallengeRisk: { value: 0.65, unit: 'probability', basis: 'judgement', range: [0.3, 0.9], note: 'Risk of conservative bench striking down statutory judicial term limits under Article III.' },
+  courtEthicsTrustGain: { value: 3, unit: 'index pts', basis: 'judgement', range: [1, 8], note: 'Public trust gain from binding statutory judicial code of conduct.' },
+  courtExpansionTrustPenalty: { value: 6, unit: 'index pts', basis: 'judgement', range: [2, 15], note: 'Public trust loss from expanding Supreme Court bench size.' },
+  courtJusticeUpholdSlope: { value: 0.08, unit: 'probability shift per net justice', basis: 'judgement', range: [0.03, 0.15], note: 'Executive order uphold probability change per net justice ideological balance.' },
+  // ---- electoral reform coefficients (Phase 11, REF-03) ----
+  rcvTurnoutBonus: { value: 1.5, unit: '% turnout', basis: 'judgement', range: [0.5, 4], note: 'Voter turnout increase from ranked choice voting adoption.' },
+  rcvCentristBonus: { value: 3.0, unit: '% margin shift', basis: 'judgement', range: [1, 6], note: 'Centrist candidate viability boost under ranked choice voting.' },
+  rcvTrustGain: { value: 1.5, unit: 'index pts', basis: 'judgement', range: [0.5, 5], note: 'Civic trust increase from ranked choice voting.' },
+  independentRedistrictingCompetitiveDistricts: { value: 35, unit: 'seats', basis: 'judgement', range: [15, 60], note: 'Increase in competitive battleground House districts under independent redistricting.' },
+  smallDollarMatchingTurnoutBonus: { value: 2.0, unit: '% turnout', basis: 'judgement', range: [0.5, 5], note: 'Voter participation increase from public campaign matching funds.' },
+  smallDollarMatchingTrustGain: { value: 2.5, unit: 'index pts', basis: 'judgement', range: [1, 7], note: 'Institutional trust gain from reducing mega-donor dependency.' },
+  smallDollarMatchingApprovalGain: { value: 1.0, unit: '% approval', basis: 'judgement', range: [0.2, 3], note: 'Presidential approval boost from championing clean campaign finance.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------

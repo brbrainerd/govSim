@@ -8,7 +8,13 @@ import { SENATE_CONFIRMATION, SENATE_CONFIRMATION_THRESHOLD, SENATE_SEATS } from
 import type { GameState, LogEntry } from './game';
 import type { Modifier, ResolverResult, Scheduled } from './modifiers';
 import { draw } from './rng';
-import { FOREVER } from './units';
+import {
+  BENCH_STARTING_CONSERVATIVE,
+  BENCH_STARTING_LIBERAL,
+  COURT_UPHOLD_CEIL,
+  COURT_UPHOLD_FLOOR,
+  FOREVER,
+} from './units';
 
 export { SENATE_CONFIRMATION, SENATE_CONFIRMATION_THRESHOLD, SENATE_SEATS };
 
@@ -56,13 +62,29 @@ const COURT_UPHOLD_THRESHOLDS: Record<CourtRiskBand, number> = {
   High: C.courtUpholdHigh,
 };
 
+/**
+ * Returns dynamic Supreme Court uphold probability based on net justice ideological balance (REF-02).
+ */
+export function getCourtUpholdProbability(
+  band: CourtRiskBand,
+  courtComposition?: { readonly conservative: number; readonly liberal: number }
+): number {
+  const baseProb = COURT_UPHOLD_THRESHOLDS[band];
+  const con = courtComposition?.conservative ?? BENCH_STARTING_CONSERVATIVE;
+  const lib = courtComposition?.liberal ?? BENCH_STARTING_LIBERAL;
+  const baselineNet = BENCH_STARTING_LIBERAL - BENCH_STARTING_CONSERVATIVE;
+  const currentNet = lib - con;
+  const shift = (currentNet - baselineNet) * C.courtJusticeUpholdSlope;
+  return Math.max(COURT_UPHOLD_FLOOR, Math.min(COURT_UPHOLD_CEIL, baseProb + shift));
+}
+
 /** Evaluates whether an executive order faces judicial challenge via keyed draw on 'court' stream (PWR-02). */
 export function evaluateCourtChallenge(seed: number, turn: number, order: ExecutiveOrder): boolean {
   const p = draw(seed, 'court', turn, `challenge:${order.id}`);
   return p < order.riskProbability;
 }
 
-/** Resolver for scheduled delayed court ruling (PWR-02, FND-06). */
+/** Resolver for scheduled delayed court ruling (PWR-02, FND-06, REF-02). */
 export function resolveCourtRuling(ctx: {
   seed: number;
   turn: number;
@@ -72,10 +94,13 @@ export function resolveCourtRuling(ctx: {
   const orderId = String(ctx.item.data.orderId ?? '');
   const order = getOrder(orderId);
   const band = order?.courtRisk ?? 'Moderate';
-  const threshold = COURT_UPHOLD_THRESHOLDS[band];
+  const con = ctx.state.courtComposition?.conservative ?? BENCH_STARTING_CONSERVATIVE;
+  const lib = ctx.state.courtComposition?.liberal ?? BENCH_STARTING_LIBERAL;
+  const threshold = getCourtUpholdProbability(band, ctx.state.courtComposition);
 
   const roll = draw(ctx.seed, 'court', ctx.turn, `ruling:${orderId}`);
   const upheld = roll < threshold;
+  const benchRatio = `${con}-${lib}`;
 
   if (upheld) {
     return {
@@ -83,7 +108,7 @@ export function resolveCourtRuling(ctx: {
         {
           kind: 'court',
           id: 'upheld',
-          detail: `Supreme Court upholds ${order?.name ?? orderId} (6-3).`,
+          detail: `Supreme Court upholds ${order?.name ?? orderId} (${benchRatio}).`,
         },
       ],
       add: [
@@ -108,7 +133,7 @@ export function resolveCourtRuling(ctx: {
       {
         kind: 'court',
         id: 'struck_down',
-        detail: `Supreme Court strikes down ${order?.name ?? orderId} (6-3).`,
+        detail: `Supreme Court strikes down ${order?.name ?? orderId} (${benchRatio}).`,
       },
     ],
     add: [

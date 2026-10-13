@@ -6,6 +6,7 @@ import { endTurn, finalScore, legacy, newGame, step, TOTAL_TURNS } from './game'
 import { activeAt } from './modifiers';
 import {
   evaluateCourtChallenge,
+  getCourtUpholdProbability,
   resolveCourtRuling,
   resolvePowerDecisions,
   senateConfirmationVotes,
@@ -243,6 +244,23 @@ describe('presidential executive powers (PWR-01..PWR-07)', () => {
       expect(state.clout).toBeLessThanOrEqual(C.cloutCap);
     }
     expect(state.clout).toBe(C.cloutCap);
+  });
+
+  it('scales Supreme Court uphold probabilities based on net ideological balance (REF-02)', () => {
+    // Baseline 6-3 conservative bench
+    expect(getCourtUpholdProbability('Low')).toBe(C.courtUpholdLow);
+    expect(getCourtUpholdProbability('Moderate')).toBe(C.courtUpholdModerate);
+    expect(getCourtUpholdProbability('High')).toBe(C.courtUpholdHigh);
+
+    // Bench expanded by +2 liberal justices: net balance moves from -3 to -1 (+2 justices)
+    // Shift is 2 * 0.08 = +0.16
+    const expandedLow = getCourtUpholdProbability('Low', { conservative: 6, liberal: 5 });
+    const expandedMod = getCourtUpholdProbability('Moderate', { conservative: 6, liberal: 5 });
+    const expandedHigh = getCourtUpholdProbability('High', { conservative: 6, liberal: 5 });
+
+    expect(expandedLow).toBeCloseTo(0.95, 5); // Clamped at COURT_UPHOLD_CEIL
+    expect(expandedMod).toBeCloseTo(C.courtUpholdModerate + 0.16, 5);
+    expect(expandedHigh).toBeCloseTo(C.courtUpholdHigh + 0.16, 5);
   });
 });
 
