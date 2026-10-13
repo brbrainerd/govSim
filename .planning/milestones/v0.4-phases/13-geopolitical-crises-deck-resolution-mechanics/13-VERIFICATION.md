@@ -1,3 +1,14 @@
+---
+phase: 13-geopolitical-crises-deck-resolution-mechanics
+verified: 2026-10-13T05:16:00.000Z
+status: passed
+score: 3/3 requirements verified
+covered_requirements:
+  - CRISIS-01
+  - CRISIS-02
+  - CRISIS-03
+---
+
 # Phase 13 Verification: Geopolitical Crises Deck & Resolution Mechanics
 
 ## Phase Objectives & Status

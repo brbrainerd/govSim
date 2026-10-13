@@ -40,13 +40,14 @@ against an honest, explainable model of the current US, and always understand *w
 - ✓ Structural government reform: Senate filibuster options, judicial ethics & 18-year term limits, electoral reforms, and 3/4 state amendment ratifications — v0.3
 - ✓ "Your Household" impact card: 7 kitchen-table budget lines, 4 authentic preset personas, and custom family/state builder — v0.3
 - ✓ Extended 100-seed Monte Carlo game balance calibration (+3.425 headroom, party neutrality $\le 5$ pp) — v0.3
+- ✓ Paced geopolitical crises (oil embargo, shipping blockade, debt contagion, cyber blackout) with cited resolution triads and autopilot streaming — v0.4
+- ✓ Presidential foreign policy controls: defense posture slider, foreign assistance adjustments, targeted economic sanctions, and foreign aid myth card — v0.4
+- ✓ Pure deterministic 0–100 Security Index driving 10% of the composite Prosperity Index with causal trace line items — v0.4
+- ✓ International Trade & Tariffs screen: strategic sector tariffs (chips, minerals, clean energy) citing Sec 301/232, bilateral trade accords, and state export vulnerability matrix — v0.4
 
 ### Active
 
-- [ ] Global crisis & geopolitical events deck (oil supply shocks, international conflicts, treaty crises) — v0.4
-- [ ] Foreign policy levers & presidential powers (diplomatic postures, sanctions, defense posture/readiness, foreign aid myth card) — v0.4
-- [ ] Security Index & macro feedback integration (10% Security Prosperity weight, defense multiplier, import/energy inflation pass-through) — v0.4
-- [ ] International trade & tariff dynamics (bilateral trade negotiations, currency/cost pass-through, retaliatory spirals) — v0.4
+- [ ] Milestone v0.5 scope definition (Satirical "Evil Mode" & alternative win/loss states)
 
 ### Out of Scope
 
@@ -57,7 +58,7 @@ against an honest, explainable model of the current US, and always understand *w
 
 ## Context
 
-- Shipped Milestone v0.3 ("Social Policy & Domestic Reform") with 330 unit tests across 54 files, 23 Playwright E2E tests, zero axe violations, and clean token guardrails.
+- Shipped Milestone v0.4 ("Foreign Policy & International Crises") with 363 unit tests across 59 files, 36 Playwright E2E tests, zero axe violations, and clean token guardrails.
 - Pure client application (TypeScript + Svelte 5 runes + Vite), zero backend dependencies, zero telemetry.
 - Visual direction C (Americana poster) + best of A; tokens SSOT, zero outer viewport scrolling across 1376×768 and 1280×720 viewports.
 - Balance calibrated across 100 seeds; sensible play reliably beats do-nothing by +3.425 index points with $\le 5$ percentage points party neutrality.
@@ -84,16 +85,18 @@ against an honest, explainable model of the current US, and always understand *w
 | Regional Price Parity Indexing | Uses authentic BEA RPP indices to ground inflation in state-level costs of living | ✓ Good |
 | High-hurdle amendment ratifications | Simulates 2/3 Congress and 3/4 state legislature approvals with realistic pacing | ✓ Good |
 | 100-seed party neutrality regression | Ensures symmetric policy yields symmetric reelection odds within 5 pp | ✓ Good |
+| Deterministic Geopolitical Crisis Deck | Keyed RNG stream 8 with cited diplomatic/military triads and multi-turn escalation | ✓ Good |
+| Security Index Composite | Pure arithmetic 0–100 index driving 10% of Prosperity Index with causal trace explanations | ✓ Good |
+| Sector Tariffs & Bilateral Accords | Models Sec 301/232 statutory authorities, inflation pass-through, and trade mitigation | ✓ Good |
 
-## Current Milestone: v0.4 Foreign Policy & International Crises
+## Completed Milestone: v0.4 Foreign Policy & International Crises (Shipped 2026-10-12)
 
 **Goal:** Introduce international diplomacy, defense posture, global crises, and foreign trade mechanics to complete the presidential toolkit and drive the Security Index.
-
-**Target features:**
-- Global crisis deck & geopolitical event engine (oil shocks, trade conflicts, alliance tensions)
-- Foreign policy levers & presidential powers (diplomatic posture, sanctions, defense posture/readiness, foreign aid myth card)
-- Security Index integration & macro feedback (10% Security Prosperity weight, defense budget multipliers, import/energy inflation)
-- Trade & tariff dynamics (bilateral agreements, retaliatory spirals, export/import cost impacts)
+**Delivered:**
+- 4-archetype Geopolitical Crises Deck with countdowns and cited precedents (CRISIS-01, CRISIS-02, CRISIS-03)
+- Defense posture dial, foreign assistance slider, targeted sanctions, and foreign aid civics myth card (FORPOL-01, FORPOL-02, FORPOL-03)
+- Security Index & macroeconomic feedback engine with report card attributions (SEC-01, SEC-02, SEC-03)
+- Dedicated Trade & Tariffs screen with sector tariffs, bilateral accords, and state export vulnerability matrix (TRADE-01, TRADE-02, TRADE-03)
 
 ## Evolution
 

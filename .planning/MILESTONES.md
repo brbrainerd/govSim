@@ -1,5 +1,16 @@
 # Milestones
 
+## v0.4 Foreign Policy & International Crises (Shipped: 2026-10-12)
+
+**Phases completed:** 4 phases, 16 plans, 0 tasks
+
+- Geopolitical crises deck: paced international crisis events (oil embargo, shipping strait blockade, debt contagion, cyber infrastructure blackout) with multi-turn countdowns, cited diplomatic/economic/military resolution options, and persistent Oval Office alert banner.
+- Foreign policy & sanctions levers: defense readiness posture dials, foreign assistance sliders, targeted economic sanctions with domestic inflation pass-through, and the "Cut Foreign Aid to Fix Deficit" civics myth card.
+- Security Index & macro feedback engine: pure deterministic 0–100 Security Index based on readiness, alliances, and crisis containment, driving 10% of the Prosperity Index with transparent causal trace explanations in report cards.
+- International trade & tariffs screen: dedicated Trade screen with strategic sector tariffs (chips, minerals, clean energy) citing Section 301 and Section 232, bilateral trade accords mitigating reciprocal retaliation, and an accessible 10-state export vulnerability matrix.
+
+---
+
 ## v0.3 Social Policy & Domestic Reform (Shipped: 2026-10-12)
 
 **Phases completed:** 4 phases, 16 plans, 0 tasks

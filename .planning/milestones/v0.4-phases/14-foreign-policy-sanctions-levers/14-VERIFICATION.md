@@ -1,3 +1,14 @@
+---
+phase: 14-foreign-policy-sanctions-levers
+verified: 2026-10-13T05:34:00.000Z
+status: passed
+score: 3/3 requirements verified
+covered_requirements:
+  - FORPOL-01
+  - FORPOL-02
+  - FORPOL-03
+---
+
 # Phase 14: Foreign Policy & Sanctions Levers Verification
 
 ## Verification Summary

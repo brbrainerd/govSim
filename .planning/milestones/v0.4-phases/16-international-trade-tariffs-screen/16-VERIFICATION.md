@@ -1,3 +1,14 @@
+---
+phase: 16-international-trade-tariffs-screen
+verified: 2026-10-13T06:08:00.000Z
+status: passed
+score: 3/3 requirements verified
+covered_requirements:
+  - TRADE-01
+  - TRADE-02
+  - TRADE-03
+---
+
 # Phase 16 Verification Report: International Trade & Tariffs Screen
 
 ## Phase Objectives & Status
