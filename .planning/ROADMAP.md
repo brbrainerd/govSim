@@ -12,7 +12,7 @@
 
 **Milestone Goal:** Introduce international diplomacy, defense posture, global crises, and foreign trade mechanics to complete the presidential toolkit and drive the Security Index (10% of Prosperity).
 
-- [ ] **Phase 13: Geopolitical Crises Deck & Resolution Mechanics** (CRISIS-01, CRISIS-02, CRISIS-03)
+- [x] **Phase 13: Geopolitical Crises Deck & Resolution Mechanics** (CRISIS-01, CRISIS-02, CRISIS-03)
 - [ ] **Phase 14: Foreign Policy & Sanctions Levers** (FORPOL-01, FORPOL-02, FORPOL-03)
 - [ ] **Phase 15: Security Index & Macro Feedback Engine** (SEC-01, SEC-02, SEC-03)
 - [ ] **Phase 16: International Trade & Tariffs Screen** (TRADE-01, TRADE-02, TRADE-03)
@@ -27,7 +27,7 @@
   1. Paced international crisis events trigger via deterministic keyed RNG streams and appear in the crisis modal with countdown timers.
   2. Player can choose between 3 cited resolution options displaying clear budget, approval, and risk trade-offs.
   3. Autopilot runs encounter identical crises and apply non-interventional default responses without drifting replay determinism.
-**Plans**: TBD (4 plans expected)
+**Plans**: 4 plans (13-01, 13-02, 13-03, 13-04) — completed 2026-10-12
 
 #### Phase 14: Foreign Policy & Sanctions Levers
 **Goal**: Provide presidential foreign policy controls including defense readiness posture dials, targeted economic sanctions, and the "Cut Foreign Aid to Fix Deficit" civics myth card.
