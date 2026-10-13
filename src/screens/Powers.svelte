@@ -442,8 +442,8 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
-    height: 100%;
     min-height: 0;
+    flex-shrink: 0;
   }
 
   .orders-section {
@@ -917,7 +917,7 @@
 
   .fallout-chip.inflation {
     background: var(--alert-tint);
-    color: var(--alert);
+    color: var(--alert-dark);
     border: 1px solid var(--alert);
   }
 
@@ -949,9 +949,9 @@
   }
 
   .sanction-toggle-btn.enacted {
-    background: var(--alert-tint);
-    color: var(--alert);
-    border-color: var(--alert);
+    background: var(--alert-dark);
+    color: var(--card);
+    border-color: var(--alert-dark);
     font-weight: 800;
   }
 

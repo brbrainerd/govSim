@@ -13,7 +13,7 @@
 **Milestone Goal:** Introduce international diplomacy, defense posture, global crises, and foreign trade mechanics to complete the presidential toolkit and drive the Security Index (10% of Prosperity).
 
 - [x] **Phase 13: Geopolitical Crises Deck & Resolution Mechanics** (CRISIS-01, CRISIS-02, CRISIS-03)
-- [ ] **Phase 14: Foreign Policy & Sanctions Levers** (FORPOL-01, FORPOL-02, FORPOL-03)
+- [x] **Phase 14: Foreign Policy & Sanctions Levers** (FORPOL-01, FORPOL-02, FORPOL-03)
 - [ ] **Phase 15: Security Index & Macro Feedback Engine** (SEC-01, SEC-02, SEC-03)
 - [ ] **Phase 16: International Trade & Tariffs Screen** (TRADE-01, TRADE-02, TRADE-03)
 
@@ -37,7 +37,7 @@
   1. Player can adjust defense readiness posture and foreign assistance levels with clear trade-offs between budget deficits and geopolitical stability.
   2. Sanctions lever allows enacting targeted financial/export sanctions against aggressive regimes, with explicit domestic inflation and trade blowback.
   3. Myth card for "Cut Foreign Aid to Fix the Deficit" clearly illustrates foreign aid spending (<1% of budget) with CBO citations.
-**Plans**: TBD (4 plans expected)
+**Plans**: 4 plans (14-01, 14-02, 14-03, 14-04) — completed 2026-10-12
 
 #### Phase 15: Security Index & Macro Feedback Engine
 **Goal**: Integrate a pure 0–100 Security Index into the 10% Security weight of the Prosperity Index, linking defense readiness and international stability to inflation and output gap.

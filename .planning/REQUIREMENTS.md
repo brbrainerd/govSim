@@ -13,9 +13,9 @@
 
 ### Foreign Policy Levers (FORPOL)
 
-- [ ] **FORPOL-01**: Player can adjust defense readiness posture vs. budget savings and foreign assistance levels in the budget/executive screens.
-- [ ] **FORPOL-02**: Player can enact targeted economic sanctions (asset freezes, trade restrictions) with explicit domestic inflation and trade fallout.
-- [ ] **FORPOL-03**: Player can inspect the "Cut Foreign Aid to Fix Deficit" myth card showing foreign aid is <1% of federal spending.
+- [x] **FORPOL-01**: Player can adjust defense readiness posture vs. budget savings and foreign assistance levels in the budget/executive screens.
+- [x] **FORPOL-02**: Player can enact targeted economic sanctions (asset freezes, trade restrictions) with explicit domestic inflation and trade fallout.
+- [x] **FORPOL-03**: Player can inspect the "Cut Foreign Aid to Fix Deficit" myth card showing foreign aid is <1% of federal spending.
 
 ### Security Index & Macro Feedback (SEC)
 
@@ -56,9 +56,9 @@
 | CRISIS-01 | Phase 13 | Complete |
 | CRISIS-02 | Phase 13 | Complete |
 | CRISIS-03 | Phase 13 | Complete |
-| FORPOL-01 | Phase 14 | Pending |
-| FORPOL-02 | Phase 14 | Pending |
-| FORPOL-03 | Phase 14 | Pending |
+| FORPOL-01 | Phase 14 | Complete |
+| FORPOL-02 | Phase 14 | Complete |
+| FORPOL-03 | Phase 14 | Complete |
 | SEC-01 | Phase 15 | Pending |
 | SEC-02 | Phase 15 | Pending |
 | SEC-03 | Phase 15 | Pending |
