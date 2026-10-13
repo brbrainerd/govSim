@@ -13,7 +13,7 @@
 
 **Milestone Goal:** Implement the satirical "Evil Mode" kleptocracy gameplay loop where the objective is to maximize an offshore stash while managing an escalating Heat meter to evade congressional investigations, special counsels, and impeachment trials.
 
-- [ ] **Phase 17: Evil Mode Engine, Offshore Stash & Heat Meter** (EVIL-01, EVIL-02, EVIL-03)
+- [x] **Phase 17: Evil Mode Engine, Offshore Stash & Heat Meter** (4/4 plans) — completed 2026-10-12
 - [ ] **Phase 18: Corrupt Executive Levers & Cronyism** (LEVER-01, LEVER-02, LEVER-03)
 - [ ] **Phase 19: Institutional Backlash & Impeachment Trial** (IMPEACH-01, IMPEACH-02, IMPEACH-03)
 - [ ] **Phase 20: Satirical UI Reskin & Heist End Screens** (UI-01, UI-02, UI-03)
@@ -28,7 +28,7 @@
   1. Player can toggle "Evil Mode" during New Game setup, storing mode choice cleanly in session options.
   2. Engine tracks `offshoreStash` ($B) accumulating from corrupt kickbacks and `heat` (0–100) decaying slowly over quarters.
   3. Escalating Heat applies pure arithmetic penalties to voter trust, national approval, and legislative friction.
-**Plans**: TBD (4 plans expected)
+**Plans**: 4 plans executed (completed 2026-10-12)
 
 #### Phase 18: Corrupt Executive Levers & Cronyism
 **Goal**: Provide corrupt executive actions: awarding no-bid crony procurement contracts, fire-sale auctions of federal assets/lands, selling tariff exemptions, and firing inspectors general to suppress investigations.
@@ -107,7 +107,7 @@ Full phase execution history and plans archived to [.planning/milestones/v0.2-RO
 | 1-8 | v0.2 | 39/39 | Complete | 2026-10-12 |
 | 9-12 | v0.3 | 16/16 | Complete | 2026-10-12 |
 | 13-16 | v0.4 | 16/16 | Complete | 2026-10-12 |
-| 17. Evil Mode Engine | v0.5 | 0/4 | Not started | - |
-| 18. Corrupt Executive Levers | v0.5 | 0/4 | Not started | - |
+| 17. Evil Mode Engine | v0.5 | 4/4 | Complete | 2026-10-12 |
+| 18. Corrupt Executive Levers | v0.5 | 0/4 | In progress | - |
 | 19. Backlash & Impeachment | v0.5 | 0/4 | Not started | - |
 | 20. Reskin & Heist Screens | v0.5 | 0/4 | Not started | - |
