@@ -25,9 +25,9 @@
 
 ### International Trade & Tariffs (TRADE)
 
-- [ ] **TRADE-01**: Player can set strategic sector tariffs and pursue bilateral trade agreements with key economic blocs.
-- [ ] **TRADE-02**: Retaliatory foreign tariffs reduce export demand and shift voter coalitions in heavily trade-exposed states.
-- [ ] **TRADE-03**: Trade screen visualizes trade balances, consumer price pass-through, and household export exposure with accessible fallbacks.
+- [x] **TRADE-01**: Player can set strategic sector tariffs and pursue bilateral trade agreements with key economic blocs.
+- [x] **TRADE-02**: Retaliatory foreign tariffs reduce export demand and shift voter coalitions in heavily trade-exposed states.
+- [x] **TRADE-03**: Trade screen visualizes trade balances, consumer price pass-through, and household export exposure with accessible fallbacks.
 
 ## v2 Requirements
 
@@ -62,9 +62,9 @@
 | SEC-01 | Phase 15 | Complete |
 | SEC-02 | Phase 15 | Complete |
 | SEC-03 | Phase 15 | Complete |
-| TRADE-01 | Phase 16 | Pending |
-| TRADE-02 | Phase 16 | Pending |
-| TRADE-03 | Phase 16 | Pending |
+| TRADE-01 | Phase 16 | Complete |
+| TRADE-02 | Phase 16 | Complete |
+| TRADE-03 | Phase 16 | Complete |
 
 **Coverage:**
 - v1 requirements: 12 total

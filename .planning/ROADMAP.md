@@ -57,7 +57,7 @@
   1. Dedicated Trade screen allows toggling strategic tariffs (minerals, chips, energy) and negotiating bilateral trade pacts.
   2. Foreign retaliatory tariffs dynamically decrease export demand and penalize voter approval in trade-dependent agricultural and manufacturing states.
   3. Trade balance charts, price pass-through metrics, and data table fallbacks pass WCAG AA contrast and keyboard accessibility audits across viewports.
-**Plans**: TBD (4 plans expected)
+**Plans**: 4 plans (16-01, 16-02, 16-03, 16-04) — completed 2026-10-12
 
 ## Progress
 
@@ -75,10 +75,10 @@
 | 10. Demographic & Regional | v0.3 | 4/4 | Complete | 2026-10-12 |
 | 11. Structural Reform & Amend | v0.3 | 4/4 | Complete | 2026-10-12 |
 | 12. Household Card & Balance | v0.3 | 4/4 | Complete | 2026-10-12 |
-| 13. Geopolitical Crises | v0.4 | 0/4 | Not started | - |
-| 14. Foreign Policy Levers | v0.4 | 0/4 | Not started | - |
-| 15. Security Index & Macro | v0.4 | 0/4 | Not started | - |
-| 16. Trade & Tariffs Screen | v0.4 | 0/4 | Not started | - |
+| 13. Geopolitical Crises | v0.4 | 4/4 | Complete | 2026-10-12 |
+| 14. Foreign Policy Levers | v0.4 | 4/4 | Complete | 2026-10-12 |
+| 15. Security Index & Macro | v0.4 | 4/4 | Complete | 2026-10-12 |
+| 16. Trade & Tariffs Screen | v0.4 | 4/4 | Complete | 2026-10-12 |
 
 ---
 
