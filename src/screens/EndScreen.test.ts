@@ -88,4 +88,19 @@ describe('EndScreen component (ELC-04, ELC-05, GR-04)', () => {
     expect(html).toContain('data-testid="retry-turn16-btn"');
     expect(html).toContain('RETRY FROM TURN 16');
   });
+
+  it('renders Milestones tab and badge rosettes (RPT-03)', () => {
+    const session = new Session(42, START, { party: 'D' });
+    session.termEnded = true;
+
+    const { html } = render(EndScreen, {
+      props: {
+        session,
+        onRestart: () => {},
+      },
+    });
+
+    expect(html).toContain('data-testid="tab-milestones"');
+    expect(html).toContain('Milestones');
+  });
 });

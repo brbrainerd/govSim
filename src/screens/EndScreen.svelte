@@ -6,6 +6,7 @@
     simulateTenYearLegacy,
     type QuarterlyLegacyPoint,
   } from '../engine/election';
+  import { BADGES } from '../content/badges';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
   let {
@@ -16,7 +17,7 @@
     onRestart?: () => void;
   } = $props();
 
-  type TabId = 'overview' | 'economy' | 'legislation' | 'voters';
+  type TabId = 'overview' | 'economy' | 'legislation' | 'voters' | 'milestones';
   type IndicatorId = 'gdpGrowth' | 'debtPct' | 'unemployment' | 'inflation';
 
   let activeTab = $state<TabId>('overview');
@@ -150,6 +151,15 @@
         onclick={() => (activeTab = 'voters')}
       >
         <span>Voter Coalition</span>
+      </button>
+      <button
+        type="button"
+        class="nav-tab"
+        class:active={activeTab === 'milestones'}
+        onclick={() => (activeTab = 'milestones')}
+        data-testid="tab-milestones"
+      >
+        <span>Milestones</span>
       </button>
     </nav>
 
@@ -351,6 +361,37 @@
                   </ul>
                 </div>
               {/if}
+            </div>
+          </div>
+        {:else if activeTab === 'milestones'}
+          <div class="record-panel card" data-testid="milestones-panel">
+            <h3 class="panel-h">Policy Milestones & Badges</h3>
+            <p class="panel-sub">
+              {session.unlockedBadges.length} of 12 milestones unlocked across budget, crises, powers, and elections.
+            </p>
+            <div class="badges-grid" data-testid="badges-grid">
+              {#each BADGES as badge (badge.id)}
+                {@const isUnlocked = session.unlockedBadges.includes(badge.id)}
+                <div
+                  class="badge-card"
+                  class:unlocked={isUnlocked}
+                  class:locked={!isUnlocked}
+                  data-testid="badge-card-{badge.id}"
+                >
+                  <div class="badge-card-header">
+                    <span class="badge-cat-tag">{badge.category}</span>
+                    <span class="badge-status-pill" class:earned={isUnlocked}>
+                      {isUnlocked ? 'EARNED' : 'LOCKED'}
+                    </span>
+                  </div>
+                  <h4 class="badge-title">{badge.title}</h4>
+                  <p class="badge-desc">{badge.description}</p>
+                  <div class="badge-crit-row">
+                    <span class="crit-tag">Goal:</span>
+                    <span class="crit-text">{badge.criterion}</span>
+                  </div>
+                </div>
+              {/each}
             </div>
           </div>
         {/if}
@@ -833,5 +874,90 @@
     letter-spacing: 0.04em;
     cursor: pointer;
     text-transform: uppercase;
+  }
+
+  .badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+    overflow-y: auto;
+    max-height: clamp(340px, 50vh, 480px);
+    padding-right: 4px;
+  }
+
+  .badge-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+  }
+
+  .badge-card.unlocked {
+    border-color: var(--gold);
+    background: var(--gold-soft);
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .badge-card.locked {
+    border-style: dashed;
+    opacity: 0.75;
+  }
+
+  .badge-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .badge-cat-tag {
+    font: 700 10px var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+  }
+
+  .badge-status-pill {
+    font: 700 10px var(--font-ui);
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--card-alt);
+    color: var(--ink-soft);
+    border: 1px solid var(--ink-soft);
+  }
+
+  .badge-status-pill.earned {
+    background: var(--sage);
+    color: var(--card);
+    border-color: var(--sage);
+  }
+
+  .badge-title {
+    margin: 0;
+    font: 700 14px var(--font-display);
+    color: var(--ink);
+  }
+
+  .badge-desc {
+    margin: 0;
+    font: 400 12px/1.3 var(--font-body);
+    color: var(--ink);
+    flex-grow: 1;
+  }
+
+  .badge-crit-row {
+    display: flex;
+    gap: 4px;
+    font: 500 11px var(--font-ui);
+    color: var(--ink-soft);
+    border-top: 1px dotted var(--rule);
+    padding-top: 6px;
+  }
+
+  .crit-tag {
+    font-weight: 700;
   }
 </style>

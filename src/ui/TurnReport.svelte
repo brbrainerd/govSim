@@ -3,6 +3,7 @@
   import { extractTurnAttributions, extractUnforeseenRipples } from '../app/attribution';
   import { formatLuckText } from '../content/text/why';
   import { termLabel } from '../engine/calendar';
+  import { getBadge } from '../content/badges';
   import Rosette from './art/Rosette.svelte';
 
   let { session, onClose }: { session: Session; onClose: () => void } = $props();
@@ -15,6 +16,11 @@
   const laterDiff = $derived(Math.round(session.score.later * 10) / 10);
   const title = $derived(`${termLabel(session.current.turn)} Report`);
   const midtermLog = $derived(session.current.report.log.find((l) => l.kind === 'midterm'));
+  const newlyEarnedBadges = $derived(
+    session.newlyUnlockedBadges
+      .map((id) => getBadge(id))
+      .filter((b): b is NonNullable<typeof b> => Boolean(b)),
+  );
 </script>
 
 <div class="report-card">
@@ -65,6 +71,18 @@
         <Rosette size={76} />
         <div class="rosette-label">Quarter Completed</div>
       </div>
+
+      {#if newlyEarnedBadges.length > 0}
+        <div class="info-card milestone-box" data-testid="new-milestone-ribbon">
+          <span class="label">★ Milestone Earned</span>
+          {#each newlyEarnedBadges as b (b.id)}
+            <div class="milestone-item">
+              <span class="milestone-title">{b.title}</span>
+              <p class="milestone-desc">{b.description}</p>
+            </div>
+          {/each}
+        </div>
+      {/if}
 
       <div class="info-card luck-box">
         <span class="label">Luck this quarter</span>
@@ -377,5 +395,24 @@
     margin: 0;
     font: 400 clamp(11px, 0.85vw, 12px)/1.3 var(--font-body);
     color: var(--ink-soft);
+  }
+
+  .milestone-box {
+    border-color: var(--gold);
+    background: var(--gold-soft);
+  }
+  .milestone-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .milestone-title {
+    font: 700 clamp(12px, 0.95vw, 14px) var(--font-display);
+    color: var(--ink);
+  }
+  .milestone-desc {
+    margin: 0;
+    font: 400 clamp(11px, 0.85vw, 12px)/1.3 var(--font-body);
+    color: var(--ink);
   }
 </style>

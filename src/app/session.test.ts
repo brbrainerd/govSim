@@ -191,4 +191,18 @@ describe('Session reelection and end of term (ELC-01, ELC-03, ELC-04)', () => {
     expect(s.current.turn).toBe(16);
     expect(s.over).toBe(true);
   });
+
+  it('tracks unlocked and newly unlocked badges across turns (RPT-03)', () => {
+    const s = new Session(7, START, { party: 'D' });
+    expect(s.unlockedBadges).toBeDefined();
+    expect(Array.isArray(s.unlockedBadges)).toBe(true);
+
+    // Initial state has some badges based on start
+    const initialCount = s.unlockedBadges.length;
+
+    // Advance turn
+    s.nextTurn();
+    expect(Array.isArray(s.newlyUnlockedBadges)).toBe(true);
+    expect(s.unlockedBadges.length).toBeGreaterThanOrEqual(initialCount);
+  });
 });

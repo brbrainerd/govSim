@@ -7,6 +7,7 @@ import { getOrder } from '../content/orders';
 import { C } from '../engine/coefficients';
 import { speechCost, type PowerDecisions } from '../engine/powers';
 import { extractElectionReasons, resolveReelection, type ElectionOutcome } from '../engine/election';
+import { evaluateBadges } from '../engine/badges';
 import { ELECTION_TURN_1 } from '../engine/units';
 import { storeAutosave, type SaveFile } from './save';
 import type { ScreenId } from './screens';
@@ -65,6 +66,8 @@ export class Session {
   electionReasons = $state.raw<readonly string[]>([]);
   reelectionWon = $state<boolean>(false);
   termEnded = $state<boolean>(false);
+  unlockedBadges = $state<string[]>([]);
+  newlyUnlockedBadges = $state<string[]>([]);
 
   current = $derived(this.history[this.history.length - 1]!);
   previous = $derived(this.history[this.history.length - 2] ?? this.current);
@@ -131,6 +134,7 @@ export class Session {
     this.history = [newGame(seed, start)];
     this.autopilot = [newGame(seed, start)];
     this.inputs = [];
+    this.unlockedBadges = evaluateBadges(this.current, this.history);
     storeAutosave(this);
   }
 
@@ -143,6 +147,11 @@ export class Session {
       s.autopilot = [...s.autopilot, endTurn(autoLast, autopilotDecisions(autoLast))];
       s.inputs = [...s.inputs, input];
       s.draft = freshDraft(next.policy);
+      for (const id of evaluateBadges(next, s.history)) {
+        if (!s.unlockedBadges.includes(id)) {
+          s.unlockedBadges.push(id);
+        }
+      }
     }
     storeAutosave(s);
     return s;
@@ -268,6 +277,22 @@ export class Session {
       this.termEnded = true;
     }
 
+    const meta = {
+      reelectionEV: this.activeElectionOutcome?.playerEV,
+      score: this.score.total,
+    };
+    const newlyEvaluated = evaluateBadges(next, this.history, meta);
+    const existing = new Set(this.unlockedBadges);
+    const brandNew: string[] = [];
+    for (const id of newlyEvaluated) {
+      if (!existing.has(id)) {
+        existing.add(id);
+        brandNew.push(id);
+      }
+    }
+    this.newlyUnlockedBadges = brandNew;
+    this.unlockedBadges = Array.from(existing);
+
     if (this.showingElectionNight) {
       this.showingReport = false;
     } else {
@@ -312,7 +337,14 @@ export class Session {
     this.reelectionWon = false;
     this.activeElectionOutcome = null;
     this.activeAutopilotElectionOutcome = null;
-    this.electionReasons = [];
+    const cumulative = new Set<string>();
+    for (const state of this.history) {
+      for (const b of evaluateBadges(state, this.history.slice(0, state.turn))) {
+        cumulative.add(b);
+      }
+    }
+    this.unlockedBadges = Array.from(cumulative);
+    this.newlyUnlockedBadges = [];
     storeAutosave(this);
   }
 
