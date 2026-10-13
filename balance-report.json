@@ -23,23 +23,23 @@
       }
     },
     "sensible": {
-      "meanScore": 67.209,
-      "nowScore": 63.529,
-      "laterScore": 70.89,
-      "diffVsAutopilot": 2.308,
+      "meanScore": 68.326,
+      "nowScore": 64.999,
+      "laterScore": 71.653,
+      "diffVsAutopilot": 3.425,
       "quantiles": {
-        "min": 65.612,
-        "p25": 66.896,
-        "median": 67.256,
-        "p75": 67.578,
-        "max": 69.228
+        "min": 66.748,
+        "p25": 68.006,
+        "median": 68.362,
+        "p75": 68.696,
+        "max": 70.366
       },
       "indicators": {
         "unemployment": 4.4,
         "inflation": 2.42,
-        "debtPct": 103.09,
-        "realIncome": 93467,
-        "approval": 49.7
+        "debtPct": 102.11,
+        "realIncome": 94651,
+        "approval": 49.8
       }
     },
     "maxDeficit": {

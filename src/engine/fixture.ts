@@ -1,5 +1,6 @@
 import type { BudgetDraft } from './budget';
 import type { Decisions, Start } from './game';
+import type { SocialDraft } from './social';
 
 // Round-number test fixture shaped like the real start; tests must not depend on live data.
 export const START: Start = {
@@ -21,4 +22,10 @@ export const START: Start = {
 
 // The single place tests turn a budget into this turn's decisions. All three deals reach 230 of 218
 // votes for 45 clout, so enacted budgets really pass the House (the starting clout is 120).
-export const enact = (budget: BudgetDraft): Decisions => ({ bill: { budget, deals: ['mod', 'cen', 'spc'] } });
+export const enact = (budget: BudgetDraft, social?: SocialDraft): Decisions => ({
+  bill: {
+    budget,
+    ...(social ? { social } : {}),
+    deals: ['mod', 'cen', 'spc'],
+  },
+});

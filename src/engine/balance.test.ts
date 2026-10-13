@@ -2,23 +2,39 @@
 import { describe, expect, it } from 'vitest';
 import committedReport from '../../balance-report.json';
 import { baseline, spendLevers, taxLevers, type BudgetDraft } from './budget';
+import { socialBaseline, socialLevers, type SocialDraft } from './social';
 import { autopilotDecisions, type Decisions } from './decisions';
 import { enact, START } from './fixture';
 import { endTurn, finalScore, newGame, projectedScore, scoreVsAutopilot, TOTAL_TURNS, type GameState } from './game';
 import { resolveReelection } from './election';
 
+export interface StrategyDef {
+  budget: BudgetDraft;
+  social?: SocialDraft;
+}
+
 const base = baseline();
-const strategies: Record<string, BudgetDraft | null> = {
+const sBase = socialBaseline();
+const strategies: Record<string, StrategyDef | null> = {
   autopilot: null,
-  sensible: { ...base, inc: 24, bus: 22, rds: 115, rnd: 110, oth: 95 },
-  maxDeficit: { ...base, inc: 10, bus: 10, inv: 10, pay: 10, tar: 0, def: 120, ssm: 110, mcd: 120, rds: 130, rnd: 130, oth: 120 },
-  maxAusterity: { ...base, inc: 35, bus: 30, inv: 30, def: 80, ssm: 90, mcd: 80, rds: 80, rnd: 80, oth: 80 },
-  tariffEverything: { ...base, tar: 35 },
+  sensible: {
+    budget: { ...base, inc: 24, bus: 22, rds: 115, rnd: 110, oth: 95 },
+    social: { ...sBase, drg: 20, vis: 120, cln: 110 },
+  },
+  maxDeficit: {
+    budget: { ...base, inc: 10, bus: 10, inv: 10, pay: 10, tar: 0, def: 120, ssm: 110, mcd: 120, rds: 130, rnd: 130, oth: 120 },
+  },
+  maxAusterity: {
+    budget: { ...base, inc: 35, bus: 30, inv: 30, def: 80, ssm: 90, mcd: 80, rds: 80, rnd: 80, oth: 80 },
+  },
+  tariffEverything: {
+    budget: { ...base, tar: 35 },
+  },
 };
 
-function run(seed: number, budget: BudgetDraft | null): GameState[] {
+function run(seed: number, strat: StrategyDef | null): GameState[] {
   const out = [newGame(seed, START)];
-  for (let t = 1; t < TOTAL_TURNS; t++) out.push(endTurn(out[t - 1]!, t === 1 && budget ? enact(budget) : {}));
+  for (let t = 1; t < TOTAL_TURNS; t++) out.push(endTurn(out[t - 1]!, t === 1 && strat ? enact(strat.budget, strat.social) : {}));
   return out;
 }
 
@@ -84,13 +100,32 @@ describe('balance', () => {
   it('verifies that every budget lever moves the score non-trivially (GR-28, GR-36)', () => {
     const autoMean = avgIndex('autopilot');
     for (const lever of [...taxLevers, ...spendLevers]) {
-      const minStates = seeds.map((sd) => run(sd, { ...base, [lever.id]: lever.min }).at(-1)!);
-      const maxStates = seeds.map((sd) => run(sd, { ...base, [lever.id]: lever.max }).at(-1)!);
+      const minStates = seeds.map((sd) => run(sd, { budget: { ...base, [lever.id]: lever.min } }).at(-1)!);
+      const maxStates = seeds.map((sd) => run(sd, { budget: { ...base, [lever.id]: lever.max } }).at(-1)!);
       const minMean = mean(minStates.map((s) => finalScore(s).total));
       const maxMean = mean(maxStates.map((s) => finalScore(s).total));
       const swing = Math.abs(maxMean - minMean);
       const maxDistFromAuto = Math.max(Math.abs(minMean - autoMean), Math.abs(maxMean - autoMean));
       expect(Math.max(swing, maxDistFromAuto)).toBeGreaterThanOrEqual(0.3);
+    }
+  });
+
+  it('verifies that every social lever moves the score non-trivially (SOC-01..04)', () => {
+    const autoMean = avgIndex('autopilot');
+    function runSocial(seed: number, social: SocialDraft): GameState[] {
+      const out = [newGame(seed, START)];
+      for (let t = 1; t < TOTAL_TURNS; t++) out.push(endTurn(out[t - 1]!, t === 1 ? { social } : {}));
+      return out;
+    }
+
+    for (const lever of socialLevers) {
+      const minStates = seeds.map((sd) => runSocial(sd, { ...sBase, [lever.id]: lever.min }).at(-1)!);
+      const maxStates = seeds.map((sd) => runSocial(sd, { ...sBase, [lever.id]: lever.max }).at(-1)!);
+      const minMean = mean(minStates.map((s) => finalScore(s).total));
+      const maxMean = mean(maxStates.map((s) => finalScore(s).total));
+      const swing = Math.abs(maxMean - minMean);
+      const maxDistFromAuto = Math.max(Math.abs(minMean - autoMean), Math.abs(maxMean - autoMean));
+      expect(Math.max(swing, maxDistFromAuto)).toBeGreaterThan(0.01);
     }
   });
 
@@ -149,7 +184,7 @@ describe('balance', () => {
     function runSensibleWithCrises(seed: number): GameState {
       let s = newGame(seed, START);
       for (let t = 1; t < TOTAL_TURNS; t++) {
-        const dec: Decisions = t === 1 ? enact(strategies.sensible!) : {};
+        const dec: Decisions = t === 1 ? enact(strategies.sensible!.budget, strategies.sensible!.social) : {};
         if (s.activeCrisis) {
           const cDec = pickSensibleCrisisOption(s);
           if (cDec.crisis) dec.crisis = cDec.crisis;
@@ -167,10 +202,10 @@ describe('balance', () => {
       return s;
     }
 
-    function runBadWithCrises(seed: number, budget: BudgetDraft): GameState {
+    function runBadWithCrises(seed: number, strat: StrategyDef): GameState {
       let s = newGame(seed, START);
       for (let t = 1; t < TOTAL_TURNS; t++) {
-        const dec: Decisions = t === 1 ? enact(budget) : autopilotDecisions(s);
+        const dec: Decisions = t === 1 ? enact(strat.budget, strat.social) : autopilotDecisions(s);
         s = endTurn(s, dec);
       }
       return s;
@@ -263,7 +298,7 @@ describe('balance', () => {
           },
         };
         if (t === 1) {
-          dec.bill = enact(strategies.maxDeficit!).bill;
+          dec.bill = enact(strategies.maxDeficit!.budget, strategies.maxDeficit!.social).bill;
         }
         out.push(endTurn(out[t - 1]!, dec));
       }
@@ -274,7 +309,7 @@ describe('balance', () => {
       let s = newGame(seed, START);
       const out = [s];
       for (let t = 1; t < TOTAL_TURNS; t++) {
-        const dec: Decisions = t === 1 ? enact(strategies.sensible!) : {};
+        const dec: Decisions = t === 1 ? enact(strategies.sensible!.budget, strategies.sensible!.social) : {};
         if (s.activeCrisis) {
           const cDec = pickSensibleCrisisOption(s);
           if (cDec.crisis) dec.crisis = cDec.crisis;

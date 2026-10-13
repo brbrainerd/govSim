@@ -53,20 +53,29 @@ export async function generateBalanceReport(seedCount = 100): Promise<BalanceRep
   try {
     const { newGame, endTurn, finalScore, TOTAL_TURNS } = await server.ssrLoadModule('./src/engine/game.ts');
     const { baseline } = await server.ssrLoadModule('./src/engine/budget.ts');
+    const { socialBaseline } = await server.ssrLoadModule('./src/engine/social.ts');
     const { enact, START } = await server.ssrLoadModule('./src/engine/fixture.ts');
 
     const base = baseline();
-    const benchmarkStrategies: Record<string, any> = {
+    const sBase = socialBaseline();
+    const benchmarkStrategies: Record<string, { budget: any; social?: any } | null> = {
       autopilot: null,
-      sensible: { ...base, inc: 24, bus: 22, rds: 115, rnd: 110, oth: 95 },
-      maxDeficit: { ...base, inc: 10, bus: 10, inv: 10, pay: 10, tar: 0, def: 120, ssm: 110, mcd: 120, rds: 130, rnd: 130, oth: 120 },
-      maxAusterity: { ...base, inc: 35, bus: 30, inv: 30, def: 80, ssm: 90, mcd: 80, rds: 80, rnd: 80, oth: 80 },
+      sensible: {
+        budget: { ...base, inc: 24, bus: 22, rds: 115, rnd: 110, oth: 95 },
+        social: { ...sBase, drg: 20, vis: 120, cln: 110 },
+      },
+      maxDeficit: {
+        budget: { ...base, inc: 10, bus: 10, inv: 10, pay: 10, tar: 0, def: 120, ssm: 110, mcd: 120, rds: 130, rnd: 130, oth: 120 },
+      },
+      maxAusterity: {
+        budget: { ...base, inc: 35, bus: 30, inv: 30, def: 80, ssm: 90, mcd: 80, rds: 80, rnd: 80, oth: 80 },
+      },
     };
 
-    function runStrategy(seed: number, draft: any) {
+    function runStrategy(seed: number, strat: { budget: any; social?: any } | null) {
       let s = newGame(seed, START);
       for (let t = 1; t < TOTAL_TURNS; t++) {
-        s = endTurn(s, t === 1 && draft ? enact(draft) : {});
+        s = endTurn(s, t === 1 && strat ? enact(strat.budget, strat.social) : {});
       }
       return s;
     }
