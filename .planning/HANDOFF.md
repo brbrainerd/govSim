@@ -67,6 +67,7 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 - **Milestone v0.3 (Social Policy & Domestic Reform): INITIALIZED AND IN PLANNING.**
   - Scoped across 4 phases: Phase 9 (Domestic Social Policy Levers), Phase 10 (Demographic & Regional Distribution), Phase 11 (Structural Government Reform & Amendments), Phase 12 (Household Impact Card & Balance).
   - 11 active requirements defined in `.planning/REQUIREMENTS.md` (SOC-01..05, REF-01..04, HOU-01..02).
+  - **Phase 9 (Domestic Social Policy Levers): PLANNED.** Research completed (`09-RESEARCH.md`) and 4 execution plans created (`09-01..04`) across 4 waves covering pure catalog, engine dynamics, congressional voting, and attribution/verification. Ready for `/gsd-execute-phase 9`.
 - **Gates:** `pnpm test` 246 passing (42 files) · `pnpm test:e2e` 14 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
