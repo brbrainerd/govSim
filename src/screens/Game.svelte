@@ -37,6 +37,9 @@
   const go = (id: typeof session.screen) => (session.screen = id);
 
   let dismissedCrisisTurn = $state<number | null>(null);
+  import type { ActiveCrisis } from '../engine/director';
+
+  let activeReviewCrisis = $state<ActiveCrisis | null>(null);
   let activeMythId = $state<string | null>(null);
   let speechModalOpen = $state<boolean>(false);
   let fedModalOpen = $state<boolean>(false);
@@ -45,11 +48,22 @@
 
   const activeMyth = $derived(activeMythId ? getMyth(activeMythId) : null);
 
-  const showCrisisModal = $derived(
-    session.current.activeCrisis !== null &&
-    !session.showingReport &&
-    dismissedCrisisTurn !== session.current.turn
-  );
+  const displayedCrisis = $derived.by(() => {
+    if (activeReviewCrisis) return activeReviewCrisis;
+    if (session.current.activeCrisis && !session.showingReport && dismissedCrisisTurn !== session.current.turn) {
+      return session.current.activeCrisis;
+    }
+    if (
+      !session.current.activeCrisis &&
+      session.current.activeGeopoliticalCrises &&
+      session.current.activeGeopoliticalCrises.length > 0 &&
+      !session.showingReport &&
+      dismissedCrisisTurn !== session.current.turn
+    ) {
+      return session.current.activeGeopoliticalCrises[0];
+    }
+    return null;
+  });
 </script>
 
 {#if session.termEnded}
@@ -67,7 +81,13 @@
         {onImport}
       />
       {#if screen.id === 'oval'}
-        <OvalOffice {session} question={screen.question} {go} onOpenMyth={(id) => (activeMythId = id)} />
+        <OvalOffice
+          {session}
+          question={screen.question}
+          {go}
+          onOpenMyth={(id) => (activeMythId = id)}
+          onOpenCrisis={(crisis) => { activeReviewCrisis = crisis; }}
+        />
       {:else if screen.id === 'economy'}
         <Economy {session} question={screen.question} {go} />
       {:else if screen.id === 'budget'}
@@ -102,12 +122,13 @@
       </Overlay>
     {/if}
 
-    {#if showCrisisModal && session.current.activeCrisis}
+    {#if displayedCrisis}
       <CrisisModal
-        crisis={session.current.activeCrisis}
+        crisis={displayedCrisis}
         {session}
         onClose={() => {
           dismissedCrisisTurn = session.current.turn;
+          activeReviewCrisis = null;
         }}
       />
     {/if}

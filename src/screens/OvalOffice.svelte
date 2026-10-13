@@ -4,6 +4,7 @@
   import type { ScreenId } from '../app/screens';
   import { prosperity as score } from '../engine/game';
   import { generateBriefing } from '../content/briefing';
+  import type { ActiveCrisis } from '../engine/director';
   import OvalOfficeScene from '../ui/art/OvalOfficeScene.svelte';
   import Rosette from '../ui/art/Rosette.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
@@ -15,11 +16,13 @@
     question,
     go,
     onOpenMyth,
+    onOpenCrisis,
   }: {
     session: Session;
     question: string;
     go: (id: ScreenId) => void;
     onOpenMyth?: (mythId: string) => void;
+    onOpenCrisis?: (crisis: ActiveCrisis) => void;
   } = $props();
 
   let showHouseholdModal = $state(false);
@@ -28,6 +31,13 @@
   const index = $derived(Math.round(session.index));
   const change = $derived(index - Math.round(score(session.previous).index));
   const briefingInfo = $derived(generateBriefing(session));
+
+  const activeGeopoliticalCrisis = $derived(
+    session.current.activeGeopoliticalCrises && session.current.activeGeopoliticalCrises.length > 0
+      ? session.current.activeGeopoliticalCrises[0]
+      : null,
+  );
+  const turnsRemaining = $derived(activeGeopoliticalCrisis?.turnsRemaining ?? 1);
 
   const spark = (t: number[]) => {
     const lo = Math.min(...t), hi = Math.max(...t), span = hi - lo || 1;
@@ -69,6 +79,32 @@
     <button class="ticket" onclick={() => onOpenMyth?.('gas_prices')}>Myth? Can you lower gas prices</button>
   {/snippet}
   {#snippet next()}
+    {#if activeGeopoliticalCrisis}
+      <div class="card geopolitical-alert" data-testid="geopolitical-alert-card">
+        <div class="alert-top">
+          <span class="alert-tag">
+            <svg class="globe-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            INTERNATIONAL CRISIS
+          </span>
+          <span class="countdown-tag" class:urgent={turnsRemaining <= 1}>
+            {turnsRemaining > 1 ? `${turnsRemaining} Quarters Left` : 'Final Quarter!'}
+          </span>
+        </div>
+        <b class="alert-headline">{activeGeopoliticalCrisis.headline}</b>
+        <button
+          type="button"
+          class="btn review-crisis-btn"
+          data-testid="review-crisis-btn"
+          onclick={() => onOpenCrisis?.(activeGeopoliticalCrisis)}
+        >
+          Review Crisis Options
+        </button>
+      </div>
+    {/if}
     <div class="card info"><span class="label">This turn</span><b>{briefingInfo.thisTurn.title}</b><span>{briefingInfo.thisTurn.detail}</span></div>
     <HouseholdCard {session} onExplore={() => (showHouseholdModal = true)} />
     {#each briefingInfo.suggestions as s (s.title)}
@@ -115,4 +151,78 @@
   .info span:last-child { font-size: clamp(12px, 1vw, 15px); color: var(--ink-soft); max-width: 35ch; }
   .option { display: flex; flex-direction: column; align-items: center; gap: clamp(6px, 0.8vh, 10px); padding: clamp(8px, 1.2vh, 14px) clamp(8px, 1vw, 12px); text-align: center; }
   .option b { font: 700 clamp(16px, 1.3vw, 20px)/1.15 var(--font-display); max-width: 25ch; }
+
+  .geopolitical-alert {
+    background: var(--paper-dark);
+    border: 2px solid var(--alert);
+    border-left: 6px solid var(--alert);
+    padding: clamp(8px, 1.2vh, 12px);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .alert-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .alert-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-condensed);
+    font-size: var(--text-xs);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--alert);
+  }
+
+  .countdown-tag {
+    font-family: var(--font-condensed);
+    font-size: var(--text-xs);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: var(--r-sm);
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--gold);
+  }
+
+  .countdown-tag.urgent {
+    background: var(--alert-tint);
+    color: var(--alert);
+    border-color: var(--alert);
+  }
+
+  .alert-headline {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    line-height: 1.35;
+    color: var(--ink);
+  }
+
+  .review-crisis-btn {
+    align-self: flex-start;
+    background: var(--alert);
+    color: var(--card);
+    border: 1.5px solid var(--ink);
+    font-family: var(--font-condensed);
+    font-size: var(--text-xs);
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+  }
+
+  .review-crisis-btn:hover {
+    background: var(--alert-dark);
+  }
 </style>

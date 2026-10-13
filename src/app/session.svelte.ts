@@ -125,11 +125,14 @@ export class Session {
         )
       : null,
   );
-  crisisCost = $derived(
-    this.draft.crisisChoice && this.current.activeCrisis
-      ? (this.current.activeCrisis.options.find((o) => o.id === this.draft.crisisChoice!.optionId)?.cloutCost ?? 0)
-      : 0,
-  );
+  crisisCost = $derived.by(() => {
+    if (!this.draft.crisisChoice) return 0;
+    const { crisisId, optionId } = this.draft.crisisChoice;
+    const crisis = this.current.activeCrisis?.crisisId === crisisId
+      ? this.current.activeCrisis
+      : this.current.activeGeopoliticalCrises?.find((c) => c.crisisId === crisisId);
+    return crisis?.options.find((o) => o.id === optionId)?.cloutCost ?? 0;
+  });
   powerCost = $derived.by(() => {
     let cost = 0;
     for (const id of this.draft.signedOrders) {
@@ -325,8 +328,10 @@ export class Session {
 
   selectCrisisOption(crisisId: string, optionId: string) {
     if (this.over) return;
-    const crisis = this.current.activeCrisis;
-    if (!crisis || crisis.crisisId !== crisisId) return;
+    const crisis = this.current.activeCrisis?.crisisId === crisisId
+      ? this.current.activeCrisis
+      : this.current.activeGeopoliticalCrises?.find((c) => c.crisisId === crisisId);
+    if (!crisis) return;
     const opt = crisis.options.find((o) => o.id === optionId);
     if (!opt) return;
     if (opt.cloutCost > this.current.clout) return;
@@ -393,7 +398,12 @@ export class Session {
     const decisions: Decisions = {};
     if (this.bill) decisions.bill = this.bill;
     if (this.draft.crisisChoice) {
-      decisions.crisis = $state.snapshot(this.draft.crisisChoice);
+      const choice = $state.snapshot(this.draft.crisisChoice);
+      if (this.current.activeGeopoliticalCrises?.some((c) => c.crisisId === choice.crisisId)) {
+        decisions.geopoliticalCrisis = choice;
+      } else {
+        decisions.crisis = choice;
+      }
     }
     if (this.powers) {
       decisions.powers = $state.snapshot(this.powers);
