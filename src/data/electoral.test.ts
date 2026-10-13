@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DISTRICTS, ELECTORAL_CITATIONS, HOUSE_DELEGATIONS, STATE_EXPOSURES } from './electoral';
+import { DISTRICTS, ELECTORAL_CITATIONS, getStateExposure, HOUSE_DELEGATIONS, STATE_EXPOSURES } from './electoral';
 
 describe('electoral data verification (VOT-06, GR-13, GR-15)', () => {
   it('has citations and retrieval metadata', () => {
@@ -88,5 +88,62 @@ describe('electoral data verification (VOT-06, GR-13, GR-15)', () => {
     expect(STATE_EXPOSURES['IN']!.manufacturing).toBeGreaterThan(0.2);
     expect(STATE_EXPOSURES['WY']!.energy).toBeGreaterThan(0.15);
     expect(STATE_EXPOSURES['IA']!.farm).toBeGreaterThan(0.05);
+  });
+
+  it('contains valid demographic and regional exposures for all 51 jurisdictions and district fallbacks', () => {
+    const codes = Object.keys(STATE_EXPOSURES);
+    const borderStates = new Set(['TX', 'CA', 'AZ', 'NM']);
+
+    for (const code of codes) {
+      const exp = STATE_EXPOSURES[code]!;
+      expect(exp.seniorShare, `${code} seniorShare`).toBeGreaterThan(0.05);
+      expect(exp.seniorShare, `${code} seniorShare`).toBeLessThan(0.35);
+
+      expect(exp.uninsuredRate, `${code} uninsuredRate`).toBeGreaterThanOrEqual(0.01);
+      expect(exp.uninsuredRate, `${code} uninsuredRate`).toBeLessThan(0.25);
+
+      expect(exp.borderState, `${code} borderState`).toBe(borderStates.has(code));
+
+      expect(exp.immigrantLaborShare, `${code} immigrantLaborShare`).toBeGreaterThanOrEqual(0.01);
+      expect(exp.immigrantLaborShare, `${code} immigrantLaborShare`).toBeLessThan(0.40);
+
+      expect(exp.cleanEnergyGrowth, `${code} cleanEnergyGrowth`).toBeGreaterThanOrEqual(0.01);
+      expect(exp.cleanEnergyGrowth, `${code} cleanEnergyGrowth`).toBeLessThan(0.80);
+
+      expect(exp.carbonIntensity, `${code} carbonIntensity`).toBeGreaterThanOrEqual(0.1);
+      expect(exp.carbonIntensity, `${code} carbonIntensity`).toBeLessThan(3.0);
+
+      expect(exp.childPovertyRate, `${code} childPovertyRate`).toBeGreaterThan(0.05);
+      expect(exp.childPovertyRate, `${code} childPovertyRate`).toBeLessThan(0.35);
+
+      expect(exp.studentDebtShare, `${code} studentDebtShare`).toBeGreaterThan(0.10);
+      expect(exp.studentDebtShare, `${code} studentDebtShare`).toBeLessThan(0.35);
+
+      expect(exp.youngFamilyShare, `${code} youngFamilyShare`).toBeGreaterThan(0.05);
+      expect(exp.youngFamilyShare, `${code} youngFamilyShare`).toBeLessThan(0.20);
+
+      expect(exp.rpp, `${code} rpp`).toBeGreaterThan(80);
+      expect(exp.rpp, `${code} rpp`).toBeLessThan(125);
+    }
+
+    // Spot-check empirical anchors
+    expect(STATE_EXPOSURES['FL']!.seniorShare).toBeGreaterThan(0.20);
+    expect(STATE_EXPOSURES['TX']!.uninsuredRate).toBeGreaterThan(0.15);
+    expect(STATE_EXPOSURES['CA']!.immigrantLaborShare).toBeGreaterThan(0.25);
+    expect(STATE_EXPOSURES['IA']!.cleanEnergyGrowth).toBeGreaterThan(0.50);
+    expect(STATE_EXPOSURES['WV']!.carbonIntensity).toBeGreaterThan(1.5);
+    expect(STATE_EXPOSURES['MS']!.childPovertyRate).toBeGreaterThan(0.25);
+    expect(STATE_EXPOSURES['CA']!.rpp).toBeGreaterThan(110);
+    expect(STATE_EXPOSURES['MS']!.rpp).toBeLessThan(90);
+
+    // Verify district fallbacks
+    const districtCodes = ['ME-1', 'ME-2', 'NE-1', 'NE-2', 'NE-3'];
+    for (const dId of districtCodes) {
+      const exp = getStateExposure(dId);
+      expect(exp).toBeDefined();
+      expect(Number.isFinite(exp!.seniorShare)).toBe(true);
+      expect(Number.isFinite(exp!.rpp)).toBe(true);
+      expect(exp!.rpp).toBeGreaterThan(80);
+    }
   });
 });

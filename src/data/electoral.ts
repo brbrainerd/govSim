@@ -20,25 +20,38 @@ export interface HouseDelegation {
   majority: 'D' | 'R' | 'split';
 }
 
-export interface StateExposure {
+export interface StateDemographicExposure {
   farm: number; // share of state GDP (0..1)
   manufacturing: number;
   energy: number;
+  fossilEnergy: number; // alias/retained from energy
+  seniorShare: number; // 65+ population share (0..1)
+  uninsuredRate: number; // non-elderly uninsured rate (0..1)
+  borderState: boolean; // southern border proximity flag
+  immigrantLaborShare: number; // foreign-born share of workforce (0..1)
+  cleanEnergyGrowth: number; // renewable electricity generation potential & investment (0..1)
+  carbonIntensity: number; // grid emission intensity relative to nat avg (e.g. 0.25..2.0)
+  childPovertyRate: number; // school-age child poverty rate (0..1)
+  studentDebtShare: number; // adults 20-39 with federal student loans (0..1)
+  youngFamilyShare: number; // households with children under 6 (0..1)
+  rpp: number; // BEA Regional Price Parity index (US avg = 100.0)
 }
+
+export type StateExposure = StateDemographicExposure;
 
 interface ElectoralDataset {
   retrieved: string;
   citations: Record<string, string>;
   districts: Record<string, ElectoralDistrict>;
   houseDelegations: Record<string, HouseDelegation>;
-  exposures: Record<string, StateExposure>;
+  exposures: Record<string, StateDemographicExposure>;
 }
 
 const data = raw as unknown as ElectoralDataset;
 
 export const DISTRICTS: Readonly<Record<string, ElectoralDistrict>> = data.districts;
 export const HOUSE_DELEGATIONS: Readonly<Record<string, HouseDelegation>> = data.houseDelegations;
-export const STATE_EXPOSURES: Readonly<Record<string, StateExposure>> = data.exposures;
+export const STATE_EXPOSURES: Readonly<Record<string, StateDemographicExposure>> = data.exposures;
 export const ELECTORAL_CITATIONS: Readonly<Record<string, string>> = data.citations;
 
 export function getDistrict(id: string): ElectoralDistrict | undefined {
@@ -49,6 +62,10 @@ export function getHouseDelegation(stateCode: string): HouseDelegation | undefin
   return HOUSE_DELEGATIONS[stateCode];
 }
 
-export function getStateExposure(stateCode: string): StateExposure | undefined {
-  return STATE_EXPOSURES[stateCode];
+export function getStateExposure(stateCode: string): StateDemographicExposure | undefined {
+  if (STATE_EXPOSURES[stateCode]) {
+    return STATE_EXPOSURES[stateCode];
+  }
+  const base = stateCode.split('-')[0];
+  return STATE_EXPOSURES[base];
 }
