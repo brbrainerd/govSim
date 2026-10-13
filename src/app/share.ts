@@ -1,11 +1,13 @@
 // Native deflate-raw URL hash run encoding, decoding, and replay (REL-03, GR-33, GR-34).
 import type { Decisions } from '../engine/decisions';
+import { isValidScenarioId, type ScenarioId } from '../content/scenarios';
 import { validateDecisions } from './save';
 
 export interface RunDescriptor {
   readonly v: 1;
   readonly seed: number;
   readonly party: 'D' | 'R';
+  readonly scenario?: ScenarioId;
   readonly inputs: readonly Decisions[];
 }
 
@@ -36,7 +38,7 @@ function base64UrlToUint8Array(str: string): Uint8Array {
 export interface RunSource {
   seed?: number;
   current?: { seed: number };
-  options: { party: string };
+  options: { party: string; scenario?: ScenarioId };
   inputs: readonly Decisions[];
 }
 
@@ -47,6 +49,9 @@ export async function encodeRunCode(run: RunSource): Promise<string> {
     v: 1,
     s: seed,
     p: run.options.party === 'R' ? 'R' : 'D',
+    ...(run.options.scenario && run.options.scenario !== 'standard_2026'
+      ? { sc: run.options.scenario }
+      : {}),
     i: run.inputs,
   });
 
@@ -90,6 +95,7 @@ export async function decodeRunCode(code: string): Promise<RunDescriptor | null>
       v: 1,
       seed: parsed.s,
       party: parsed.p,
+      ...(isValidScenarioId(parsed.sc) ? { scenario: parsed.sc } : {}),
       inputs: validatedInputs,
     };
   } catch {

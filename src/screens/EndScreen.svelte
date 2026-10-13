@@ -150,6 +150,7 @@
     <div class="header-left">
       <span class="presidency-title">{session.isEvilMode ? 'KLEPTOCRATIC HEIST REVIEW' : 'PRESIDENTIAL LEGACY REVIEW'}</span>
       <span class="term-badge">{session.current.evil?.convicted ? 'Term Terminated (Convicted)' : `${yearsCompleted} Years Completed`}</span>
+      <span class="term-badge" data-testid="end-scenario-badge">{session.activeScenario.name}</span>
     </div>
     <div class="header-stats">
       {#if session.isEvilMode}

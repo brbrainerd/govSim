@@ -1,21 +1,21 @@
 ---
 gsd_state_version: "1.0"
 milestone: v0.6
-status: Ready to plan Phase 21
-stopped_at: Milestone v0.6 initialized (Phases 21-24 defined)
-last_updated: "2026-10-13T14:30:00.000Z"
+status: All v0.6 phases complete (Phases 21-24 verified)
+stopped_at: Phase 24 complete (all 10 v0.6 requirements satisfied)
+last_updated: "2026-10-13T15:30:00.000Z"
 last_activity: 2026-10-13
-last_activity_desc: Milestone v0.6 initialized with REQUIREMENTS.md and ROADMAP.md (Phases 21-24)
-state_head: e892ad9
+last_activity_desc: Completed Phases 21-24 of Milestone v0.6 (LEARN-01..03, ADVISOR-01..03, PACE-01..02, SCEN-01..02)
+state_head: 2c9c6d4
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 4
+  total_plans: 8
+  completed_plans: 8
+  percent: 100
 milestone_name: "Completeness, Advisor Agency & Scenarios"
-current_phase: 21
-current_phase_name: Complete the Learn Loop & Interactive Explainers
+current_phase: 24
+current_phase_name: Replayable Starting Scenarios
 ---
 
 # Project State
@@ -25,14 +25,14 @@ current_phase_name: Complete the Learn Loop & Interactive Explainers
 See: .planning/PROJECT.md (updated 2026-10-13)
 
 **Core value:** A player can make real presidential tradeoffs (or play the satirical "Evil Mode" kleptocracy) against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
-**Current focus:** Milestone v0.6 — Completeness, Advisor Agency & Scenarios (Phase 21)
+**Current focus:** Milestone v0.6 — Completeness, Advisor Agency & Scenarios (Complete)
 
 ## Current Position
 
-Phase: 21 of 24 (Complete the Learn Loop & Interactive Explainers)
-Plan: Not yet planned
-Status: Ready to plan
-Last activity: 2026-10-13 — Milestone v0.6 initialized (Phases 21–24)
+Phase: 24 of 24 (Replayable Starting Scenarios) — COMPLETE
+Plan: 24-01 complete (8/8 plans across Phases 21–24 complete)
+Status: Ready for milestone audit (`/gsd-audit-milestone`) or completion (`/gsd-complete-milestone`)
+Last activity: 2026-10-13 — Completed Phases 21–24 of Milestone v0.6
 
 ## Deferred Items
 
@@ -44,10 +44,10 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-13T14:30:00.000Z
-Stopped at: Milestone v0.6 initialized (Phases 21-24 defined)
+Last session: 2026-10-13T15:30:00.000Z
+Stopped at: Phase 24 complete (all 10 v0.6 requirements satisfied)
 Resume file: None
 
 ## Operator Next Steps
 
-- Plan or discuss Phase 21 with `/gsd-plan-phase 21` or `/gsd-autonomous`
+- Audit Milestone v0.6 with `/gsd-audit-milestone` or archive with `/gsd-complete-milestone`

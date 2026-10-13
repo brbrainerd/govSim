@@ -38,6 +38,12 @@ import { type EvilLeverId } from '../engine/units';
 import { getEvilLever } from '../data/evil';
 import { calculateHeatPenalties, resolveEvilLevers } from '../engine/evil';
 import { getImminentDeadlines } from '../engine/deadlines';
+import {
+  applyScenarioStart,
+  getScenario,
+  type ScenarioDef,
+  type ScenarioId,
+} from '../content/scenarios';
 
 export interface StagedActionItem {
   readonly id: string;
@@ -50,6 +56,7 @@ export interface StagedActionItem {
 export interface GameOptions {
   party: PartyId;
   evilMode?: boolean;
+  scenario?: ScenarioId;
 }
 
 interface Draft {
@@ -429,6 +436,7 @@ export class Session {
   canFastForward = $derived(!this.over && !this.hasUnresolvedCrisis);
   /** Evil Mode helpers (Phase 17, EVIL-01, EVIL-02) */
   isEvilMode = $derived(Boolean(this.options.evilMode));
+  activeScenario = $derived<ScenarioDef>(getScenario(this.options.scenario));
   offshoreStashBn = $derived(this.current.evil?.offshoreStashBn ?? 0);
   heat = $derived(this.current.evil?.heat ?? 0);
   evilState = $derived(this.current.evil);
@@ -448,8 +456,11 @@ export class Session {
 
   constructor(seed: number, start: Start, options: GameOptions) {
     this.options = options;
-    this.history = [newGame(seed, start)];
-    this.autopilot = [newGame(seed, start)];
+    const effectiveStart = applyScenarioStart(start, options.scenario);
+    const initial = newGame(seed, effectiveStart);
+    this.history = [initial];
+    this.autopilot = [newGame(seed, effectiveStart)];
+    this.draft = freshDraft(initial.policy, initial.socialPolicy);
     this.inputs = [];
     this.unlockedBadges = evaluateBadges(this.current, this.history);
     storeAutosave(this);
@@ -492,8 +503,11 @@ export class Session {
     return s;
   }
 
-  static fromRun(run: { seed: number; party: 'D' | 'R'; inputs: readonly Decisions[] }, start: Start): Session {
-    const s = new Session(run.seed, start, { party: run.party });
+  static fromRun(
+    run: { seed: number; party: 'D' | 'R'; scenario?: ScenarioId; inputs: readonly Decisions[] },
+    start: Start,
+  ): Session {
+    const s = new Session(run.seed, start, { party: run.party, scenario: run.scenario });
     for (const input of run.inputs) {
       if (s.current.turn === 16) {
         s.turn16Snapshot = s.current;

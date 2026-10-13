@@ -8,6 +8,7 @@ import type { CrisisDecision, Decisions } from '../engine/decisions';
 import { endTurn, newGame, type GameState, type Start } from '../engine/game';
 import { stableHash } from '../engine/hash';
 import { getSocialLever, type SocialDraft } from '../engine/social';
+import { isValidScenarioId } from '../content/scenarios';
 import type { GameOptions } from './session.svelte';
 
 export const MAX_SAVE_SIZE_CHARS = 1_000_000;
@@ -270,7 +271,11 @@ export function parseSave(json: string): SaveFile {
   if (parsed.options.party !== 'D' && parsed.options.party !== 'R') {
     throw new Error(`Invalid party option "${String(parsed.options.party)}", expected "D" or "R"`);
   }
-  const options: GameOptions = { party: parsed.options.party };
+  const options: GameOptions = {
+    party: parsed.options.party,
+    ...(typeof parsed.options.evilMode === 'boolean' ? { evilMode: parsed.options.evilMode } : {}),
+    ...(isValidScenarioId(parsed.options.scenario) ? { scenario: parsed.options.scenario } : {}),
+  };
 
   if (!Array.isArray(parsed.inputs)) {
     throw new Error('Save inputs must be an array');

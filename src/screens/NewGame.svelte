@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { GameOptions } from '../app/session.svelte';
   import { PARTIES, type PartyId } from '../content/parties';
+  import { SCENARIOS, getScenario, type ScenarioId } from '../content/scenarios';
   import { termLabel } from '../engine/calendar';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import type { SaveFile } from '../app/save';
@@ -21,9 +22,11 @@
 
   let party = $state<PartyId | null>(null);
   let evilMode = $state(false);
+  let scenario = $state<ScenarioId>('standard_2026');
   let dismissResume = $state(false);
   let fileInput = $state<HTMLInputElement>();
 
+  const selectedScenario = $derived(getScenario(scenario));
   const showResume = $derived(autosave !== null && !dismissResume && onResume !== undefined);
   const saveParty = $derived(
     autosave ? (PARTIES.find((p) => p.id === autosave.options.party)?.name ?? autosave.options.party) : '',
@@ -64,6 +67,34 @@
             <b>{p.name}</b>
           </label>
         {/each}
+      </div>
+
+      <div class="mode-section" role="radiogroup" aria-label="Starting Scenario" data-testid="scenario-selector">
+        <span class="label">Starting Scenario</span>
+        <div class="scenario-cards">
+          {#each SCENARIOS as s (s.id)}
+            <label
+              class="card mode-option scenario-option"
+              class:active-mode={scenario === s.id}
+              data-testid={`scenario-card-${s.id}`}
+            >
+              <input
+                type="radio"
+                name="scenario"
+                value={s.id}
+                checked={scenario === s.id}
+                onchange={() => (scenario = s.id)}
+              />
+              <div class="mode-info">
+                <div class="scen-head">
+                  <b>{s.name}</b>
+                  <span class="scen-tag">{s.tag}</span>
+                </div>
+                <span class="mode-sub">{s.summary}</span>
+              </div>
+            </label>
+          {/each}
+        </div>
       </div>
 
       <div class="mode-section" role="radiogroup" aria-label="Game Mode">
@@ -111,10 +142,10 @@
           <span class="line">Every corrupt move generates public Heat. Too much Heat triggers Special Counsel, Impeachment, and Conviction.</span>
         </div>
       {:else}
-        <div class="card info">
-          <span class="label">What it means</span>
+        <div class="card info" data-testid="newgame-scenario-preview">
+          <span class="label">Scenario Briefing · {selectedScenario.name}</span>
+          <span class="line">{selectedScenario.briefing}</span>
           <span class="line">Your party changes the names you see. The economy plays the same either way.</span>
-          <span class="line">Your term is made up. It starts from the real economy of late 2026.</span>
         </div>
       {/if}
       <div class="spacer"></div>
@@ -122,7 +153,7 @@
         class="stamp"
         class:evil-stamp={evilMode}
         disabled={party === null}
-        onclick={() => party && onStart({ party, evilMode })}
+        onclick={() => party && onStart({ party, evilMode, scenario })}
       >
         {evilMode ? 'Seize power' : 'Start the term'}
       </button>
@@ -131,31 +162,31 @@
 </div>
 
 <style>
-  .newgame { height: 100dvh; max-height: 100dvh; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) clamp(240px, 20vw, 290px); gap: clamp(14px, 2vw, 24px); padding: clamp(16px, 2.5vh, 28px) clamp(16px, 2.5vw, 28px); }
-  .options { display: flex; flex-direction: column; gap: clamp(10px, 1.5vh, 14px); max-width: 48rem; }
-  .option { display: flex; align-items: center; gap: clamp(10px, 1.2vw, 14px); padding: clamp(12px, 1.8vh, 18px) clamp(14px, 1.8vw, 20px); cursor: pointer; }
-  .option b { font: 700 clamp(20px, 2vw, 24px) var(--font-display); color: var(--ink); }
-  .option input { width: 22px; height: 22px; accent-color: var(--ink); }
+  .newgame { height: 100dvh; max-height: 100dvh; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) clamp(240px, 20vw, 290px); gap: clamp(14px, 2vw, 24px); padding: clamp(14px, 2vh, 24px) clamp(16px, 2.5vw, 28px); }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(10px, 1.2vw, 14px); max-width: 48rem; }
+  .option { display: flex; align-items: center; gap: clamp(10px, 1.2vw, 14px); padding: clamp(10px, 1.4vh, 14px) clamp(14px, 1.8vw, 20px); cursor: pointer; }
+  .option b { font: 700 clamp(18px, 1.8vw, 22px) var(--font-display); color: var(--ink); }
+  .option input { width: 20px; height: 20px; accent-color: var(--ink); }
   .option:has(input:checked) { background: var(--gold); }
   .option:has(input:focus-visible) { outline: 3px solid var(--ink); outline-offset: 3px; }
   
   .resume-card {
-    padding: clamp(14px, 2vh, 20px);
-    margin-bottom: clamp(12px, 1.8vh, 18px);
+    padding: clamp(10px, 1.5vh, 16px);
+    margin-bottom: clamp(8px, 1.2vh, 12px);
     max-width: 48rem;
     border: 3px solid var(--ink);
     background: var(--paper-warm);
   }
   .resume-title {
-    font: 700 clamp(22px, 2.2vw, 28px) var(--font-display);
+    font: 700 clamp(20px, 2vw, 24px) var(--font-display);
     color: var(--ink);
-    margin: 4px 0 8px 0;
+    margin: 2px 0 6px 0;
   }
   .resume-meta {
     display: flex;
     gap: 16px;
-    margin-bottom: 14px;
-    font: 600 clamp(14px, 1.1vw, 16px) var(--font-body);
+    margin-bottom: 10px;
+    font: 600 clamp(13px, 1vw, 15px) var(--font-body);
     color: var(--ink-soft);
   }
   .resume-actions {
@@ -164,10 +195,10 @@
     align-items: center;
   }
   .navy-btn {
-    font: 600 clamp(14px, 1vw, 16px) var(--font-ui);
+    font: 600 clamp(13px, 1vw, 15px) var(--font-ui);
     text-transform: uppercase;
     letter-spacing: .06em;
-    padding: 10px 18px;
+    padding: 8px 16px;
     background: var(--ink);
     color: var(--card);
     border: 2px solid var(--ink);
@@ -180,8 +211,8 @@
   }
 
   .alert-banner {
-    padding: 12px 16px;
-    margin-bottom: 12px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
     border: 2px solid var(--alert);
     background: var(--card);
     max-width: 48rem;
@@ -192,24 +223,24 @@
   }
   .error-text {
     display: block;
-    font: 500 15px/1.3 var(--font-body);
+    font: 500 14px/1.3 var(--font-body);
     color: var(--ink);
     margin-top: 2px;
   }
 
   .import-strip {
-    margin-top: clamp(10px, 1.5vh, 16px);
+    margin-top: clamp(6px, 1vh, 12px);
   }
   .import-btn {
     background: none;
     border: none;
-    font: 600 clamp(13px, 1vw, 15px) var(--font-ui);
+    font: 600 clamp(12px, 0.95vw, 14px) var(--font-ui);
     text-transform: uppercase;
     letter-spacing: .06em;
     color: var(--ink-soft);
     text-decoration: underline;
     cursor: pointer;
-    padding: 4px 0;
+    padding: 2px 0;
   }
   .import-btn:hover {
     color: var(--ink);
@@ -221,16 +252,28 @@
   .stamp { align-self: center; flex-shrink: 0; }
   .stamp:disabled { opacity: .45; cursor: not-allowed; }
 
-  .mode-section { margin-top: clamp(12px, 1.8vh, 18px); max-width: 48rem; display: flex; flex-direction: column; gap: 8px; }
-  .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(10px, 1.2vw, 14px); }
-  .mode-option { display: flex; align-items: flex-start; gap: 10px; padding: clamp(10px, 1.4vh, 14px) clamp(12px, 1.4vw, 16px); cursor: pointer; }
-  .mode-option input { width: 18px; height: 18px; accent-color: var(--ink); margin-top: 2px; }
+  .mode-section { margin-top: clamp(8px, 1.2vh, 14px); max-width: 48rem; display: flex; flex-direction: column; gap: 6px; }
+  .mode-cards, .scenario-cards { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(8px, 1vw, 12px); }
+  .mode-option { display: flex; align-items: flex-start; gap: 10px; padding: clamp(8px, 1.1vh, 12px) clamp(10px, 1.2vw, 14px); cursor: pointer; }
+  .mode-option input { width: 18px; height: 18px; accent-color: var(--ink); margin-top: 2px; flex-shrink: 0; }
   .mode-option.active-mode { background: var(--gold); }
   .mode-option.evil-option.active-mode { background: var(--alert-tint); border-color: var(--alert); }
   .mode-option.active-mode .mode-sub { color: var(--ink); }
-  .mode-info { display: flex; flex-direction: column; gap: 2px; }
-  .mode-info b { font: 700 clamp(15px, 1.2vw, 17px) var(--font-display); color: var(--ink); }
-  .mode-sub { font: 500 clamp(12px, 0.9vw, 13px)/1.3 var(--font-body); color: var(--ink-soft); }
+  .mode-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  .scen-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .scen-tag {
+    font: 700 10px/1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+  .mode-info b { font: 700 clamp(14px, 1.15vw, 16px) var(--font-display); color: var(--ink); }
+  .mode-sub { font: 500 clamp(11px, 0.85vw, 13px)/1.25 var(--font-body); color: var(--ink-soft); }
   .evil-warning { border-color: var(--alert); background: var(--card); }
   .evil-warning .label { color: var(--alert); }
   .stamp.evil-stamp { background: var(--alert-dark); border-color: var(--ink); }

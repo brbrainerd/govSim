@@ -24,8 +24,8 @@
 
 ### Replayable Starting Scenarios (SCEN)
 
-- [ ] **SCEN-01**: Add a Starting Scenario selector at New Game with 4 curated scenarios (*2026 Standard Baseline*, *70s Stagflation Shock*, *Debt Ceiling Brinkmanship*, *Global Trade War*) modifying initial macro/fiscal/crisis state deterministically.
-- [ ] **SCEN-02**: Display scenario briefing objectives at inauguration and surface scenario completion badges on the Post-Term Legacy Report and shareable replay hash.
+- [x] **SCEN-01**: Add a Starting Scenario selector at New Game with 4 curated scenarios (*2026 Standard Baseline*, *70s Stagflation Shock*, *Debt Ceiling Brinkmanship*, *Global Trade War*) modifying initial macro/fiscal/crisis state deterministically.
+- [x] **SCEN-02**: Display scenario briefing objectives at inauguration and surface scenario completion badges on the Post-Term Legacy Report and shareable replay hash.
 
 ## Out of Scope
 
@@ -48,8 +48,8 @@
 | ADVISOR-03 | Phase 22 | Complete |
 | PACE-01 | Phase 23 | Complete |
 | PACE-02 | Phase 23 | Complete |
-| SCEN-01 | Phase 24 | Pending |
-| SCEN-02 | Phase 24 | Pending |
+| SCEN-01 | Phase 24 | Complete |
+| SCEN-02 | Phase 24 | Complete |
 
 **Coverage:**
 

@@ -17,7 +17,7 @@
 - [x] **Phase 21: Complete the Learn Loop & Interactive Explainers** (3/3 plans) — completed 2026-10-13
 - [x] **Phase 22: Smart Advisor Plays, Auto-Whip & Live Household Budgeting** (3/3 plans) — completed 2026-10-13
 - [x] **Phase 23: Pacing Controls — Fast-Forward & Staged Decisions Tray** (1/1 plan) — completed 2026-10-13
-- [ ] **Phase 24: Replayable Starting Scenarios** — Selectable Starting Scenarios at New Game (*2026 Baseline*, *70s Stagflation Shock*, *Debt Ceiling Brinkmanship*, *Global Trade War*) with scenario briefings and Legacy Report badges
+- [x] **Phase 24: Replayable Starting Scenarios** (1/1 plan) — completed 2026-10-13
 
 ### Phase Details
 
@@ -70,7 +70,7 @@
   2. Inauguration / Oval Office briefing surfaces the active scenario's context and strategic challenge, and the Post-Term Legacy Report and shareable replay hash preserve and display the completed scenario badge.
   3. Fully audited with headless Playwright across 1376×768 and 1280×720 viewports with zero serious/critical axe violations.
 
-**Plans**: TBD
+**Plans**: 1 plan executed (completed 2026-10-13)
 
 ---
 

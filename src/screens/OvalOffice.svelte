@@ -209,7 +209,14 @@
         </button>
       </div>
     {/if}
-    <div class="card info"><span class="label">This turn</span><b>{briefingInfo.thisTurn.title}</b><span>{briefingInfo.thisTurn.detail}</span></div>
+    <div class="card info">
+      <div class="turn-head">
+        <span class="label">This turn</span>
+        <span class="scen-pill" data-testid="oval-scenario-badge">{session.activeScenario.name}</span>
+      </div>
+      <b>{briefingInfo.thisTurn.title}</b>
+      <span>{briefingInfo.thisTurn.detail}</span>
+    </div>
     <HouseholdCard {session} onExplore={() => (showHouseholdModal = true)} />
     {#each briefingInfo.suggestions as s (s.title)}
       <div class="card option">
@@ -273,6 +280,8 @@
   .dir { font: 600 clamp(12px, 0.9vw, 15px) var(--font-ui); color: var(--alert); }
   .dir.good { color: var(--sage-dark); }
   .info { display: flex; flex-direction: column; gap: 4px; padding: clamp(8px, 1.2vh, 14px); text-align: center; }
+  .turn-head { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .scen-pill { font: 700 10px/1 var(--font-ui); text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px; background: var(--paper); border: 1px solid var(--ink); color: var(--ink); }
   .info b { font: 700 clamp(17px, 1.4vw, 21px)/1.2 var(--font-display); }
   .info span:last-child { font-size: clamp(12px, 1vw, 15px); color: var(--ink-soft); max-width: 35ch; }
   .option { display: flex; flex-direction: column; align-items: center; gap: clamp(4px, 0.6vh, 8px); padding: clamp(6px, 1vh, 12px) clamp(8px, 1vw, 12px); text-align: center; }

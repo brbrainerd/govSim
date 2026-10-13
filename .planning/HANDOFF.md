@@ -70,12 +70,12 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
   - All 4 phases (13 to 16) executed, verified, and audited with 12/12 requirements satisfied (CRIS-01..03, SEC-01..03, SANC-01..03, TRD-01..03).
 - **Milestone v0.5 (Satirical "Evil Mode"): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.5`.**
   - All 4 phases (17 to 20) executed, verified, and audited with 12/12 requirements satisfied (EVIL-01..03, LEVER-01..03, IMPEACH-01..03, UI-01..03).
-- **Milestone v0.6 (Completeness, Advisor Agency & Scenarios): INITIALIZED (Phases 21–24).**
-  - **Phase 21:** Complete the Learn Loop & Interactive Explainers (`LEARN-01..03`) — Pending.
-  - **Phase 22:** Smart Advisor Plays, Auto-Whip & Live Household Budgeting (`ADVISOR-01..03`) — Pending.
-  - **Phase 23:** Pacing Controls — Fast-Forward & Staged Decisions Tray (`PACE-01..02`) — Pending.
-  - **Phase 24:** Replayable Starting Scenarios (`SCEN-01..02`) — Pending.
-- **Gates:** `pnpm test` 417 passing (65 files) · `pnpm test:e2e` 51 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
+- **Milestone v0.6 (Completeness, Advisor Agency & Scenarios): COMPLETE & VERIFIED (Phases 21–24, 10/10 requirements).**
+  - **Phase 21:** Complete the Learn Loop & Interactive Explainers (`LEARN-01..03`) — Complete & Verified.
+  - **Phase 22:** Smart Advisor Plays, Auto-Whip & Live Household Budgeting (`ADVISOR-01..03`) — Complete & Verified.
+  - **Phase 23:** Pacing Controls — Fast-Forward & Staged Decisions Tray (`PACE-01..02`) — Complete & Verified.
+  - **Phase 24:** Replayable Starting Scenarios (`SCEN-01..02`) — Complete & Verified.
+- **Gates:** `pnpm test` 427 passing (68 files) · `pnpm test:e2e` 57 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
 ### Open debts (do not lose these)
@@ -87,8 +87,7 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 3. **Data gaps** in `data/us-2026.json`: `nondefenseDiscretionary` is null; outlays are 11-month
    actuals; debt/GDP is a CBO projection. The 2026 midterms are **Nov 3 2026**; House/Senate
    counts need a refresh when the 120th Congress is seated (Jan 2027). Ask before refreshing.
-4. **Budget sliders** mark "changed" against the 2026 baseline, not the policy in force. Fine
-   while only one bill can pass; revisit when multi-bill budgeting arrives.
+4. **Budget sliders (RESOLVED in Phase 22).** Sliders now compare against `session.current.policy` (`inForce`) with a secondary `.base-tick` for the 2026 baseline (`ADVISOR-03`).
 5. **Tooltips & Modals (RESOLVED in Phase 3).** Accessible modal shell with Escape-to-dismiss and focus trapping built in `Overlay.svelte`.
 
 
