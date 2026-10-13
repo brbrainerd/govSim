@@ -355,7 +355,7 @@
     gap: 4px;
     font: 700 11px var(--font-ui);
     letter-spacing: 0.08em;
-    color: var(--gold-dark);
+    color: var(--gold);
     text-transform: uppercase;
   }
 
@@ -481,7 +481,7 @@
     margin-top: 2px;
     background: var(--alert);
     border-color: var(--alert-dark);
-    color: var(--card);
+    color: var(--ink);
   }
 
   .corrupt-levers-btn:hover {

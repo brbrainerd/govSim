@@ -30,6 +30,11 @@ p, .line, .prose { max-width: 65ch; }
 }
 .stamp:hover:not(:disabled) { transform: translateY(-2px); }
 .stamp:disabled { opacity: .5; cursor: not-allowed; }
+:root[data-theme="evil"] .stamp,
+[data-theme="evil"] .stamp {
+  color: var(--ink);
+  outline-color: var(--ink);
+}
 
 /* Option button: small navy */
 .btn { font: 600 clamp(14px, 1.1vw, 17px)/1 var(--font-ui); letter-spacing: .03em; color: var(--card); background: var(--ink); border: 0; border-radius: 8px; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.1vw, 16px); min-height: clamp(32px, 4vh, 40px); cursor: pointer; box-shadow: 2px 2px 0 var(--gold-dark); }
