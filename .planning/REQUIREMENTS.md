@@ -13,9 +13,9 @@
 
 ### Corrupt Executive Levers & Cronyism (LEVER)
 
-- [ ] **LEVER-01**: Player can award no-bid crony procurement contracts and auction federal land/assets to siphon kickbacks directly into the offshore stash.
-- [ ] **LEVER-02**: Player can sell targeted tariff exemptions and solicit presidential "library foundation" donations at the cost of heat generation.
-- [ ] **LEVER-03**: Player can fire inspectors general and pressure law enforcement to suppress active heat generation at high clout and trust costs.
+- [x] **LEVER-01**: Player can award no-bid crony procurement contracts and auction federal land/assets to siphon kickbacks directly into the offshore stash.
+- [x] **LEVER-02**: Player can sell targeted tariff exemptions and solicit presidential "library foundation" donations at the cost of heat generation.
+- [x] **LEVER-03**: Player can fire inspectors general and pressure law enforcement to suppress active heat generation at high clout and trust costs.
 
 ### Institutional Backlash & Impeachment (IMPEACH)
 
@@ -45,9 +45,9 @@
 | EVIL-01 | Phase 17 | Complete |
 | EVIL-02 | Phase 17 | Complete |
 | EVIL-03 | Phase 17 | Complete |
-| LEVER-01 | Phase 18 | Pending |
-| LEVER-02 | Phase 18 | Pending |
-| LEVER-03 | Phase 18 | Pending |
+| LEVER-01 | Phase 18 | Complete |
+| LEVER-02 | Phase 18 | Complete |
+| LEVER-03 | Phase 18 | Complete |
 | IMPEACH-01 | Phase 19 | Pending |
 | IMPEACH-02 | Phase 19 | Pending |
 | IMPEACH-03 | Phase 19 | Pending |

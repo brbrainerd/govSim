@@ -14,7 +14,7 @@
 **Milestone Goal:** Implement the satirical "Evil Mode" kleptocracy gameplay loop where the objective is to maximize an offshore stash while managing an escalating Heat meter to evade congressional investigations, special counsels, and impeachment trials.
 
 - [x] **Phase 17: Evil Mode Engine, Offshore Stash & Heat Meter** (4/4 plans) — completed 2026-10-12
-- [ ] **Phase 18: Corrupt Executive Levers & Cronyism** (LEVER-01, LEVER-02, LEVER-03)
+- [x] **Phase 18: Corrupt Executive Levers & Cronyism** (4/4 plans) — completed 2026-10-12
 - [ ] **Phase 19: Institutional Backlash & Impeachment Trial** (IMPEACH-01, IMPEACH-02, IMPEACH-03)
 - [ ] **Phase 20: Satirical UI Reskin & Heist End Screens** (UI-01, UI-02, UI-03)
 
@@ -38,7 +38,7 @@
   1. Corrupt actions catalog in `src/data/evil.ts` with direct kickback amounts, clout costs, and heat generation.
   2. Player can enact no-bid contracts and auction tariff exemptions to siphon funds into the offshore stash.
   3. Player can fire inspectors general to suppress active heat generation at high clout and trust costs.
-**Plans**: TBD (4 plans expected)
+**Plans**: 4 plans executed (completed 2026-10-12)
 
 #### Phase 19: Institutional Backlash & Impeachment Trial
 **Goal**: Model institutional retaliation when Heat exceeds critical thresholds: House judiciary investigations, special counsel subpoenas, House impeachment votes, and Senate conviction trials.
@@ -108,6 +108,6 @@ Full phase execution history and plans archived to [.planning/milestones/v0.2-RO
 | 9-12 | v0.3 | 16/16 | Complete | 2026-10-12 |
 | 13-16 | v0.4 | 16/16 | Complete | 2026-10-12 |
 | 17. Evil Mode Engine | v0.5 | 4/4 | Complete | 2026-10-12 |
-| 18. Corrupt Executive Levers | v0.5 | 0/4 | In progress | - |
-| 19. Backlash & Impeachment | v0.5 | 0/4 | Not started | - |
+| 18. Corrupt Executive Levers | v0.5 | 4/4 | Complete | 2026-10-12 |
+| 19. Backlash & Impeachment | v0.5 | 0/4 | In progress | - |
 | 20. Reskin & Heist Screens | v0.5 | 0/4 | Not started | - |
