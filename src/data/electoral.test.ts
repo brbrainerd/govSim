@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DISTRICTS, ELECTORAL_CITATIONS, getStateExposure, HOUSE_DELEGATIONS, STATE_EXPOSURES } from './electoral';
+import { DISTRICTS, ELECTORAL_CITATIONS, getStateExposure, getStateLegislature, HOUSE_DELEGATIONS, STATE_EXPOSURES, STATE_LEGISLATURES } from './electoral';
 
 describe('electoral data verification (VOT-06, GR-13, GR-15)', () => {
   it('has citations and retrieval metadata', () => {
@@ -145,5 +145,35 @@ describe('electoral data verification (VOT-06, GR-13, GR-15)', () => {
       expect(Number.isFinite(exp!.rpp)).toBe(true);
       expect(exp!.rpp).toBeGreaterThan(80);
     }
+  });
+
+  it('contains state legislature control for all 50 states (28 R, 20 D, 2 split)', () => {
+    const states = Object.keys(STATE_LEGISLATURES);
+    expect(states.length).toBe(50);
+    expect(states).not.toContain('DC');
+
+    let countR = 0;
+    let countD = 0;
+    let countSplit = 0;
+
+    for (const [code, leg] of Object.entries(STATE_LEGISLATURES)) {
+      expect(leg.state).toBe(code);
+      expect(['D', 'R', 'split']).toContain(leg.chamberMajority);
+      expect(['D', 'R', 'split']).toContain(leg.senateMajority);
+      expect(['D', 'R', 'split']).toContain(leg.control);
+
+      if (leg.control === 'R') countR++;
+      else if (leg.control === 'D') countD++;
+      else countSplit++;
+    }
+
+    expect(countR).toBe(28);
+    expect(countD).toBe(20);
+    expect(countSplit).toBe(2);
+
+    expect(getStateLegislature('TX')!.control).toBe('R');
+    expect(getStateLegislature('CA')!.control).toBe('D');
+    expect(getStateLegislature('PA')!.control).toBe('split');
+    expect(getStateLegislature('AK')!.control).toBe('split');
   });
 });

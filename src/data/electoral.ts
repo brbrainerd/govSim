@@ -39,12 +39,20 @@ export interface StateDemographicExposure {
 
 export type StateExposure = StateDemographicExposure;
 
+export interface StateLegislature {
+  state: string;
+  chamberMajority: 'D' | 'R' | 'split';
+  senateMajority: 'D' | 'R' | 'split';
+  control: 'D' | 'R' | 'split';
+}
+
 interface ElectoralDataset {
   retrieved: string;
   citations: Record<string, string>;
   districts: Record<string, ElectoralDistrict>;
   houseDelegations: Record<string, HouseDelegation>;
   exposures: Record<string, StateDemographicExposure>;
+  stateLegislatures: Record<string, StateLegislature>;
 }
 
 const data = raw as unknown as ElectoralDataset;
@@ -52,6 +60,7 @@ const data = raw as unknown as ElectoralDataset;
 export const DISTRICTS: Readonly<Record<string, ElectoralDistrict>> = data.districts;
 export const HOUSE_DELEGATIONS: Readonly<Record<string, HouseDelegation>> = data.houseDelegations;
 export const STATE_EXPOSURES: Readonly<Record<string, StateDemographicExposure>> = data.exposures;
+export const STATE_LEGISLATURES: Readonly<Record<string, StateLegislature>> = data.stateLegislatures;
 export const ELECTORAL_CITATIONS: Readonly<Record<string, string>> = data.citations;
 
 export function getDistrict(id: string): ElectoralDistrict | undefined {
@@ -60,6 +69,10 @@ export function getDistrict(id: string): ElectoralDistrict | undefined {
 
 export function getHouseDelegation(stateCode: string): HouseDelegation | undefined {
   return HOUSE_DELEGATIONS[stateCode];
+}
+
+export function getStateLegislature(stateCode: string): StateLegislature | undefined {
+  return STATE_LEGISLATURES[stateCode];
 }
 
 export function getStateExposure(stateCode: string): StateDemographicExposure | undefined {

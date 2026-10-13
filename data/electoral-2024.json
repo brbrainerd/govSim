@@ -6,7 +6,8 @@
     "exposures": "U.S. Bureau of Economic Analysis (BEA), SAGDP2N Gross Domestic Product by State and Industry (2024 release). Industry share of state GDP.",
     "demographics": "U.S. Census Bureau, 2023 American Community Survey (ACS) 1-Year Estimates: Senior (65+), Non-elderly Uninsured, Foreign-born Labor Force, Child Poverty, Student Loan Debt, Households with Young Children (<6).",
     "rpp": "U.S. Bureau of Economic Analysis (BEA), Regional Price Parities by State (2023 release). Index: US = 100.0.",
-    "cleanEnergy": "U.S. Energy Information Administration (EIA), State Electricity Profiles (2023/2024). Net Generation by Fuel Source and Carbon Emissions Intensity."
+    "cleanEnergy": "U.S. Energy Information Administration (EIA), State Electricity Profiles (2023/2024). Net Generation by Fuel Source and Carbon Emissions Intensity.",
+    "stateLegislatures": "National Conference of State Legislatures (NCSL), State Partisan Composition (post-2024 election). 28 R-controlled, 20 D-controlled, 2 split."
   },
   "districts": {
     "ME-1": {
@@ -1178,6 +1179,308 @@
       "studentDebtShare": 0.135,
       "youngFamilyShare": 0.098,
       "rpp": 93.5
+    }
+  },
+  "stateLegislatures": {
+    "AK": {
+      "state": "AK",
+      "chamberMajority": "split",
+      "senateMajority": "split",
+      "control": "split"
+    },
+    "AL": {
+      "state": "AL",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "AR": {
+      "state": "AR",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "AZ": {
+      "state": "AZ",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "CA": {
+      "state": "CA",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "CO": {
+      "state": "CO",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "CT": {
+      "state": "CT",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "DE": {
+      "state": "DE",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "FL": {
+      "state": "FL",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "GA": {
+      "state": "GA",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "HI": {
+      "state": "HI",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "IA": {
+      "state": "IA",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "ID": {
+      "state": "ID",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "IL": {
+      "state": "IL",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "IN": {
+      "state": "IN",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "KS": {
+      "state": "KS",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "KY": {
+      "state": "KY",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "LA": {
+      "state": "LA",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "MA": {
+      "state": "MA",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "MD": {
+      "state": "MD",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "ME": {
+      "state": "ME",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "MI": {
+      "state": "MI",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "MN": {
+      "state": "MN",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "MO": {
+      "state": "MO",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "MS": {
+      "state": "MS",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "MT": {
+      "state": "MT",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "NC": {
+      "state": "NC",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "ND": {
+      "state": "ND",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "NE": {
+      "state": "NE",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "NH": {
+      "state": "NH",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "NJ": {
+      "state": "NJ",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "NM": {
+      "state": "NM",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "NV": {
+      "state": "NV",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "NY": {
+      "state": "NY",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "OH": {
+      "state": "OH",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "OK": {
+      "state": "OK",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "OR": {
+      "state": "OR",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "PA": {
+      "state": "PA",
+      "chamberMajority": "D",
+      "senateMajority": "R",
+      "control": "split"
+    },
+    "RI": {
+      "state": "RI",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "SC": {
+      "state": "SC",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "SD": {
+      "state": "SD",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "TN": {
+      "state": "TN",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "TX": {
+      "state": "TX",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "UT": {
+      "state": "UT",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "VA": {
+      "state": "VA",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "VT": {
+      "state": "VT",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "WA": {
+      "state": "WA",
+      "chamberMajority": "D",
+      "senateMajority": "D",
+      "control": "D"
+    },
+    "WI": {
+      "state": "WI",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "WV": {
+      "state": "WV",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
+    },
+    "WY": {
+      "state": "WY",
+      "chamberMajority": "R",
+      "senateMajority": "R",
+      "control": "R"
     }
   }
 }

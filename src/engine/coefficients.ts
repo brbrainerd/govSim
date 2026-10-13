@@ -549,6 +549,15 @@ export const COEFF = {
   smallDollarMatchingTurnoutBonus: { value: 2.0, unit: '% turnout', basis: 'judgement', range: [0.5, 5], note: 'Voter participation increase from public campaign matching funds.' },
   smallDollarMatchingTrustGain: { value: 2.5, unit: 'index pts', basis: 'judgement', range: [1, 7], note: 'Institutional trust gain from reducing mega-donor dependency.' },
   smallDollarMatchingApprovalGain: { value: 1.0, unit: '% approval', basis: 'judgement', range: [0.2, 3], note: 'Presidential approval boost from championing clean campaign finance.' },
+  // ---- Article V amendment coefficients (Phase 11, REF-04) ----
+  amendmentProposalCloutCost: { value: 50, unit: 'clout', basis: 'judgement', range: [20, 100], note: 'Clout required to whip Article V proposal through Congress.' },
+  amendmentCampaignCloutCost: { value: 15, unit: 'clout', basis: 'judgement', range: [5, 30], note: 'Clout per turn invested to lobby state legislatures for ratification.' },
+  amendmentJudicialTrustGain: { value: 4, unit: 'index pts', basis: 'judgement', range: [1, 10], note: 'Trust gain from constitutional codification of judicial term limits.' },
+  amendmentCampaignFinanceTrustGain: { value: 6, unit: 'index pts', basis: 'judgement', range: [2, 12], note: 'Trust gain from constitutional campaign finance reform.' },
+  amendmentEraGrowthBonus: { value: 0.2, unit: 'pp', basis: 'judgement', range: [0.05, 0.5], note: 'Economic productivity dividend from Equal Rights Amendment codification.' },
+  amendmentEraGiniReduction: { value: 0.01, unit: 'index pts', basis: 'judgement', range: [0.002, 0.03], note: 'Inequality reduction from Equal Rights Amendment codification.' },
+  amendmentEraTrustGain: { value: 3, unit: 'index pts', basis: 'judgement', range: [1, 8], note: 'Trust gain from Equal Rights Amendment codification.' },
+  amendmentBalancedBudgetBondYieldReduction: { value: 0.25, unit: 'pp', basis: 'judgement', range: [0.05, 0.6], note: 'Bond yield spread reduction from constitutional fiscal constraint credibility.' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------

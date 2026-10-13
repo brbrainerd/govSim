@@ -18,6 +18,14 @@ import {
   type JudicialReformId,
   type ReformId,
 } from './reforms';
+import {
+  type ActiveAmendment,
+  type AmendmentId,
+  AMENDMENTS_CATALOG,
+  calculateAmendmentProposalVotes,
+  checkAmendmentCongressionalProposal,
+  tickAmendmentRatification,
+} from './amendments';
 import { isKnownSource, Ledger, type Term, type TraceKey } from './trace';
 import { BN_PER_TN, BUDGET_WINDOW_YEARS, LEGACY_QUARTERS, MIDTERM_TURN_1, MIDTERM_TURN_2, MONTHS_PER_YEAR, PERCENT, QUARTERS_PER_YEAR, TOTAL_TURNS } from './units';
 import { scheduleTurnEvents, type ActiveCrisis } from './director';
@@ -84,6 +92,8 @@ export interface GameState {
   readonly filibusterRule?: FilibusterRule; // active Senate filibuster rule (default sixty_vote)
   readonly activeReforms?: readonly string[]; // IDs of enacted structural reforms
   readonly courtComposition?: { readonly conservative: number; readonly liberal: number }; // Supreme Court bench composition
+  readonly activeAmendment?: ActiveAmendment; // active Article V constitutional amendment proposal
+  readonly ratifiedAmendments?: readonly AmendmentId[]; // permanently ratified Article V constitutional amendments
 }
 
 /** One thing that happened last turn (a bill passed, failed or was rejected). */
@@ -284,6 +294,86 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     }
   }
 
+  // Article V Constitutional Amendments (Phase 11, REF-04)
+  let nextActiveAmendment = state.activeAmendment;
+  let nextRatifiedAmendments = state.ratifiedAmendments ? [...state.ratifiedAmendments] : undefined;
+  let amendmentCloutCost = 0;
+  let amendmentTrustGain = 0;
+
+  const rawProposal: unknown = decisions !== null && typeof decisions === 'object' ? (decisions as { amendmentProposal?: unknown }).amendmentProposal : undefined;
+  const rawCampaign: unknown = decisions !== null && typeof decisions === 'object' ? (decisions as { amendmentCampaign?: unknown }).amendmentCampaign : undefined;
+  const presidentialSide = (decisions !== null && typeof decisions === 'object' ? (decisions as { presidentialSide?: unknown }).presidentialSide : undefined) as 'D' | 'R' | undefined;
+
+  if (!legacyRun) {
+    if (typeof rawProposal === 'string' && Object.hasOwn(AMENDMENTS_CATALOG, rawProposal)) {
+      const amendmentId = rawProposal as AmendmentId;
+      if (!nextActiveAmendment || nextActiveAmendment.isRatified || nextActiveAmendment.isExpired) {
+        const cost = C.amendmentProposalCloutCost;
+        if (state.clout >= cost) {
+          const { houseVotes, senateVotes } = calculateAmendmentProposalVotes(
+            amendmentId,
+            state.houseSeatDelta,
+            state.senateSeatDelta ?? 0,
+            state.approval,
+          );
+          const proposalCheck = checkAmendmentCongressionalProposal(amendmentId, houseVotes, senateVotes);
+          if (proposalCheck.proposed) {
+            amendmentCloutCost += cost;
+            nextActiveAmendment = {
+              id: amendmentId,
+              proposedTurn: state.turn,
+              ratifiedStates: [],
+              isRatified: false,
+              isExpired: false,
+            };
+            log.push({ kind: 'amendment', id: 'proposed', detail: amendmentId, amount: cost });
+          } else {
+            log.push({ kind: 'amendment', id: 'failed_congress', detail: proposalCheck.reason });
+          }
+        } else {
+          log.push({ kind: 'amendment', id: 'rejected', detail: 'unaffordable' });
+        }
+      }
+    }
+
+    let campaigned = false;
+    if (nextActiveAmendment && !nextActiveAmendment.isRatified && !nextActiveAmendment.isExpired && rawCampaign === true) {
+      const campCost = C.amendmentCampaignCloutCost;
+      if (state.clout >= amendmentCloutCost + campCost) {
+        amendmentCloutCost += campCost;
+        campaigned = true;
+        log.push({ kind: 'amendment', id: 'campaign', detail: nextActiveAmendment.id, amount: campCost });
+      }
+    }
+
+    if (nextActiveAmendment && !nextActiveAmendment.isRatified && !nextActiveAmendment.isExpired) {
+      const wasRatified = nextActiveAmendment.isRatified;
+      nextActiveAmendment = tickAmendmentRatification(
+        nextActiveAmendment,
+        state.turn,
+        state.approval,
+        state.seed,
+        presidentialSide,
+        campaigned,
+      );
+
+      if (nextActiveAmendment.isRatified && !wasRatified) {
+        if (!nextRatifiedAmendments) nextRatifiedAmendments = [];
+        nextRatifiedAmendments.push(nextActiveAmendment.id);
+        log.push({ kind: 'amendment', id: 'ratified', detail: nextActiveAmendment.id });
+        if (nextActiveAmendment.id === 'amendment_judicial_terms') {
+          amendmentTrustGain += C.amendmentJudicialTrustGain;
+        } else if (nextActiveAmendment.id === 'amendment_campaign_finance') {
+          amendmentTrustGain += C.amendmentCampaignFinanceTrustGain;
+        } else if (nextActiveAmendment.id === 'amendment_equal_rights') {
+          amendmentTrustGain += C.amendmentEraTrustGain;
+        }
+      } else if (nextActiveAmendment.isExpired) {
+        log.push({ kind: 'amendment', id: 'expired', detail: nextActiveAmendment.id });
+      }
+    }
+  }
+
   const active = activeAt(modifiers, state.turn, legacyRun);
   for (const m of active) {
     if (!m.source.startsWith(`${m.tag}:`) || !isKnownSource(m.source)) throw new Error(`modifier ${m.id} has source "${m.source}", which must start with "${m.tag}:"`);
@@ -298,7 +388,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const raw: unknown = decisions !== null && typeof decisions === 'object' ? decisions.bill : undefined;
   const activeRule = nextFilibusterRule ?? state.filibusterRule ?? 'sixty_vote';
   const reformCloutCost = reformResult?.cloutCost ?? 0;
-  const r = raw === undefined ? null : resolveBill(state.clout - filibusterCost - reformCloutCost, raw, state.houseSeatDelta, state.senateSeatDelta ?? 0, activeRule, state.approval);
+  const r = raw === undefined ? null : resolveBill(state.clout - filibusterCost - reformCloutCost - amendmentCloutCost, raw, state.houseSeatDelta, state.senateSeatDelta ?? 0, activeRule, state.approval);
   const enacted = r && r.valid && r.passed ? r : null;
   const policy = enacted ? enacted.budget : state.policy;
   const before = estimate(state.policy), after = estimate(policy);
@@ -432,6 +522,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   for (const m of mods('trust')) tr.add(m.source, m.amount);
   if (filibusterTrustPenalty > 0) tr.add('trust:reform', -filibusterTrustPenalty);
   if (reformResult && reformResult.trustDelta !== 0) tr.add('trust:reform', reformResult.trustDelta);
+  if (amendmentTrustGain > 0) tr.add('trust:reform', amendmentTrustGain);
   const trust = tr.clamp(e.trust + tr.sum, ...LIMITS.trust.bounds);
 
   const cl = new Ledger();
@@ -450,6 +541,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   }
   if (filibusterCost > 0) cl.add('clout:reform', -filibusterCost);
   if (reformResult && reformResult.cloutCost > 0) cl.add('clout:reform', -reformResult.cloutCost);
+  if (amendmentCloutCost > 0) cl.add('clout:reform', -amendmentCloutCost);
   const clout = cl.clamp(state.clout + cl.sum, 0, C.cloutCap);
 
   if (filibusterLog) log.push(filibusterLog);
@@ -491,6 +583,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     ...(nextFilibusterRule !== undefined && nextFilibusterRule !== 'sixty_vote' ? { filibusterRule: nextFilibusterRule } : {}),
     ...(nextActiveReforms && nextActiveReforms.length > 0 ? { activeReforms: nextActiveReforms } : {}),
     ...(nextCourtComposition ? { courtComposition: nextCourtComposition } : {}),
+    ...(nextActiveAmendment ? { activeAmendment: nextActiveAmendment } : {}),
+    ...(nextRatifiedAmendments && nextRatifiedAmendments.length > 0 ? { ratifiedAmendments: nextRatifiedAmendments } : {}),
     econ: nextEcon,
     activeCrisis: state.activeCrisis,
     report: {
