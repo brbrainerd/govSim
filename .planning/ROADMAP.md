@@ -25,8 +25,8 @@
 
 - [x] **Phase 9: Domestic Social Policy Levers** - Healthcare, immigration, energy/climate, and education models, pure engine levers, cited coefficients, causal traces (SOC-01, SOC-02, SOC-03, SOC-04) — completed 2026-10-12
 - [x] **Phase 10: Demographic & Regional Distribution** - Sector exposure, state-level cost-of-living impacts, and voter coalition shifts (SOC-05) — completed 2026-10-12
-- [ ] **Phase 11: Structural Government Reform & Amendments** - Senate filibuster reforms, judicial reform, electoral rules, and constitutional amendment hurdles (REF-01, REF-02, REF-03, REF-04)
-- [ ] **Phase 12: Household Impact Card & Balance** - "Your Household" card on Oval Office and Economy screens, persona presets, custom builder, balance calibration pass, and E2E verification (HOU-01, HOU-02)
+- [x] **Phase 11: Structural Government Reform & Amendments** - Senate filibuster reforms, judicial reform, electoral rules, and constitutional amendment hurdles (REF-01, REF-02, REF-03, REF-04) — completed 2026-10-12
+- [x] **Phase 12: Household Impact Card & Balance** - "Your Household" card on Oval Office and Economy screens, persona presets, custom builder, balance calibration pass, and E2E verification (HOU-01, HOU-02) — completed 2026-10-12
 
 ## Phase Details
 
@@ -95,3 +95,11 @@ Plans:
   2. Players can select preset household personas or customize state, income, and family size.
   3. Balance harness verifies sensible bot non-domination and realistic prosperity scoring across 100 seeds.
   4. 0 axe violations, 0 viewport scroll regressions at 1376×768 and 1280×720 viewports.
+
+**Plans**: 4 plans
+
+Plans:
+- [x] 12-01-PLAN.md — Wave 1: Pure Household Engine, Constants, RPP Indexing & Presets (HOU-01, HOU-02)
+- [x] 12-02-PLAN.md — Wave 2: Household Card, Modal & Economy Breakdown Views (HOU-01, HOU-02)
+- [x] 12-03-PLAN.md — Wave 3: Balance Calibration & Party Neutrality Suite (HOU-01, HOU-02)
+- [x] 12-04-PLAN.md — Wave 4: Playwright E2E, Accessibility & Viewport Audits (HOU-01, HOU-02, OBS-07)

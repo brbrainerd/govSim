@@ -158,8 +158,8 @@
     white-space: nowrap;
   }
   .tag.benefit {
-    background: var(--sage);
-    color: var(--ink);
+    background: var(--sage-dark);
+    color: var(--card);
   }
   .tag.drag {
     background: var(--alert-tint);

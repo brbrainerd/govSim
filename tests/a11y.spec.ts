@@ -249,4 +249,34 @@ test.describe('accessibility audits (OBS-07, D6)', () => {
     const problemSevere = problemAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     expect(problemSevere, `Problem Report modal a11y violations: ${JSON.stringify(problemSevere, null, 2)}`).toEqual([]);
   });
+
+  test('Household card, Household modal, and Economy breakdown have zero serious or critical violations (HOU-01, HOU-02, OBS-07)', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('input[name="party"][value="D"]').check();
+    await page.locator('button.stamp:has-text("START THE TERM")').click();
+    await expect(page.locator('.app')).toBeVisible();
+
+    // 1. Audit Oval Office Household Card
+    await expect(page.locator('[data-testid="household-card"]')).toBeVisible();
+    const cardAxe = await new AxeBuilder({ page }).include('[data-testid="household-card"]').analyze();
+    const cardSevere = cardAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(cardSevere, `Household Card a11y violations: ${JSON.stringify(cardSevere, null, 2)}`).toEqual([]);
+
+    // 2. Audit Household Modal
+    await page.locator('[data-testid="household-card"] button:has-text("Explore Household Impact →")').click();
+    await expect(page.locator('[data-testid="household-modal"]')).toBeVisible();
+    const modalAxe = await new AxeBuilder({ page }).analyze();
+    const modalSevere = modalAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(modalSevere, `Household Modal a11y violations: ${JSON.stringify(modalSevere, null, 2)}`).toEqual([]);
+    await page.locator('[data-testid="household-modal"] button.close-x').click();
+    await expect(page.locator('[data-testid="household-modal"]')).not.toBeVisible();
+
+    // 3. Audit Economy Your Household view
+    await page.locator('.tab:has-text("Economy")').click();
+    await page.locator('[data-testid="tab-household"]').click();
+    await expect(page.locator('[data-testid="household-breakdown"]')).toBeVisible();
+    const economyAxe = await new AxeBuilder({ page }).analyze();
+    const economySevere = economyAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(economySevere, `Economy Household Breakdown a11y violations: ${JSON.stringify(economySevere, null, 2)}`).toEqual([]);
+  });
 });

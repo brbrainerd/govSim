@@ -516,8 +516,7 @@
     font-size: 13px;
     font-weight: bold;
     cursor: pointer;
-    color: var(--ink-soft);
-    transition: background 0.15s ease, color 0.15s ease;
+    color: var(--ink);
   }
 
   .switch-btn.active {

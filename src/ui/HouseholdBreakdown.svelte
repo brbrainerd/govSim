@@ -302,6 +302,7 @@
     align-items: center;
     padding: 6px 4px;
     background: var(--paper);
+    color: var(--ink);
     border: 2px solid var(--ink);
     border-radius: 6px;
     cursor: pointer;
@@ -463,8 +464,8 @@
     flex-shrink: 0;
   }
   .row-pill.positive {
-    background: var(--sage);
-    color: var(--ink);
+    background: var(--sage-dark);
+    color: var(--card);
   }
   .row-pill.negative {
     background: var(--alert-tint);
