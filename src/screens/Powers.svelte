@@ -7,6 +7,7 @@
   import CourtBench from '../ui/art/CourtBench.svelte';
   import FedPortrait from '../ui/art/FedPortrait.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
+  import JudicialReformModal from '../ui/JudicialReformModal.svelte';
 
   let {
     session,
@@ -23,6 +24,10 @@
     onOpenSpeech?: () => void;
     onOpenFed?: () => void;
   } = $props();
+
+  let showingJudicialModal = $state(false);
+  const composition = $derived(session.current.courtComposition ?? { conservative: 6, liberal: 3 });
+  const isEnacted = (id: string) => Boolean(session.current.activeReforms?.includes(id));
 
   let selectedOrderId = $state<string>(ORDERS_CATALOG[0]!.id);
   const selectedOrder = $derived(getOrder(selectedOrderId) ?? ORDERS_CATALOG[0]!);
@@ -152,7 +157,7 @@
           <div class="court-header-row">
             <div>
               <span class="inst-tag">ARTICLE III</span>
-              <h4 class="inst-name">Supreme Court · leans 6–3</h4>
+              <h4 class="inst-name">Supreme Court · leans {composition.conservative}–{composition.liberal}</h4>
             </div>
             {#if pendingChallengesCount > 0}
               <span class="court-badge alert">
@@ -163,9 +168,71 @@
             {/if}
           </div>
           <div class="bench-illustration">
-            <CourtBench />
+            <CourtBench conservative={composition.conservative} liberal={composition.liberal} />
           </div>
-          <p class="court-subtext">Strikes down executive actions exceeding delegated statutory authority.</p>
+          <div class="court-actions-row">
+            <p class="court-subtext">Strikes down executive actions exceeding delegated statutory authority.</p>
+            <button
+              type="button"
+              class="btn court-reform-btn"
+              onclick={() => showingJudicialModal = true}
+              data-testid="open-judicial-reform-modal"
+            >
+              Judicial Reforms...
+            </button>
+          </div>
+        </div>
+
+        <!-- Electoral Reforms Card (REF-03) -->
+        <div class="institution-card electoral-card" data-testid="electoral-reforms-card">
+          <div class="electoral-header">
+            <span class="inst-tag">ELECTORAL REFORMS</span>
+            <h4 class="inst-name">Democracy &amp; Voting System Grants</h4>
+          </div>
+          <div class="electoral-grid">
+            <div class="electoral-item" class:enacted={isEnacted('rcv_incentives')}>
+              <div class="electoral-text">
+                <b>Ranked-Choice Voting Grants</b>
+                <span>Federal grants for state RCV transition (+1.5% turnout, centrist boost).</span>
+              </div>
+              <button
+                type="button"
+                class="btn electoral-btn"
+                disabled={isEnacted('rcv_incentives') || session.draft.reform === 'rcv_incentives' || session.clout < 15}
+                onclick={() => session.enactReform('rcv_incentives')}
+              >
+                {isEnacted('rcv_incentives') ? '✓ Enacted' : session.draft.reform === 'rcv_incentives' ? 'Staged' : 'Enact (15 Clout)'}
+              </button>
+            </div>
+            <div class="electoral-item" class:enacted={isEnacted('independent_redistricting')}>
+              <div class="electoral-text">
+                <b>Independent Redistricting</b>
+                <span>Grants for citizen districting commissions (+35 competitive seats).</span>
+              </div>
+              <button
+                type="button"
+                class="btn electoral-btn"
+                disabled={isEnacted('independent_redistricting') || session.draft.reform === 'independent_redistricting' || session.clout < 20}
+                onclick={() => session.enactReform('independent_redistricting')}
+              >
+                {isEnacted('independent_redistricting') ? '✓ Enacted' : session.draft.reform === 'independent_redistricting' ? 'Staged' : 'Enact (20 Clout)'}
+              </button>
+            </div>
+            <div class="electoral-item" class:enacted={isEnacted('small_dollar_matching')}>
+              <div class="electoral-text">
+                <b>Small-Dollar Donor Matching</b>
+                <span>Public match for grassroots donations under $200 (+trust, +turnout).</span>
+              </div>
+              <button
+                type="button"
+                class="btn electoral-btn"
+                disabled={isEnacted('small_dollar_matching') || session.draft.reform === 'small_dollar_matching' || session.clout < 25}
+                onclick={() => session.enactReform('small_dollar_matching')}
+              >
+                {isEnacted('small_dollar_matching') ? '✓ Enacted' : session.draft.reform === 'small_dollar_matching' ? 'Staged' : 'Enact (25 Clout)'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -273,6 +340,10 @@
   {/snippet}
 </ScreenLayout>
 
+{#if showingJudicialModal}
+  <JudicialReformModal {session} onClose={() => showingJudicialModal = false} />
+{/if}
+
 <style>
   .powers-container {
     display: flex;
@@ -327,11 +398,11 @@
   .orders-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 8px;
     overflow-y: auto;
     padding-right: 4px;
     flex: 1;
-    min-height: 0;
+    min-height: 120px;
   }
 
   .order-card {
@@ -472,8 +543,8 @@
   /* Institutional bottom strip */
   .institutions-strip {
     display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    gap: 12px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
     flex-shrink: 0;
   }
 
@@ -481,7 +552,7 @@
     background: var(--card);
     border: 2px solid var(--ink);
     border-radius: var(--r-sm);
-    padding: 10px 12px;
+    padding: 8px 10px;
     box-shadow: 2px 2px 0 var(--ink);
   }
 
@@ -803,5 +874,72 @@
     cursor: not-allowed;
     box-shadow: 1px 1px 0 var(--ink);
     transform: none;
+  }
+
+  .court-actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .court-reform-btn {
+    padding: 4px 10px;
+    font-size: var(--text-xs);
+    white-space: nowrap;
+  }
+
+  .electoral-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+  }
+
+  .electoral-header {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .electoral-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .electoral-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px;
+    background: var(--paper-dark);
+    border-radius: var(--r-sm);
+  }
+
+  .electoral-item.enacted {
+    background: var(--card);
+    border: 1px solid var(--sage-dark);
+  }
+
+  .electoral-text {
+    display: flex;
+    flex-direction: column;
+    font-size: 11px;
+    line-height: 1.15;
+  }
+
+  .electoral-text span {
+    color: var(--ink-soft);
+    font-size: 10px;
+  }
+
+  .electoral-btn {
+    padding: 2px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+    min-height: 24px;
   }
 </style>

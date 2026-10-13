@@ -44,6 +44,24 @@ test.describe('accessibility audits (OBS-07, D6)', () => {
     const congressSevere = congressAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     expect(congressSevere, `Congress a11y violations: ${JSON.stringify(congressSevere, null, 2)}`).toEqual([]);
 
+    // 4b. Filibuster modal (REF-01, OBS-07)
+    await page.locator('[data-testid="open-filibuster-modal"]').click();
+    await expect(page.locator('[data-testid="filibuster-modal"]')).toBeVisible();
+    const filibusterAxe = await new AxeBuilder({ page }).analyze();
+    const filibusterSevere = filibusterAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(filibusterSevere, `Filibuster modal a11y violations: ${JSON.stringify(filibusterSevere, null, 2)}`).toEqual([]);
+    await page.locator('[data-testid="filibuster-modal"] button.close-btn').click();
+    await expect(page.locator('[data-testid="filibuster-modal"]')).not.toBeVisible();
+
+    // 4c. Amendment modal (REF-04, OBS-07)
+    await page.locator('[data-testid="open-amendment-modal"]').click();
+    await expect(page.locator('[data-testid="amendment-modal"]')).toBeVisible();
+    const amendmentAxe = await new AxeBuilder({ page }).analyze();
+    const amendmentSevere = amendmentAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(amendmentSevere, `Amendment modal a11y violations: ${JSON.stringify(amendmentSevere, null, 2)}`).toEqual([]);
+    await page.locator('[data-testid="amendment-modal"] button.close-btn').click();
+    await expect(page.locator('[data-testid="amendment-modal"]')).not.toBeVisible();
+
     // 5. Economy screen
     await page.locator('.tab:has-text("Economy")').click();
     await expect(page.locator('.h:has-text("How is the economy doing?")')).toBeVisible();
@@ -95,6 +113,15 @@ test.describe('accessibility audits (OBS-07, D6)', () => {
     expect(fedSevere, `Fed modal a11y violations: ${JSON.stringify(fedSevere, null, 2)}`).toEqual([]);
     await page.locator('button.cancel-link').click();
     await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
+
+    // 8d. Judicial Reform modal (REF-02, OBS-07)
+    await page.locator('[data-testid="open-judicial-reform-modal"]').click();
+    await expect(page.locator('[data-testid="judicial-reform-modal"]')).toBeVisible();
+    const judicialAxe = await new AxeBuilder({ page }).analyze();
+    const judicialSevere = judicialAxe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(judicialSevere, `Judicial Reform modal a11y violations: ${JSON.stringify(judicialSevere, null, 2)}`).toEqual([]);
+    await page.locator('[data-testid="judicial-reform-modal"] button.close-btn').click();
+    await expect(page.locator('[data-testid="judicial-reform-modal"]')).not.toBeVisible();
 
     // 8. Crisis modal (advance turns until crisis fires on turn 3, 4, or 5)
     while (!(await page.locator('.breaking-ribbon').isVisible())) {

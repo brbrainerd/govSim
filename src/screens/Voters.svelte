@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Session } from '../app/session.svelte';
   import type { ScreenId } from '../app/screens';
-  import { getStateExposure } from '../data/electoral';
+  import { getStateExposure, getStateLegislature } from '../data/electoral';
   import { calculateDemographicCoalitions } from '../engine/cohorts';
   import { calculateElectoralCollege, calculateStateFamilyRelief, type StateVoterState } from '../engine/voters';
   import USMap from '../ui/art/USMap.svelte';
@@ -28,6 +28,13 @@
   const selectedUnit = $derived<StateVoterState | undefined>(summary.units[currentSelectedId]);
   const stateExposure = $derived(getStateExposure(currentSelectedId));
   const familyRelief = $derived(calculateStateFamilyRelief(currentSelectedId, session.current.socialPolicy));
+
+  const stateCode = $derived(currentSelectedId.split('-')[0]!);
+  const stateLeg = $derived(getStateLegislature(stateCode));
+  const activeAmendment = $derived(session.current.activeAmendment);
+  const isStateRatified = $derived(
+    Boolean(activeAmendment?.ratifiedStates.includes(stateCode))
+  );
 
   const salienceTags = $derived.by(() => {
     if (!stateExposure) return [];
@@ -408,6 +415,28 @@
               {/if}
             </p>
           </div>
+
+          <!-- State Legislature & Article V Status (REF-04) -->
+          {#if stateLeg}
+            <div class="legislature-status-box" data-testid="state-legislature-status">
+              <div class="leg-row">
+                <span class="leg-label">STATE LEGISLATURE</span>
+                <span class="leg-badge {stateLeg.control}">
+                  {stateLeg.control === 'R' ? 'GOP Majority' : stateLeg.control === 'D' ? 'Dem Majority' : 'Divided Legislature'}
+                </span>
+              </div>
+              {#if activeAmendment && !activeAmendment.isRatified && !activeAmendment.isExpired}
+                <div class="ratification-status-row">
+                  <span class="amendment-sub">Article V Status:</span>
+                  {#if isStateRatified}
+                    <span class="ratified-chip">✓ Ratified</span>
+                  {:else}
+                    <span class="pending-chip">Pending</span>
+                  {/if}
+                </div>
+              {/if}
+            </div>
+          {/if}
 
           <div class="reasons-section">
             <span class="reasons-title">WHY VOTERS FEEL THIS WAY</span>
@@ -1198,5 +1227,73 @@
     text-align: center;
     color: var(--ink-soft);
     font-size: 13px;
+  }
+
+  .legislature-status-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+    background: var(--paper-dark);
+    border-radius: var(--r-sm);
+  }
+
+  .leg-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .leg-label {
+    font-family: var(--font-condensed);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .leg-badge {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: var(--r-sm);
+  }
+
+  .leg-badge.R {
+    background: var(--alert-light);
+    color: var(--ink);
+  }
+
+  .leg-badge.D {
+    background: var(--sky);
+    color: var(--ink);
+  }
+
+  .leg-badge.split {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--ink-soft);
+  }
+
+  .ratification-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  .amendment-sub {
+    color: var(--ink-soft);
+  }
+
+  .ratified-chip {
+    font-weight: 700;
+    color: var(--sage);
+  }
+
+  .pending-chip {
+    font-weight: 600;
+    color: var(--ink-soft);
   }
 </style>

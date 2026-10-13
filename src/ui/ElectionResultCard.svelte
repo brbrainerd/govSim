@@ -111,13 +111,13 @@
   }
 
   .header-strip.won {
-    background: var(--sage);
-    color: var(--paper);
+    background: var(--sage-dark);
+    color: var(--card);
   }
 
   .header-strip.lost {
-    background: var(--alert);
-    color: var(--paper);
+    background: var(--alert-dark);
+    color: var(--card);
   }
 
   .decision-tag {

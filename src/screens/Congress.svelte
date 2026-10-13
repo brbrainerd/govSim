@@ -1,14 +1,21 @@
 <script lang="ts">
   import { ThumbsDown, ThumbsUp } from '@lucide/svelte';
   import type { Session } from '../app/session.svelte';
-  import { deals, groups, HOUSE_SEATS, TO_PASS } from '../engine/congress';
+  import { deals, groups, HOUSE_SEATS, TO_PASS, FILIBUSTER_RULES_CATALOG } from '../engine/congress';
   import Character, { type Look } from '../ui/art/Character.svelte';
   import { arcPoint, HEMI, hemicycle } from '../ui/art/hemicycle';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import { getImminentDeadlines } from '../engine/deadlines';
+  import FilibusterModal from '../ui/FilibusterModal.svelte';
+  import AmendmentModal from '../ui/AmendmentModal.svelte';
 
   let { session, question }: { session: Session; question: string } = $props();
 
+  let showingFilibuster = $state(false);
+  let showingAmendment = $state(false);
+
+  const filibusterRule = $derived(session.draft.filibusterRule ?? session.current.filibusterRule ?? 'sixty_vote');
+  const filibusterInfo = $derived(FILIBUSTER_RULES_CATALOG[filibusterRule]);
   const deadlines = $derived(getImminentDeadlines(session.current.turn, session.current));
 
   const seats = hemicycle(HOUSE_SEATS);
@@ -96,8 +103,22 @@
     </div>
   {/snippet}
   {#snippet learn()}
-    <button class="link" disabled title="Coming soon">Senate: 60 votes, or 51 for budget bills</button>
-    <button class="ticket" disabled title="Coming soon">Myth? The President writes the laws</button>
+    <button
+      type="button"
+      class="link"
+      onclick={() => showingFilibuster = true}
+      data-testid="open-filibuster-modal"
+    >
+      Senate Cloture: {filibusterInfo.threshold} votes ({filibusterInfo.name})
+    </button>
+    <button
+      type="button"
+      class="link"
+      onclick={() => showingAmendment = true}
+      data-testid="open-amendment-modal"
+    >
+      Article V Amendments {#if session.current.activeAmendment}· <b>Ratifying ({session.current.activeAmendment.ratifiedStates.length}/38)</b>{/if}
+    </button>
   {/snippet}
   {#snippet next()}
     <div class="card info" aria-live="polite">
@@ -134,6 +155,14 @@
     {#if !vote}<button class="stamp" disabled={session.over} onclick={() => session.callVote()}>Call the vote</button>{/if}
   {/snippet}
 </ScreenLayout>
+
+{#if showingFilibuster}
+  <FilibusterModal {session} onClose={() => showingFilibuster = false} />
+{/if}
+
+{#if showingAmendment}
+  <AmendmentModal {session} onClose={() => showingAmendment = false} />
+{/if}
 
 <style>
   .chamber { position: relative; padding: clamp(8px, 1.2vh, 14px) clamp(10px, 1.2vw, 16px); display: flex; flex-direction: column; gap: clamp(4px, 0.6vh, 8px); flex-grow: 1; min-height: 0; overflow: hidden; }

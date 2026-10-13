@@ -13,6 +13,10 @@ import { ELECTION_TURN_1 } from '../engine/units';
 import { storeAutosave, type SaveFile } from './save';
 import type { ScreenId } from './screens';
 
+import { FILIBUSTER_RULES_CATALOG, type FilibusterRule } from '../engine/congress';
+import { REFORMS_CATALOG, type ReformId } from '../engine/reforms';
+import { AMENDMENTS_CATALOG, type AmendmentId } from '../engine/amendments';
+
 /** Choices made at New Game. Kept beside the engine state, never inside it (D4). */
 export interface GameOptions {
   party: PartyId;
@@ -31,6 +35,10 @@ interface Draft {
   fedPressure: boolean;
   speechAudience: 'general' | 'congress' | 'business' | null;
   viewMyth: string | null;
+  filibusterRule: FilibusterRule | null;
+  reform: ReformId | null;
+  amendmentProposal: AmendmentId | null;
+  amendmentCampaign: boolean;
 }
 
 /** A new turn's draft starts from the policy already in force. */
@@ -47,6 +55,10 @@ const freshDraft = (policy: BudgetDraft, socialPolicy?: SocialDraft): Draft => (
   fedPressure: false,
   speechAudience: null,
   viewMyth: null,
+  filibusterRule: null,
+  reform: null,
+  amendmentProposal: null,
+  amendmentCampaign: false,
 });
 
 /**
@@ -112,13 +124,29 @@ export class Session {
     if (this.draft.speechAudience) cost += speechCost(this.current.speechCountInWindow);
     return cost;
   });
+  reformCost = $derived.by(() => {
+    let cost = 0;
+    if (this.draft.filibusterRule && this.draft.filibusterRule !== (this.current.filibusterRule ?? 'sixty_vote')) {
+      cost += FILIBUSTER_RULES_CATALOG[this.draft.filibusterRule].cloutCost;
+    }
+    if (this.draft.reform) {
+      cost += REFORMS_CATALOG[this.draft.reform].cloutCost;
+    }
+    if (this.draft.amendmentProposal) {
+      cost += C.amendmentProposalCloutCost;
+    }
+    if (this.draft.amendmentCampaign) {
+      cost += C.amendmentCampaignCloutCost;
+    }
+    return cost;
+  });
   mythReward = $derived(
     this.draft.viewMyth && !this.current.viewedMyths.includes(this.draft.viewMyth)
       ? C.mythRewardClout
       : 0,
   );
   clout = $derived(
-    this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost + this.mythReward,
+    this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost - this.reformCost + this.mythReward,
   );
   powers = $derived<PowerDecisions | null>(
     this.draft.signedOrders.length > 0 ||
@@ -324,6 +352,26 @@ export class Session {
     }
   }
 
+  setFilibusterRule(rule: FilibusterRule) {
+    if (this.over) return;
+    this.draft.filibusterRule = rule;
+  }
+
+  enactReform(reformId: ReformId) {
+    if (this.over) return;
+    this.draft.reform = reformId;
+  }
+
+  proposeAmendment(amendmentId: AmendmentId) {
+    if (this.over) return;
+    this.draft.amendmentProposal = amendmentId;
+  }
+
+  toggleAmendmentCampaign() {
+    if (this.over) return;
+    this.draft.amendmentCampaign = !this.draft.amendmentCampaign;
+  }
+
   nextTurn() {
     if (this.termEnded || this.over) return;
 
@@ -335,6 +383,19 @@ export class Session {
     if (this.powers) {
       decisions.powers = $state.snapshot(this.powers);
     }
+    if (this.draft.filibusterRule) {
+      decisions.filibusterRule = this.draft.filibusterRule;
+    }
+    if (this.draft.reform) {
+      decisions.reform = this.draft.reform;
+    }
+    if (this.draft.amendmentProposal) {
+      decisions.amendmentProposal = this.draft.amendmentProposal;
+    }
+    if (this.draft.amendmentCampaign) {
+      decisions.amendmentCampaign = true;
+    }
+    decisions.presidentialSide = (this.options.party === 'R' ? 'R' : 'D') as 'D' | 'R';
 
     if (this.current.turn === 16) {
       if (!this.turn16Snapshot) {

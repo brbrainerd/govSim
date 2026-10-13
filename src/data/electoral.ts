@@ -1,6 +1,6 @@
 // Typed accessors and validation for 2024 electoral district margins,
 // 119th Congress House delegations, and state industry exposures (VOT-06, GR-13, GR-15).
-import raw from '../../data/electoral-2024.json';
+import raw from '../../data/electoral-2024.json' with { type: 'json' };
 
 export interface ElectoralDistrict {
   id: string;

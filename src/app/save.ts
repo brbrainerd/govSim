@@ -1,7 +1,10 @@
 // Save file serialization, parsing, trust boundary validation, and replay (OBS-01, OBS-02, GR-31, GR-34).
 import { spendLevers, taxLevers, type BudgetDraft } from '../engine/budget';
-import { deals as DEALS, type DealId } from '../engine/congress';
-import type { Decisions } from '../engine/decisions';
+import { deals as DEALS, FILIBUSTER_RULES_CATALOG, type DealId, type FilibusterRule } from '../engine/congress';
+import { AMENDMENTS_CATALOG, type AmendmentId } from '../engine/amendments';
+import { REFORMS_CATALOG, type ReformId } from '../engine/reforms';
+import type { PowerDecisions } from '../engine/powers';
+import type { CrisisDecision, Decisions } from '../engine/decisions';
 import { endTurn, newGame, type GameState, type Start } from '../engine/game';
 import { stableHash } from '../engine/hash';
 import { getSocialLever, type SocialDraft } from '../engine/social';
@@ -44,6 +47,18 @@ const START_FIELDS: (keyof Start)[] = [
 const KNOWN_LEVERS = new Map([...taxLevers, ...spendLevers].map((l) => [l.id, l]));
 const KNOWN_DEAL_IDS = new Set(DEALS.map((d) => d.id));
 
+const VALID_DECISION_KEYS = new Set([
+  'bill',
+  'crisis',
+  'powers',
+  'social',
+  'filibusterRule',
+  'reform',
+  'amendmentProposal',
+  'amendmentCampaign',
+  'presidentialSide',
+]);
+
 /**
  * Validates a single Decisions input record.
  * Throws an Error with a descriptive explanation if any field is invalid, unknown, or out of range.
@@ -53,38 +68,94 @@ export function validateDecisions(d: unknown): Decisions {
 
   const keys = Object.keys(d);
   for (const k of keys) {
-    if (k !== 'bill') throw new Error(`Unknown decision property: "${k}"`);
+    if (!VALID_DECISION_KEYS.has(k)) throw new Error(`Unknown decision property: "${k}"`);
   }
 
-  if (d.bill === undefined) return {};
+  const result: Decisions = {};
 
-  const b = d.bill;
-  if (!isRecord(b)) throw new Error('Bill must be a plain object');
+  if (d.bill !== undefined) {
+    const b = d.bill;
+    if (!isRecord(b)) throw new Error('Bill must be a plain object');
 
-  const billKeys = Object.keys(b);
-  for (const k of billKeys) {
-    if (k !== 'budget' && k !== 'deals' && k !== 'social') throw new Error(`Unknown bill property: "${k}"`);
-  }
-
-  if (!isRecord(b.budget)) throw new Error('Bill budget must be a plain object');
-  const budget: BudgetDraft = {};
-  for (const [leverId, val] of Object.entries(b.budget)) {
-    const lever = KNOWN_LEVERS.get(leverId);
-    if (!lever) throw new Error(`Unknown budget lever: "${leverId}"`);
-    if (typeof val !== 'number' || !Number.isFinite(val)) {
-      throw new Error(`Budget lever "${leverId}" must be a finite number`);
+    const billKeys = Object.keys(b);
+    for (const k of billKeys) {
+      if (k !== 'budget' && k !== 'deals' && k !== 'social') throw new Error(`Unknown bill property: "${k}"`);
     }
-    if (val < lever.min || val > lever.max) {
-      throw new Error(`Budget lever "${leverId}" value ${val} out of range [${lever.min}, ${lever.max}]`);
+
+    if (!isRecord(b.budget)) throw new Error('Bill budget must be a plain object');
+    const budget: BudgetDraft = {};
+    for (const [leverId, val] of Object.entries(b.budget)) {
+      const lever = KNOWN_LEVERS.get(leverId);
+      if (!lever) throw new Error(`Unknown budget lever: "${leverId}"`);
+      if (typeof val !== 'number' || !Number.isFinite(val)) {
+        throw new Error(`Budget lever "${leverId}" must be a finite number`);
+      }
+      if (val < lever.min || val > lever.max) {
+        throw new Error(`Budget lever "${leverId}" value ${val} out of range [${lever.min}, ${lever.max}]`);
+      }
+      budget[leverId] = val;
     }
-    budget[leverId] = val;
+
+    let social: SocialDraft | undefined;
+    if (b.social !== undefined) {
+      if (!isRecord(b.social)) throw new Error('Bill social must be a plain object');
+      social = {};
+      for (const [leverId, val] of Object.entries(b.social)) {
+        const lever = getSocialLever(leverId);
+        if (!lever) throw new Error(`Unknown social lever: "${leverId}"`);
+        if (typeof val !== 'number' || !Number.isFinite(val)) {
+          throw new Error(`Social lever "${leverId}" must be a finite number`);
+        }
+        if (val < lever.min || val > lever.max) {
+          throw new Error(`Social lever "${leverId}" value ${val} out of range [${lever.min}, ${lever.max}]`);
+        }
+        social[leverId] = val;
+      }
+    }
+
+    if (!Array.isArray(b.deals)) throw new Error('Bill deals must be an array');
+    const deals: DealId[] = [];
+    const seenDeals = new Set<string>();
+    for (const dealId of b.deals) {
+      if (typeof dealId !== 'string' || !KNOWN_DEAL_IDS.has(dealId as DealId)) {
+        throw new Error(`Unknown deal ID: "${String(dealId)}"`);
+      }
+      if (seenDeals.has(dealId)) {
+        throw new Error(`Duplicate deal ID: "${dealId}"`);
+      }
+      seenDeals.add(dealId);
+      deals.push(dealId as DealId);
+    }
+
+    result.bill = { budget, deals, ...(social !== undefined ? { social } : {}) };
   }
 
-  let social: SocialDraft | undefined;
-  if (b.social !== undefined) {
-    if (!isRecord(b.social)) throw new Error('Bill social must be a plain object');
-    social = {};
-    for (const [leverId, val] of Object.entries(b.social)) {
+  if (d.crisis !== undefined) {
+    if (!isRecord(d.crisis)) throw new Error('Crisis decision must be a plain object');
+    if (typeof d.crisis.crisisId !== 'string' || typeof d.crisis.optionId !== 'string') {
+      throw new Error('Crisis decision must contain crisisId and optionId');
+    }
+    result.crisis = { crisisId: d.crisis.crisisId, optionId: d.crisis.optionId };
+  }
+
+  if (d.powers !== undefined) {
+    if (!isRecord(d.powers)) throw new Error('Powers decision must be a plain object');
+    const powers: PowerDecisions = {
+      ...(Array.isArray(d.powers.signOrders) ? { signOrders: d.powers.signOrders.map(String) } : {}),
+      ...(Array.isArray(d.powers.revokeOrders) ? { revokeOrders: d.powers.revokeOrders.map(String) } : {}),
+      ...(typeof d.powers.pressureFed === 'boolean' ? { pressureFed: d.powers.pressureFed } : {}),
+      ...(typeof d.powers.viewMyth === 'string' ? { viewMyth: d.powers.viewMyth } : {}),
+      ...(isRecord(d.powers.speech) && typeof d.powers.speech.audience === 'string'
+        ? { speech: { audience: d.powers.speech.audience as 'general' | 'congress' | 'business' } }
+        : {}),
+    };
+    result.powers = powers;
+  }
+
+  if (d.social !== undefined) {
+    if (!isRecord(d.social)) throw new Error('Social decision must be a plain object');
+    const social: SocialDraft = {};
+    for (const [leverId, val] of Object.entries(d.social)) {
       const lever = getSocialLever(leverId);
       if (!lever) throw new Error(`Unknown social lever: "${leverId}"`);
       if (typeof val !== 'number' || !Number.isFinite(val)) {
@@ -95,23 +166,45 @@ export function validateDecisions(d: unknown): Decisions {
       }
       social[leverId] = val;
     }
+    result.social = social;
   }
 
-  if (!Array.isArray(b.deals)) throw new Error('Bill deals must be an array');
-  const deals: DealId[] = [];
-  const seenDeals = new Set<string>();
-  for (const dealId of b.deals) {
-    if (typeof dealId !== 'string' || !KNOWN_DEAL_IDS.has(dealId as DealId)) {
-      throw new Error(`Unknown deal ID: "${String(dealId)}"`);
+  if (d.filibusterRule !== undefined) {
+    if (typeof d.filibusterRule !== 'string' || !Object.hasOwn(FILIBUSTER_RULES_CATALOG, d.filibusterRule)) {
+      throw new Error(`Unknown filibuster rule: "${String(d.filibusterRule)}"`);
     }
-    if (seenDeals.has(dealId)) {
-      throw new Error(`Duplicate deal ID: "${dealId}"`);
-    }
-    seenDeals.add(dealId);
-    deals.push(dealId as DealId);
+    result.filibusterRule = d.filibusterRule as FilibusterRule;
   }
 
-  return { bill: { budget, deals, ...(social !== undefined ? { social } : {}) } };
+  if (d.reform !== undefined) {
+    if (typeof d.reform !== 'string' || !Object.hasOwn(REFORMS_CATALOG, d.reform)) {
+      throw new Error(`Unknown reform: "${String(d.reform)}"`);
+    }
+    result.reform = d.reform as ReformId;
+  }
+
+  if (d.amendmentProposal !== undefined) {
+    if (typeof d.amendmentProposal !== 'string' || !Object.hasOwn(AMENDMENTS_CATALOG, d.amendmentProposal)) {
+      throw new Error(`Unknown amendment proposal: "${String(d.amendmentProposal)}"`);
+    }
+    result.amendmentProposal = d.amendmentProposal as AmendmentId;
+  }
+
+  if (d.amendmentCampaign !== undefined) {
+    if (typeof d.amendmentCampaign !== 'boolean') {
+      throw new Error('amendmentCampaign must be a boolean');
+    }
+    result.amendmentCampaign = d.amendmentCampaign;
+  }
+
+  if (d.presidentialSide !== undefined) {
+    if (d.presidentialSide !== 'D' && d.presidentialSide !== 'R') {
+      throw new Error(`Invalid presidential side: "${String(d.presidentialSide)}"`);
+    }
+    result.presidentialSide = d.presidentialSide;
+  }
+
+  return result;
 }
 
 /** Replays the input log from the initial start data and returns the final GameState. */

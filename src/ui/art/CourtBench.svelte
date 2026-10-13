@@ -11,17 +11,49 @@
     lean: 'conservative' | 'liberal';
   }
 
-  const JUSTICES: readonly Justice[] = [
-    { skin: 'skin-1', hair: 'hair-2', hairStyle: 'short', lean: 'conservative' },
-    { skin: 'skin-2', hair: 'hair-1', hairStyle: 'bun', glasses: true, lean: 'liberal' },
-    { skin: 'skin-3', hair: 'hair-3', hairStyle: 'side', lean: 'conservative' },
-    { skin: 'skin-4', hair: 'hair-3', hairStyle: 'bald', lean: 'conservative' },
-    { skin: 'skin-1', hair: 'hair-2', hairStyle: 'short', lean: 'conservative' }, // Chief
-    { skin: 'skin-2', hair: 'hair-1', hairStyle: 'bun', lean: 'liberal' },
-    { skin: 'skin-3', hair: 'hair-1', hairStyle: 'side', lean: 'conservative' },
-    { skin: 'skin-1', hair: 'hair-3', hairStyle: 'side', glasses: true, lean: 'liberal' },
-    { skin: 'skin-2', hair: 'hair-3', hairStyle: 'short', lean: 'conservative' },
-  ];
+  let {
+    conservative = 6,
+    liberal = 3,
+  }: {
+    conservative?: number;
+    liberal?: number;
+  } = $props();
+
+  const totalSeats = $derived(conservative + liberal);
+
+  const JUSTICES = $derived.by(() => {
+    const list: Justice[] = [];
+    const styles: ('short' | 'side' | 'bun' | 'bald')[] = ['short', 'side', 'bun', 'short', 'bald'];
+    const skins = ['skin-1', 'skin-2', 'skin-3', 'skin-4'];
+    const hairs = ['hair-1', 'hair-2', 'hair-3'];
+
+    let cLeft = conservative;
+    let lLeft = liberal;
+
+    for (let i = 0; i < totalSeats; i++) {
+      const isLiberal = (i % 3 === 1 || cLeft === 0) && lLeft > 0;
+      if (isLiberal) {
+        lLeft--;
+        list.push({
+          skin: skins[i % skins.length]!,
+          hair: hairs[i % hairs.length]!,
+          hairStyle: styles[i % styles.length]!,
+          glasses: i % 2 === 0,
+          lean: 'liberal',
+        });
+      } else {
+        cLeft--;
+        list.push({
+          skin: skins[i % skins.length]!,
+          hair: hairs[i % hairs.length]!,
+          hairStyle: styles[i % styles.length]!,
+          glasses: i % 4 === 0,
+          lean: 'conservative',
+        });
+      }
+    }
+    return list;
+  });
 </script>
 
 <svg
@@ -29,16 +61,17 @@
   width="100%"
   height="100%"
   role="img"
-  aria-label="Supreme Court bench, 6-3 conservative majority"
+  aria-label="Supreme Court bench, {conservative}-{liberal} ideological balance"
+  data-testid="court-bench"
   preserveAspectRatio="xMidYMid meet"
 >
   <!-- Background curtain / wood paneling -->
   <rect x="0" y="0" width="360" height="84" fill="var(--card)" />
   <rect x="6" y="6" width="348" height="72" rx="4" fill="var(--paper)" opacity="0.6" />
 
-  <!-- 9 Justices seated behind the bench -->
+  <!-- Justices seated behind the bench -->
   {#each JUSTICES as j, i}
-    {@const cx = 32 + i * 37}
+    {@const cx = 20 + ((i + 0.5) / totalSeats) * 320}
     <g class="justice" transform="translate({cx}, 36)">
       <!-- Body / Robe -->
       <path d="M-13,10 Q-15,-2 -7,-8 L7,-8 Q15,-2 13,10 Z" fill="var(--ink)" />
