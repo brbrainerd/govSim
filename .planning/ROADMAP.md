@@ -16,7 +16,7 @@
 
 - [x] **Phase 21: Complete the Learn Loop & Interactive Explainers** (3/3 plans) — completed 2026-10-13
 - [x] **Phase 22: Smart Advisor Plays, Auto-Whip & Live Household Budgeting** (3/3 plans) — completed 2026-10-13
-- [ ] **Phase 23: Pacing Controls — Fast-Forward & Staged Decisions Tray** — Top-bar Staged Decisions indicator and safe "Skip to Next Event" fast-forward with automatic crisis/deadline interrupts
+- [x] **Phase 23: Pacing Controls — Fast-Forward & Staged Decisions Tray** (1/1 plan) — completed 2026-10-13
 - [ ] **Phase 24: Replayable Starting Scenarios** — Selectable Starting Scenarios at New Game (*2026 Baseline*, *70s Stagflation Shock*, *Debt Ceiling Brinkmanship*, *Global Trade War*) with scenario briefings and Legacy Report badges
 
 ### Phase Details
@@ -57,7 +57,7 @@
   1. Top status bar shows a live Staged Decisions pill/tray summarizing unsent budget drafts, queued congressional deals, and pending executive actions before the player clicks Next Turn.
   2. Player can trigger `"Skip to next event"` to fast-forward through quiet quarters; the loop halts immediately and surfaces the relevant screen/modal when an active crisis, annual budget deadline, congressional vote, impeachment step, or election arrives.
 
-**Plans**: TBD
+**Plans**: 1 plan executed (completed 2026-10-13)
 
 #### Phase 24: Replayable Starting Scenarios
 

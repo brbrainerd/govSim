@@ -19,8 +19,8 @@
 
 ### Turn Pacing & Staged Decisions (PACE)
 
-- [ ] **PACE-01**: Add a top-bar Staged Decisions indicator showing pending policy drafts, deals, and executive actions queued for the current turn.
-- [ ] **PACE-02**: Add a "Skip to Next Event" fast-forward control that advances quiet quarters automatically and halts immediately when a crisis, budget deadline, midterm, or pending bill vote requires attention.
+- [x] **PACE-01**: Add a top-bar Staged Decisions indicator showing pending policy drafts, deals, and executive actions queued for the current turn.
+- [x] **PACE-02**: Add a "Skip to Next Event" fast-forward control that advances quiet quarters automatically and halts immediately when a crisis, budget deadline, midterm, or pending bill vote requires attention.
 
 ### Replayable Starting Scenarios (SCEN)
 
@@ -46,8 +46,8 @@
 | ADVISOR-01 | Phase 22 | Complete |
 | ADVISOR-02 | Phase 22 | Complete |
 | ADVISOR-03 | Phase 22 | Complete |
-| PACE-01 | Phase 23 | Pending |
-| PACE-02 | Phase 23 | Pending |
+| PACE-01 | Phase 23 | Complete |
+| PACE-02 | Phase 23 | Complete |
 | SCEN-01 | Phase 24 | Pending |
 | SCEN-02 | Phase 24 | Pending |
 

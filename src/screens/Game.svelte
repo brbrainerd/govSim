@@ -83,7 +83,12 @@
       score={session.score}
       party={PARTIES.find((p) => p.id === session.options.party)!.name}
       evilMode={session.isEvilMode}
+      stagedActions={session.stagedActionsSummary}
+      canFastForward={session.canFastForward}
       onNextTurn={() => session.nextTurn()}
+      onFastForward={() => session.fastForwardToNextEvent()}
+      onSelectScreen={go}
+      onClearStaged={() => session.resetDraft()}
     />
     <div class="zones">
       <Rail

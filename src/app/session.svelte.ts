@@ -37,6 +37,14 @@ import {
 import { type EvilLeverId } from '../engine/units';
 import { getEvilLever } from '../data/evil';
 import { calculateHeatPenalties, resolveEvilLevers } from '../engine/evil';
+import { getImminentDeadlines } from '../engine/deadlines';
+
+export interface StagedActionItem {
+  readonly id: string;
+  readonly label: string;
+  readonly screen: ScreenId;
+  readonly warning?: boolean;
+}
 
 /** Choices made at New Game. Kept beside the engine state, never inside it (D4). */
 export interface GameOptions {
@@ -294,6 +302,131 @@ export class Session {
     this.cheapestCoalition.dealsToAdd.length > 0 &&
     cloutCost(this.cheapestCoalition.totalDeals) <= this.current.clout,
   );
+  stagedActionsSummary = $derived.by<readonly StagedActionItem[]>(() => {
+    const items: StagedActionItem[] = [];
+    const budgetModified = Object.entries(this.draft.budget).some(
+      ([k, v]) => v !== (this.current.policy[k] ?? v),
+    );
+    const baseSocial = this.current.socialPolicy ?? socialBaseline();
+    const socialModified = Object.entries(this.draft.social).some(
+      ([k, v]) => v !== (baseSocial[k as keyof SocialDraft] ?? v),
+    );
+    const hasBillQueued =
+      this.draft.voteCalled || this.draft.sentToCongress || this.draft.deals.length > 0;
+
+    if ((budgetModified || socialModified || this.draft.pack !== null) && !hasBillQueued) {
+      items.push({
+        id: 'budget-unsent',
+        label: 'Budget draft (unsent)',
+        screen: 'budget',
+        warning: true,
+      });
+    } else if (hasBillQueued) {
+      const dealSuffix =
+        this.draft.deals.length > 0
+          ? ` (${this.draft.deals.length} deal${this.draft.deals.length === 1 ? '' : 's'})`
+          : '';
+      items.push({
+        id: 'bill-queued',
+        label: this.draft.voteCalled ? `Bill vote called${dealSuffix}` : `Bill sent to Congress${dealSuffix}`,
+        screen: 'congress',
+      });
+    }
+
+    if (this.draft.crisisChoice) {
+      items.push({
+        id: 'crisis-choice',
+        label: 'Crisis response ready',
+        screen: 'oval',
+      });
+    }
+
+    if (this.draft.signedOrders.length > 0 || this.draft.revokedOrders.length > 0) {
+      const count = this.draft.signedOrders.length + this.draft.revokedOrders.length;
+      items.push({
+        id: 'orders',
+        label: `${count} Executive Order${count === 1 ? '' : 's'}`,
+        screen: 'powers',
+      });
+    }
+
+    if (this.draft.speechAudience) {
+      items.push({
+        id: 'speech',
+        label: `Speech (${this.draft.speechAudience})`,
+        screen: 'powers',
+      });
+    }
+
+    if (this.draft.fedPressure) {
+      items.push({
+        id: 'fed',
+        label: 'Pressure the Fed',
+        screen: 'economy',
+      });
+    }
+
+    if (this.draft.reform) {
+      items.push({
+        id: 'reform',
+        label: 'Institutional reform',
+        screen: 'powers',
+      });
+    }
+
+    if (this.draft.filibusterRule) {
+      items.push({
+        id: 'filibuster',
+        label: 'Senate cloture change',
+        screen: 'congress',
+      });
+    }
+
+    if (this.draft.amendmentProposal || this.draft.amendmentCampaign) {
+      items.push({
+        id: 'amendment',
+        label: 'Article V amendment',
+        screen: 'congress',
+      });
+    }
+
+    if (
+      this.draft.defensePosture !== null ||
+      this.draft.foreignAssistance !== null ||
+      this.draft.activeSanctions !== null
+    ) {
+      items.push({
+        id: 'foreign',
+        label: 'Foreign policy shift',
+        screen: 'powers',
+      });
+    }
+
+    if (this.draft.sectorTariffs !== null || this.draft.tradeAgreements !== null) {
+      items.push({
+        id: 'trade',
+        label: 'Trade & tariff action',
+        screen: 'trade',
+      });
+    }
+
+    if (this.draft.stagedEvilLevers.length > 0) {
+      const n = this.draft.stagedEvilLevers.length;
+      items.push({
+        id: 'evil',
+        label: `${n} Corrupt lever${n === 1 ? '' : 's'}`,
+        screen: 'powers',
+      });
+    }
+
+    return items;
+  });
+  hasUnresolvedCrisis = $derived(
+    (Boolean(this.current.activeCrisis) ||
+      Boolean(this.current.activeGeopoliticalCrises && this.current.activeGeopoliticalCrises.length > 0)) &&
+      !this.draft.crisisChoice,
+  );
+  canFastForward = $derived(!this.over && !this.hasUnresolvedCrisis);
   /** Evil Mode helpers (Phase 17, EVIL-01, EVIL-02) */
   isEvilMode = $derived(Boolean(this.options.evilMode));
   offshoreStashBn = $derived(this.current.evil?.offshoreStashBn ?? 0);
@@ -705,6 +838,56 @@ export class Session {
       this.showingReport = true;
     }
     storeAutosave(this);
+  }
+
+  /**
+   * Advances quiet quarters until an active crisis, critical congressional deadline (<= 1 turn left),
+   * midterm/reelection turn, impeachment event, or term end arrives (PACE-02).
+   * Returns the number of turns advanced.
+   */
+  fastForwardToNextEvent(): number {
+    if (!this.canFastForward) return 0;
+    const maxSteps = 8;
+    let steps = 0;
+
+    while (steps < maxSteps && !this.over && !this.showingElectionNight && !this.showingImpeachmentModal) {
+      const prevTurn = this.current.turn;
+      this.nextTurn();
+      if (this.current.turn === prevTurn) break;
+      steps += 1;
+
+      const hasCrisis =
+        Boolean(this.current.activeCrisis) ||
+        Boolean(this.current.activeGeopoliticalCrises && this.current.activeGeopoliticalCrises.length > 0);
+      const hasCriticalDeadline = getImminentDeadlines(this.current.turn, this.current).some(
+        (d) => d.turnsRemaining <= 1,
+      );
+      const isLandmarkTurn =
+        this.current.turn === 8 ||
+        this.current.turn === 9 ||
+        this.current.turn === 16 ||
+        this.current.turn === 17 ||
+        this.current.turn === 24 ||
+        this.current.turn === 25;
+
+      if (
+        hasCrisis ||
+        hasCriticalDeadline ||
+        isLandmarkTurn ||
+        this.showingElectionNight ||
+        this.showingImpeachmentModal ||
+        this.over
+      ) {
+        if (hasCrisis && !this.showingElectionNight && !this.showingImpeachmentModal) {
+          this.showingReport = false;
+        }
+        break;
+      }
+
+      this.showingReport = false;
+    }
+
+    return steps;
   }
 
   dismissImpeachmentModal() {
