@@ -9,11 +9,11 @@ Requirements for Milestone v0.3: Social Policy & Domestic Reform.
 
 ### Domestic Social Policy (SOC)
 
-- [ ] **SOC-01**: Healthcare policy levers (ACA subsidy levels, Medicare drug negotiation scope, public option) with health coverage, costs, and budgetary tradeoffs.
-- [ ] **SOC-02**: Immigration policy levers (border security funding, agricultural & high-skilled visa caps, status regularization) with labor supply, population, and wage impacts.
-- [ ] **SOC-03**: Energy & Climate policy levers (clean energy tax credits, federal leasing permits, carbon standards) with energy price, emissions, and regional industrial consequences.
-- [ ] **SOC-04**: Education policy levers (Title I federal aid, student loan repayment assistance, universal pre-K grants) with workforce productivity and fiscal outlays.
-- [ ] **SOC-05**: Sector and demographic distribution: social policy choices dynamically impact state-level voter coalitions, cost-of-living metrics, and congressional seat leanings.
+- [x] **SOC-01**: Healthcare policy levers (ACA subsidy levels, Medicare drug negotiation scope, public option) with health coverage, costs, and budgetary tradeoffs.
+- [x] **SOC-02**: Immigration policy levers (border security funding, agricultural & high-skilled visa caps, status regularization) with labor supply, population, and wage impacts.
+- [x] **SOC-03**: Energy & Climate policy levers (clean energy tax credits, federal leasing permits, carbon standards) with energy price, emissions, and regional industrial consequences.
+- [x] **SOC-04**: Education policy levers (Title I federal aid, student loan repayment assistance, universal pre-K grants) with workforce productivity and fiscal outlays.
+- [x] **SOC-05**: Sector and demographic distribution: social policy choices dynamically impact state-level voter coalitions, cost-of-living metrics, and congressional seat leanings.
 
 ### Structural Government Reform (REF)
 
@@ -40,11 +40,11 @@ Requirements for Milestone v0.3: Social Policy & Domestic Reform.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SOC-01 | Phase 9 | Pending |
-| SOC-02 | Phase 9 | Pending |
-| SOC-03 | Phase 9 | Pending |
-| SOC-04 | Phase 9 | Pending |
-| SOC-05 | Phase 10 | Pending |
+| SOC-01 | Phase 9 | Complete |
+| SOC-02 | Phase 9 | Complete |
+| SOC-03 | Phase 9 | Complete |
+| SOC-04 | Phase 9 | Complete |
+| SOC-05 | Phase 10 | Complete |
 | REF-01 | Phase 11 | Pending |
 | REF-02 | Phase 11 | Pending |
 | REF-03 | Phase 11 | Pending |
