@@ -1,6 +1,7 @@
 // Trace attribution: extracts top causal mover and directional change for each indicator (RPT-01, GR-06).
 import { whyText } from '../content/text/why';
 import type { GameState } from '../engine/game';
+import { calculateSecurityBreakdown } from '../engine/security';
 import type { Term } from '../engine/trace';
 
 export type Direction = 'up' | 'down' | 'flat';
@@ -39,6 +40,8 @@ export function formatValueWithUnit(id: string, value: number): string {
       return `${Math.round(value)}`;
     case 'clout':
       return `${Math.round(value)}`;
+    case 'security':
+      return `${(Math.round(value * 10) / 10).toFixed(1)}`;
     default:
       return `${Math.round(value * 10) / 10}`;
   }
@@ -51,6 +54,32 @@ export function isFavorableDirection(id: string, direction: Direction): boolean 
   const lowerIsBetter = ['inflation', 'debtPct', 'crime', 'gini', 'unemployment'];
   const wantsLower = lowerIsBetter.includes(id);
   return wantsLower ? direction === 'down' : direction === 'up';
+}
+
+function attributeSecurity(
+  curr: ReturnType<typeof calculateSecurityBreakdown>,
+  prev: ReturnType<typeof calculateSecurityBreakdown>,
+  delta: number,
+): { topCauseId: string; topCauseText: string; direction: Direction } {
+  const direction: Direction = delta > 1e-6 ? 'up' : delta < -1e-6 ? 'down' : 'flat';
+  if (direction === 'flat') {
+    return { topCauseId: 'none', topCauseText: 'No change this quarter', direction };
+  }
+  const diffs = [
+    { id: 'crises', name: 'International crisis containment', diff: curr.crises - prev.crises },
+    { id: 'defense', name: 'Defense readiness posture change', diff: curr.defense - prev.defense },
+    { id: 'sanctions', name: 'Targeted economic sanctions', diff: curr.sanctions - prev.sanctions },
+    { id: 'alliances', name: 'Foreign aid and alliance shifts', diff: curr.alliances - prev.alliances },
+    { id: 'domestic', name: 'Domestic crime trends', diff: curr.domestic - prev.domestic },
+  ];
+  let top = diffs[0]!;
+  for (const d of diffs) {
+    if (Math.abs(d.diff) > Math.abs(top.diff)) top = d;
+  }
+  if (Math.abs(top.diff) > 0.01) {
+    return { topCauseId: top.id, topCauseText: top.name, direction };
+  }
+  return { topCauseId: 'mixed', topCauseText: 'Several small factors', direction };
 }
 
 /** Evaluates top causal attribution from a list of trace terms (GR-06). */
@@ -113,11 +142,13 @@ export function extractTurnAttributions(current: GameState, previous: GameState)
   const trace = current.report.trace ?? {};
   const c = current.econ;
   const p = previous.econ;
+  const currSec = calculateSecurityBreakdown(current);
+  const prevSec = calculateSecurityBreakdown(previous);
 
   const specs: Array<{
     id: string;
     name: string;
-    traceKey: keyof typeof trace;
+    traceKey?: keyof typeof trace;
     currVal: number;
     prevVal: number;
     unit: string;
@@ -129,14 +160,28 @@ export function extractTurnAttributions(current: GameState, previous: GameState)
     { id: 'debtPct', name: 'National Debt', traceKey: 'debtPct', currVal: (c.debt / c.gdp) * 100, prevVal: (p.debt / p.gdp) * 100, unit: '%', higherIsBetter: false },
     { id: 'lifeExp', name: 'Life Expectancy', traceKey: 'lifeExp', currVal: c.lifeExp, prevVal: p.lifeExp, unit: 'yrs', higherIsBetter: true },
     { id: 'gini', name: 'Inequality', traceKey: 'gini', currVal: c.gini, prevVal: p.gini, unit: '', higherIsBetter: false },
-    { id: 'crime', name: 'Public Safety', traceKey: 'crime', currVal: c.crime, prevVal: p.crime, unit: '', higherIsBetter: false },
+    { id: 'security', name: 'National Security', currVal: currSec.total, prevVal: prevSec.total, unit: 'pts', higherIsBetter: true },
     { id: 'trust', name: 'Social Trust', traceKey: 'trust', currVal: c.trust, prevVal: p.trust, unit: '%', higherIsBetter: true },
   ];
 
   const indicators: IndicatorAttribution[] = specs.map((spec) => {
     const delta = spec.currVal - spec.prevVal;
-    const terms = trace[spec.traceKey] as readonly Term[] | undefined;
-    const { topCauseId, topCauseText, direction } = attributeTerms(terms, delta);
+    let topCauseId: string;
+    let topCauseText: string;
+    let direction: Direction;
+
+    if (spec.id === 'security') {
+      const secAttr = attributeSecurity(currSec, prevSec, delta);
+      topCauseId = secAttr.topCauseId;
+      topCauseText = secAttr.topCauseText;
+      direction = secAttr.direction;
+    } else {
+      const terms = spec.traceKey ? (trace[spec.traceKey] as readonly Term[] | undefined) : undefined;
+      const attr = attributeTerms(terms, delta);
+      topCauseId = attr.topCauseId;
+      topCauseText = attr.topCauseText;
+      direction = attr.direction;
+    }
     const isPositive = direction === 'flat' ? true : spec.higherIsBetter ? direction === 'up' : direction === 'down';
     const sign = delta > 0 ? '+' : '';
     const formattedDelta = `${sign}${formatValueWithUnit(spec.id, delta)}`;

@@ -3,16 +3,16 @@
   "seeds": 100,
   "strategies": {
     "autopilot": {
-      "meanScore": 64.267,
-      "nowScore": 60.677,
-      "laterScore": 67.857,
+      "meanScore": 63.039,
+      "nowScore": 60.119,
+      "laterScore": 65.959,
       "diffVsAutopilot": 0,
       "quantiles": {
-        "min": 62.218,
-        "p25": 63.934,
-        "median": 64.304,
-        "p75": 64.718,
-        "max": 66.403
+        "min": 61.676,
+        "p25": 62.732,
+        "median": 62.994,
+        "p75": 63.393,
+        "max": 64.231
       },
       "indicators": {
         "unemployment": 4.43,
@@ -23,16 +23,16 @@
       }
     },
     "sensible": {
-      "meanScore": 67.68,
-      "nowScore": 63.88,
-      "laterScore": 71.479,
-      "diffVsAutopilot": 3.413,
+      "meanScore": 66.556,
+      "nowScore": 63.459,
+      "laterScore": 69.653,
+      "diffVsAutopilot": 3.517,
       "quantiles": {
-        "min": 65.673,
-        "p25": 67.338,
-        "median": 67.726,
-        "p75": 68.174,
-        "max": 69.858
+        "min": 65.042,
+        "p25": 66.294,
+        "median": 66.538,
+        "p75": 66.928,
+        "max": 67.658
       },
       "indicators": {
         "unemployment": 4.42,
@@ -43,16 +43,16 @@
       }
     },
     "maxDeficit": {
-      "meanScore": 44.45,
-      "nowScore": 26.097,
+      "meanScore": 46.582,
+      "nowScore": 30.361,
       "laterScore": 62.804,
-      "diffVsAutopilot": -19.816,
+      "diffVsAutopilot": -16.457,
       "quantiles": {
-        "min": 41.606,
-        "p25": 43.962,
-        "median": 44.479,
-        "p75": 45.125,
-        "max": 46.375
+        "min": 43.711,
+        "p25": 46.085,
+        "median": 46.608,
+        "p75": 47.271,
+        "max": 48.533
       },
       "indicators": {
         "unemployment": 14.98,
@@ -63,16 +63,16 @@
       }
     },
     "maxAusterity": {
-      "meanScore": 69.011,
-      "nowScore": 61.37,
-      "laterScore": 76.652,
-      "diffVsAutopilot": 4.745,
+      "meanScore": 68.823,
+      "nowScore": 62.186,
+      "laterScore": 75.461,
+      "diffVsAutopilot": 5.784,
       "quantiles": {
-        "min": 66.271,
-        "p25": 68.519,
-        "median": 69.071,
-        "p75": 69.729,
-        "max": 71.117
+        "min": 67.064,
+        "p25": 68.448,
+        "median": 68.873,
+        "p75": 69.316,
+        "max": 70.143
       },
       "indicators": {
         "unemployment": 4.31,

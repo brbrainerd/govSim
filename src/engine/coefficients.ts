@@ -604,7 +604,7 @@ export const COEFF = {
   securityForeignAidScale: { value: 0.05, unit: 'index pts per aid pt deviation', basis: 'judgement', range: [0.01, 0.15], note: 'Security index effect per point deviation from baseline foreign assistance (100 base).' },
   securityActiveCrisisPenalty: { value: 12.0, unit: 'index pts per active crisis', basis: 'judgement', range: [5.0, 25.0], note: 'Security index penalty per uncontained international crisis.' },
   securitySanctionBonus: { value: 2.5, unit: 'index pts per sanction', basis: 'judgement', range: [1.0, 6.0], note: 'Deterrence credibility added to security index per active targeted sanction.' },
-  securityCrimeScale: { value: 25.0, unit: 'index pts per 100% crime deviation', basis: 'judgement', range: [10.0, 50.0], note: 'Domestic public safety contribution to the overall Security Index.' },
+  securityCrimeScale: { value: 30.0, unit: 'index pts per 100% crime deviation', basis: 'judgement', range: [10.0, 50.0], note: 'Domestic public safety contribution to the overall Security Index.' },
   geopoliticalEnergyInflation: { value: 0.25, unit: '% quarterly inflation', basis: 'judgement', range: [0.05, 0.6], note: 'Cost-push CPI inflation from active international energy supply disruptions (SEC-03).' },
   geopoliticalShippingInflation: { value: 0.15, unit: '% quarterly inflation', basis: 'judgement', range: [0.03, 0.4], note: 'Cost-push CPI inflation from active shipping strait choke points (SEC-03).' },
   geopoliticalSupplyOutputDrag: { value: 0.20, unit: '% output gap drag', basis: 'judgement', range: [0.05, 0.5], note: 'Output gap contraction from active geopolitical supply chain bottlenecks (SEC-03).' },

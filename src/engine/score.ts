@@ -4,6 +4,7 @@
 import { C, LIMITS, SCORE } from './coefficients';
 import { clamp } from './detmath';
 import type { GameState } from './game';
+import { calculateSecurityIndex } from './security';
 import { PERCENT } from './units';
 
 /** Prosperity index components: SCORE.neutral = where you started, 0..100. */
@@ -19,7 +20,7 @@ export function prosperity(state: GameState) {
     debt: { w: SCORE.debtWeight.value, v: score(mid - ((e.debt / e.gdp) * PERCENT - s.debtPct) * SCORE.debtScale.value) },
     lifeExp: { w: SCORE.lifeExpWeight.value, v: score(mid + (e.lifeExp - s.lifeExp) * SCORE.lifeExpScale.value) },
     inequality: { w: SCORE.inequalityWeight.value, v: score(mid - (e.gini - s.gini) * SCORE.inequalityScale.value) },
-    security: { w: SCORE.securityWeight.value, v: score(mid - (e.crime / s.crime - 1) * SCORE.securityScale.value) },
+    security: { w: SCORE.securityWeight.value, v: calculateSecurityIndex(state) },
     trust: { w: SCORE.trustWeight.value, v: score(mid + (e.trust - s.trust) * SCORE.trustScale.value) },
   };
   const index = Object.values(parts).reduce((a, p) => a + p.w * p.v, 0);
