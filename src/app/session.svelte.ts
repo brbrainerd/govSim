@@ -1,6 +1,6 @@
 import { fromPackage, packages, type BudgetDraft, type PackageName } from '../engine/budget';
 import { findCheapestCoalition, tally, type DealId } from '../engine/congress';
-import { autopilotDecisions, cloutCost, resolveBill, type CrisisDecision, type Decisions } from '../engine/decisions';
+import { autopilotDecisions, cloutCost, resolveBill, type CrisisDecision, type Decisions, type DynamicCrisisDelta } from '../engine/decisions';
 import { endTurn, newGame, prosperity, scoreVsAutopilot, TOTAL_TURNS, type GameState, type ScoreBreakdown, type Start } from '../engine/game';
 import { socialBaseline, type SocialDraft } from '../engine/social';
 import type { PartyId } from '../content/parties';
@@ -58,6 +58,7 @@ export interface GameOptions {
   evilMode?: boolean;
   scenario?: ScenarioId;
   unlockAll?: boolean;
+  livingWorld?: boolean;
 }
 
 interface Draft {
@@ -83,6 +84,8 @@ interface Draft {
   sectorTariffs: SectorTariffId[] | null;
   tradeAgreements: TradeAgreementId[] | null;
   stagedEvilLevers: EvilLeverId[];
+  turnEntropy?: number | null;
+  dynamicCrisisDelta?: DynamicCrisisDelta | null;
 }
 
 /** A new turn's draft starts from the policy already in force. */
@@ -109,6 +112,8 @@ const freshDraft = (policy: BudgetDraft, socialPolicy?: SocialDraft): Draft => (
   sectorTariffs: null,
   tradeAgreements: null,
   stagedEvilLevers: [],
+  turnEntropy: null,
+  dynamicCrisisDelta: null,
 });
 
 /**
@@ -778,6 +783,16 @@ export class Session {
     }
   }
 
+  setTurnEntropy(entropy: number | null) {
+    if (this.over) return;
+    this.draft.turnEntropy = entropy;
+  }
+
+  setDynamicCrisisDelta(delta: DynamicCrisisDelta | null) {
+    if (this.over) return;
+    this.draft.dynamicCrisisDelta = delta;
+  }
+
   nextTurn() {
     if (this.termEnded || this.over) return;
 
@@ -833,6 +848,20 @@ export class Session {
       decisions.evil = {
         enactedLevers: $state.snapshot(this.draft.stagedEvilLevers),
       };
+    }
+    if (this.draft.dynamicCrisisDelta) {
+      decisions.dynamicCrisisDelta = $state.snapshot(this.draft.dynamicCrisisDelta);
+    }
+    if (this.draft.turnEntropy != null) {
+      decisions.turnEntropy = this.draft.turnEntropy;
+    } else if (this.options.livingWorld) {
+      let entropy: number;
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        entropy = (crypto.getRandomValues(new Uint32Array(1))[0] ?? 0) & 0x7fffffff;
+      } else {
+        entropy = Math.floor(Math.random() * 0x80000000) & 0x7fffffff;
+      }
+      decisions.turnEntropy = entropy;
     }
     decisions.presidentialSide = (this.options.party === 'R' ? 'R' : 'D') as 'D' | 'R';
 

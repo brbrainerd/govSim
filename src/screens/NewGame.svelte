@@ -24,6 +24,7 @@
   let evilMode = $state(false);
   let scenario = $state<ScenarioId>('standard_2026');
   let unlockAll = $state(false);
+  let livingWorld = $state(false);
   let dismissResume = $state(false);
   let fileInput = $state<HTMLInputElement>();
 
@@ -134,6 +135,22 @@
         </label>
       </div>
 
+      <div class="pacing-section">
+        <span class="label">World Simulation</span>
+        <label class="card unlock-all-card" class:active-mode={livingWorld}>
+          <input
+            type="checkbox"
+            checked={livingWorld}
+            onchange={(e) => (livingWorld = e.currentTarget.checked)}
+            data-testid="living-world-toggle"
+          />
+          <div class="mode-info">
+            <b>Living World Mode (Non-Deterministic Shocks)</b>
+            <span class="mode-sub">Enable unpredictable quarterly economic shifts, supply chain volatility, and dynamic events.</span>
+          </div>
+        </label>
+      </div>
+
       <div class="import-strip">
         <button type="button" class="import-btn" onclick={() => fileInput?.click()}>
           Load save file (.json)
@@ -170,7 +187,7 @@
         class="stamp"
         class:evil-stamp={evilMode}
         disabled={party === null}
-        onclick={() => party && onStart({ party, evilMode, scenario, unlockAll })}
+        onclick={() => party && onStart({ party, evilMode, scenario, unlockAll, livingWorld })}
       >
         {evilMode ? 'Seize power' : 'Start the term'}
       </button>

@@ -197,5 +197,5 @@ export const TIER_PETTY_GRIFTER_MAX = 10;
 export const TIER_GILDED_OLIGARCH_MAX = 25;
 export const TIER_SOVEREIGN_PLUNDERER_MAX = 50;
 
-
-
+// Living World Entropy Limit (Phase 29, AI-01)
+export const MAX_TURN_ENTROPY = 0x7fffffff;

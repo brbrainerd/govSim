@@ -82,6 +82,8 @@ export const WHY_COPY: Record<string, string> = {
   'approval:evil_levers': 'Voter anger from corrupt deals',
   'trust:evil_levers': 'Public trust lost from corrupt deals',
   'clout:special_counsel': 'Influence drained by special counsel probe',
+  'event:living_world_variance': 'Dynamic market variance',
+  'event:ai_dynamic_crisis': 'Unfolding dynamic event',
 };
 
 /** Plain-language description of an engine trace source key (GR-06). */

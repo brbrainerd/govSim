@@ -1,10 +1,11 @@
 // Save file serialization, parsing, trust boundary validation, and replay (OBS-01, OBS-02, GR-31, GR-34).
 import { spendLevers, taxLevers, type BudgetDraft } from '../engine/budget';
+import { C } from '../engine/coefficients';
 import { deals as DEALS, FILIBUSTER_RULES_CATALOG, type DealId, type FilibusterRule } from '../engine/congress';
 import { AMENDMENTS_CATALOG, type AmendmentId } from '../engine/amendments';
 import { REFORMS_CATALOG, type ReformId } from '../engine/reforms';
 import type { PowerDecisions } from '../engine/powers';
-import type { CrisisDecision, Decisions, EvilDecision } from '../engine/decisions';
+import type { CrisisDecision, Decisions, DynamicCrisisDelta, EvilDecision } from '../engine/decisions';
 import { SANCTIONS_CATALOG, type DefensePosture, type ForeignPolicyDraft, type SanctionType } from '../engine/foreign';
 import {
   SECTOR_TARIFFS_CATALOG,
@@ -77,6 +78,8 @@ const VALID_DECISION_KEYS = new Set([
   'amendmentCampaign',
   'presidentialSide',
   'evil',
+  'turnEntropy',
+  'dynamicCrisisDelta',
 ]);
 
 function isValidMythOrExplainerId(id: string): boolean {
@@ -380,6 +383,41 @@ export function validateDecisions(d: unknown): Decisions {
     result.evil = evil as EvilDecision;
   }
 
+  if (d.turnEntropy !== undefined) {
+    if (typeof d.turnEntropy !== 'number' || !Number.isInteger(d.turnEntropy) || d.turnEntropy < 0 || d.turnEntropy > 0x7fffffff) {
+      throw new Error(`turnEntropy must be an integer in [0, 0x7fffffff], got ${String(d.turnEntropy)}`);
+    }
+    result.turnEntropy = d.turnEntropy;
+  }
+
+  if (d.dynamicCrisisDelta !== undefined) {
+    const cd = d.dynamicCrisisDelta;
+    if (!isRecord(cd)) throw new Error('dynamicCrisisDelta must be a plain object');
+    for (const k of Object.keys(cd)) {
+      if (k !== 'gapDelta' && k !== 'infDelta' && k !== 'approvalDelta' && k !== 'trustDelta') {
+        throw new Error(`Unknown dynamicCrisisDelta property: "${k}"`);
+      }
+    }
+    if (typeof cd.gapDelta !== 'number' || !Number.isFinite(cd.gapDelta) || Math.abs(cd.gapDelta) > C.dynamicCrisisGapCap) {
+      throw new Error(`dynamicCrisisDelta.gapDelta out of range [-${C.dynamicCrisisGapCap}, ${C.dynamicCrisisGapCap}]`);
+    }
+    if (typeof cd.infDelta !== 'number' || !Number.isFinite(cd.infDelta) || Math.abs(cd.infDelta) > C.dynamicCrisisInfCap) {
+      throw new Error(`dynamicCrisisDelta.infDelta out of range [-${C.dynamicCrisisInfCap}, ${C.dynamicCrisisInfCap}]`);
+    }
+    if (typeof cd.approvalDelta !== 'number' || !Number.isFinite(cd.approvalDelta) || Math.abs(cd.approvalDelta) > C.dynamicCrisisApprovalCap) {
+      throw new Error(`dynamicCrisisDelta.approvalDelta out of range [-${C.dynamicCrisisApprovalCap}, ${C.dynamicCrisisApprovalCap}]`);
+    }
+    if (typeof cd.trustDelta !== 'number' || !Number.isFinite(cd.trustDelta) || Math.abs(cd.trustDelta) > C.dynamicCrisisTrustCap) {
+      throw new Error(`dynamicCrisisDelta.trustDelta out of range [-${C.dynamicCrisisTrustCap}, ${C.dynamicCrisisTrustCap}]`);
+    }
+    result.dynamicCrisisDelta = {
+      gapDelta: cd.gapDelta,
+      infDelta: cd.infDelta,
+      approvalDelta: cd.approvalDelta,
+      trustDelta: cd.trustDelta,
+    };
+  }
+
   return result;
 }
 
@@ -451,6 +489,7 @@ export function parseSave(json: string): SaveFile {
     ...(typeof parsed.options.evilMode === 'boolean' ? { evilMode: parsed.options.evilMode } : {}),
     ...(isValidScenarioId(parsed.options.scenario) ? { scenario: parsed.options.scenario } : {}),
     ...(typeof parsed.options.unlockAll === 'boolean' ? { unlockAll: parsed.options.unlockAll } : {}),
+    ...(typeof parsed.options.livingWorld === 'boolean' ? { livingWorld: parsed.options.livingWorld } : {}),
   };
 
   if (!Array.isArray(parsed.inputs)) {

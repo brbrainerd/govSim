@@ -179,6 +179,15 @@ const DOMAIN_MAP: Record<string, Exclude<ModelDomainId, 'all'>> = {
   fedChairHawkInflationCut: 'macro',
   fedChairDoveGapBoost: 'macro',
   fossilPermittingEnergyRelief: 'macro',
+  livingWorldGapScale: 'macro',
+  livingWorldInfScale: 'macro',
+  livingWorldStressMultiplier: 'macro',
+  livingWorldTariffThreshold: 'macro',
+  livingWorldInflationThreshold: 'macro',
+  livingWorldGapShockMax: 'macro',
+  livingWorldInfShockMax: 'macro',
+  dynamicCrisisGapCap: 'macro',
+  dynamicCrisisInfCap: 'macro',
 
   // COEFF - Fiscal
   fiscalMultiplier: 'fiscal',
@@ -296,6 +305,7 @@ const DOMAIN_MAP: Record<string, Exclude<ModelDomainId, 'all'>> = {
   householdTitleIEducationRelief: 'social',
   householdStudentDebtRelief: 'social',
   securityCrimeScale: 'social',
+  dynamicCrisisTrustCap: 'social',
 
   // COEFF - Foreign
   tariffPass: 'foreign',
@@ -399,6 +409,7 @@ const DOMAIN_MAP: Record<string, Exclude<ModelDomainId, 'all'>> = {
   smallDollarMatchingApprovalGain: 'scoring',
   amendmentProposalCloutCost: 'scoring',
   amendmentCampaignCloutCost: 'scoring',
+  dynamicCrisisApprovalCap: 'scoring',
 
   // COEFF - Evil
   heatDecayQuarterly: 'evil',

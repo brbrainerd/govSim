@@ -671,6 +671,18 @@ export const COEFF = {
   impeachmentHouseApprovalSlope: { value: 0.8, unit: 'votes per % approval deficit', basis: 'judgement', range: [0.1, 2.0], note: 'House defection votes to impeach per percentage point approval drops below 45%.' },
   convictionSenateHeatSlope: { value: 1.0, unit: 'senators per heat pt', basis: 'judgement', range: [0.3, 2.5], note: 'Senate crossover conviction votes per point of critical heat above 85.' },
   convictionSenateApprovalSlope: { value: 0.6, unit: 'senators per % approval deficit', basis: 'judgement', range: [0.1, 1.5], note: 'Senate crossover conviction votes per percentage point approval drops below 45%.' },
+  // ---- Living World & Dynamic AI Crisis coefficients (Phase 29, AI-01, AI-04) ----
+  livingWorldGapScale: { value: 0.15, unit: 'std dev multiplier', basis: 'judgement', range: [0.05, 0.5], note: 'base standard deviation for Living World output gap shocks' },
+  livingWorldInfScale: { value: 0.1, unit: 'std dev multiplier', basis: 'judgement', range: [0.02, 0.3], note: 'base standard deviation for Living World inflation shocks' },
+  livingWorldStressMultiplier: { value: 0.4, unit: 'shock amplification fraction', basis: 'judgement', range: [0.1, 1.0], note: 'amplification factor applied when trade or macroeconomic stress is elevated' },
+  livingWorldTariffThreshold: { value: 15, unit: '% tariff', basis: 'judgement', range: [5, 30], note: 'tariff rate above which trade shock vulnerability increases' },
+  livingWorldInflationThreshold: { value: 4.0, unit: '% inflation', basis: 'judgement', range: [2.5, 8.0], note: 'inflation rate above which macroeconomic volatility increases' },
+  livingWorldGapShockMax: { value: 0.35, unit: 'output gap pts per quarter', basis: 'judgement', range: [0.1, 0.8], note: 'max quarterly output gap variance in Living World mode' },
+  livingWorldInfShockMax: { value: 0.2, unit: 'inflation pts per quarter', basis: 'judgement', range: [0.05, 0.5], note: 'max quarterly inflation variance in Living World mode' },
+  dynamicCrisisGapCap: { value: 0.8, unit: 'max abs output gap delta from a dynamic crisis option', basis: 'judgement', range: [0.2, 1.5], note: 'safety clamp for AI dynamic crisis output gap impact' },
+  dynamicCrisisInfCap: { value: 0.8, unit: 'max abs inflation delta from a dynamic crisis option', basis: 'judgement', range: [0.2, 1.5], note: 'safety clamp for AI dynamic crisis inflation impact' },
+  dynamicCrisisApprovalCap: { value: 6, unit: 'max abs approval pts from a dynamic crisis option', basis: 'judgement', range: [2, 12], note: 'safety clamp for AI dynamic crisis approval impact' },
+  dynamicCrisisTrustCap: { value: 5, unit: 'max abs trust pts from a dynamic crisis option', basis: 'judgement', range: [2, 10], note: 'safety clamp for AI dynamic crisis trust impact' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------

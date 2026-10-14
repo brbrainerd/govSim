@@ -697,6 +697,42 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
       }
     }
   }
+
+  // Living World emergent variance (Phase 29, AI-01)
+  let lwInfImpulse = 0;
+  if (!legacyRun && decisions !== null && typeof decisions === 'object' && decisions.turnEntropy !== undefined) {
+    const lwSeed = (state.seed ^ decisions.turnEntropy) | 0;
+    const lwGapRaw = normal(lwSeed, 'livingWorld', state.turn, 'lw_gap');
+    const lwInfRaw = normal(lwSeed, 'livingWorld', state.turn, 'lw_inf');
+
+    let stressMult = 1.0;
+    if (tariffOf(policy) > C.livingWorldTariffThreshold && e.inflation > C.livingWorldInflationThreshold) {
+      stressMult += C.livingWorldStressMultiplier;
+    }
+    if (stress > 0) stressMult += C.livingWorldStressMultiplier;
+
+    const lwGapImpulse = clamp(
+      lwGapRaw * C.livingWorldGapScale * stressMult,
+      -C.livingWorldGapShockMax,
+      C.livingWorldGapShockMax,
+    );
+    lwInfImpulse = clamp(
+      lwInfRaw * C.livingWorldInfScale * stressMult,
+      -C.livingWorldInfShockMax,
+      C.livingWorldInfShockMax,
+    );
+
+    g.add('event:living_world_variance', lwGapImpulse);
+  }
+
+  // Dynamic AI crisis consequences on output gap (Phase 29, AI-04)
+  if (!legacyRun && decisions !== null && typeof decisions === 'object' && decisions.dynamicCrisisDelta !== undefined) {
+    const cd = decisions.dynamicCrisisDelta;
+    if (cd.gapDelta !== 0) {
+      g.add('event:ai_dynamic_crisis', clamp(cd.gapDelta, -C.dynamicCrisisGapCap, C.dynamicCrisisGapCap));
+    }
+  }
+
   const gap = e.gap + g.sum;
 
   // Growth is a level: potential plus the annualized change in the gap.
@@ -734,6 +770,15 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
       } else if (crisis.crisisId === 'shipping_blockade') {
         inf.add('geopolitical:shipping', C.geopoliticalShippingInflation);
       }
+    }
+  }
+  if (lwInfImpulse !== 0) {
+    inf.add('event:living_world_variance', lwInfImpulse);
+  }
+  if (!legacyRun && decisions !== null && typeof decisions === 'object' && decisions.dynamicCrisisDelta !== undefined) {
+    const cd = decisions.dynamicCrisisDelta;
+    if (cd.infDelta !== 0) {
+      inf.add('event:ai_dynamic_crisis', clamp(cd.infDelta, -C.dynamicCrisisInfCap, C.dynamicCrisisInfCap));
     }
   }
   const inflation = inf.clamp(e.inflation + inf.sum, ...LIMITS.inflation.bounds);
@@ -813,6 +858,12 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (geoEscalationApprovalPenalty > 0) ap.add('event:geopolitical_escalation', -geoEscalationApprovalPenalty);
   if (evilPenalties.approvalDelta !== 0) ap.add('approval:evil', evilPenalties.approvalDelta);
   if (leverResult.approvalDelta !== 0) ap.add('approval:evil_levers', leverResult.approvalDelta);
+  if (!legacyRun && decisions !== null && typeof decisions === 'object' && decisions.dynamicCrisisDelta !== undefined) {
+    const cd = decisions.dynamicCrisisDelta;
+    if (cd.approvalDelta !== 0) {
+      ap.add('event:ai_dynamic_crisis', clamp(cd.approvalDelta, -C.dynamicCrisisApprovalCap, C.dynamicCrisisApprovalCap));
+    }
+  }
   const approval = ap.round(ap.clamp(state.approval + ap.sum, ...LIMITS.approval.bounds), RULES.approvalStep.value);
   const tr = new Ledger();
   tr.add('trust:reversion', C.trustAdjust * (s.trust - e.trust));
@@ -824,6 +875,12 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (geoEscalationTrustPenalty > 0) tr.add('event:geopolitical_escalation', -geoEscalationTrustPenalty);
   if (evilPenalties.trustDelta !== 0) tr.add('trust:evil', evilPenalties.trustDelta);
   if (leverResult.trustDelta !== 0) tr.add('trust:evil_levers', leverResult.trustDelta);
+  if (!legacyRun && decisions !== null && typeof decisions === 'object' && decisions.dynamicCrisisDelta !== undefined) {
+    const cd = decisions.dynamicCrisisDelta;
+    if (cd.trustDelta !== 0) {
+      tr.add('event:ai_dynamic_crisis', clamp(cd.trustDelta, -C.dynamicCrisisTrustCap, C.dynamicCrisisTrustCap));
+    }
+  }
   const trust = tr.clamp(e.trust + tr.sum, ...LIMITS.trust.bounds);
 
   const cl = new Ledger();

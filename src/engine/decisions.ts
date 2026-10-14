@@ -21,7 +21,7 @@ import { getCrisis } from './crises';
 import type { Modifier, Scheduled } from './modifiers';
 import type { PowerDecisions } from './powers';
 import { isSocialBaseline, sanitizeSocial, type SocialDraft } from './social';
-import { SENATE_BASE_SEATS, SENATE_SIMPLE_MAJORITY, type EvilLeverId } from './units';
+import { MAX_TURN_ENTROPY, SENATE_BASE_SEATS, SENATE_SIMPLE_MAJORITY, type EvilLeverId } from './units';
 
 export interface Bill {
   budget: BudgetDraft;
@@ -54,7 +54,14 @@ export interface EvilDecision {
   enactedLevers?: readonly EvilLeverId[];
 }
 
-/** Phases 4/5/9/11/14/16/17 add keys here (crisis, powers, social, filibusterRule, reform, amendment, foreignPolicy, trade, evil). There is deliberately no clout field. */
+export interface DynamicCrisisDelta {
+  gapDelta: number;
+  infDelta: number;
+  approvalDelta: number;
+  trustDelta: number;
+}
+
+/** Phases 4/5/9/11/14/16/17/29 add keys here (crisis, powers, social, filibusterRule, reform, amendment, foreignPolicy, trade, evil, turnEntropy, dynamicCrisisDelta). There is deliberately no clout field. */
 export interface Decisions {
   bill?: Bill;
   crisis?: CrisisDecision;
@@ -69,6 +76,8 @@ export interface Decisions {
   amendmentCampaign?: boolean;
   presidentialSide?: 'D' | 'R';
   evil?: EvilDecision;
+  turnEntropy?: number;
+  dynamicCrisisDelta?: DynamicCrisisDelta;
 }
 
 export interface CrisisChoiceResult {
@@ -253,3 +262,21 @@ export function autopilotDecisions(state: {
   return d;
 }
 
+export function isValidTurnEntropy(entropy: unknown): entropy is number {
+  return typeof entropy === 'number' && Number.isInteger(entropy) && entropy >= 0 && entropy <= MAX_TURN_ENTROPY;
+}
+
+export function isValidDynamicCrisisDelta(delta: unknown): delta is DynamicCrisisDelta {
+  if (delta === null || typeof delta !== 'object' || Array.isArray(delta)) return false;
+  const d = delta as Record<string, unknown>;
+  const keys = Object.keys(d);
+  for (const k of keys) {
+    if (k !== 'gapDelta' && k !== 'infDelta' && k !== 'approvalDelta' && k !== 'trustDelta') return false;
+  }
+  return (
+    typeof d.gapDelta === 'number' && Number.isFinite(d.gapDelta) && Math.abs(d.gapDelta) <= C.dynamicCrisisGapCap &&
+    typeof d.infDelta === 'number' && Number.isFinite(d.infDelta) && Math.abs(d.infDelta) <= C.dynamicCrisisInfCap &&
+    typeof d.approvalDelta === 'number' && Number.isFinite(d.approvalDelta) && Math.abs(d.approvalDelta) <= C.dynamicCrisisApprovalCap &&
+    typeof d.trustDelta === 'number' && Number.isFinite(d.trustDelta) && Math.abs(d.trustDelta) <= C.dynamicCrisisTrustCap
+  );
+}
