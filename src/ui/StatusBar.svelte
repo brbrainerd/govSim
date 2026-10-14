@@ -45,6 +45,14 @@
   const hasUnsentWarning = $derived(stagedActions.some((a) => a.warning));
 </script>
 
+<svelte:window
+  onkeydown={(e) => {
+    if (e.key === 'Escape' && trayOpen) {
+      trayOpen = false;
+    }
+  }}
+/>
+
 <header class="bar">
   <div class="resources">
     <button type="button" class="stat tip" aria-describedby="tip-approval">

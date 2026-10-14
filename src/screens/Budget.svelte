@@ -67,7 +67,10 @@
         <label for="foreign-assistance-slider">Foreign Assistance &amp; Aid</label>
         <span class="val">{assist === assistInForce ? 'Same as now ($45B/yr, <1%)' : `${assist > assistInForce ? '+' : ''}${assist - assistInForce}% · ${assist > assistInForce ? 'up' : 'down'}`}</span>
         <div class="track" style:--fill="{(assist / 200) * 100}%">
-          <span class="tick" style:left="{(assistInForce / 200) * 100}%"></span>
+          {#if assistInForce !== 100}
+            <span class="tick base-tick" style:left="50%" title="2026 baseline"></span>
+          {/if}
+          <span class="tick" style:left="{(assistInForce / 200) * 100}%" title="Current policy in force"></span>
           <input
             id="foreign-assistance-slider"
             type="range"

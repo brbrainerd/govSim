@@ -495,7 +495,11 @@ export class Session {
           s.unlockedBadges.push(id);
         }
       }
-      if (next.turn >= TOTAL_TURNS || Boolean(next.evil?.convicted)) {
+      if (
+        next.turn >= TOTAL_TURNS ||
+        Boolean(next.evil?.convicted) ||
+        (s.activeElectionOutcome !== null && !s.reelectionWon)
+      ) {
         s.termEnded = true;
       }
     }
@@ -504,10 +508,20 @@ export class Session {
   }
 
   static fromRun(
-    run: { seed: number; party: 'D' | 'R'; scenario?: ScenarioId; inputs: readonly Decisions[] },
+    run: {
+      seed: number;
+      party: 'D' | 'R';
+      scenario?: ScenarioId;
+      evilMode?: boolean;
+      inputs: readonly Decisions[];
+    },
     start: Start,
   ): Session {
-    const s = new Session(run.seed, start, { party: run.party, scenario: run.scenario });
+    const s = new Session(run.seed, start, {
+      party: run.party,
+      scenario: run.scenario,
+      ...(run.evilMode ? { evilMode: true } : {}),
+    });
     for (const input of run.inputs) {
       if (s.current.turn === 16) {
         s.turn16Snapshot = s.current;
@@ -535,7 +549,11 @@ export class Session {
           s.unlockedBadges.push(id);
         }
       }
-      if (next.turn >= TOTAL_TURNS || Boolean(next.evil?.convicted)) {
+      if (
+        next.turn >= TOTAL_TURNS ||
+        Boolean(next.evil?.convicted) ||
+        (s.activeElectionOutcome !== null && !s.reelectionWon)
+      ) {
         s.termEnded = true;
       }
     }
@@ -598,7 +616,7 @@ export class Session {
     if (play.pack) {
       this.pickPackage(play.pack);
     }
-    if (play.sendToCongress) {
+    if (play.sendToCongress || play.autoWhip) {
       this.sendToCongress();
     }
     if (play.autoWhip) {

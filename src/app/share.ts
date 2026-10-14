@@ -1,13 +1,14 @@
 // Native deflate-raw URL hash run encoding, decoding, and replay (REL-03, GR-33, GR-34).
 import type { Decisions } from '../engine/decisions';
 import { isValidScenarioId, type ScenarioId } from '../content/scenarios';
-import { validateDecisions } from './save';
+import { MAX_SAVE_SIZE_CHARS, validateDecisions } from './save';
 
 export interface RunDescriptor {
   readonly v: 1;
   readonly seed: number;
   readonly party: 'D' | 'R';
   readonly scenario?: ScenarioId;
+  readonly evilMode?: boolean;
   readonly inputs: readonly Decisions[];
 }
 
@@ -38,7 +39,7 @@ function base64UrlToUint8Array(str: string): Uint8Array {
 export interface RunSource {
   seed?: number;
   current?: { seed: number };
-  options: { party: string; scenario?: ScenarioId };
+  options: { party: string; scenario?: ScenarioId; evilMode?: boolean };
   inputs: readonly Decisions[];
 }
 
@@ -52,6 +53,7 @@ export async function encodeRunCode(run: RunSource): Promise<string> {
     ...(run.options.scenario && run.options.scenario !== 'standard_2026'
       ? { sc: run.options.scenario }
       : {}),
+    ...(run.options.evilMode ? { e: 1 } : {}),
     i: run.inputs,
   });
 
@@ -72,6 +74,9 @@ export async function decodeRunCode(code: string): Promise<RunDescriptor | null>
     const ds = new DecompressionStream('deflate-raw');
     const stream = new Blob([bytes.buffer as ArrayBuffer]).stream().pipeThrough(ds);
     const text = await new Response(stream).text();
+    if (text.length > MAX_SAVE_SIZE_CHARS) {
+      return null;
+    }
     const parsed = JSON.parse(text);
 
     if (
@@ -81,7 +86,8 @@ export async function decodeRunCode(code: string): Promise<RunDescriptor | null>
       typeof parsed.s !== 'number' ||
       !Number.isFinite(parsed.s) ||
       (parsed.p !== 'D' && parsed.p !== 'R') ||
-      !Array.isArray(parsed.i)
+      !Array.isArray(parsed.i) ||
+      parsed.i.length > 32
     ) {
       return null;
     }
@@ -96,6 +102,7 @@ export async function decodeRunCode(code: string): Promise<RunDescriptor | null>
       seed: parsed.s,
       party: parsed.p,
       ...(isValidScenarioId(parsed.sc) ? { scenario: parsed.sc } : {}),
+      ...(parsed.e === 1 || parsed.e === true ? { evilMode: true } : {}),
       inputs: validatedInputs,
     };
   } catch {

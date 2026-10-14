@@ -54,6 +54,7 @@ function collectFiles(dir: string): string[] {
 
 describe('content and readability gates (OBS-05, GR-24, GR-25)', () => {
   it('content strings in src/content/ have reading grade <= 9.0 and sentences <= 20 words', async () => {
+    // Note: briefing.ts uses dynamic state callbacks and is gated via src/content/briefing.test.ts.
     const mods = [
       await import('../content/parties'),
       await import('../content/orders'),

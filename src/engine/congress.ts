@@ -332,6 +332,7 @@ export interface CheapestCoalitionResult {
 
 /**
  * Finds the lowest-Clout combination of additional deals needed to reach 218 House votes (ADVISOR-02, design §7b).
+ * Exhaustive power-set search is bounded to 2^3 = 8 subsets for the 3-deal catalog.
  */
 export function findCheapestCoalition(
   alreadyDeals: readonly DealId[] = [],

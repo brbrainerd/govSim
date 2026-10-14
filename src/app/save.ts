@@ -4,7 +4,19 @@ import { deals as DEALS, FILIBUSTER_RULES_CATALOG, type DealId, type FilibusterR
 import { AMENDMENTS_CATALOG, type AmendmentId } from '../engine/amendments';
 import { REFORMS_CATALOG, type ReformId } from '../engine/reforms';
 import type { PowerDecisions } from '../engine/powers';
-import type { CrisisDecision, Decisions } from '../engine/decisions';
+import type { CrisisDecision, Decisions, EvilDecision } from '../engine/decisions';
+import { SANCTIONS_CATALOG, type DefensePosture, type ForeignPolicyDraft, type SanctionType } from '../engine/foreign';
+import {
+  SECTOR_TARIFFS_CATALOG,
+  TRADE_AGREEMENTS_CATALOG,
+  type SectorTariffId,
+  type TradeAgreementId,
+  type TradeDraft,
+} from '../engine/trade';
+import { isEvilLeverId } from '../data/evil';
+import type { EvilLeverId } from '../engine/units';
+import { getMyth } from '../content/myths';
+import { getExplainer } from '../content/explainers';
 import { endTurn, newGame, type GameState, type Start } from '../engine/game';
 import { stableHash } from '../engine/hash';
 import { getSocialLever, type SocialDraft } from '../engine/social';
@@ -47,18 +59,33 @@ const START_FIELDS: (keyof Start)[] = [
 
 const KNOWN_LEVERS = new Map([...taxLevers, ...spendLevers].map((l) => [l.id, l]));
 const KNOWN_DEAL_IDS = new Set(DEALS.map((d) => d.id));
+const KNOWN_SANCTION_IDS = new Set<SanctionType>(SANCTIONS_CATALOG.map((s) => s.id));
+const KNOWN_SECTOR_TARIFF_IDS = new Set<SectorTariffId>(SECTOR_TARIFFS_CATALOG.map((s) => s.id));
+const KNOWN_TRADE_AGREEMENT_IDS = new Set<TradeAgreementId>(TRADE_AGREEMENTS_CATALOG.map((a) => a.id));
 
 const VALID_DECISION_KEYS = new Set([
   'bill',
   'crisis',
+  'geopoliticalCrisis',
   'powers',
   'social',
+  'foreignPolicy',
+  'trade',
   'filibusterRule',
   'reform',
   'amendmentProposal',
   'amendmentCampaign',
   'presidentialSide',
+  'evil',
 ]);
+
+function isValidMythOrExplainerId(id: string): boolean {
+  if (getMyth(id) !== undefined) return true;
+  if (id.startsWith('explainer:')) {
+    return getExplainer(id.slice('explainer:'.length)) !== undefined;
+  }
+  return false;
+}
 
 /**
  * Validates a single Decisions input record.
@@ -139,15 +166,49 @@ export function validateDecisions(d: unknown): Decisions {
     result.crisis = { crisisId: d.crisis.crisisId, optionId: d.crisis.optionId };
   }
 
+  if (d.geopoliticalCrisis !== undefined) {
+    if (!isRecord(d.geopoliticalCrisis)) throw new Error('Geopolitical crisis decision must be a plain object');
+    if (
+      typeof d.geopoliticalCrisis.crisisId !== 'string' ||
+      typeof d.geopoliticalCrisis.optionId !== 'string'
+    ) {
+      throw new Error('Geopolitical crisis decision must contain crisisId and optionId');
+    }
+    result.geopoliticalCrisis = {
+      crisisId: d.geopoliticalCrisis.crisisId,
+      optionId: d.geopoliticalCrisis.optionId,
+    };
+  }
+
   if (d.powers !== undefined) {
     if (!isRecord(d.powers)) throw new Error('Powers decision must be a plain object');
+    if (typeof d.powers.viewMyth === 'string' && !isValidMythOrExplainerId(d.powers.viewMyth)) {
+      throw new Error(`Unknown myth or explainer ID: "${d.powers.viewMyth}"`);
+    }
+    const nominateFed =
+      d.powers.nominateFed === 'hawk' || d.powers.nominateFed === 'centrist' || d.powers.nominateFed === 'dove'
+        ? d.powers.nominateFed
+        : undefined;
+    const nominateScotus: PowerDecisions['nominateScotus'] =
+      isRecord(d.powers.nominateScotus) &&
+      typeof d.powers.nominateScotus.name === 'string' &&
+      (d.powers.nominateScotus.lean === 'liberal' ||
+        d.powers.nominateScotus.lean === 'conservative' ||
+        d.powers.nominateScotus.lean === 'moderate')
+        ? { name: d.powers.nominateScotus.name, lean: d.powers.nominateScotus.lean }
+        : undefined;
     const powers: PowerDecisions = {
       ...(Array.isArray(d.powers.signOrders) ? { signOrders: d.powers.signOrders.map(String) } : {}),
       ...(Array.isArray(d.powers.revokeOrders) ? { revokeOrders: d.powers.revokeOrders.map(String) } : {}),
       ...(typeof d.powers.pressureFed === 'boolean' ? { pressureFed: d.powers.pressureFed } : {}),
+      ...(nominateFed ? { nominateFed } : {}),
+      ...(nominateScotus ? { nominateScotus } : {}),
       ...(typeof d.powers.viewMyth === 'string' ? { viewMyth: d.powers.viewMyth } : {}),
-      ...(isRecord(d.powers.speech) && typeof d.powers.speech.audience === 'string'
-        ? { speech: { audience: d.powers.speech.audience as 'general' | 'congress' | 'business' } }
+      ...(isRecord(d.powers.speech) &&
+      (d.powers.speech.audience === 'general' ||
+        d.powers.speech.audience === 'congress' ||
+        d.powers.speech.audience === 'business')
+        ? { speech: { audience: d.powers.speech.audience } }
         : {}),
     };
     result.powers = powers;
@@ -168,6 +229,85 @@ export function validateDecisions(d: unknown): Decisions {
       social[leverId] = val;
     }
     result.social = social;
+  }
+
+  if (d.foreignPolicy !== undefined) {
+    if (!isRecord(d.foreignPolicy)) throw new Error('Foreign policy decision must be a plain object');
+    const fp: {
+      defensePosture?: DefensePosture;
+      foreignAssistance?: number;
+      activeSanctions?: SanctionType[];
+    } = {};
+    if (d.foreignPolicy.defensePosture !== undefined) {
+      if (
+        d.foreignPolicy.defensePosture !== 'peacetime' &&
+        d.foreignPolicy.defensePosture !== 'standard' &&
+        d.foreignPolicy.defensePosture !== 'surge'
+      ) {
+        throw new Error(`Invalid defense posture: "${String(d.foreignPolicy.defensePosture)}"`);
+      }
+      fp.defensePosture = d.foreignPolicy.defensePosture;
+    }
+    if (d.foreignPolicy.foreignAssistance !== undefined) {
+      if (
+        typeof d.foreignPolicy.foreignAssistance !== 'number' ||
+        !Number.isFinite(d.foreignPolicy.foreignAssistance) ||
+        d.foreignPolicy.foreignAssistance < 0 ||
+        d.foreignPolicy.foreignAssistance > 200
+      ) {
+        throw new Error(`Invalid foreignAssistance: "${String(d.foreignPolicy.foreignAssistance)}"`);
+      }
+      fp.foreignAssistance = d.foreignPolicy.foreignAssistance;
+    }
+    if (d.foreignPolicy.activeSanctions !== undefined) {
+      if (!Array.isArray(d.foreignPolicy.activeSanctions)) {
+        throw new Error('activeSanctions must be an array');
+      }
+      const sanctions: SanctionType[] = [];
+      for (const s of d.foreignPolicy.activeSanctions) {
+        if (typeof s !== 'string' || !KNOWN_SANCTION_IDS.has(s as SanctionType)) {
+          throw new Error(`Unknown sanction ID: "${String(s)}"`);
+        }
+        sanctions.push(s as SanctionType);
+      }
+      fp.activeSanctions = sanctions;
+    }
+    result.foreignPolicy = fp as ForeignPolicyDraft;
+  }
+
+  if (d.trade !== undefined) {
+    if (!isRecord(d.trade)) throw new Error('Trade decision must be a plain object');
+    const tr: {
+      sectorTariffs?: SectorTariffId[];
+      agreements?: TradeAgreementId[];
+    } = {};
+    if (d.trade.sectorTariffs !== undefined) {
+      if (!Array.isArray(d.trade.sectorTariffs)) {
+        throw new Error('sectorTariffs must be an array');
+      }
+      const tariffs: SectorTariffId[] = [];
+      for (const st of d.trade.sectorTariffs) {
+        if (typeof st !== 'string' || !KNOWN_SECTOR_TARIFF_IDS.has(st as SectorTariffId)) {
+          throw new Error(`Unknown sector tariff ID: "${String(st)}"`);
+        }
+        tariffs.push(st as SectorTariffId);
+      }
+      tr.sectorTariffs = tariffs;
+    }
+    if (d.trade.agreements !== undefined) {
+      if (!Array.isArray(d.trade.agreements)) {
+        throw new Error('agreements must be an array');
+      }
+      const agreements: TradeAgreementId[] = [];
+      for (const ag of d.trade.agreements) {
+        if (typeof ag !== 'string' || !KNOWN_TRADE_AGREEMENT_IDS.has(ag as TradeAgreementId)) {
+          throw new Error(`Unknown trade agreement ID: "${String(ag)}"`);
+        }
+        agreements.push(ag as TradeAgreementId);
+      }
+      tr.agreements = agreements;
+    }
+    result.trade = tr as TradeDraft;
   }
 
   if (d.filibusterRule !== undefined) {
@@ -203,6 +343,41 @@ export function validateDecisions(d: unknown): Decisions {
       throw new Error(`Invalid presidential side: "${String(d.presidentialSide)}"`);
     }
     result.presidentialSide = d.presidentialSide;
+  }
+
+  if (d.evil !== undefined) {
+    if (!isRecord(d.evil)) throw new Error('Evil decision must be a plain object');
+    const evil: {
+      siphonBn?: number;
+      heatDelta?: number;
+      enactedLevers?: EvilLeverId[];
+    } = {};
+    if (d.evil.siphonBn !== undefined) {
+      if (typeof d.evil.siphonBn !== 'number' || !Number.isFinite(d.evil.siphonBn)) {
+        throw new Error('evil.siphonBn must be a finite number');
+      }
+      evil.siphonBn = d.evil.siphonBn;
+    }
+    if (d.evil.heatDelta !== undefined) {
+      if (typeof d.evil.heatDelta !== 'number' || !Number.isFinite(d.evil.heatDelta)) {
+        throw new Error('evil.heatDelta must be a finite number');
+      }
+      evil.heatDelta = d.evil.heatDelta;
+    }
+    if (d.evil.enactedLevers !== undefined) {
+      if (!Array.isArray(d.evil.enactedLevers)) {
+        throw new Error('evil.enactedLevers must be an array');
+      }
+      const levers: EvilLeverId[] = [];
+      for (const lv of d.evil.enactedLevers) {
+        if (!isEvilLeverId(lv)) {
+          throw new Error(`Unknown evil lever ID: "${String(lv)}"`);
+        }
+        levers.push(lv);
+      }
+      evil.enactedLevers = levers;
+    }
+    result.evil = evil as EvilDecision;
   }
 
   return result;

@@ -63,4 +63,25 @@ describe('share-your-run code compression & replay (REL-03, GR-33, GR-34)', () =
     const result = await decodeRunCode(badCode);
     expect(result).toBeNull();
   });
+
+  it('preserves evilMode and scenario in encoded run codes and rejects >32 turns', async () => {
+    const evilRun = {
+      seed: 123,
+      options: { party: 'R', scenario: 'debt_brinkmanship' as const, evilMode: true },
+      inputs: [{ evil: { enactedLevers: ['crony_contracts'] } } as Decisions],
+    };
+    const code = await encodeRunCode(evilRun);
+    const decoded = await decodeRunCode(code);
+    expect(decoded?.party).toBe('R');
+    expect(decoded?.scenario).toBe('debt_brinkmanship');
+    expect(decoded?.evilMode).toBe(true);
+
+    const tooManyTurns = {
+      seed: 123,
+      options: { party: 'D' },
+      inputs: Array.from({ length: 33 }, () => ({}) as Decisions),
+    };
+    const badCode = await encodeRunCode(tooManyTurns);
+    expect(await decodeRunCode(badCode)).toBeNull();
+  });
 });

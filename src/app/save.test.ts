@@ -69,13 +69,40 @@ describe('save system and trust boundary (OBS-01, OBS-02, GR-31, GR-34)', () => 
     expect(() => validateDecisions({ bill: { budget: { bus: 9999 }, deals: [] } })).toThrow('out of range');
     expect(() => validateDecisions({ bill: { budget: {}, deals: ['fake_deal'] } })).toThrow('Unknown deal ID');
     expect(() => validateDecisions({ bill: { budget: {}, deals: ['mod', 'mod'] } })).toThrow('Duplicate deal ID');
+    expect(() => validateDecisions({ powers: { viewMyth: 'nonexistent_myth' } })).toThrow(
+      'Unknown myth or explainer ID',
+    );
+    expect(() => validateDecisions({ powers: { viewMyth: 'explainer:fake' } })).toThrow(
+      'Unknown myth or explainer ID',
+    );
+    expect(validateDecisions({ powers: { viewMyth: 'explainer:economy' } })).toEqual({
+      powers: { viewMyth: 'explainer:economy' },
+    });
   });
 
-  it('serializes and parses a game roundtrip with identical hash', () => {
+  it('serializes and parses a game roundtrip with foreignPolicy, trade, evil, and explainer decisions', () => {
     let state = newGame(seed, start);
     const inputs: Decisions[] = [
-      { bill: { budget: { bus: 23 }, deals: [] } },
-      {},
+      {
+        bill: { budget: { bus: 23 }, deals: [] },
+        foreignPolicy: {
+          defensePosture: 'surge',
+          foreignAssistance: 120,
+          activeSanctions: ['asset_freeze'],
+        },
+        trade: {
+          sectorTariffs: ['chips'],
+          agreements: ['indoPacific'],
+        },
+        powers: {
+          viewMyth: 'explainer:economy',
+        },
+      },
+      {
+        evil: {
+          enactedLevers: ['crony_contracts'],
+        },
+      },
       { bill: { budget: { bus: 23, rds: 120 }, deals: ['mod'] } },
     ];
     for (const input of inputs) {
@@ -84,7 +111,7 @@ describe('save system and trust boundary (OBS-01, OBS-02, GR-31, GR-34)', () => 
 
     const sessionLike = {
       current: state,
-      options: { party: 'D' as const },
+      options: { party: 'D' as const, evilMode: true, scenario: 'stagflation_shock' as const },
       inputs,
     };
 
@@ -95,6 +122,8 @@ describe('save system and trust boundary (OBS-01, OBS-02, GR-31, GR-34)', () => 
     expect(parsed.v).toBe(1);
     expect(parsed.engine).toBe('0.2');
     expect(parsed.seed).toBe(seed);
+    expect(parsed.options.evilMode).toBe(true);
+    expect(parsed.options.scenario).toBe('stagflation_shock');
     expect(parsed.inputs.length).toBe(3);
     expect(parsed.check).toBe(stableHash(state));
 
