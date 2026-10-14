@@ -1,5 +1,17 @@
 # Milestones
 
+## v0.7 Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director (Shipped: 2026-10-14)
+
+**Phases completed:** 5 phases, 9 plans, 0 tasks
+
+- Dramatic SVG art overhaul & state-reactive scenes: replaced simple geometric pill characters and static backdrops with layered Americana editorial-poster illustrations (`Character.svelte`, `OvalOfficeScene.svelte`, `ReporterScene.svelte`, `CourtBench.svelte`, `FedPortrait.svelte`), 5 reactive facial expressions (`confident`, `stressed`, `scheming`, `panicked`, `triumphant`), dynamic window sky/weather, desk prop density, and Evil Mode visual tells (document shredder, offshore ledger).
+- Tactile visual flair, satirical wit & Calm Mode: added stamp-slam signing animations (`Congress.svelte`, `Powers.svelte`), Congress hemicycle seat-flip pulses (`Hemicycle.svelte`), a persistent `"Calm mode"` accessibility toggle in `StatusBar.svelte` (respecting `prefers-reduced-motion`), and 40+ ironic, party-blind news-ticker chyrons (`src/content/chyrons.ts`) passing the Flesch-Kincaid grade $\le 9.0$ gate.
+- Year-1 progressive onboarding & Unlock All control: guided new players through Year 1 (`docs/design.md` §7b: Turn 1 Oval/Budget/Congress, Turn 2 Your Powers, Turn 3+ Voters/Social/Trade/Reforms) with contextual callouts, `NEW` rail badges, and an `"Unlock all screens immediately"` toggle on `NewGame.svelte` and `Rail.svelte`.
+- "Show Your Work" Model Inspector & citation audit: built an interactive Model Inspector (`src/content/model-inspector.ts`, `ModelInspectorModal.svelte`) accessible from Economy and AboutModal, surfacing 100% of `COEFF`, `SCORE`, `LIMITS`, and `RULES` parameters (`138` total) plus 6 core macroeconomic equations with live search, domain filters, range indicator bars, and verified institutional citations.
+- Living World variance & opt-in Free AI Game Director: implemented non-deterministic Living World mode (`turnEntropy` on stream 19/20 with player/autopilot shock parity and 100% deterministic replayability), a multi-provider Free AI client (`src/app/ai-providers.ts`: OpenRouter `:free` live model discovery + 429 cascade failover, 1-click OAuth PKCE, Chrome `window.ai`, Gemini/Groq/Ollama BYOK) with zero default network egress, and a context-aware AI Director (`src/app/ai-director.ts`, `DynamicCrisisModal.svelte`) generating party-blind briefings and schema-clamped dynamic crisis dilemmas.
+
+---
+
 ## v0.6 Completeness, Advisor Agency & Scenarios (Shipped: 2026-10-14)
 
 **Phases completed:** 4 phases, 8 plans, 0 tasks

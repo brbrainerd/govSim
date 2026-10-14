@@ -58,18 +58,15 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 - ✓ Safe "Skip to Next Event" fast-forward loop with automatic crisis/deadline interrupts — v0.6
 - ✓ 4 curated Starting Scenarios at New Game with deterministic macro/fiscal overrides — v0.6
 - ✓ Scenario briefing objectives at inauguration and persistent scenario completion badges — v0.6
+- ✓ Layered Americana editorial-poster SVG character anatomy, 5 reactive expressions (`confident`, `stressed`, `scheming`, `panicked`, `triumphant`), and live `GameState`-reactive `OvalOfficeScene`, `ReporterScene`, `CourtBench`, and `FedPortrait` — v0.7
+- ✓ Stamp-slam and hemicycle seat-flip micro-animations, ironic party-blind news chyrons and advisor banter, and an in-game `"Calm mode"` toggle — v0.7
+- ✓ Year-1 progressive onboarding (`docs/design.md` §7b: Turn 1 Budget/Congress, Turn 2 Your Powers, Turn 3+ all screens) with `"Unlock all screens"` toggle — v0.7
+- ✓ Interactive `"Show your work"` Model Inspector modal exposing all 138 live `coefficients.ts` parameters, 6 core equations, ranges, and audited citations — v0.7
+- ✓ Optional non-deterministic `"Living World"` shock variance (`turnEntropy`) and opt-in Free AI Director (`openrouter/free` + `:free` auto-discovery, OAuth PKCE, local `window.ai`, Gemini/Groq BYOK) for generative briefings, satirical chyrons, and schema-clamped dynamic crises — v0.7
 
 ### Active
 
-- [ ] **ART-01..03**: Layered Americana editorial-poster SVG character anatomy, 5 reactive expressions (`confident`, `stressed`, `scheming`, `panicked`, `triumphant`), and live `GameState`-reactive `OvalOfficeScene`, `ReporterScene`, `CourtBench`, and `FedPortrait` (Phase 25)
-- [ ] **JUICE-01..03**: Stamp-slam and hemicycle seat-flip micro-animations, ironic party-blind news chyrons and advisor banter, and an in-game `"Calm mode"` toggle (Phase 26)
-- [ ] **ONBOARD-01..02**: Year-1 progressive onboarding (`docs/design.md` §7b: Turn 1 Budget/Congress, Turn 2 Your Powers, Turn 3+ all screens) with `"Unlock all screens"` toggle (Phase 27)
-- [ ] **MODEL-01..02**: Interactive `"Show your work"` Model Inspector modal/drawer exposing live `coefficients.ts` equations, ranges, and audited citations (Phase 28)
-- [ ] **AI-01..04**: Optional non-deterministic `"Living World"` shock variance and opt-in Free AI Director (`openrouter/free` + `:free` auto-discovery, OAuth PKCE, local `window.ai`, Gemini/Groq BYOK) for generative briefings, satirical chyrons, and schema-clamped dynamic crises (Phase 29)
-
-## Current Milestone: v0.7 Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director
-
-**Goal:** Overhaul character and scene graphics from simple shapes into expressive, state-reactive Americana editorial-poster illustrations, inject tactile micro-interactions and satirical institutional wit (with Calm Mode), add guided Year-1 onboarding and a "Show Your Work" Model Inspector, and introduce an optional Living World variance mode plus a Free AI Director powered by OpenRouter `:free` routes, browser AI, or free-tier keys.
+- *(None — Milestone v0.7 shipped; run `/gsd-new-milestone` to define next milestone)*
 
 ### Out of Scope
 
@@ -81,7 +78,7 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 
 ## Context
 
-- Shipped Milestone v0.6 ("Completeness, Advisor Agency & Scenarios") with 428 unit/property tests across 68 files, 57 Playwright E2E tests, zero axe violations, and clean token guardrails.
+- Shipped Milestone v0.7 ("Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director") with 464 unit/property tests across 75 files, 63 Playwright E2E tests, zero axe violations, zero default network egress, and clean token guardrails.
 - Pure client application (TypeScript + Svelte 5 runes + Vite), zero backend dependencies, zero telemetry.
 - Visual direction C (Americana poster) with dual theme tokens (Day Americana and Dark Oxblood/Gold/Ink for Evil Mode).
 - Zero outer viewport scrolling across 1376×768 and 1280×720 viewports.
@@ -119,6 +116,18 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 | Pure-Function Auto-Whip Solver | Uses exhaustive subset search ($2^3 = 8$) to find the cheapest vote coalition without engine impurity | ✓ Good |
 | In-Force Policy vs Baseline Dual Indicators | Visually distinguishes current active law from 2026 starting point on budget sliders | ✓ Good |
 | Deterministic Starting Scenarios | Deterministic macro/fiscal overrides on top of `us-2026.json` preserving bit-for-bit replay | ✓ Good |
+| Living World App-Layer `turnEntropy` | Injects turn-level entropy into `Decisions` (stream 19/20) for both player and autopilot while keeping `src/engine/` 100% pure | ✓ Good |
+| Opt-In Free AI Director + Schema Clamping | Supports OpenRouter `:free` cascade failover, OAuth PKCE, and `window.ai` with zero default egress and strict `C.dynamicCrisis*Cap` clamping | ✓ Good |
+
+## Completed Milestone: v0.7 Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director (Shipped 2026-10-14)
+
+**Goal:** Overhaul character and scene graphics from simple shapes into expressive, state-reactive Americana editorial-poster illustrations, inject tactile micro-interactions and satirical institutional wit (with Calm Mode), add guided Year-1 onboarding and a "Show Your Work" Model Inspector, and introduce an optional Living World variance mode plus a Free AI Director powered by OpenRouter `:free` routes, browser AI, or free-tier keys.
+**Delivered:**
+- Dramatic SVG art overhaul & state-reactive scenes: layered Americana editorial-poster anatomy, 5 reactive moods, and live `GameState`-reactive Oval Office, Reporter, Court, and Fed scenes (`ART-01..03`)
+- Tactile visual flair, satirical wit & Calm Mode: stamp-slam signing animations, hemicycle seat-flip pulses, 40+ readability-gated chyrons, and a persistent `"Calm mode"` toggle (`JUICE-01..03`)
+- Year-1 progressive onboarding: Turn 1/2/3+ screen progression with contextual callouts, `NEW` badges, and `"Unlock all screens immediately"` toggle (`ONBOARD-01..02`)
+- "Show Your Work" Model Inspector: interactive catalog exposing all 138 parameters and 6 core macroeconomic equations with live search, domain filters, and verified citations (`MODEL-01..02`)
+- Living World variance & Free AI Director: app-layer `turnEntropy` shocks, multi-provider Free AI adapter (`openrouter/free` + `:free` discovery, 429 failover, OAuth PKCE, `window.ai`, Gemini/Groq/Ollama BYOK), and party-blind AI Director with schema-clamped dynamic crisis dilemmas (`AI-01..04`)
 
 ## Completed Milestone: v0.6 Completeness, Advisor Agency & Scenarios (Shipped 2026-10-14)
 
@@ -156,4 +165,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-14 after v0.6 milestone*
+*Last updated: 2026-10-14 after v0.7 milestone*
