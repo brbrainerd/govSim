@@ -24,15 +24,15 @@
 
 ### "Show Your Work" Model Inspector & Citation Audit (Phase 28)
 
-- [ ] **MODEL-01**: Build an interactive `"Show your work"` Model Inspector modal/drawer accessible from the Economy screen and About modal that renders live `src/engine/coefficients.ts` parameters, equations, valid ranges, and literature citations grouped by policy domain.
-- [ ] **MODEL-02**: Audit and upgrade remaining `judgement` coefficient citations in `src/engine/coefficients.ts` with verified institutional/academic source references and plain-language notes.
+- [x] **MODEL-01**: Build an interactive `"Show your work"` Model Inspector modal/drawer accessible from the Economy screen and About modal that renders live `src/engine/coefficients.ts` parameters, equations, valid ranges, and literature citations grouped by policy domain.
+- [x] **MODEL-02**: Audit and upgrade remaining `judgement` coefficient citations in `src/engine/coefficients.ts` with verified institutional/academic source references and plain-language notes.
 
 ### Free AI Director, OpenRouter `:free` Auto-Routing & Living World Variance (Phase 29)
 
-- [ ] **AI-01**: Implement a Living World non-deterministic mode toggle (`livingWorld`) that injects fresh turn-level entropy via `Decisions` / app-layer seed mixing (preserving `src/engine/` purity and seeded determinism when off) and triggers emergent multi-condition shock chains.
-- [ ] **AI-02**: Build a client-side Free AI Provider adapter (`src/app/ai-providers.ts`) supporting OpenRouter `:free` model auto-discovery (`GET /api/v1/models` filtered for `:free` + `openrouter/free` fallback with automatic 429 failover), 1-click OpenRouter OAuth PKCE key exchange, browser-native local AI (`window.ai`), and BYOK free tiers (Gemini Flash, Groq, custom local Ollama/OpenAI endpoint), strictly opt-in so default zero-egress CSP tests remain green.
-- [ ] **AI-03**: Build the generative AI Director (`src/app/ai-director.ts`) that consumes a compact `GameState` digest each turn to generate bespoke Oval Office advisor briefings, satirical breaking-news chyrons, and year-end press questions, filtered through the party-blind/banned-name sanitizer with instant offline fallback.
-- [ ] **AI-04**: Enable AI-generated dynamic crisis & dilemma cards with schema-validated, strictly clamped numeric effect vectors (bounded within safe `coefficients.ts` limits) so the AI Director can synthesize realistic situational dilemmas that affect gameplay without breaking engine balance.
+- [x] **AI-01**: Implement a Living World non-deterministic mode toggle (`livingWorld`) that injects fresh turn-level entropy via `Decisions` / app-layer seed mixing (preserving `src/engine/` purity and seeded determinism when off) and triggers emergent multi-condition shock chains.
+- [x] **AI-02**: Build a client-side Free AI Provider adapter (`src/app/ai-providers.ts`) supporting OpenRouter `:free` model auto-discovery (`GET /api/v1/models` filtered for `:free` + `openrouter/free` fallback with automatic 429 failover), 1-click OpenRouter OAuth PKCE key exchange, browser-native local AI (`window.ai`), and BYOK free tiers (Gemini Flash, Groq, custom local Ollama/OpenAI endpoint), strictly opt-in so default zero-egress CSP tests remain green.
+- [x] **AI-03**: Build the generative AI Director (`src/app/ai-director.ts`) that consumes a compact `GameState` digest each turn to generate bespoke Oval Office advisor briefings, satirical breaking-news chyrons, and year-end press questions, filtered through the party-blind/banned-name sanitizer with instant offline fallback.
+- [x] **AI-04**: Enable AI-generated dynamic crisis & dilemma cards with schema-validated, strictly clamped numeric effect vectors (bounded within safe `coefficients.ts` limits) so the AI Director can synthesize realistic situational dilemmas that affect gameplay without breaking engine balance.
 
 ## Traceability
 
@@ -46,9 +46,9 @@
 | JUICE-03 | Phase 26 | Complete |
 | ONBOARD-01 | Phase 27 | Complete |
 | ONBOARD-02 | Phase 27 | Complete |
-| MODEL-01 | Phase 28 | Pending |
-| MODEL-02 | Phase 28 | Pending |
-| AI-01 | Phase 29 | Pending |
-| AI-02 | Phase 29 | Pending |
-| AI-03 | Phase 29 | Pending |
-| AI-04 | Phase 29 | Pending |
+| MODEL-01 | Phase 28 | Complete |
+| MODEL-02 | Phase 28 | Complete |
+| AI-01 | Phase 29 | Complete |
+| AI-02 | Phase 29 | Complete |
+| AI-03 | Phase 29 | Complete |
+| AI-04 | Phase 29 | Complete |
