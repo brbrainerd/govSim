@@ -190,5 +190,20 @@ describe('EndScreen component (ELC-04, ELC-05, GR-04)', () => {
     expect(html).toContain('data-testid="kleptocrat-epilogue"');
     expect(html).toContain('federal facility');
   });
+
+  it('renders Civic Dossier tab navigation button (SPIN-02)', () => {
+    const session = new Session(42, START, { party: 'D' });
+    session.termEnded = true;
+
+    const { html } = render(EndScreen, {
+      props: {
+        session,
+        onRestart: () => {},
+      },
+    });
+
+    expect(html).toContain('data-testid="tab-civic-dossier"');
+    expect(html).toContain('Civic Dossier');
+  });
 });
 

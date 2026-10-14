@@ -153,6 +153,14 @@ describe('Session persistence and save restore (OBS-01, OBS-02)', () => {
     expect(s.draft.revokedOrders).toContain('eo_hiring_freeze');
     s.nextTurn();
     expect(s.current.activeOrders).not.toContain('eo_hiring_freeze');
+
+    // Spin a myth on television (SPIN-01, SPIN-02)
+    s.spinMythCard('interest_rates');
+    expect(s.draft.spinMyth).toBe('interest_rates');
+    expect(s.hasSpunMyth('interest_rates')).toBe(true);
+    s.nextTurn();
+    expect(s.current.spunMyths).toContain('interest_rates');
+    expect(s.current.viewedMyths).toContain('interest_rates');
   });
 });
 

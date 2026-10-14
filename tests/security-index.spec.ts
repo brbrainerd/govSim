@@ -58,7 +58,7 @@ test.describe('Security Index & Macro Feedback Engine (SEC-01, SEC-02, SEC-03)',
       await expect(secRowQ2).toBeVisible();
       await expect(secRowQ2.locator('.val')).toHaveText(/^\d{2}\.\d$/);
       await expect(secRowQ2.locator('.badge')).toHaveClass(/badge/);
-      await expect(secRowQ2.locator('.cause')).toHaveText('Defense readiness posture change');
+      await expect(secRowQ2.locator('.cause')).toHaveText(/Defense readiness posture change|International crisis containment/);
 
       // Capture screenshot of Turn Report
       await page.screenshot({

@@ -11,6 +11,7 @@
     onClose,
     onGotIt,
     onPivot,
+    onSpin,
   }: {
     myth: MythCard;
     isFirstView?: boolean;
@@ -18,6 +19,7 @@
     onClose: () => void;
     onGotIt: () => void;
     onPivot?: (action: MythRealLeverAction) => void;
+    onSpin?: () => void;
   } = $props();
 
   let selectedOption = $state<number | null>(null);
@@ -229,15 +231,29 @@
       </section>
     </div>
 
-    <!-- Modal Footer with Got It Stamp Button -->
+    <!-- Modal Footer with Debunk and Spin Buttons -->
     <footer class="modal-footer">
       <button class="close-link" onclick={onClose}>
         Close
       </button>
 
-      <button class="got-it-btn" onclick={onGotIt}>
-        GOT IT {#if isFirstView}(+5 CLOUT){/if}
-      </button>
+      <div class="footer-actions">
+        {#if isFirstView && onSpin}
+          <button
+            type="button"
+            class="spin-btn"
+            data-testid="spin-myth-btn"
+            onclick={onSpin}
+            title="Spin this populist myth on national television: gain short-term approval rally (+2%), but erode public trust (-1.5) and raise Evil Heat"
+          >
+            📺 SPIN THIS MYTH (+2% Approval, −Trust)
+          </button>
+        {/if}
+
+        <button class="got-it-btn" onclick={onGotIt} data-testid="debunk-myth-btn">
+          {#if isFirstView}DEBUNK MYTH (+5 CLOUT){:else}GOT IT{/if}
+        </button>
+      </div>
     </footer>
   </div>
 </Overlay>
@@ -694,6 +710,41 @@
 
   .close-link:hover {
     color: var(--ink);
+  }
+
+  .footer-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .spin-btn {
+    padding: 10px 18px;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    background: var(--alert-dark);
+    color: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: var(--r-sm);
+    box-shadow: 2px 2px 0 var(--ink);
+    cursor: pointer;
+    transition: transform var(--dur-fast), filter var(--dur-fast);
+  }
+
+  :global([data-theme="evil"]) .spin-btn {
+    color: var(--ink);
+  }
+
+  .spin-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.15);
+  }
+
+  .spin-btn:active {
+    transform: translateY(1px);
+    box-shadow: 1px 1px 0 var(--ink);
   }
 
   .got-it-btn {

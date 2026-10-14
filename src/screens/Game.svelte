@@ -228,6 +228,10 @@
           activeMythId = null;
           go(action.screen);
         }}
+        onSpin={() => {
+          session.spinMythCard(activeMyth!.id);
+          activeMythId = null;
+        }}
       />
     {/if}
 

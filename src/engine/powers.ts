@@ -3,6 +3,7 @@
 // Keyed counter-based RNG ('court', 'fed') ensures isolation from macro and crisis draws (FND-01).
 
 import { ORDERS_CATALOG, getOrder, type CourtRiskBand, type ExecutiveOrder } from '../content/orders';
+import { getMyth } from '../content/myths';
 import { C } from './coefficients';
 import { SENATE_CONFIRMATION, SENATE_CONFIRMATION_THRESHOLD, SENATE_SEATS } from './congress';
 import type { GameState, LogEntry } from './game';
@@ -26,6 +27,7 @@ export interface PowerDecisions {
   readonly nominateScotus?: { readonly name: string; readonly lean: 'liberal' | 'conservative' | 'moderate' };
   readonly speech?: { readonly audience: 'general' | 'congress' | 'business' };
   readonly viewMyth?: string;
+  readonly spinMyth?: string;
 }
 
 export interface PowerDecisionsResult {
@@ -40,6 +42,8 @@ export interface PowerDecisionsResult {
   readonly scheduled: readonly Scheduled[];
   readonly log: readonly LogEntry[];
   readonly viewedMyths: readonly string[];
+  readonly spunMyths?: readonly string[];
+  readonly heatDelta?: number;
   readonly speechCountInWindow: number;
 }
 
@@ -200,6 +204,8 @@ export function resolvePowerDecisions(state: GameState, powersInput: unknown): P
   const log: LogEntry[] = [];
   let nextActiveOrders = [...state.activeOrders];
   let nextViewedMyths = [...state.viewedMyths];
+  let nextSpunMyths = state.spunMyths ? [...state.spunMyths] : [];
+  let mythHeatDelta = 0;
   let nextSpeechCount = state.speechCountInWindow;
 
   // 1. One-time myth card or civic explainer reward (PWR-06, LEARN-01, Pitfall 17)
@@ -215,6 +221,48 @@ export function resolvePowerDecisions(state: GameState, powersInput: unknown): P
       amount: reward,
       detail: isExplainer ? 'Civic explainer curiosity bonus' : 'Civics insight bonus',
     });
+  }
+
+  // 1b. Spin myth on national television (SPIN-01)
+  const spinId = typeof powersInput.spinMyth === 'string' ? powersInput.spinMyth : undefined;
+  if (spinId && !nextViewedMyths.includes(spinId) && !nextSpunMyths.includes(spinId)) {
+    const myth = getMyth(spinId);
+    if (myth) {
+      nextViewedMyths = [...nextViewedMyths, spinId];
+      nextSpunMyths = [...nextSpunMyths, spinId];
+      mythHeatDelta += C.mythSpinHeatDelta;
+
+      // Short-term 1-turn approval rally
+      newModifiers.push({
+        id: `event:myth_spin#approval#t${state.turn}`,
+        group: `myth_spin:${spinId}`,
+        source: 'event:myth_spin',
+        channel: 'approval',
+        amount: C.mythSpinApprovalBoost,
+        from: state.turn,
+        until: state.turn,
+        tag: 'event',
+      });
+
+      // Lasting public institutional trust penalty
+      newModifiers.push({
+        id: `event:myth_spin#trust#t${state.turn}`,
+        group: `myth_spin:${spinId}`,
+        source: 'event:myth_spin',
+        channel: 'trust',
+        amount: C.mythSpinTrustPenalty,
+        from: state.turn,
+        until: FOREVER,
+        tag: 'event',
+      });
+
+      log.push({
+        kind: 'myth',
+        id: spinId,
+        amount: 0,
+        detail: 'Spun populist civics claim on television',
+      });
+    }
   }
 
   // 2. Sign executive orders (PWR-01, PWR-02)
@@ -412,6 +460,8 @@ export function resolvePowerDecisions(state: GameState, powersInput: unknown): P
     scheduled: newScheduled,
     log,
     viewedMyths: nextViewedMyths,
+    ...(nextSpunMyths.length > 0 ? { spunMyths: nextSpunMyths } : {}),
+    ...(mythHeatDelta > 0 ? { heatDelta: mythHeatDelta } : {}),
     speechCountInWindow: nextSpeechCount,
   };
 }

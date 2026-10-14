@@ -374,13 +374,13 @@
     gap: 6px;
   }
   .calm-pill {
-    padding: 2px 7px;
-    font: 700 11px/1.2 var(--font-ui);
+    padding: 3px 9px;
+    font: 700 12px/1.2 var(--font-ui);
     text-transform: uppercase;
     letter-spacing: .04em;
     background: var(--paper);
-    color: var(--ink-soft);
-    border: 1.5px solid var(--ink);
+    color: var(--ink);
+    border: 1px solid var(--ink);
     border-radius: 999px;
     cursor: pointer;
     transition: background var(--dur-fast), color var(--dur-fast);
@@ -388,5 +388,16 @@
   .calm-pill:hover, .calm-pill.active {
     background: var(--ink);
     color: var(--card);
+  }
+  :global([data-theme="evil"]) .calm-pill {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--paper);
+  }
+  :global([data-theme="evil"]) .calm-pill:hover,
+  :global([data-theme="evil"]) .calm-pill.active {
+    background: var(--paper);
+    color: var(--ink);
+    border-color: var(--ink);
   }
 </style>

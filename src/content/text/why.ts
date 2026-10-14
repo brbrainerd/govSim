@@ -84,6 +84,7 @@ export const WHY_COPY: Record<string, string> = {
   'clout:special_counsel': 'Influence drained by special counsel probe',
   'event:living_world_variance': 'Dynamic market variance',
   'event:ai_dynamic_crisis': 'Unfolding dynamic event',
+  'event:myth_spin': 'TV spin on common myths',
 };
 
 /** Plain-language description of an engine trace source key (GR-06). */

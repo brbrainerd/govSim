@@ -9,8 +9,8 @@ const BANNED_POLITICIANS = [
 ];
 
 describe('policy milestone badges content (RPT-03, OBS-05)', () => {
-  it('contains exactly 12 milestone badges', () => {
-    expect(BADGES).toHaveLength(12);
+  it('contains exactly 14 milestone badges', () => {
+    expect(BADGES).toHaveLength(14);
   });
 
   it('provides getBadge lookup by id', () => {

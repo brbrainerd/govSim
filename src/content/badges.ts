@@ -12,6 +12,8 @@ export const BADGE_THRESHOLDS = {
   reelectionEV: 300,
   socialTrustPct: 25,
   prosperityScore: 5,
+  truthTellerMythsBusted: 6,
+  demagogueMythsSpun: 4,
 } as const;
 
 export interface Badge {
@@ -119,6 +121,22 @@ export const BADGES: readonly Badge[] = [
     description: 'Left America +5.0 points or more better off than doing nothing.',
     criterion: 'Score >= +5.0 vs doing nothing',
     icon: 'sparkles',
+  },
+  {
+    id: 'truth_teller',
+    title: 'Truth Teller',
+    category: 'stewardship',
+    description: 'Debunked 6 or more civics myths without spinning any to the public.',
+    criterion: 'Busted 6+ myths, 0 spun',
+    icon: 'shield-check',
+  },
+  {
+    id: 'demagogue',
+    title: 'Demagogue',
+    category: 'powers',
+    description: 'Spun 4 or more common myths on TV for quick poll gains.',
+    criterion: 'Spun 4+ myths',
+    icon: 'flame',
   },
 ] as const;
 

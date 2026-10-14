@@ -143,6 +143,19 @@ export function checkBadgeUnlock(
       const score = m.score ?? finalScore(state).total;
       return score >= BADGE_THRESHOLDS.prosperityScore;
     }
+    case 'truth_teller': {
+      // Debunked 6+ myths without spinning any
+      const spunCount = (state.spunMyths ?? []).length;
+      const bustedCount = (state.viewedMyths ?? []).filter(
+        (id) => !id.startsWith('explainer:') && !(state.spunMyths ?? []).includes(id),
+      ).length;
+      return bustedCount >= BADGE_THRESHOLDS.truthTellerMythsBusted && spunCount === 0;
+    }
+    case 'demagogue': {
+      // Spun 4+ myths on television
+      const spunCount = (state.spunMyths ?? []).length;
+      return spunCount >= BADGE_THRESHOLDS.demagogueMythsSpun;
+    }
     default:
       return false;
   }

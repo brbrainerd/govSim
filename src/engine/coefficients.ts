@@ -426,6 +426,18 @@ export const COEFF = {
     value: 1, unit: 'clout pts', basis: 'judgement', range: [1, 3],
     note: 'One-time political capital curiosity reward for reading a How It Works civic explainer (design §7c).',
   },
+  mythSpinApprovalBoost: {
+    value: 2, unit: '% approval', basis: 'judgement', range: [1, 5],
+    note: 'Short-term rally in presidential approval from populist television demagoguery (SPIN-01).',
+  },
+  mythSpinTrustPenalty: {
+    value: -1.5, unit: 'trust index pts', basis: 'judgement', range: [-5, -0.5],
+    note: 'Erosion of public institutional trust from cynical populist spin (SPIN-01).',
+  },
+  mythSpinHeatDelta: {
+    value: 5, unit: 'heat pts', basis: 'judgement', range: [1, 10],
+    note: 'Scandal scrutiny and press backlash in Evil Mode from blatant public demagoguery (SPIN-01).',
+  },
   speechDiminishingFactor: {
     value: 0.5, unit: 'factor', basis: 'judgement', range: [0.2, 0.8],
     note: 'Diminishing returns rate for presidential speeches.',

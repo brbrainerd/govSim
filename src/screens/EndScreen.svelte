@@ -11,6 +11,7 @@
   import { getEvilLever } from '../data/evil';
   import type { EvilLeverId } from '../engine/units';
   import { BADGES } from '../content/badges';
+  import { MYTHS_CATALOG } from '../content/myths';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
   let {
@@ -21,7 +22,7 @@
     onRestart?: () => void;
   } = $props();
 
-  type TabId = 'overview' | 'economy' | 'legislation' | 'voters' | 'milestones' | 'extraction';
+  type TabId = 'overview' | 'economy' | 'legislation' | 'voters' | 'civics' | 'milestones' | 'extraction';
   type IndicatorId = 'gdpGrowth' | 'debtPct' | 'unemployment' | 'inflation';
 
   let activeTab = $state<TabId>('overview');
@@ -77,6 +78,47 @@
       lever: getEvilLever(id)!,
       count,
     }));
+  });
+
+  const allViewedMyths = $derived(
+    (session.current.viewedMyths ?? []).filter((id) => !id.startsWith('explainer:'))
+  );
+  const allSpunMyths = $derived(session.current.spunMyths ?? []);
+  const mythsBustedCount = $derived(
+    allViewedMyths.filter((id) => !allSpunMyths.includes(id)).length
+  );
+  const mythsSpunCount = $derived(allSpunMyths.length);
+  const netTrustPenalty = $derived(mythsSpunCount * 1.5);
+
+  const civicArchetype = $derived.by(() => {
+    if (mythsSpunCount >= 4) {
+      return {
+        title: 'Unrepentant Demagogue',
+        summary: 'You routinely exploited populist civics misconceptions on television for short-term approval, eroding long-term public trust.',
+      };
+    }
+    if (mythsSpunCount > 0 && mythsBustedCount > 0) {
+      return {
+        title: 'Calculated Populist',
+        summary: 'You balanced institutional myth-busting with selective populist television spin when convenient.',
+      };
+    }
+    if (mythsBustedCount >= 6 && mythsSpunCount === 0) {
+      return {
+        title: 'Constitutional Realist',
+        summary: 'You stood firm on institutional reality, debunking myths without resorting to populist demagoguery.',
+      };
+    }
+    if (mythsBustedCount > 0) {
+      return {
+        title: 'Emerging Institutionalist',
+        summary: 'You began mastering the constitutional machinery of statecraft and refrained from cynical demagoguery.',
+      };
+    }
+    return {
+      title: 'Untested Executive',
+      summary: 'You completed your term without directly confronting the populist civics misconceptions facing modern presidents.',
+    };
   });
 
   const yearsCompleted = $derived(session.history.length > 16 ? 8 : 4);
@@ -229,6 +271,15 @@
         onclick={() => (activeTab = 'voters')}
       >
         <span>Voter Coalition</span>
+      </button>
+      <button
+        type="button"
+        class="nav-tab"
+        class:active={activeTab === 'civics'}
+        onclick={() => (activeTab = 'civics')}
+        data-testid="tab-civic-dossier"
+      >
+        <span>Civic Dossier</span>
       </button>
       <button
         type="button"
@@ -498,11 +549,70 @@
               {/if}
             </div>
           </div>
+        {:else if activeTab === 'civics'}
+          <div class="record-panel card civic-dossier-panel" data-testid="civic-dossier-panel">
+            <h3 class="panel-h">Civic Mastery Dossier</h3>
+            <p class="panel-sub">
+              Your record distinguishing between constitutional realities and populist television demagoguery.
+            </p>
+
+            <div class="civic-stats-row">
+              <div class="civic-stat-card">
+                <span class="civic-stat-num stat-busted" data-testid="stat-myths-busted">{mythsBustedCount}</span>
+                <span class="civic-stat-label">Myths Busted</span>
+                <span class="civic-stat-sub">+{mythsBustedCount * 5} Clout Earned</span>
+              </div>
+              <div class="civic-stat-card">
+                <span class="civic-stat-num stat-spun" data-testid="stat-myths-spun">{mythsSpunCount}</span>
+                <span class="civic-stat-label">Myths Spun on TV</span>
+                <span class="civic-stat-sub">+{mythsSpunCount * 2}% Short-Term Appr</span>
+              </div>
+              <div class="civic-stat-card">
+                <span class="civic-stat-num stat-trust" data-testid="stat-trust-impact">{netTrustPenalty > 0 ? `-${netTrustPenalty.toFixed(1)}` : '0.0'}%</span>
+                <span class="civic-stat-label">Social Trust Impact</span>
+                <span class="civic-stat-sub">{netTrustPenalty > 0 ? 'Lasting Trust Erosion' : 'No Demagogue Fallout'}</span>
+              </div>
+              <div class="civic-stat-card archetype-card">
+                <span class="archetype-tag">PEDAGOGICAL ARCHETYPE</span>
+                <h4 class="archetype-title" data-testid="civic-archetype-title">{civicArchetype.title}</h4>
+                <p class="archetype-desc">{civicArchetype.summary}</p>
+              </div>
+            </div>
+
+            <h4 class="civic-sub-h">Civic Misconceptions Ledger ({allViewedMyths.length} of {MYTHS_CATALOG.length} Examined)</h4>
+            <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+            <div class="civic-ledger-grid" role="region" aria-label="Civics myths ledger" tabindex="0">
+              {#each MYTHS_CATALOG as myth (myth.id)}
+                {@const isSpun = allSpunMyths.includes(myth.id)}
+                {@const isBusted = allViewedMyths.includes(myth.id) && !isSpun}
+                <div
+                  class="civic-myth-card"
+                  class:status-busted={isBusted}
+                  class:status-spun={isSpun}
+                  class:status-unexamined={!isBusted && !isSpun}
+                  data-testid="civic-myth-card-{myth.id}"
+                >
+                  <div class="civic-card-header">
+                    <span class="civic-domain-tag">{myth.target.toUpperCase()}</span>
+                    {#if isBusted}
+                      <span class="civic-status-pill pill-busted">BUSTED (+5 Clout)</span>
+                    {:else if isSpun}
+                      <span class="civic-status-pill pill-spun">SPUN ON TV</span>
+                    {:else}
+                      <span class="civic-status-pill pill-unexamined">UNEXAMINED</span>
+                    {/if}
+                  </div>
+                  <h5 class="civic-claim-text">"{myth.mythStatement}"</h5>
+                  <p class="civic-reality-snippet">{myth.realitySummary}</p>
+                </div>
+              {/each}
+            </div>
+          </div>
         {:else if activeTab === 'milestones'}
           <div class="record-panel card" data-testid="milestones-panel">
             <h3 class="panel-h">Policy Milestones & Badges</h3>
             <p class="panel-sub">
-              {session.unlockedBadges.length} of 12 milestones unlocked across budget, crises, powers, and elections.
+              {session.unlockedBadges.length} of {BADGES.length} milestones unlocked across budget, crises, powers, and elections.
             </p>
             <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
             <div class="badges-grid" data-testid="badges-grid" role="region" aria-label="Policy milestones and badges" tabindex="0">
@@ -1257,5 +1367,213 @@
     text-align: center;
     color: var(--ink-soft);
     font: 500 14px var(--font-body);
+  }
+
+  /* Civic Mastery Dossier Styles (SPIN-02) */
+  .civic-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) 1.6fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .civic-stat-card {
+    background: var(--paper);
+    border: 1px solid var(--ink-soft);
+    border-radius: var(--r-sm);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .civic-stat-num {
+    font-family: var(--font-mono, monospace);
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .stat-busted {
+    color: var(--sage-dark);
+  }
+
+  .stat-spun {
+    color: var(--alert);
+  }
+
+  .stat-trust {
+    color: var(--gold-dark);
+  }
+
+  :global([data-theme="evil"]) .stat-spun {
+    color: var(--gold);
+  }
+
+  :global([data-theme="evil"]) .stat-busted {
+    color: var(--sage-dark);
+  }
+
+  :global([data-theme="evil"]) .stat-trust {
+    color: var(--gold);
+  }
+
+  .civic-stat-label {
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--ink);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .civic-stat-sub {
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+  }
+
+  .archetype-card {
+    background: var(--card);
+    border: 2px solid var(--ink);
+  }
+
+  .archetype-tag {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+
+  .archetype-title {
+    font-family: var(--font-headline);
+    font-size: 1.05rem;
+    font-weight: 800;
+    margin: 2px 0 4px 0;
+    color: var(--ink);
+  }
+
+  .archetype-desc {
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    color: var(--ink);
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  .civic-sub-h {
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin: 14px 0 8px 0;
+  }
+
+  .civic-ledger-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .civic-myth-card {
+    background: var(--paper);
+    border: 1px solid var(--ink-soft);
+    border-radius: var(--r-sm);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .civic-myth-card.status-busted {
+    border-left: 4px solid var(--sage-dark);
+  }
+
+  .civic-myth-card.status-spun {
+    border-left: 4px solid var(--alert);
+  }
+
+  :global([data-theme="evil"]) .civic-myth-card.status-spun {
+    border-left-color: var(--gold);
+  }
+
+  :global([data-theme="evil"]) .civic-myth-card.status-busted {
+    border-left-color: var(--sage-dark);
+  }
+
+  .civic-myth-card.status-unexamined {
+    border-left: 4px solid var(--ink-soft);
+    opacity: 0.85;
+  }
+
+  .civic-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .civic-domain-tag {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+  }
+
+  .civic-status-pill {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+  }
+
+  .pill-busted {
+    background: var(--sage-tint);
+    color: var(--sage-dark);
+    border: 1px solid var(--sage-dark);
+  }
+
+  .pill-spun {
+    background: var(--alert-tint);
+    color: var(--alert);
+    border: 1px solid var(--alert);
+  }
+
+  :global([data-theme="evil"]) .pill-spun {
+    color: var(--gold);
+    border-color: var(--gold);
+  }
+
+  .pill-unexamined {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--ink-soft);
+  }
+
+  .civic-claim-text {
+    font-family: var(--font-headline);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .civic-reality-snippet {
+    font-family: var(--font-body);
+    font-size: 0.74rem;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.3;
   }
 </style>

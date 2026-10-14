@@ -283,6 +283,75 @@ describe('presidential executive powers (PWR-01..PWR-07)', () => {
     expect(expandedMod).toBeCloseTo(C.courtUpholdModerate + 0.16, 5);
     expect(expandedHigh).toBeCloseTo(C.courtUpholdHigh + 0.16, 5);
   });
+
+  it('spins civics myth on TV: grants 0 clout, boosts 1-turn approval, penalizes trust, and raises heat in Evil Mode (SPIN-01)', () => {
+    let state = newGame(77, START);
+    // Baseline trust & approval
+    const baseApproval = state.approval;
+    const baseTrust = state.econ.trust;
+
+    state = endTurn(state, {
+      powers: {
+        spinMyth: 'interest_rates',
+      },
+    });
+
+    expect(state.viewedMyths).toContain('interest_rates');
+    expect(state.spunMyths).toContain('interest_rates');
+
+    // Clout was NOT granted for spinning (remains normal approval gain only)
+    expect(state.clout).toBe(START_CLOUT_AFTER_1_TURN(state.approval, 0));
+
+    // Approval had an active modifier for turn 1
+    const spinApprMod = state.modifiers.find((m) => m.group === 'myth_spin:interest_rates' && m.channel === 'approval');
+    expect(spinApprMod).toBeDefined();
+    expect(spinApprMod?.amount).toBe(C.mythSpinApprovalBoost);
+    expect(spinApprMod?.until).toBe(1); // 1-turn duration
+
+    // Trust has a lasting penalty modifier
+    const spinTrustMod = state.modifiers.find((m) => m.group === 'myth_spin:interest_rates' && m.channel === 'trust');
+    expect(spinTrustMod).toBeDefined();
+    expect(spinTrustMod?.amount).toBe(C.mythSpinTrustPenalty);
+
+    // Turn log contains the spin entry
+    const spinLog = state.report.log.find((l) => l.kind === 'myth' && l.id === 'interest_rates');
+    expect(spinLog).toBeDefined();
+    expect(spinLog?.amount).toBe(0);
+
+    // Cannot double spin or debunk an already spun myth
+    state = endTurn(state, {
+      powers: {
+        viewMyth: 'interest_rates',
+      },
+    });
+    const doubleRewardLog = state.report.log.find((l) => l.kind === 'myth' && l.id === 'interest_rates');
+    expect(doubleRewardLog).toBeUndefined();
+  });
+
+  it('raises evil heat when spinning a myth in Evil Mode (SPIN-01)', () => {
+    let state = newGame(88, START);
+    // Enable Evil Mode with 0 initial heat
+    state = {
+      ...state,
+      evil: {
+        offshoreStashBn: 0,
+        heat: 0,
+        investigationsActive: false,
+        specialCounselAppointed: false,
+        articlesOfImpeachmentVoted: false,
+        convicted: false,
+      },
+    };
+
+    state = endTurn(state, {
+      powers: {
+        spinMyth: 'gas_prices',
+      },
+    });
+
+    // Heat increased by C.mythSpinHeatDelta (5) minus 0 decay
+    expect(state.evil?.heat).toBeGreaterThanOrEqual(C.mythSpinHeatDelta);
+  });
 });
 
 function START_CLOUT_AFTER_1_TURN(approval: number, spend: number): number {

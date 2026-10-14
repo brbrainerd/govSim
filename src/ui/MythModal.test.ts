@@ -57,4 +57,21 @@ describe('MythModal (MYTH-03, MYTH-04, PIVOT-02)', () => {
 
     expect(html).not.toContain('slam');
   });
+
+  it('renders Debunk and Spin buttons when isFirstView is true and onSpin is provided (SPIN-01, SPIN-02)', () => {
+    const { html } = render(MythModal, {
+      props: {
+        myth: gasMyth,
+        isFirstView: true,
+        onClose: () => {},
+        onGotIt: () => {},
+        onSpin: () => {},
+      },
+    });
+
+    expect(html).toContain('data-testid="spin-myth-btn"');
+    expect(html).toContain('SPIN THIS MYTH');
+    expect(html).toContain('data-testid="debunk-myth-btn"');
+    expect(html).toContain('DEBUNK MYTH (+5 CLOUT)');
+  });
 });

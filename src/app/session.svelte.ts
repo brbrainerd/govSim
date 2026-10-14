@@ -76,6 +76,7 @@ interface Draft {
   fedPressure: boolean;
   speechAudience: 'general' | 'congress' | 'business' | null;
   viewMyth: string | null;
+  spinMyth: string | null;
   filibusterRule: FilibusterRule | null;
   reform: ReformId | null;
   amendmentProposal: AmendmentId | null;
@@ -104,6 +105,7 @@ const freshDraft = (policy: BudgetDraft, socialPolicy?: SocialDraft): Draft => (
   fedPressure: false,
   speechAudience: null,
   viewMyth: null,
+  spinMyth: null,
   filibusterRule: null,
   reform: null,
   amendmentProposal: null,
@@ -291,13 +293,15 @@ export class Session {
     this.draft.revokedOrders.length > 0 ||
     this.draft.fedPressure ||
     this.draft.speechAudience !== null ||
-    this.draft.viewMyth !== null
+    this.draft.viewMyth !== null ||
+    this.draft.spinMyth !== null
       ? {
           ...(this.draft.signedOrders.length > 0 ? { signOrders: $state.snapshot(this.draft.signedOrders) } : {}),
           ...(this.draft.revokedOrders.length > 0 ? { revokeOrders: $state.snapshot(this.draft.revokedOrders) } : {}),
           ...(this.draft.fedPressure ? { pressureFed: true } : {}),
           ...(this.draft.speechAudience ? { speech: { audience: this.draft.speechAudience } } : {}),
           ...(this.draft.viewMyth ? { viewMyth: this.draft.viewMyth } : {}),
+          ...(this.draft.spinMyth ? { spinMyth: this.draft.spinMyth } : {}),
         }
       : null,
   );
@@ -397,6 +401,14 @@ export class Session {
         id: 'fed',
         label: 'Pressure the Fed',
         screen: 'economy',
+      });
+    }
+
+    if (this.draft.spinMyth) {
+      items.push({
+        id: 'spin_myth',
+        label: `Spin ${this.draft.spinMyth}`,
+        screen: 'powers',
       });
     }
 
@@ -721,7 +733,24 @@ export class Session {
     if (this.over) return;
     if (!this.current.viewedMyths.includes(id)) {
       this.draft.viewMyth = id;
+      if (this.draft.spinMyth === id) {
+        this.draft.spinMyth = null;
+      }
     }
+  }
+
+  spinMythCard(id: string) {
+    if (this.over) return;
+    if (!this.current.viewedMyths.includes(id)) {
+      this.draft.spinMyth = id;
+      if (this.draft.viewMyth === id) {
+        this.draft.viewMyth = null;
+      }
+    }
+  }
+
+  hasSpunMyth(id: string): boolean {
+    return (this.current.spunMyths ?? []).includes(id) || this.draft.spinMyth === id;
   }
 
   viewExplainer(id: string) {

@@ -134,4 +134,42 @@ describe('policy milestone badges engine (RPT-03)', () => {
     expect(meta.passedBillsCount).toBe(1);
     expect(meta.crisesResolvedCount).toBe(1);
   });
+
+  it('unlocks truth_teller when >= 6 myths are busted and 0 spun (SPIN-02)', () => {
+    const s1: GameState = {
+      ...baseState,
+      viewedMyths: ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'explainer:economy'],
+      spunMyths: [],
+    };
+    expect(checkBadgeUnlock('truth_teller', s1, [s1])).toBe(true);
+
+    // If a myth was spun, truth_teller is locked
+    const s2: GameState = {
+      ...s1,
+      spunMyths: ['m1'],
+    };
+    expect(checkBadgeUnlock('truth_teller', s2, [s2])).toBe(false);
+
+    // If fewer than 6 myths are busted, truth_teller is locked
+    const s3: GameState = {
+      ...baseState,
+      viewedMyths: ['m1', 'm2', 'm3', 'm4', 'm5'],
+      spunMyths: [],
+    };
+    expect(checkBadgeUnlock('truth_teller', s3, [s3])).toBe(false);
+  });
+
+  it('unlocks demagogue when >= 4 myths are spun (SPIN-02)', () => {
+    const s1: GameState = {
+      ...baseState,
+      spunMyths: ['m1', 'm2', 'm3', 'm4'],
+    };
+    expect(checkBadgeUnlock('demagogue', s1, [s1])).toBe(true);
+
+    const s2: GameState = {
+      ...baseState,
+      spunMyths: ['m1', 'm2', 'm3'],
+    };
+    expect(checkBadgeUnlock('demagogue', s2, [s2])).toBe(false);
+  });
 });

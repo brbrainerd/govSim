@@ -31,7 +31,7 @@ test.describe('Your Powers screen and modals (PWR-01..PWR-07, OBS-07)', () => {
 
     // Verify first view reward button
     const gotItBtn = modal.locator('button.got-it-btn');
-    await expect(gotItBtn).toContainText('GOT IT (+5 CLOUT)');
+    await expect(gotItBtn).toContainText('DEBUNK MYTH (+5 CLOUT)');
     await gotItBtn.click();
     await expect(modal).not.toBeVisible();
 

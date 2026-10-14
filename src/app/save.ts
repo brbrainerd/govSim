@@ -188,6 +188,9 @@ export function validateDecisions(d: unknown): Decisions {
     if (typeof d.powers.viewMyth === 'string' && !isValidMythOrExplainerId(d.powers.viewMyth)) {
       throw new Error(`Unknown myth or explainer ID: "${d.powers.viewMyth}"`);
     }
+    if (typeof d.powers.spinMyth === 'string' && getMyth(d.powers.spinMyth) === undefined) {
+      throw new Error(`Unknown myth ID for spin: "${d.powers.spinMyth}"`);
+    }
     const nominateFed =
       d.powers.nominateFed === 'hawk' || d.powers.nominateFed === 'centrist' || d.powers.nominateFed === 'dove'
         ? d.powers.nominateFed
@@ -207,6 +210,7 @@ export function validateDecisions(d: unknown): Decisions {
       ...(nominateFed ? { nominateFed } : {}),
       ...(nominateScotus ? { nominateScotus } : {}),
       ...(typeof d.powers.viewMyth === 'string' ? { viewMyth: d.powers.viewMyth } : {}),
+      ...(typeof d.powers.spinMyth === 'string' ? { spinMyth: d.powers.spinMyth } : {}),
       ...(isRecord(d.powers.speech) &&
       (d.powers.speech.audience === 'general' ||
         d.powers.speech.audience === 'congress' ||

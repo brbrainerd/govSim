@@ -114,6 +114,7 @@ export interface GameState {
   readonly activeCrisis: ActiveCrisis | null;
   readonly activeOrders: readonly string[]; // signed executive orders currently in force
   readonly viewedMyths: readonly string[]; // myth cards visited by player (one-time reward)
+  readonly spunMyths?: readonly string[]; // myth cards spun by player for short-term gain (SPIN-01)
   readonly speechCountInWindow: number; // rolling speech count for diminishing returns
   readonly houseSeatDelta: number; // net seat change from midterms (default 0)
   readonly senateSeatDelta?: number; // net Senate seat change from midterms (default 0)
@@ -212,6 +213,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   let scheduled: readonly Scheduled[] = state.scheduled;
   let activeOrders: readonly string[] = state.activeOrders;
   let viewedMyths: readonly string[] = state.viewedMyths;
+  let spunMyths: readonly string[] | undefined = state.spunMyths;
   let speechCountInWindow: number = state.speechCountInWindow;
   const log: LogEntry[] = [];
   if (!legacyRun) {
@@ -344,6 +346,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
       scheduled = [...scheduled, ...pRes.scheduled];
       activeOrders = pRes.activeOrders;
       viewedMyths = pRes.viewedMyths;
+      if (pRes.spunMyths) spunMyths = pRes.spunMyths;
       speechCountInWindow = pRes.speechCountInWindow;
       log.push(...pRes.log);
     } else {
@@ -539,8 +542,9 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     log.push(entry);
   }
 
+  const powersHeat = pRes?.valid && typeof pRes.heatDelta === 'number' ? pRes.heatDelta : 0;
   const decayedHeat = calculateHeatDecay(currentEvil.heat);
-  const nextHeat = Math.max(MIN_HEAT, Math.min(MAX_HEAT, decayedHeat + heatAdd + leverResult.heatDelta));
+  const nextHeat = Math.max(MIN_HEAT, Math.min(MAX_HEAT, decayedHeat + heatAdd + leverResult.heatDelta + powersHeat));
   const evilPenalties = calculateHeatPenalties(nextHeat);
 
   let nextStash = currentEvil.offshoreStashBn + siphon + leverResult.stashDeltaBn;
@@ -968,6 +972,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     scheduled,
     activeOrders,
     viewedMyths,
+    ...(spunMyths && spunMyths.length > 0 ? { spunMyths } : (state.spunMyths && state.spunMyths.length > 0 ? { spunMyths: state.spunMyths } : {})),
     speechCountInWindow,
     houseSeatDelta: nextHouseSeatDelta,
     activeGeopoliticalCrises: activeGeoCrises,
