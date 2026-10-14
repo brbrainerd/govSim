@@ -9,6 +9,7 @@
   import HouseholdBreakdown from '../ui/HouseholdBreakdown.svelte';
 
   import type { ExplainerId } from '../content/explainers';
+  import { getInspectorSummary } from '../content/model-inspector';
 
   let {
     session,
@@ -17,6 +18,7 @@
     onOpenMyth,
     onOpenExplainer,
     onOpenFed,
+    onOpenModelInspector,
   }: {
     session: Session;
     question: string;
@@ -24,7 +26,10 @@
     onOpenMyth?: (mythId: string) => void;
     onOpenExplainer?: (explainerId: ExplainerId) => void;
     onOpenFed?: () => void;
+    onOpenModelInspector?: () => void;
   } = $props();
+
+  const totalParams = getInspectorSummary().totalParameters;
 
   let showScoresModal = $state(false);
   let viewMode = $state<'macro' | 'household'>('macro');
@@ -218,6 +223,7 @@
 
   {#snippet learn()}
     <button type="button" class="link" data-testid="how-it-works-btn" onclick={() => onOpenExplainer?.('economy')}>How it works</button>
+    <button type="button" class="link" data-testid="open-model-inspector-btn" onclick={() => onOpenModelInspector?.()}>Show your work ({totalParams} params)</button>
     <button type="button" class="ticket" onclick={() => onOpenMyth?.('supply_side_taxes')}>Myth? Lower taxes boost growth?</button>
   {/snippet}
 

@@ -24,6 +24,7 @@
   import ProblemReportModal from '../ui/ProblemReportModal.svelte';
   import ImpeachmentModal from '../ui/ImpeachmentModal.svelte';
   import ExplainerModal from '../ui/ExplainerModal.svelte';
+  import ModelInspectorModal from '../ui/ModelInspectorModal.svelte';
   import EndScreen from './EndScreen.svelte';
   import { getMyth } from '../content/myths';
   import { getExplainer, type ExplainerId } from '../content/explainers';
@@ -50,6 +51,7 @@
   let fedModalOpen = $state<boolean>(false);
   let aboutModalOpen = $state<boolean>(false);
   let reportModalOpen = $state<boolean>(false);
+  let modelInspectorOpen = $state<boolean>(false);
 
   const activeMyth = $derived(activeMythId ? getMyth(activeMythId) : null);
   const activeExplainer = $derived(activeExplainerId ? getExplainer(activeExplainerId) : null);
@@ -121,6 +123,7 @@
           onOpenMyth={(id) => (activeMythId = id)}
           onOpenExplainer={(id) => (activeExplainerId = id)}
           onOpenFed={() => (fedModalOpen = true)}
+          onOpenModelInspector={() => (modelInspectorOpen = true)}
         />
       {:else if screen.id === 'budget'}
         <Budget
@@ -221,6 +224,7 @@
       <AboutModal
         onClose={() => (aboutModalOpen = false)}
         onOpenReport={() => (reportModalOpen = true)}
+        onOpenModelInspector={() => (modelInspectorOpen = true)}
       />
     {/if}
 
@@ -228,6 +232,12 @@
       <ProblemReportModal
         {session}
         onClose={() => (reportModalOpen = false)}
+      />
+    {/if}
+
+    {#if modelInspectorOpen}
+      <ModelInspectorModal
+        onClose={() => (modelInspectorOpen = false)}
       />
     {/if}
   </div>

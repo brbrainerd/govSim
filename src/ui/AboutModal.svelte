@@ -4,9 +4,11 @@
   let {
     onClose,
     onOpenReport,
+    onOpenModelInspector,
   }: {
     onClose: () => void;
     onOpenReport?: () => void;
+    onOpenModelInspector?: () => void;
   } = $props();
 </script>
 
@@ -69,6 +71,19 @@
           <p class="act-p">
             Encountered a bug, calculation discrepancy, or layout issue? Generate a diagnostic bundle without sending any data over the network.
           </p>
+          {#if onOpenModelInspector}
+            <button
+              type="button"
+              class="report-btn"
+              data-testid="about-model-inspector-btn"
+              onclick={() => {
+                onClose();
+                onOpenModelInspector();
+              }}
+            >
+              Inspect Economic Model & Equations
+            </button>
+          {/if}
           {#if onOpenReport}
             <button
               type="button"
