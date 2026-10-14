@@ -13,12 +13,14 @@
     score,
     party,
     evilMode = false,
+    calmMode = false,
     stagedActions = [],
     canFastForward = false,
     onNextTurn,
     onFastForward,
     onSelectScreen,
     onClearStaged,
+    onToggleCalm,
   }: {
     state: GameState;
     clout: number;
@@ -26,12 +28,14 @@
     score: number | ScoreBreakdown;
     party: string;
     evilMode?: boolean;
+    calmMode?: boolean;
     stagedActions?: readonly StagedActionItem[];
     canFastForward?: boolean;
     onNextTurn: () => void;
     onFastForward?: () => void;
     onSelectScreen?: (id: ScreenId) => void;
     onClearStaged?: () => void;
+    onToggleCalm?: () => void;
   } = $props();
 
   let trayOpen = $state(false);
@@ -174,7 +178,20 @@
             </div>
           {/if}
         </div>
-        <div class="label">{party}</div>
+        <div class="party-calm-wrap">
+          <button
+            type="button"
+            class="calm-pill"
+            class:active={calmMode}
+            data-testid="calm-mode-toggle"
+            aria-pressed={calmMode}
+            onclick={onToggleCalm}
+            title="Calm mode: disable decorative animations"
+          >
+            {calmMode ? 'Calm: ON' : 'Calm'}
+          </button>
+          <div class="label">{party}</div>
+        </div>
       </div>
       <button type="button" class="when tip" aria-describedby="tip-when">{gameState.turn >= TOTAL_TURNS ? 'Term over' : `Turn ${gameState.turn} of ${TOTAL_TURNS} · ${termLabel(gameState.turn)}`}
         <span role="tooltip" id="tip-when">Real calendar: {realQuarterLabel(gameState.turn)}. Your term is fictional and off-cycle.</span>
@@ -350,5 +367,26 @@
   .special-counsel-badge .badge-icon {
     font-size: 11px;
     color: var(--paper);
+  }
+  .party-calm-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .calm-pill {
+    padding: 2px 7px;
+    font: 700 11px/1.2 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    background: var(--paper);
+    color: var(--ink-soft);
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background var(--dur-fast), color var(--dur-fast);
+  }
+  .calm-pill:hover, .calm-pill.active {
+    background: var(--ink);
+    color: var(--card);
   }
 </style>

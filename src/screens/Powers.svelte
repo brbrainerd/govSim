@@ -114,7 +114,7 @@
                 {:else if draftRevoked}
                   <span class="status-badge revoking">Revoking</span>
                 {:else if draftSigned}
-                  <span class="status-badge signing">Signing</span>
+                  <span class="stamp-slam" data-testid="stamp-slam-badge">SIGNED BY ORDER</span>
                 {:else if active}
                   <span class="status-badge signed">
                     <CheckCircle size={13} /> Active
@@ -349,6 +349,11 @@
     <div class="next-column">
       <!-- What It Means Explainer -->
       <div class="card preview-card">
+        {#if isOrderDraftSigned(selectedOrderId)}
+          <div class="stamp-wrap">
+            <span class="stamp-slam" data-testid="stamp-slam-badge">SIGNED BY ORDER</span>
+          </div>
+        {/if}
         <span class="label">What it means</span>
         <h4 class="preview-title">{selectedOrder.name}</h4>
         <p class="preview-desc">{selectedOrder.description}</p>
@@ -1234,5 +1239,35 @@
     font-size: 11px;
     white-space: nowrap;
     min-height: 24px;
+  }
+
+  .stamp-wrap {
+    margin: 2px 0 6px;
+  }
+
+  .stamp-slam {
+    display: inline-block;
+    padding: 3px 8px;
+    font: 900 11px/1.1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--alert);
+    color: var(--card);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--r-sm);
+    box-shadow: 2px 2px 0 var(--ink);
+    transform: rotate(-6deg);
+    animation: stampSlam var(--dur-fast) var(--ease-pop);
+  }
+
+  @keyframes stampSlam {
+    0% {
+      transform: scale(1.85) rotate(-12deg);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1) rotate(-6deg);
+      opacity: 1;
+    }
   }
 </style>

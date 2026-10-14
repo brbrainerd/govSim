@@ -135,6 +135,11 @@ export class Session {
   newlyUnlockedBadges = $state<string[]>([]);
   selectedHouseholdPersona = $state<HouseholdPersona>(DEFAULT_HOUSEHOLD_PERSONA);
   options = $state<GameOptions>({ party: 'D' });
+  calmMode = $state<boolean>(
+    typeof localStorage !== 'undefined' && localStorage.getItem('govsim_calm_mode') === 'true'
+      ? true
+      : typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true,
+  );
 
   current = $derived(this.history[this.history.length - 1]!);
   previous = $derived(this.history[this.history.length - 2] ?? this.current);
@@ -463,6 +468,9 @@ export class Session {
     this.draft = freshDraft(initial.policy, initial.socialPolicy);
     this.inputs = [];
     this.unlockedBadges = evaluateBadges(this.current, this.history);
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.calm = this.calmMode ? 'true' : 'false';
+    }
     storeAutosave(this);
   }
 
@@ -685,6 +693,16 @@ export class Session {
   hasViewedExplainer(id: string): boolean {
     const key = `explainer:${id}`;
     return this.current.viewedMyths.includes(key) || this.draft.viewMyth === key;
+  }
+
+  toggleCalmMode(): void {
+    this.calmMode = !this.calmMode;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('govsim_calm_mode', this.calmMode ? 'true' : 'false');
+    }
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.calm = this.calmMode ? 'true' : 'false';
+    }
   }
 
   setFilibusterRule(rule: FilibusterRule) {

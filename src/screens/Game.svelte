@@ -83,12 +83,14 @@
       score={session.score}
       party={PARTIES.find((p) => p.id === session.options.party)!.name}
       evilMode={session.isEvilMode}
+      calmMode={session.calmMode}
       stagedActions={session.stagedActionsSummary}
       canFastForward={session.canFastForward}
       onNextTurn={() => session.nextTurn()}
       onFastForward={() => session.fastForwardToNextEvent()}
       onSelectScreen={go}
       onClearStaged={() => session.resetDraft()}
+      onToggleCalm={() => session.toggleCalmMode()}
     />
     <div class="zones">
       <Rail
@@ -256,5 +258,12 @@
     height: 100%;
     min-height: 0;
     overflow: hidden;
+  }
+  :global([data-calm='true'] *),
+  :global([data-calm='true'] *::before),
+  :global([data-calm='true'] *::after) {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 </style>
