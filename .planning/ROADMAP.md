@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- 🚧 **v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy** — Phases 30-33 (in progress)
+- ✅ **v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy** — Phases 30-33 (shipped 2026-10-14)
 - ✅ **v0.7 Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director** — Phases 25-29 (shipped 2026-10-14)
 - ✅ **v0.6 Completeness, Advisor Agency & Scenarios** — Phases 21-24 (shipped 2026-10-14)
 - ✅ **v0.5 Satirical "Evil Mode"** — Phases 17-20 (shipped 2026-10-13)
@@ -12,14 +12,20 @@
 
 ## Phases
 
-### 🚧 v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy (Phases 30-33)
+### ✅ v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy (Phases 30-33) — SHIPPED 2026-10-14
 
 - [x] **Phase 30: Expanded 12-Card Myth Catalog, Bottleneck Predictions & Actionable Pivot Schema** — Expand `src/content/myths.ts` to 12 spectrum-balanced cards (`|left - right| <= 1`), add 2-option prediction prompts and tempting `mirageLabel` copy, and define typed `realLeverActions` pivot targets (`DECK-01`, `DECK-02`, `PIVOT-01`). (completed 2026-10-14)
 - [x] **Phase 31: Interactive Reality-Check Modal & 1-Click Tactical Pivots** — Upgrade `MythModal.svelte` with optional 1-click bottleneck prediction, tactile `MYTH BUSTED` stamp-slam animation, zero-friction skip/dismiss, and clickable `realLeverActions` buttons that stage levers and jump to target screens (`MYTH-03`, `MYTH-04`, `PIVOT-02`). (completed 2026-10-14)
 - [x] **Phase 32: Tempting "Mirage Levers" Across Screens & Contextual Blame Triggers** — Place viewport-safe populist "Mirage Lever" buttons across `Economy`, `Budget`, `Congress`, `Powers`, `Trade`, and `Voters` screens, and surface contextual "Public Blame / Myth Check" suggestions in `OvalOffice` briefings (`MYTH-01`, `MYTH-02`). (completed 2026-10-14)
 - [x] **Phase 33: "Debunk vs. Spin" Gameplay Mechanics & EndScreen Civic Dossier** — Add pure-engine `spinMyth` support (+Approval rally, −Social Trust, +Evil Heat) with registered coefficients and causal traces, wire the `"Spin This Myth"` button in `MythModal.svelte`, and add a Civic Mastery Dossier to `EndScreen.svelte` (`SPIN-01`, `SPIN-02`). (completed 2026-10-14)
 
-### Phase Details (v0.8)
+<details>
+<summary>✅ v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy (Phases 30-33) — SHIPPED 2026-10-14</summary>
+
+- [x] Phase 30: Expanded 12-Card Myth Catalog, Bottleneck Predictions & Actionable Pivot Schema (1/1 plans) — completed 2026-10-14
+- [x] Phase 31: Interactive Reality-Check Modal & 1-Click Tactical Pivots (1/1 plans) — completed 2026-10-14
+- [x] Phase 32: Tempting "Mirage Levers" Across Screens & Contextual Blame Triggers (1/1 plans) — completed 2026-10-14
+- [x] Phase 33: "Debunk vs. Spin" Gameplay Mechanics & EndScreen Civic Dossier (1/1 plans) — completed 2026-10-14
 
 #### Phase 30: Expanded 12-Card Myth Catalog, Bottleneck Predictions & Actionable Pivot Schema
 - **Goal**: Expand the civics myth deck to cover every core policy screen with 12 spectrum-balanced cards, active prediction prompts, and actionable tactical pivot descriptors.
@@ -50,6 +56,8 @@
 - **Success Criteria**:
   1. `resolvePowerDecisions` in `src/engine/powers.ts` resolves `powers.spinMyth` using registered coefficients (`C.mythSpinApprovalBoost`, `C.mythSpinTrustPenalty`, `C.mythSpinHeatDelta`), emits `'event:myth_spin'` ledger modifiers with `why.ts` copy, validates in `parseSave`, and preserves 8/8 golden determinism hashes.
   2. First-view `MythModal.svelte` offers both `"Debunk Myth (+5 Clout)"` and `"Spin This Myth (+2% Approval, −Trust)"` actions, and `EndScreen.svelte` displays the player's Myths Busted vs. Myths Spun record.
+
+</details>
 
 ---
 

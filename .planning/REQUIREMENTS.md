@@ -19,13 +19,13 @@
 
 ### Tempting "Mirage Levers" Across Screens & Contextual Blame Triggers (Phase 32)
 
-- [ ] **MYTH-01**: Place viewport-safe tempting "Mirage Lever" controls (plausible populist "Easy Buttons" that trigger the corresponding Myth Reality Check at the moment of player intent) across `Economy.svelte`, `Budget.svelte`, `Congress.svelte` (wiring `onOpenMyth` in `Game.svelte`), `Powers.svelte`, `Trade.svelte`, and `Voters.svelte`, maintaining zero outer viewport scrolling at `1376×768` and `1280×720`.
-- [ ] **MYTH-02**: Upgrade `generateBriefing` in `src/content/briefing.ts` and `OvalOffice.svelte` so that when inflation, gas/energy costs, unemployment, or budget deficits spike, the Chief of Staff surfaces a contextual "Public Blame / Myth Check" suggestion tied to the active macro pressure.
+- [x] **MYTH-01**: Place viewport-safe tempting "Mirage Lever" controls (plausible populist "Easy Buttons" that trigger the corresponding Myth Reality Check at the moment of player intent) across `Economy.svelte`, `Budget.svelte`, `Congress.svelte` (wiring `onOpenMyth` in `Game.svelte`), `Powers.svelte`, `Trade.svelte`, and `Voters.svelte`, maintaining zero outer viewport scrolling at `1376×768` and `1280×720`. *(Validated in Phase 32)*
+- [x] **MYTH-02**: Upgrade `generateBriefing` in `src/content/briefing.ts` and `OvalOffice.svelte` so that when inflation, gas/energy costs, unemployment, or budget deficits spike, the Chief of Staff surfaces a contextual "Public Blame / Myth Check" suggestion tied to the active macro pressure. *(Validated in Phase 32)*
 
 ### "Debunk vs. Spin" Gameplay Mechanics & EndScreen Civic Dossier (Phase 33)
 
-- [ ] **SPIN-01**: Implement the pure-engine `"Debunk vs. Spin"` mechanic (`spinMyth?: string` in `PowerDecisions`, registered coefficients `mythSpinApprovalBoost`, `mythSpinTrustPenalty`, `mythSpinHeatDelta` in `coefficients.ts`, `'event:myth_spin'` trace copy in `why.ts`, and `save.ts` validation) so players can either Debunk a myth (+5 Clout) or Spin it on TV (+Approval rally for 1 turn, −Social Trust, and +Heat in Evil Mode) while keeping all existing determinism golden hashes bit-identical.
-- [ ] **SPIN-02**: Wire the `"Spin This Myth"` demagogue action in `src/ui/MythModal.svelte` and `Session` (`src/app/session.svelte.ts`), and upgrade `src/screens/EndScreen.svelte` with a Civic Mastery Dossier summarizing Myths Busted vs. Myths Spun at term end.
+- [x] **SPIN-01**: Implement the pure-engine `"Debunk vs. Spin"` mechanic (`spinMyth?: string` in `PowerDecisions`, registered coefficients `mythSpinApprovalBoost`, `mythSpinTrustPenalty`, `mythSpinHeatDelta` in `coefficients.ts`, `'event:myth_spin'` trace copy in `why.ts`, and `save.ts` validation) so players can either Debunk a myth (+5 Clout) or Spin it on TV (+Approval rally for 1 turn, −Social Trust, and +Heat in Evil Mode) while keeping all existing determinism golden hashes bit-identical. *(Validated in Phase 33)*
+- [x] **SPIN-02**: Wire the `"Spin This Myth"` demagogue action in `src/ui/MythModal.svelte` and `Session` (`src/app/session.svelte.ts`), and upgrade `src/screens/EndScreen.svelte` with a Civic Mastery Dossier summarizing Myths Busted vs. Myths Spun at term end. *(Validated in Phase 33)*
 
 ## Future Requirements
 
@@ -46,10 +46,10 @@
 | MYTH-03 | Phase 31 | Validated |
 | MYTH-04 | Phase 31 | Validated |
 | PIVOT-02 | Phase 31 | Validated |
-| MYTH-01 | Phase 32 | Pending |
-| MYTH-02 | Phase 32 | Pending |
-| SPIN-01 | Phase 33 | Pending |
-| SPIN-02 | Phase 33 | Pending |
+| MYTH-01 | Phase 32 | Validated |
+| MYTH-02 | Phase 32 | Validated |
+| SPIN-01 | Phase 33 | Validated |
+| SPIN-02 | Phase 33 | Validated |
 
 **Coverage:**
 - v0.8 requirements: 10 total
