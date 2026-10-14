@@ -11,7 +11,7 @@ export default defineConfig({
   preview: {
     headers: {
       'Content-Security-Policy':
-        "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.r2.cloudflarestorage.com;",
+        "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.r2.cloudflarestorage.com https://openrouter.ai https://generativelanguage.googleapis.com https://api.groq.com http://localhost:* http://127.0.0.1:*;",
     },
   },
 });

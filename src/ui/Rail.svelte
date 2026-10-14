@@ -12,6 +12,7 @@
     onImport,
     onAbout,
     onUnlockAll,
+    onOpenAiSettings,
   }: {
     turn: number;
     current: ScreenId;
@@ -22,6 +23,7 @@
     onImport?: (f: File) => void;
     onAbout?: () => void;
     onUnlockAll?: () => void;
+    onOpenAiSettings?: () => void;
   } = $props();
 
   const nav = $derived(navFor(turn, unlockAll, isEvilMode));
@@ -56,6 +58,17 @@
       <button type="button" class="util-btn" onclick={onAbout} data-testid="nav-about-btn" aria-label="About govSim and Privacy">
         <InfoIcon size={16} strokeWidth={2.2} aria-hidden="true" />
         <span>About & Privacy</span>
+      </button>
+    {/if}
+    {#if onOpenAiSettings}
+      <button
+        type="button"
+        class="util-btn"
+        onclick={onOpenAiSettings}
+        data-testid="nav-ai-settings-btn"
+        aria-label="Free AI Director Settings"
+      >
+        <span>AI Director (Free)</span>
       </button>
     {/if}
     {#if onExport}

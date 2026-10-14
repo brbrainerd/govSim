@@ -25,9 +25,12 @@
   import ImpeachmentModal from '../ui/ImpeachmentModal.svelte';
   import ExplainerModal from '../ui/ExplainerModal.svelte';
   import ModelInspectorModal from '../ui/ModelInspectorModal.svelte';
+  import AiSettingsModal from '../ui/AiSettingsModal.svelte';
   import EndScreen from './EndScreen.svelte';
   import { getMyth } from '../content/myths';
   import { getExplainer, type ExplainerId } from '../content/explainers';
+  import { onMount } from 'svelte';
+  import { completeOpenRouterPkceAuth, loadAiConfig, saveAiConfig } from '../app/ai-providers';
 
   let {
     session,
@@ -52,6 +55,28 @@
   let aboutModalOpen = $state<boolean>(false);
   let reportModalOpen = $state<boolean>(false);
   let modelInspectorOpen = $state<boolean>(false);
+  let aiSettingsModalOpen = $state<boolean>(false);
+
+  onMount(async () => {
+    if (typeof window !== 'undefined' && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      if (code) {
+        try {
+          const apiKey = await completeOpenRouterPkceAuth(code);
+          const currentConfig = loadAiConfig();
+          currentConfig.provider = 'openrouter_free';
+          currentConfig.apiKey = apiKey;
+          saveAiConfig(currentConfig);
+          aiSettingsModalOpen = true;
+          const cleanUrl = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+        } catch (err) {
+          console.error('Failed to complete OpenRouter PKCE auth:', err);
+        }
+      }
+    }
+  });
 
   const activeMyth = $derived(activeMythId ? getMyth(activeMythId) : null);
   const activeExplainer = $derived(activeExplainerId ? getExplainer(activeExplainerId) : null);
@@ -103,6 +128,7 @@
         onSelect={go}
         onExport={() => downloadSave(session)}
         onAbout={() => (aboutModalOpen = true)}
+        onOpenAiSettings={() => (aiSettingsModalOpen = true)}
         onUnlockAll={() => session.unlockAllScreens()}
         {onImport}
       />
@@ -238,6 +264,12 @@
     {#if modelInspectorOpen}
       <ModelInspectorModal
         onClose={() => (modelInspectorOpen = false)}
+      />
+    {/if}
+
+    {#if aiSettingsModalOpen}
+      <AiSettingsModal
+        onClose={() => (aiSettingsModalOpen = false)}
       />
     {/if}
   </div>
