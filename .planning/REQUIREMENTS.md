@@ -19,8 +19,8 @@
 
 ### Year-1 Progressive Onboarding & Guided Turn Flow (Phase 27)
 
-- [ ] **ONBOARD-01**: Implement Year-1 progressive onboarding per `docs/design.md` §7b — guiding new runs through Turn 1 (Oval Office, Budget, Congress), Turn 2 (Your Powers), and Turn 3+ (Voters, Social, Trade, Reforms) with contextual stage callouts and step badges.
-- [ ] **ONBOARD-02**: Provide an `"Unlock all screens immediately"` toggle on `NewGame.svelte` and in-game navigation so experienced players and automated tests can access any screen on Turn 1 without friction.
+- [x] **ONBOARD-01**: Implement Year-1 progressive onboarding per `docs/design.md` §7b — guiding new runs through Turn 1 (Oval Office, Budget, Congress), Turn 2 (Your Powers), and Turn 3+ (Voters, Social, Trade, Reforms) with contextual stage callouts and step badges.
+- [x] **ONBOARD-02**: Provide an `"Unlock all screens immediately"` toggle on `NewGame.svelte` and in-game navigation so experienced players and automated tests can access any screen on Turn 1 without friction.
 
 ### "Show Your Work" Model Inspector & Citation Audit (Phase 28)
 
@@ -44,8 +44,8 @@
 | JUICE-01 | Phase 26 | Complete |
 | JUICE-02 | Phase 26 | Complete |
 | JUICE-03 | Phase 26 | Complete |
-| ONBOARD-01 | Phase 27 | Pending |
-| ONBOARD-02 | Phase 27 | Pending |
+| ONBOARD-01 | Phase 27 | Complete |
+| ONBOARD-02 | Phase 27 | Complete |
 | MODEL-01 | Phase 28 | Pending |
 | MODEL-02 | Phase 28 | Pending |
 | AI-01 | Phase 29 | Pending |
