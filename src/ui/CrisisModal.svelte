@@ -80,7 +80,7 @@
         <h2 id="crisis-headline" class="crisis-headline">{crisis.headline}</h2>
 
         <div class="scene-container">
-          <ReporterScene category={crisis.crisisId} />
+          <ReporterScene category={crisis.crisisId} chyronText={crisis.headline.toUpperCase()} />
         </div>
 
         <p class="crisis-desc">{crisis.description}</p>

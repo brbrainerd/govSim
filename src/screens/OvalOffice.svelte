@@ -53,7 +53,18 @@
 <ScreenLayout {question}>
   {#snippet main()}
     <div class="card stage">
-      <div class="scene"><OvalOfficeScene /></div>
+      <div class="scene">
+        <OvalOfficeScene
+          talking={true}
+          approval={session.current.approval}
+          inflation={session.current.econ.inflation}
+          unemployment={session.current.econ.unemployment}
+          hasCrisis={Boolean(session.current.activeCrisis || activeGeopoliticalCrisis)}
+          evilMode={session.isEvilMode}
+          heat={session.current.evil?.heat ?? 0}
+          stagedCount={session.stagedActionsSummary.length}
+        />
+      </div>
       <div class="bubble" role="status">{briefingInfo.bubble}</div>
     </div>
     <div class="doing">
