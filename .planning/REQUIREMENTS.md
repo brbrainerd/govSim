@@ -13,9 +13,9 @@
 
 ### Interactive Reality-Check Modal & 1-Click Tactical Pivots (Phase 31)
 
-- [ ] **MYTH-03**: Upgrade `src/ui/MythModal.svelte` with an interactive "Call the Bluff / Spot the Bottleneck" prediction step that lets the player test their intuition before revealing the causal reality and slamming the `MYTH BUSTED` stamp (respecting `calmMode` and `prefers-reduced-motion`).
-- [ ] **MYTH-04**: Provide a zero-friction `"Skip to Reality"` / direct `"Got It"` path in `src/ui/MythModal.svelte` so players are never gated by a mandatory quiz and can claim or dismiss the card in one click.
-- [ ] **PIVOT-02**: Convert the static `realLevers` pills in `src/ui/MythModal.svelte` into interactive 1-click tactical pivot buttons (`Session.applyMythLeverAction`) that mark the myth examined, stage or highlight the real lever, navigate to the target screen, and close the modal.
+- [x] **MYTH-03**: Upgrade `src/ui/MythModal.svelte` with an interactive "Call the Bluff / Spot the Bottleneck" prediction step that lets the player test their intuition before revealing the causal reality and slamming the `MYTH BUSTED` stamp (respecting `calmMode` and `prefers-reduced-motion`). *(Validated in Phase 31)*
+- [x] **MYTH-04**: Provide a zero-friction `"Skip to Reality"` / direct `"Got It"` path in `src/ui/MythModal.svelte` so players are never gated by a mandatory quiz and can claim or dismiss the card in one click. *(Validated in Phase 31)*
+- [x] **PIVOT-02**: Convert the static `realLevers` pills in `src/ui/MythModal.svelte` into interactive 1-click tactical pivot buttons (`Session.applyMythLeverAction`) that mark the myth examined, stage or highlight the real lever, navigate to the target screen, and close the modal. *(Validated in Phase 31)*
 
 ### Tempting "Mirage Levers" Across Screens & Contextual Blame Triggers (Phase 32)
 
@@ -43,9 +43,9 @@
 | DECK-01 | Phase 30 | Validated |
 | DECK-02 | Phase 30 | Validated |
 | PIVOT-01 | Phase 30 | Validated |
-| MYTH-03 | Phase 31 | Pending |
-| MYTH-04 | Phase 31 | Pending |
-| PIVOT-02 | Phase 31 | Pending |
+| MYTH-03 | Phase 31 | Validated |
+| MYTH-04 | Phase 31 | Validated |
+| PIVOT-02 | Phase 31 | Validated |
 | MYTH-01 | Phase 32 | Pending |
 | MYTH-02 | Phase 32 | Pending |
 | SPIN-01 | Phase 33 | Pending |
