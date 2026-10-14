@@ -17,6 +17,7 @@ describe('OvalOffice screen component (UI-01, UI-02)', () => {
 
     expect(html).toContain('What needs you this turn?');
     expect(html).toContain('How America is doing');
+    expect(html).toContain('data-testid="oval-news-chyron"');
     expect(html).not.toContain('data-testid="evil-situation-card"');
     expect(html).not.toContain('data-testid="oval-offshore-stash"');
   });
@@ -33,6 +34,7 @@ describe('OvalOffice screen component (UI-01, UI-02)', () => {
 
     expect(html).toContain('What needs you this turn?');
     expect(html).toContain('How the loot is doing');
+    expect(html).toContain('data-testid="oval-news-chyron"');
     expect(html).toContain('data-testid="oval-offshore-stash"');
     expect(html).toContain('Offshore Stash');
     expect(html).toContain('data-testid="evil-situation-card"');

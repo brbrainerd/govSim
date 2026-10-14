@@ -10,6 +10,7 @@
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import HouseholdCard from '../ui/HouseholdCard.svelte';
   import HouseholdModal from '../ui/HouseholdModal.svelte';
+  import { pickChyron } from '../content/chyrons';
 
   import type { ExplainerId } from '../content/explainers';
 
@@ -35,6 +36,7 @@
   const index = $derived(Math.round(session.index));
   const change = $derived(index - Math.round(score(session.previous).index));
   const briefingInfo = $derived(generateBriefing(session));
+  const chyron = $derived(pickChyron(session));
 
   const activeGeopoliticalCrisis = $derived(
     session.current.activeGeopoliticalCrises && session.current.activeGeopoliticalCrises.length > 0
@@ -64,6 +66,10 @@
           heat={session.current.evil?.heat ?? 0}
           stagedCount={session.stagedActionsSummary.length}
         />
+      </div>
+      <div class="chyron-strip" data-testid="oval-news-chyron">
+        <span class="chyron-tag">LIVE</span>
+        <span class="chyron-text">{chyron}</span>
       </div>
       <div class="bubble" role="status">{briefingInfo.bubble}</div>
     </div>
@@ -267,6 +273,39 @@
 <style>
   .stage { position: relative; height: clamp(170px, 30vh, 310px); padding: clamp(6px, 1vh, 10px); min-height: 0; flex-shrink: 1; }
   .scene { height: 100%; border-radius: 8px; overflow: hidden; border: 2px solid var(--ink); }
+  .chyron-strip {
+    position: absolute;
+    bottom: clamp(10px, 1.5vh, 16px);
+    left: clamp(12px, 1.5vw, 20px);
+    right: clamp(12px, 1.5vw, 20px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 10px;
+    background: var(--ink);
+    color: var(--card);
+    border-radius: var(--r-sm);
+    box-shadow: 2px 2px 0 var(--paper);
+    z-index: 2;
+    overflow: hidden;
+  }
+  .chyron-tag {
+    font: 900 10px/1.2 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--alert);
+    color: var(--card);
+    padding: 2px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .chyron-text {
+    font: 600 clamp(11px, 0.9vw, 13px)/1.2 var(--font-ui);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .bubble {
     position: absolute; right: clamp(14px, 2vw, 34px); top: clamp(12px, 2vh, 30px); max-width: 24ch; padding: clamp(8px, 1.2vh, 12px) clamp(10px, 1.2vw, 16px); background: var(--card);
     border: 2.5px solid var(--ink); border-radius: 14px; font: 700 clamp(14px, 1.2vw, 18px)/1.3 var(--font-body); color: var(--ink); text-align: center;
