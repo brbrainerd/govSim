@@ -212,10 +212,16 @@
       <MythModal
         myth={activeMyth}
         isFirstView={!session.current.viewedMyths.includes(activeMyth.id)}
+        calmMode={session.calmMode}
         onClose={() => (activeMythId = null)}
         onGotIt={() => {
           session.viewMythCard(activeMyth!.id);
           activeMythId = null;
+        }}
+        onPivot={(action) => {
+          session.viewMythCard(activeMyth!.id);
+          activeMythId = null;
+          go(action.screen);
         }}
       />
     {/if}

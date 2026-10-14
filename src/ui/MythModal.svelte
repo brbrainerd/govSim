@@ -1,20 +1,29 @@
 <script lang="ts">
-  import { ExternalLink, XCircle } from '@lucide/svelte';
-  import type { MythCard } from '../content/myths';
+  import { ArrowRight, CheckCircle2, ExternalLink, HelpCircle, XCircle } from '@lucide/svelte';
+  import type { MythCard, MythRealLeverAction } from '../content/myths';
   import Character, { type Look } from './art/Character.svelte';
   import Overlay from './Overlay.svelte';
 
   let {
     myth,
     isFirstView = false,
+    calmMode = false,
     onClose,
     onGotIt,
+    onPivot,
   }: {
     myth: MythCard;
     isFirstView?: boolean;
+    calmMode?: boolean;
     onClose: () => void;
     onGotIt: () => void;
+    onPivot?: (action: MythRealLeverAction) => void;
   } = $props();
+
+  let selectedOption = $state<number | null>(null);
+  let manuallyRevealed = $state<boolean>(false);
+  let isRevealed = $derived(!isFirstView || manuallyRevealed);
+  let stampSlam = $state<boolean>(false);
 
   const analystLook: Look = {
     skin: 'skin-2',
@@ -24,17 +33,44 @@
     tie: 'gold',
     glasses: true,
   };
+
+  function handleSelectOption(index: number) {
+    if (isRevealed) return;
+    selectedOption = index;
+    manuallyRevealed = true;
+    if (!calmMode) {
+      stampSlam = true;
+      setTimeout(() => {
+        stampSlam = false;
+      }, 350);
+    }
+  }
+
+  function handleSkip() {
+    manuallyRevealed = true;
+  }
 </script>
 
 <Overlay title="Civics Myth: {myth.title}" {onClose}>
   <div class="myth-modal-content">
     <div class="myth-grid">
-      <!-- Left Column: The Myth -->
+      <!-- Left Column: The Myth / Claim -->
       <section class="myth-side" aria-label="The Myth">
         <div class="myth-stamp-container">
-          <div class="myth-stamp" aria-hidden="true">
-            <XCircle size={28} />
-            <span>MYTH</span>
+          <div
+            class="myth-stamp"
+            class:slam={stampSlam}
+            class:busted={isRevealed}
+            data-testid="myth-stamp"
+            aria-hidden="true"
+          >
+            {#if isRevealed}
+              <XCircle size={24} />
+              <span>MYTH BUSTED</span>
+            {:else}
+              <HelpCircle size={24} />
+              <span>CIVIC CLAIM</span>
+            {/if}
           </div>
         </div>
 
@@ -51,72 +87,145 @@
         </div>
       </section>
 
-      <!-- Right Column: The Reality -->
+      <!-- Right Column: Prediction Challenge or Institutional Reality -->
       <section class="reality-side" aria-label="The Reality">
-        <div class="reality-header">
-          <span class="reality-tag">INSTITUTIONAL MECHANISM</span>
-          <h3 class="reality-title">REALITY</h3>
-          <p class="reality-summary">{myth.realitySummary}</p>
-        </div>
+        {#if !isRevealed}
+          <!-- Prediction Step (MYTH-03) -->
+          <div class="challenge-container" data-testid="myth-challenge">
+            <div class="challenge-header">
+              <span class="challenge-tag">POPULIST CLAIM REALITY CHECK</span>
+              <h3 class="challenge-question">{myth.predictionPrompt.question}</h3>
+              <p class="challenge-lead">
+                Call the bluff or spot the bottleneck before checking the constitutional facts:
+              </p>
+            </div>
 
-        <!-- Flowchart & Character Scene -->
-        <div class="scene-container">
-          <div class="flowchart-box" aria-label="Flowchart: how it works in reality">
-            <div class="flow-steps">
-              {#each myth.flowSteps as step, i}
-                <div class="flow-node">
-                  <div class="step-card">
-                    <span class="step-num">{i + 1}</span>
-                    <span class="step-name">{step}</span>
-                  </div>
-                  {#if i < myth.flowSteps.length - 1}
-                    <div class="flow-arrow" aria-hidden="true">
-                      <svg viewBox="0 0 24 16" width="20" height="14">
-                        <line x1="2" y1="8" x2="16" y2="8" stroke="var(--ink)" stroke-width="2" />
-                        <polygon points="15,4 22,8 15,12" fill="var(--ink)" />
-                      </svg>
-                    </div>
-                  {/if}
-                </div>
+            <div class="options-grid">
+              {#each myth.predictionPrompt.options as option, idx}
+                <button
+                  type="button"
+                  class="pred-option-btn"
+                  data-testid="myth-pred-opt-{idx}"
+                  onclick={() => handleSelectOption(idx)}
+                >
+                  <span class="option-marker">{idx === 0 ? 'A' : 'B'}</span>
+                  <span class="option-text">{option}</span>
+                </button>
               {/each}
+            </div>
+
+            <div class="skip-row">
+              <button
+                type="button"
+                class="skip-btn"
+                data-testid="myth-skip-btn"
+                onclick={handleSkip}
+              >
+                Skip straight to reality &rarr;
+              </button>
+            </div>
+          </div>
+        {:else}
+          <!-- Refutation Banner -->
+          {#if selectedOption !== null}
+            <div
+              class="refutation-banner"
+              class:correct={selectedOption === myth.predictionPrompt.correctIndex}
+              data-testid="refutation-banner"
+            >
+              <div class="banner-title-row">
+                {#if selectedOption === myth.predictionPrompt.correctIndex}
+                  <CheckCircle2 size={16} />
+                  <strong>Spot on! You called the institutional bluff.</strong>
+                {:else}
+                  <HelpCircle size={16} />
+                  <strong>A very common misconception!</strong>
+                {/if}
+              </div>
+              <p class="refutation-text">{myth.predictionPrompt.refutation}</p>
+            </div>
+          {/if}
+
+          <div class="reality-header">
+            <span class="reality-tag">INSTITUTIONAL MECHANISM</span>
+            <h3 class="reality-title">REALITY</h3>
+            <p class="reality-summary">{myth.realitySummary}</p>
+          </div>
+
+          <!-- Flowchart & Character Scene -->
+          <div class="scene-container">
+            <div class="flowchart-box" aria-label="Flowchart: how it works in reality">
+              <div class="flow-steps">
+                {#each myth.flowSteps as step, i}
+                  <div class="flow-node">
+                    <div class="step-card">
+                      <span class="step-num">{i + 1}</span>
+                      <span class="step-name">{step}</span>
+                    </div>
+                    {#if i < myth.flowSteps.length - 1}
+                      <div class="flow-arrow" aria-hidden="true">
+                        <svg viewBox="0 0 24 16" width="20" height="14">
+                          <line x1="2" y1="8" x2="16" y2="8" stroke="var(--ink)" stroke-width="2" />
+                          <polygon points="15,4 22,8 15,12" fill="var(--ink)" />
+                        </svg>
+                      </div>
+                    {/if}
+                  </div>
+                {/each}
+              </div>
+            </div>
+
+            <!-- Character Explainer -->
+            <div class="character-wrapper" aria-hidden="true">
+              <svg viewBox="0 0 120 240" width="80" height="140" preserveAspectRatio="xMidYMid meet">
+                <Character look={analystLook} pose="point" prop="clipboard" />
+              </svg>
             </div>
           </div>
 
-          <!-- Character Explainer -->
-          <div class="character-wrapper" aria-hidden="true">
-            <svg viewBox="0 0 120 240" width="80" height="140" preserveAspectRatio="xMidYMid meet">
-              <Character look={analystLook} pose="point" prop="clipboard" />
-            </svg>
+          <!-- Real Levers Row with 1-Click Tactical Pivots (PIVOT-02) -->
+          <div class="levers-section">
+            <span class="levers-tag">TACTICAL PIVOT: REAL LEVERS AVAILABLE TO THE PRESIDENT</span>
+            <div class="levers-list">
+              {#if myth.realLeverActions && myth.realLeverActions.length > 0}
+                {#each myth.realLeverActions as action}
+                  <button
+                    type="button"
+                    class="lever-pivot-btn"
+                    data-testid="lever-pivot-btn"
+                    title={action.hint}
+                    onclick={() => (onPivot ? onPivot(action) : onGotIt())}
+                  >
+                    <span>⚡ {action.label}</span>
+                    <ArrowRight size={14} />
+                  </button>
+                {/each}
+              {:else}
+                {#each myth.realLevers as lever}
+                  <span class="lever-pill">{lever}</span>
+                {/each}
+              {/if}
+            </div>
           </div>
-        </div>
 
-        <!-- Real Levers Row -->
-        <div class="levers-section">
-          <span class="levers-tag">REAL LEVERS AVAILABLE TO THE PRESIDENT:</span>
-          <div class="levers-list">
-            {#each myth.realLevers as lever}
-              <span class="lever-pill">{lever}</span>
-            {/each}
+          <!-- Sourced Attribution -->
+          <div class="source-row">
+            <span class="source-label">Source:</span>
+            {#if myth.citation.url}
+              <a
+                href={myth.citation.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="source-link"
+              >
+                {myth.citation.title}
+                <ExternalLink size={12} />
+              </a>
+            {:else}
+              <span class="source-title">{myth.citation.title}</span>
+            {/if}
           </div>
-        </div>
-
-        <!-- Sourced Attribution -->
-        <div class="source-row">
-          <span class="source-label">Source:</span>
-          {#if myth.citation.url}
-            <a
-              href={myth.citation.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="source-link"
-            >
-              {myth.citation.title}
-              <ExternalLink size={12} />
-            </a>
-          {:else}
-            <span class="source-title">{myth.citation.title}</span>
-          {/if}
-        </div>
+        {/if}
       </section>
     </div>
 
@@ -177,15 +286,43 @@
     align-items: center;
     gap: 6px;
     padding: 6px 14px;
-    background: var(--alert-tint);
-    border: 3px double var(--alert);
+    background: var(--paper);
+    border: 3px double var(--ink);
     border-radius: 4px;
-    color: var(--alert);
+    color: var(--ink);
     font-family: var(--font-ui);
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 900;
     letter-spacing: 0.12em;
     transform: rotate(-3deg);
+    transition: all var(--dur-fast);
+  }
+
+  .myth-stamp.busted {
+    background: var(--alert-tint);
+    border-color: var(--alert);
+    color: var(--alert);
+  }
+
+  @keyframes stampSlam {
+    0% {
+      transform: scale(2.2) rotate(-15deg);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(0.95) rotate(-3deg);
+      opacity: 1;
+    }
+    75% {
+      transform: scale(1.05) rotate(-3deg);
+    }
+    100% {
+      transform: scale(1) rotate(-3deg);
+    }
+  }
+
+  .myth-stamp.slam {
+    animation: stampSlam 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
 
   .myth-tag {
@@ -231,6 +368,140 @@
     flex-direction: column;
     gap: 14px;
     box-shadow: 3px 3px 0 var(--ink);
+  }
+
+  /* Challenge Step */
+  .challenge-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 8px 0;
+  }
+
+  .challenge-tag {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--alert);
+  }
+
+  .challenge-question {
+    font-family: var(--font-display);
+    font-size: 22px;
+    line-height: 1.25;
+    color: var(--ink);
+    margin: 4px 0 6px 0;
+  }
+
+  .challenge-lead {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pred-option-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: var(--r-sm);
+    box-shadow: 2px 2px 0 var(--ink);
+    cursor: pointer;
+    text-align: left;
+    transition: transform var(--dur-fast), background var(--dur-fast);
+  }
+
+  .pred-option-btn:hover {
+    transform: translateY(-2px);
+    background: var(--card);
+  }
+
+  .option-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: var(--ink);
+    color: var(--card);
+    border-radius: 50%;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+
+  .option-text {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+
+  .skip-row {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .skip-btn {
+    background: none;
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .skip-btn:hover {
+    color: var(--ink);
+  }
+
+  /* Refutation Banner */
+  .refutation-banner {
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-left: 6px solid var(--alert);
+    border-radius: 4px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .refutation-banner.correct {
+    border-left-color: var(--sage);
+    background: var(--sage-tint);
+  }
+
+  .banner-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .refutation-text {
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.35;
+    color: var(--ink);
+    margin: 0;
   }
 
   .reality-tag {
@@ -323,7 +594,7 @@
     align-items: flex-end;
   }
 
-  /* Real Levers */
+  /* Real Levers & Tactical Pivot Buttons (PIVOT-02) */
   .levers-section {
     display: flex;
     flex-direction: column;
@@ -341,7 +612,29 @@
   .levers-list {
     display: flex;
     flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .lever-pivot-btn {
+    display: inline-flex;
+    align-items: center;
     gap: 6px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--sage-tint);
+    color: var(--sage-dark);
+    border: 1.5px solid var(--sage);
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    box-shadow: 1px 1px 0 var(--sage);
+    transition: transform var(--dur-fast), filter var(--dur-fast);
+  }
+
+  .lever-pivot-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
   }
 
   .lever-pill {
