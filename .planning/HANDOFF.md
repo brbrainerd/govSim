@@ -76,6 +76,9 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 - **Milestone v0.7 (Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director): COMPLETE, AUDITED, CODE-REVIEWED, ARCHIVED AND TAGGED `v0.7`.**
   - All 5 phases (25 to 29, 9 plans) executed, verified, code-reviewed (`29-REVIEW.md`), and audited (`v0.7-MILESTONE-AUDIT.md`) with 14/14 requirements satisfied (`ART-01..03`, `JUICE-01..03`, `ONBOARD-01..02`, `MODEL-01..02`, `AI-01..04`).
   - Archived to `.planning/milestones/v0.7-ROADMAP.md`, `v0.7-REQUIREMENTS.md`, `v0.7-MILESTONE-AUDIT.md`, and `v0.7-phases/`.
+- **Milestone v0.8 (Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy): INITIALIZED (Phases 30–33).**
+  - Research synthesized in `.planning/research/v0.8-PEDAGOGY-MYTHS.md`.
+  - 10 requirements (`DECK-01..02`, `MYTH-01..04`, `PIVOT-01..02`, `SPIN-01..02`) mapped across Phases 30–33 in `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`.
 - **Gates:** `pnpm test` 464 passing (75 files) · `pnpm test:e2e` 63 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
