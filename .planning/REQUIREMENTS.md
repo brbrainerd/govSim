@@ -7,9 +7,9 @@
 
 ### Dramatic SVG Art Overhaul & Reactive Scenes (Phase 25)
 
-- [ ] **ART-01**: Upgrade `src/ui/art/Character.svelte` from basic geometric pills into layered Americana editorial-poster illustrations with contoured anatomy (hairstyles, ears, noses, eyebrows, expressive eyes, collars, suit lapels, ties/pearls, shading) and 5 reactive mood states (`confident`, `stressed`, `scheming`, `panicked`, `triumphant`) using CSS custom properties from `src/design/tokens.ts`.
-- [ ] **ART-02**: Upgrade `src/ui/art/OvalOfficeScene.svelte` to dynamically react to live `GameState` — changing window weather/sky with economic health, desk props (bill stacks, coffee mugs, flashing red crisis phone), character poses/expressions, and satirical Evil Mode visual tells (document shredder, offshore ledger, nervous sweat).
-- [ ] **ART-03**: Upgrade `src/ui/art/ReporterScene.svelte`, `src/ui/art/CourtBench.svelte`, and `src/ui/art/FedPortrait.svelte` with detailed editorial-poster props (microphones, cameras, scales of justice, gavel, marble pillars, yield-curve ticker board) and state-reactive expressions.
+- [x] **ART-01**: Upgrade `src/ui/art/Character.svelte` from basic geometric pills into layered Americana editorial-poster illustrations with contoured anatomy (hairstyles, ears, noses, eyebrows, expressive eyes, collars, suit lapels, ties/pearls, shading) and 5 reactive mood states (`confident`, `stressed`, `scheming`, `panicked`, `triumphant`) using CSS custom properties from `src/design/tokens.ts`.
+- [x] **ART-02**: Upgrade `src/ui/art/OvalOfficeScene.svelte` to dynamically react to live `GameState` — changing window weather/sky with economic health, desk props (bill stacks, coffee mugs, flashing red crisis phone), character poses/expressions, and satirical Evil Mode visual tells (document shredder, offshore ledger, nervous sweat).
+- [x] **ART-03**: Upgrade `src/ui/art/ReporterScene.svelte`, `src/ui/art/CourtBench.svelte`, and `src/ui/art/FedPortrait.svelte` with detailed editorial-poster props (microphones, cameras, scales of justice, gavel, marble pillars, yield-curve ticker board) and state-reactive expressions.
 
 ### Visual Flair, Micro-Interactions, Satirical Wit & Calm Mode (Phase 26)
 
@@ -38,9 +38,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ART-01 | Phase 25 | Pending |
-| ART-02 | Phase 25 | Pending |
-| ART-03 | Phase 25 | Pending |
+| ART-01 | Phase 25 | Complete |
+| ART-02 | Phase 25 | Complete |
+| ART-03 | Phase 25 | Complete |
 | JUICE-01 | Phase 26 | Pending |
 | JUICE-02 | Phase 26 | Pending |
 | JUICE-03 | Phase 26 | Pending |
