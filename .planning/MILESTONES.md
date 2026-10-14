@@ -1,5 +1,16 @@
 # Milestones
 
+## v0.6 Completeness, Advisor Agency & Scenarios (Shipped: 2026-10-14)
+
+**Phases completed:** 4 phases, 8 plans, 0 tasks
+
+- Interactive civic explainers & Learn loop: replaced all disabled "Coming soon" buttons with step-by-step interactive "How it works" civic explainer modals across Oval Office, Economy, Budget, and Trade screens, awarding a one-time +1 Clout curiosity bonus, expanded the Myth card deck with 3 cited institutional entries, and wired Oval Office Chief of Staff suggestion modals.
+- Smart Advisor plays & Congress Auto-Whip: converted Chief of Staff recommendations into actionable one-click "Advisor Plays" that navigate and pre-fill recommended policy packages, implemented a pure-function findCheapestCoalition solver that determines the lowest-Clout deal combination to reach 218 House votes, bound the Budget impact card to the active Household Persona, and displayed slider changes against both current in-force policy and the 2026 baseline.
+- Pacing controls & staged decisions tray: live top-bar Staged Decisions indicator with jump buttons and unsent warnings summarizing pending budget, deal, and executive actions, paired with a safe "Skip to Next Event" fast-forward loop advancing quiet quarters with automatic interrupts on active crises, annual budget deadlines, midterms, impeachment milestones, and reelection night.
+- Replayable starting scenarios: curated Starting Scenario selector at New Game offering 4 historically grounded starting scenarios (2026 Standard Baseline, 70s Stagflation Shock, Debt Ceiling Brinkmanship, Global Trade War) with deterministic macro/fiscal overrides, inauguration briefing objectives, and persistent legacy badges on the EndScreen and URL replay hash.
+
+---
+
 ## v0.5 Satirical 'Evil Mode' (Shipped: 2026-10-13)
 
 **Phases completed:** 4 phases, 16 plans, 0 tasks

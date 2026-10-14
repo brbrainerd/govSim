@@ -59,7 +59,7 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 
 ## 3. Current state (update this section at the end of every session)
 
-**As of 2026-10-13, branch `game-pivot`** (not pushed; GitHub default branch is `master`; `git log -5` for the latest commits).
+**As of 2026-10-14, branch `game-pivot`** (not pushed; GitHub default branch is `master`; `git log -5` for the latest commits).
 
 - **Milestone v0.2 (Playable First Term): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.2`.**
   - All 8 phases (1 to 8) executed, verified, and audited with 53/53 requirements satisfied.
@@ -70,12 +70,10 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
   - All 4 phases (13 to 16) executed, verified, and audited with 12/12 requirements satisfied (CRIS-01..03, SEC-01..03, SANC-01..03, TRD-01..03).
 - **Milestone v0.5 (Satirical "Evil Mode"): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.5`.**
   - All 4 phases (17 to 20) executed, verified, and audited with 12/12 requirements satisfied (EVIL-01..03, LEVER-01..03, IMPEACH-01..03, UI-01..03).
-- **Milestone v0.6 (Completeness, Advisor Agency & Scenarios): COMPLETE & VERIFIED (Phases 21–24, 10/10 requirements).**
-  - **Phase 21:** Complete the Learn Loop & Interactive Explainers (`LEARN-01..03`) — Complete & Verified.
-  - **Phase 22:** Smart Advisor Plays, Auto-Whip & Live Household Budgeting (`ADVISOR-01..03`) — Complete & Verified.
-  - **Phase 23:** Pacing Controls — Fast-Forward & Staged Decisions Tray (`PACE-01..02`) — Complete & Verified.
-  - **Phase 24:** Replayable Starting Scenarios (`SCEN-01..02`) — Complete & Verified.
-- **Gates:** `pnpm test` 427 passing (68 files) · `pnpm test:e2e` 57 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
+- **Milestone v0.6 (Completeness, Advisor Agency & Scenarios): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.6`.**
+  - All 4 phases (21 to 24) executed, verified, code-reviewed, and audited with 10/10 requirements satisfied (LEARN-01..03, ADVISOR-01..03, PACE-01..02, SCEN-01..02).
+  - Archived to `.planning/milestones/v0.6-ROADMAP.md`, `v0.6-REQUIREMENTS.md`, `v0.6-MILESTONE-AUDIT.md`, and `v0.6-phases/`.
+- **Gates:** `pnpm test` 428 passing (68 files) · `pnpm test:e2e` 57 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
 ### Open debts (do not lose these)

@@ -61,6 +61,66 @@
 1. Household-level microeconomic models provide immediate player empathy and clarify complex federal macroeconomic tradeoffs.
 2. High-hurdle institutional mechanics (filibuster thresholds, constitutional amendments) require explicit feedback and intermediate state indicators to remain satisfying game loops.
 
+## Milestone: v0.4 — Foreign Policy & International Crises
+
+**Shipped:** 2026-10-12  
+**Phases:** 4 | **Plans:** 16 | **Tests:** 365 unit, 35 E2E
+
+### What Was Built
+- Paced geopolitical crisis deck (oil embargo, shipping blockade, debt contagion, cyber blackout) with cited diplomatic/economic/military resolution options and multi-turn escalation.
+- Foreign policy levers (defense readiness posture, foreign assistance, targeted sanctions) with domestic inflation pass-through and civics myth cards.
+- Pure deterministic 0–100 Security Index driving 10% of Prosperity Index with causal trace explanations.
+- International Trade & Tariffs screen with strategic sector tariffs (chips, minerals, clean energy), bilateral trade accords, and state export vulnerability matrix.
+
+### What Worked
+- **Reciprocal Retaliation Logic**: Coupling unilateral tariffs to foreign reciprocal rates grounded trade policy in authentic international economics without arbitrary balancing numbers.
+- **Security Index Composite**: Modularizing defense readiness, alliances, and crisis fallout into a single 0–100 index provided intuitive player feedback.
+
+### Key Lessons
+1. Clear risk bands and multi-turn escalation horizons give players time to respond thoughtfully to international shocks.
+
+---
+
+## Milestone: v0.5 — Satirical "Evil Mode"
+
+**Shipped:** 2026-10-13  
+**Phases:** 4 | **Plans:** 16 | **Tests:** 417 unit, 51 E2E
+
+### What Was Built
+- Alternative "Evil Mode" kleptocracy toggle, pure deterministic offshore stash accumulator ($B), and dynamic 0–100 Heat meter with natural decay and evidence leaks.
+- Catalog of corrupt presidential levers (no-bid contracts, land auctions, tariff exemption sales, slush funds, watchdog purges).
+- Institutional backlash system: special counsel investigations, House impeachment votes, and Senate conviction trial with immediate asset forfeiture.
+- Dark Americana theme (oxblood, aged gold, ink), live Oval Office stash rosette/heat gauge, Kleptocratic Heist Review EndScreen, and 6-tier satirical verdicts.
+
+### What Worked
+- **Parallel Game Loop**: Isolating Evil Mode's offshore stash and heat dynamics within a dedicated engine module maintained strict nonpartisanship in standard mode while delivering a razor-sharp satire of executive corruption.
+- **High-Stakes Impeachment Trials**: Authentic constitutional thresholds (218 House, 67 Senate) created intense mechanical tension between greed and political survival.
+
+### Key Lessons
+1. Satirical game modes benefit from authentic institutional mechanics rather than cartoonish arbitrary rules.
+
+---
+
+## Milestone: v0.6 — Completeness, Advisor Agency & Scenarios
+
+**Shipped:** 2026-10-14  
+**Phases:** 4 | **Plans:** 8 | **Tests:** 428 unit, 57 E2E
+
+### What Was Built
+- Interactive civic explainers & Learn loop: step-by-step interactive "How it works" modals across all screens (+1 Clout bonus), Trade Learn strip, 3 new Myth cards, and wired Oval Office Chief of Staff suggestion modals.
+- Smart Advisor plays & Congress Auto-Whip: actionable one-click "Advisor Plays" navigating and pre-filling draft packages, pure `findCheapestCoalition` solver for 218 House votes, live Household Persona binding, and dual in-force vs 2026 baseline slider indicators.
+- Turn pacing & staged decisions: top-bar live Staged Decisions tray with unsent warnings and screen jump buttons, safe "Skip to Next Event" fast-forward loop with automatic interrupts on crises/deadlines/elections.
+- Replayable starting scenarios: curated Starting Scenario selector at New Game with 4 scenarios, inauguration briefings, and persistent EndScreen and URL hash replay badges.
+
+### What Worked
+- **Exhaustive Subset Solver for Congressional Coalitions**: Because the deals catalog is concise (3 deals), an exhaustive power-set search ($2^3 = 8$) guarantees finding the exact cheapest coalition instantaneously while preserving pure-engine determinism.
+- **Unified Decision Schema Hardening**: Expanding `validateDecisions` and deflate-raw share codes to cover all levers ensured seamless save/share round-trips across every gameplay mechanic.
+- **Pacing Controls Without State Divergence**: Reusing `Session.nextTurn()` directly inside `fastForwardToNextEvent` ensured that fast-forwarding advances the exact same deterministic simulation path as clicking turn by turn.
+
+### Key Lessons
+1. Reducing cognitive friction (via one-click advisor plays and auto-whip) dramatically improves game feel without dumbing down the underlying model.
+2. Replayable starting scenarios multiply depth and player engagement more effectively than adding dozens of isolated policy dials.
+
 ---
 
 ## Cross-Milestone Trends
@@ -71,6 +131,9 @@
 |-----------|--------|-------|------------|
 | v0.2 | 8 | 39 | GSD autonomous execution with wave parallelization, headless Playwright E2E audits, and pure arithmetic determinism |
 | v0.3 | 4 | 16 | Deep demographic/regional modeling, kitchen-table microeconomics, and structural reform systems |
+| v0.4 | 4 | 16 | International geopolitical crises, defense readiness, foreign assistance, and sector tariffs |
+| v0.5 | 4 | 16 | Satirical kleptocracy game loop, heat meter, and constitutional impeachment trials |
+| v0.6 | 4 | 8 | Complete learn loop, one-click advisor plays, congress auto-whip, turn pacing, and starting scenarios |
 
 ### Cumulative Quality
 
@@ -78,9 +141,13 @@
 |-----------|-------|----------------|-----------------|
 | v0.2 | 246 unit, 14 E2E | 0 | 0 overflow at 1376x768 & 1280x720 |
 | v0.3 | 330 unit, 23 E2E | 0 | 0 overflow at 1376x768 & 1280x720 |
+| v0.4 | 365 unit, 35 E2E | 0 | 0 overflow at 1376x768 & 1280x720 |
+| v0.5 | 417 unit, 51 E2E | 0 | 0 overflow at 1376x768 & 1280x720 |
+| v0.6 | 428 unit, 57 E2E | 0 | 0 overflow at 1376x768 & 1280x720 |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. Deterministic simulation engines must eliminate transcendental `Math` and stateful RNG cursors for cross-browser reproducibility.
 2. Accessibility and viewport responsiveness must be continuously asserted by automated test suites.
 3. Macroeconomic governance games feel most impactful when grounded in tangible household-level financial consequences.
+4. Advisor guidance and auto-solvers keep deep strategic games accessible without compromising mathematical rigor.

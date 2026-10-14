@@ -1,19 +1,19 @@
 ---
 gsd_state_version: "1.0"
 milestone: v0.6
-status: All v0.6 phases complete (Phases 21-24 verified)
+milestone_name: Completeness, Advisor Agency & Scenarios
+status: Awaiting next milestone
 stopped_at: Phase 24 complete (all 10 v0.6 requirements satisfied)
-last_updated: "2026-10-13T15:30:00.000Z"
-last_activity: 2026-10-13
-last_activity_desc: Completed Phases 21-24 of Milestone v0.6 (LEARN-01..03, ADVISOR-01..03, PACE-01..02, SCEN-01..02)
-state_head: 2c9c6d4
+last_updated: "2026-10-14T09:26:56.572Z"
+last_activity: 2026-10-14
+last_activity_desc: Milestone v0.6 completed and archived
+state_head: c568df236b6feb782dfafdf362f78fc954ca84dd
 progress:
   total_phases: 4
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 8
   completed_plans: 8
   percent: 100
-milestone_name: "Completeness, Advisor Agency & Scenarios"
 current_phase: 24
 current_phase_name: Replayable Starting Scenarios
 ---
@@ -22,17 +22,17 @@ current_phase_name: Replayable Starting Scenarios
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-13)
+See: .planning/PROJECT.md (updated 2026-10-14)
 
 **Core value:** A player can make real presidential tradeoffs (or play the satirical "Evil Mode" kleptocracy) against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
-**Current focus:** Milestone v0.6 — Completeness, Advisor Agency & Scenarios (Complete)
+**Current focus:** Planning next milestone (v0.7)
 
 ## Current Position
 
-Phase: 24 of 24 (Replayable Starting Scenarios) — COMPLETE
-Plan: 24-01 complete (8/8 plans across Phases 21–24 complete)
-Status: Ready for milestone audit (`/gsd-audit-milestone`) or completion (`/gsd-complete-milestone`)
-Last activity: 2026-10-13 — Completed Phases 21–24 of Milestone v0.6
+Phase: Milestone v0.6 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-10-14 — Milestone v0.6 completed and archived
 
 ## Deferred Items
 
@@ -50,4 +50,4 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Audit Milestone v0.6 with `/gsd-audit-milestone` or archive with `/gsd-complete-milestone`
+- Start the next milestone with /gsd-new-milestone

@@ -48,29 +48,24 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 - ✓ Corrupt executive levers: no-bid crony contracts, land auctions, tariff exemption sales, library foundation slush fund, watchdog purges — v0.5
 - ✓ Institutional backlash & impeachment: special counsel appointments/subpoenas, House impeachment floor vote, Senate conviction trial with full asset forfeiture — v0.5
 - ✓ Dark Americana visual reskin (oxblood, aged gold, ink), live Oval Office stash rosette/heat gauge, Kleptocratic Heist Review EndScreen, and 6-tier satirical verdicts — v0.5
+- ✓ Interactive "How it works" explainers across Oval Office, Economy, Budget, and Trade with +1 Clout curiosity reward — v0.6
+- ✓ Trade Learn strip and expanded 3-card Myth deck (`supply_side_taxes`, `debt_ceiling_default`, `trade_deficits`) — v0.6
+- ✓ Oval Office Chief of Staff suggestion actions wired to Crisis and Myth modals — v0.6
+- ✓ One-click actionable Chief of Staff "Advisor Plays" navigating and pre-filling draft packages — v0.6
+- ✓ Congress Auto-Whip cheapest-path coalition solver staging lowest-Clout deal sets to reach 218 House votes — v0.6
+- ✓ Live Budget Household Persona binding and in-force vs 2026 baseline dual slider indicators — v0.6
+- ✓ Top-bar live Staged Decisions tray with unsent warnings and screen jump buttons — v0.6
+- ✓ Safe "Skip to Next Event" fast-forward loop with automatic crisis/deadline interrupts — v0.6
+- ✓ 4 curated Starting Scenarios at New Game with deterministic macro/fiscal overrides — v0.6
+- ✓ Scenario briefing objectives at inauguration and persistent scenario completion badges — v0.6
 
 ### Active
 
-- [ ] **LEARN-01**: Replace all disabled "Coming soon" Learn strip buttons across Oval Office, Economy, and Budget with interactive "How it works" civic explainer modals that award a one-time +1 Clout curiosity bonus.
-- [ ] **LEARN-02**: Add the missing Learn strip to the Trade screen and expand the Myth card deck (`supply_side_taxes`, `debt_ceiling_default`, `trade_deficits`) with cited institutional facts.
-- [ ] **LEARN-03**: Wire Chief of Staff suggestion actions on the Oval Office (`"Decide now"` and `"Find out"`) so crisis and myth suggestions directly open the corresponding Crisis or Myth modal instead of being no-ops.
-- [ ] **ADVISOR-01**: Upgrade Chief of Staff policy suggestions into one-click "Advisor Plays" that navigate to the target screen and optionally pre-fill recommended slider packages.
-- [ ] **ADVISOR-02**: Add a one-click "Auto-Whip Cheapest Path" helper in Congress that selects the lowest-Clout combination of bloc deals needed to reach 218 House / 51 (or 60) Senate votes.
-- [ ] **ADVISOR-03**: Connect the Budget screen impact card to the player's active `selectedHouseholdPersona` (replacing hardcoded "Nurse in Ohio") and display slider changes against both policy-in-force and the 2026 baseline.
-- [ ] **PACE-01**: Add a top-bar Staged Decisions indicator showing pending policy drafts, deals, and executive actions queued for the current turn.
-- [ ] **PACE-02**: Add a "Skip to Next Event" fast-forward control that advances quiet quarters automatically and halts immediately when a crisis, budget deadline, midterm, or pending bill vote requires attention.
-- [ ] **SCEN-01**: Add a Starting Scenario selector at New Game with 4 curated scenarios (*2026 Standard Baseline*, *70s Stagflation Shock*, *Debt Ceiling Brinkmanship*, *Global Trade War*) modifying initial macro/fiscal/crisis state deterministically.
-- [ ] **SCEN-02**: Display scenario briefing objectives at inauguration and surface scenario completion badges on the Post-Term Legacy Report and shareable replay hash.
+*(None currently — ready for `/gsd-new-milestone`)*
 
-## Current Milestone: v0.6 Completeness, Advisor Agency & Scenarios
+## Current Milestone: Next Milestone Planning
 
-**Goal:** Eliminate every remaining "Coming soon" stub and disconnected UI loop, elevate day-to-day gameplay feel with one-click Advisor Plays, Congress Auto-Whip, and Fast-Forward pacing controls from `docs/design.md`, and multiply replayability with selectable starting scenarios.
-
-**Target features:**
-- Complete Learn Loop: interactive "How it works" explainers (+1 Clout reward), Trade Learn strip, 3 new Myth cards, and wired Oval Office modal triggers (Phase 21)
-- Smart Advisor Plays, Congress Auto-Whip cheapest coalition solver, live Household Persona binding on Budget, and policy-in-force vs baseline slider indicators (Phase 22)
-- Turn Pacing & Staged Decisions: top-bar staged decisions pill/popover and safe "Skip to Next Event" fast-forward with automatic crisis/deadline interrupts (Phase 23)
-- Replayable Starting Scenarios: 4 curated starting scenarios at New Game with deterministic initial overrides, briefing cards, and Legacy Report badges (Phase 24)
+**Goal:** Plan next milestone (v0.7) to further enhance gameplay depth, dynamic events, and replayability.
 
 ### Out of Scope
 
@@ -82,7 +77,7 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 
 ## Context
 
-- Shipped Milestone v0.5 ("Satirical 'Evil Mode'") with 417 unit tests across 65 files, 51 Playwright E2E tests, zero axe violations, and clean token guardrails.
+- Shipped Milestone v0.6 ("Completeness, Advisor Agency & Scenarios") with 428 unit/property tests across 68 files, 57 Playwright E2E tests, zero axe violations, and clean token guardrails.
 - Pure client application (TypeScript + Svelte 5 runes + Vite), zero backend dependencies, zero telemetry.
 - Visual direction C (Americana poster) with dual theme tokens (Day Americana and Dark Oxblood/Gold/Ink for Evil Mode).
 - Zero outer viewport scrolling across 1376×768 and 1280×720 viewports.
@@ -116,6 +111,19 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 | Evil Mode Parallel Game Engine | Pure arithmetic offshore stash and heat tracking while keeping standard mode nonpartisan | ✓ Good |
 | Authentic Impeachment Thresholds | 218 House majority and 67 Senate conviction threshold with 100% asset forfeiture | ✓ Good |
 | Satirical Kleptocrat Verdict Tiers | 6-tier classification ranking unconvicted plunderers or federal prison downfall | ✓ Good |
+| One-click Advisor Plays | Reduces player cognitive friction by letting advisors navigate and pre-fill policy suggestions | ✓ Good |
+| Pure-Function Auto-Whip Solver | Uses exhaustive subset search ($2^3 = 8$) to find the cheapest vote coalition without engine impurity | ✓ Good |
+| In-Force Policy vs Baseline Dual Indicators | Visually distinguishes current active law from 2026 starting point on budget sliders | ✓ Good |
+| Deterministic Starting Scenarios | Deterministic macro/fiscal overrides on top of `us-2026.json` preserving bit-for-bit replay | ✓ Good |
+
+## Completed Milestone: v0.6 Completeness, Advisor Agency & Scenarios (Shipped 2026-10-14)
+
+**Goal:** Eliminate every remaining "Coming soon" stub and disconnected UI loop, elevate day-to-day gameplay feel with one-click Advisor Plays, Congress Auto-Whip, and Fast-Forward pacing controls from `docs/design.md`, and multiply replayability with selectable starting scenarios.
+**Delivered:**
+- Interactive civic explainers & Learn loop: step-by-step interactive "How it works" modals across all screens (+1 Clout bonus), Trade Learn strip, 3 new Myth cards, and wired Oval Office Chief of Staff suggestion modals (LEARN-01, LEARN-02, LEARN-03)
+- Smart Advisor plays & Congress Auto-Whip: actionable one-click "Advisor Plays" navigating and pre-filling draft packages, pure `findCheapestCoalition` solver for 218 House votes, live Household Persona binding, and dual in-force vs 2026 baseline slider indicators (ADVISOR-01, ADVISOR-02, ADVISOR-03)
+- Turn pacing & staged decisions: top-bar live Staged Decisions tray with unsent warnings and screen jump buttons, safe "Skip to Next Event" fast-forward loop with automatic interrupts on crises/deadlines/elections (PACE-01, PACE-02)
+- Replayable starting scenarios: curated Starting Scenario selector at New Game with 4 scenarios, inauguration briefings, and persistent EndScreen and URL hash replay badges (SCEN-01, SCEN-02)
 
 ## Completed Milestone: v0.5 Satirical "Evil Mode" (Shipped 2026-10-13)
 
@@ -144,4 +152,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-13 after v0.5 milestone*
+*Last updated: 2026-10-14 after v0.6 milestone*
