@@ -71,11 +71,11 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 25. Dramatic SVG Art Overhaul & Reactive Scenes | 0/TBD | Not started | - |
-| 26. Visual Flair, Micro-Interactions, Satirical Wit & Calm Mode | 0/TBD | Not started | - |
-| 27. Year-1 Progressive Onboarding & Guided Turn Flow | 0/TBD | Not started | - |
-| 28. "Show Your Work" Model Inspector & Citation Audit | 0/TBD | Not started | - |
-| 29. Free AI Director, OpenRouter `:free` Auto-Routing & Living World Variance | 0/TBD | Not started | - |
+| 25. Dramatic SVG Art Overhaul & Reactive Scenes | 0/2 | Planned | - |
+| 26. Visual Flair, Micro-Interactions, Satirical Wit & Calm Mode | 0/2 | Planned | - |
+| 27. Year-1 Progressive Onboarding & Guided Turn Flow | 0/1 | Planned | - |
+| 28. "Show Your Work" Model Inspector & Citation Audit | 0/1 | Planned | - |
+| 29. Free AI Director, OpenRouter `:free` Auto-Routing & Living World Variance | 0/3 | Planned | - |
 
 <details>
 <summary>✅ v0.6 Completeness, Advisor Agency & Scenarios (Phases 21-24) — SHIPPED 2026-10-14</summary>

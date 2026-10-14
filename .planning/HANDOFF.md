@@ -73,9 +73,22 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 - **Milestone v0.6 (Completeness, Advisor Agency & Scenarios): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.6`.**
   - All 4 phases (21 to 24) executed, verified, code-reviewed, and audited with 10/10 requirements satisfied (LEARN-01..03, ADVISOR-01..03, PACE-01..02, SCEN-01..02).
   - Archived to `.planning/milestones/v0.6-ROADMAP.md`, `v0.6-REQUIREMENTS.md`, `v0.6-MILESTONE-AUDIT.md`, and `v0.6-phases/`.
-- **Milestone v0.7 (Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director): INITIALIZED (Phases 25–29).**
-  - 14 requirements defined in `.planning/REQUIREMENTS.md`: `ART-01..03` (Phase 25), `JUICE-01..03` (Phase 26), `ONBOARD-01..02` (Phase 27), `MODEL-01..02` (Phase 28), `AI-01..04` (Phase 29).
-  - Ready for Phase 25 planning (`/gsd-plan-phase 25` or `/gsd-autonomous`).
+- **Milestone v0.7 (Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director): PLANNED & READY FOR EXECUTION (Phases 25–29, 9 Plans).**
+  - 14 requirements defined in `.planning/REQUIREMENTS.md` and decomposed into 9 self-contained, executable `PLAN.md` files (with `<read_first>`, `<action>`, `<verify><automated>`, and `<acceptance_criteria>` blocks) for Gemini 3.8 / Argon execution:
+    - **Phase 25 (`ART-01..03`)**:
+      - `.planning/phases/25-dramatic-svg-art-overhaul-reactive-scenes/25-01-PLAN.md` — Expressive `Character.svelte` anatomy, 5 moods (`confident`, `stressed`, `scheming`, `panicked`, `triumphant`), hairstyles, glasses/props & unit tests
+      - `.planning/phases/25-dramatic-svg-art-overhaul-reactive-scenes/25-02-PLAN.md` — State-reactive `OvalOfficeScene`, `ReporterScene`, `CourtBench`, `FedPortrait` & `tests/art-scenes.spec.ts`
+    - **Phase 26 (`JUICE-01..03`)**:
+      - `.planning/phases/26-visual-flair-micro-interactions-satirical-wit-calm-mode/26-01-PLAN.md` — `Calm mode` toggle in `StatusBar.svelte`, stamp-slam badge in `Congress`/`Powers`, seat-flip pulse in `Hemicycle` & `tests/calm-and-juice.spec.ts`
+      - `.planning/phases/26-visual-flair-micro-interactions-satirical-wit-calm-mode/26-02-PLAN.md` — Satirical news chyrons (`src/content/chyrons.ts`), `OvalOffice` chyron strip & readability-gated humor
+    - **Phase 27 (`ONBOARD-01..02`)**:
+      - `.planning/phases/27-year-1-progressive-onboarding-guided-turn-flow/27-01-PLAN.md` — Year-1 guided step callouts, `NEW` rail badges on Turn 2/3, `"Unlock all screens"` toggle on `NewGame.svelte` & `Rail.svelte` & `tests/onboarding.spec.ts`
+    - **Phase 28 (`MODEL-01..02`)**:
+      - `.planning/phases/28-show-your-work-model-inspector-citation-audit/28-01-PLAN.md` — `src/content/model-inspector.ts` catalog, `ModelInspectorModal.svelte` wired to `Economy` & `AboutModal` & `tests/model-inspector.spec.ts`
+    - **Phase 29 (`AI-01..04`)**:
+      - `.planning/phases/29-free-ai-director-openrouter-free-auto-routing-living-world-variance/29-01-PLAN.md` — Living World non-deterministic `turnEntropy` & bounded `dynamicCrisisDelta` in `Decisions` / `step()` & `src/engine/living-world.test.ts`
+      - `.planning/phases/29-free-ai-director-openrouter-free-auto-routing-living-world-variance/29-02-PLAN.md` — Opt-in Free AI Provider adapter (`src/app/ai-providers.ts`: OpenRouter `:free` discovery + `openrouter/free` 429 cascade, 1-click PKCE auth, `window.ai`, Gemini/Groq/Ollama BYOK) & `AiSettingsModal.svelte`
+      - `.planning/phases/29-free-ai-director-openrouter-free-auto-routing-living-world-variance/29-03-PLAN.md` — Generative AI Director (`src/app/ai-director.ts`), party-blind sanitizer, schema-clamped dynamic crisis dilemmas & `tests/ai-director.spec.ts`
 - **Gates:** `pnpm test` 428 passing (68 files) · `pnpm test:e2e` 57 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
