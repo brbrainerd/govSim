@@ -152,6 +152,7 @@ export class Session {
   aiTurnPayload = $state<AiTurnPayload | null>(null);
   aiLoading = $state<boolean>(false);
   aiConfig = $state<AiConfig>(loadAiConfig());
+  private aiRequestSeq = 0;
 
   current = $derived(this.history[this.history.length - 1]!);
   previous = $derived(this.history[this.history.length - 2] ?? this.current);
@@ -281,8 +282,9 @@ export class Session {
         : C.mythRewardClout
       : 0,
   );
+  dynamicCrisisCost = $derived(this.draft.dynamicCrisisDelta?.cloutCost ?? 0);
   clout = $derived(
-    this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost - this.reformCost - this.foreignCost - this.tradeCost - this.evilLeversCost + this.mythReward,
+    this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost - this.reformCost - this.foreignCost - this.tradeCost - this.evilLeversCost - this.dynamicCrisisCost + this.mythReward,
   );
   powers = $derived<PowerDecisions | null>(
     this.draft.signedOrders.length > 0 ||
@@ -515,7 +517,11 @@ export class Session {
       const next = endTurn(s.current, input);
       s.history = [...s.history, next];
       const autoLast = s.autopilot[s.autopilot.length - 1]!;
-      s.autopilot = [...s.autopilot, endTurn(autoLast, autopilotDecisions(autoLast))];
+      const autoDecisions = {
+        ...autopilotDecisions(autoLast),
+        ...(input.turnEntropy !== undefined ? { turnEntropy: input.turnEntropy } : {}),
+      };
+      s.autopilot = [...s.autopilot, endTurn(autoLast, autoDecisions)];
       s.inputs = [...s.inputs, input];
       s.draft = freshDraft(next.policy, next.socialPolicy);
       const meta = {
@@ -545,6 +551,8 @@ export class Session {
       party: 'D' | 'R';
       scenario?: ScenarioId;
       evilMode?: boolean;
+      unlockAll?: boolean;
+      livingWorld?: boolean;
       inputs: readonly Decisions[];
     },
     start: Start,
@@ -553,6 +561,8 @@ export class Session {
       party: run.party,
       scenario: run.scenario,
       ...(run.evilMode ? { evilMode: true } : {}),
+      ...(run.unlockAll ? { unlockAll: true } : {}),
+      ...(run.livingWorld ? { livingWorld: true } : {}),
     });
     for (const input of run.inputs) {
       if (s.current.turn === 16) {
@@ -569,7 +579,11 @@ export class Session {
       const next = endTurn(s.current, input);
       s.history = [...s.history, next];
       const autoLast = s.autopilot[s.autopilot.length - 1]!;
-      s.autopilot = [...s.autopilot, endTurn(autoLast, autopilotDecisions(autoLast))];
+      const autoDecisions = {
+        ...autopilotDecisions(autoLast),
+        ...(input.turnEntropy !== undefined ? { turnEntropy: input.turnEntropy } : {}),
+      };
+      s.autopilot = [...s.autopilot, endTurn(autoLast, autoDecisions)];
       s.inputs = [...s.inputs, input];
       s.draft = freshDraft(next.policy, next.socialPolicy);
       const meta = {
@@ -821,17 +835,27 @@ export class Session {
   }
 
   async refreshAiDirector(): Promise<void> {
+    const seq = ++this.aiRequestSeq;
     if (this.aiConfig.provider === 'off') {
       this.aiTurnPayload = null;
+      this.aiLoading = false;
       return;
     }
+    const expectedTurn = this.current.turn;
     this.aiLoading = true;
     try {
-      this.aiTurnPayload = await requestAiTurnDirector(this);
+      const payload = await requestAiTurnDirector(this);
+      if (this.aiRequestSeq === seq && this.current.turn === expectedTurn) {
+        this.aiTurnPayload = payload;
+      }
     } catch {
-      this.aiTurnPayload = null;
+      if (this.aiRequestSeq === seq && this.current.turn === expectedTurn) {
+        this.aiTurnPayload = null;
+      }
     } finally {
-      this.aiLoading = false;
+      if (this.aiRequestSeq === seq) {
+        this.aiLoading = false;
+      }
     }
   }
 
@@ -928,7 +952,11 @@ export class Session {
     this.inputs = [...this.inputs, decisions];
     this.history = [...this.history, next];
     const autoLast = this.autopilot[this.autopilot.length - 1]!;
-    this.autopilot = [...this.autopilot, endTurn(autoLast, autopilotDecisions(autoLast))];
+    const autoDecisions = {
+      ...autopilotDecisions(autoLast),
+      ...(decisions.turnEntropy !== undefined ? { turnEntropy: decisions.turnEntropy } : {}),
+    };
+    this.autopilot = [...this.autopilot, endTurn(autoLast, autoDecisions)];
     this.draft = freshDraft(next.policy, next.socialPolicy);
 
     if (next.turn === 16 && !this.turn16Snapshot) {

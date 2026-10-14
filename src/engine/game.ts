@@ -49,6 +49,7 @@ import {
   HEAT_SPECIAL_COUNSEL_THRESHOLD,
   HOUSE_IMPEACHMENT_THRESHOLD,
   HOUSE_TOTAL_SEATS,
+  MAX_DYNAMIC_CRISIS_CLOUT_COST,
   MAX_HEAT,
   MIN_HEAT,
   SENATE_CONVICTION_THRESHOLD,
@@ -726,11 +727,28 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   }
 
   // Dynamic AI crisis consequences on output gap (Phase 29, AI-04)
-  if (!legacyRun && decisions !== null && typeof decisions === 'object' && decisions.dynamicCrisisDelta !== undefined) {
-    const cd = decisions.dynamicCrisisDelta;
-    if (cd.gapDelta !== 0) {
-      g.add('event:ai_dynamic_crisis', clamp(cd.gapDelta, -C.dynamicCrisisGapCap, C.dynamicCrisisGapCap));
-    }
+  const rawDynamicCrisis =
+    !legacyRun && decisions !== null && typeof decisions === 'object' && decisions.dynamicCrisisDelta !== undefined && decisions.dynamicCrisisDelta !== null && typeof decisions.dynamicCrisisDelta === 'object'
+      ? decisions.dynamicCrisisDelta
+      : null;
+  const rawDynamicCloutCost =
+    rawDynamicCrisis && typeof rawDynamicCrisis.cloutCost === 'number' && Number.isFinite(rawDynamicCrisis.cloutCost)
+      ? clamp(Math.round(rawDynamicCrisis.cloutCost), 0, MAX_DYNAMIC_CRISIS_CLOUT_COST)
+      : 0;
+  const availableCloutForDynamicCrisis = Math.max(
+    0,
+    availableCloutForTrade -
+      (tradeRes ? tradeRes.cloutSpent : 0) -
+      (r?.valid ? r.spent : 0) -
+      (cRes?.valid ? cRes.cloutCost : 0) -
+      (geoRes?.valid ? geoRes.cloutCost : 0) -
+      leverResult.cloutCost,
+  );
+  const validDynamicCrisis = rawDynamicCrisis && rawDynamicCloutCost <= availableCloutForDynamicCrisis ? rawDynamicCrisis : null;
+  const dynamicCrisisCloutCost = validDynamicCrisis ? rawDynamicCloutCost : 0;
+
+  if (validDynamicCrisis && typeof validDynamicCrisis.gapDelta === 'number' && Number.isFinite(validDynamicCrisis.gapDelta) && validDynamicCrisis.gapDelta !== 0) {
+    g.add('event:ai_dynamic_crisis', clamp(validDynamicCrisis.gapDelta, -C.dynamicCrisisGapCap, C.dynamicCrisisGapCap));
   }
 
   const gap = e.gap + g.sum;
@@ -775,11 +793,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (lwInfImpulse !== 0) {
     inf.add('event:living_world_variance', lwInfImpulse);
   }
-  if (!legacyRun && decisions !== null && typeof decisions === 'object' && decisions.dynamicCrisisDelta !== undefined) {
-    const cd = decisions.dynamicCrisisDelta;
-    if (cd.infDelta !== 0) {
-      inf.add('event:ai_dynamic_crisis', clamp(cd.infDelta, -C.dynamicCrisisInfCap, C.dynamicCrisisInfCap));
-    }
+  if (validDynamicCrisis && typeof validDynamicCrisis.infDelta === 'number' && Number.isFinite(validDynamicCrisis.infDelta) && validDynamicCrisis.infDelta !== 0) {
+    inf.add('event:ai_dynamic_crisis', clamp(validDynamicCrisis.infDelta, -C.dynamicCrisisInfCap, C.dynamicCrisisInfCap));
   }
   const inflation = inf.clamp(e.inflation + inf.sum, ...LIMITS.inflation.bounds);
   const ex = new Ledger();
@@ -858,11 +873,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (geoEscalationApprovalPenalty > 0) ap.add('event:geopolitical_escalation', -geoEscalationApprovalPenalty);
   if (evilPenalties.approvalDelta !== 0) ap.add('approval:evil', evilPenalties.approvalDelta);
   if (leverResult.approvalDelta !== 0) ap.add('approval:evil_levers', leverResult.approvalDelta);
-  if (!legacyRun && decisions !== null && typeof decisions === 'object' && decisions.dynamicCrisisDelta !== undefined) {
-    const cd = decisions.dynamicCrisisDelta;
-    if (cd.approvalDelta !== 0) {
-      ap.add('event:ai_dynamic_crisis', clamp(cd.approvalDelta, -C.dynamicCrisisApprovalCap, C.dynamicCrisisApprovalCap));
-    }
+  if (validDynamicCrisis && typeof validDynamicCrisis.approvalDelta === 'number' && Number.isFinite(validDynamicCrisis.approvalDelta) && validDynamicCrisis.approvalDelta !== 0) {
+    ap.add('event:ai_dynamic_crisis', clamp(validDynamicCrisis.approvalDelta, -C.dynamicCrisisApprovalCap, C.dynamicCrisisApprovalCap));
   }
   const approval = ap.round(ap.clamp(state.approval + ap.sum, ...LIMITS.approval.bounds), RULES.approvalStep.value);
   const tr = new Ledger();
@@ -875,11 +887,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (geoEscalationTrustPenalty > 0) tr.add('event:geopolitical_escalation', -geoEscalationTrustPenalty);
   if (evilPenalties.trustDelta !== 0) tr.add('trust:evil', evilPenalties.trustDelta);
   if (leverResult.trustDelta !== 0) tr.add('trust:evil_levers', leverResult.trustDelta);
-  if (!legacyRun && decisions !== null && typeof decisions === 'object' && decisions.dynamicCrisisDelta !== undefined) {
-    const cd = decisions.dynamicCrisisDelta;
-    if (cd.trustDelta !== 0) {
-      tr.add('event:ai_dynamic_crisis', clamp(cd.trustDelta, -C.dynamicCrisisTrustCap, C.dynamicCrisisTrustCap));
-    }
+  if (validDynamicCrisis && typeof validDynamicCrisis.trustDelta === 'number' && Number.isFinite(validDynamicCrisis.trustDelta) && validDynamicCrisis.trustDelta !== 0) {
+    tr.add('event:ai_dynamic_crisis', clamp(validDynamicCrisis.trustDelta, -C.dynamicCrisisTrustCap, C.dynamicCrisisTrustCap));
   }
   const trust = tr.clamp(e.trust + tr.sum, ...LIMITS.trust.bounds);
 
@@ -895,6 +904,9 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   }
   if (geoRes?.valid && geoRes.cloutCost > 0) {
     cl.add('clout:crisis', -geoRes.cloutCost);
+  }
+  if (dynamicCrisisCloutCost > 0) {
+    cl.add('clout:crisis', -dynamicCrisisCloutCost);
   }
   if (pRes?.valid) {
     if (pRes.cloutSpent > 0) cl.add('clout:powers', -pRes.cloutSpent);

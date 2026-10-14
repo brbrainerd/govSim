@@ -394,7 +394,7 @@ export function validateDecisions(d: unknown): Decisions {
     const cd = d.dynamicCrisisDelta;
     if (!isRecord(cd)) throw new Error('dynamicCrisisDelta must be a plain object');
     for (const k of Object.keys(cd)) {
-      if (k !== 'gapDelta' && k !== 'infDelta' && k !== 'approvalDelta' && k !== 'trustDelta') {
+      if (k !== 'gapDelta' && k !== 'infDelta' && k !== 'approvalDelta' && k !== 'trustDelta' && k !== 'cloutCost') {
         throw new Error(`Unknown dynamicCrisisDelta property: "${k}"`);
       }
     }
@@ -410,11 +410,19 @@ export function validateDecisions(d: unknown): Decisions {
     if (typeof cd.trustDelta !== 'number' || !Number.isFinite(cd.trustDelta) || Math.abs(cd.trustDelta) > C.dynamicCrisisTrustCap) {
       throw new Error(`dynamicCrisisDelta.trustDelta out of range [-${C.dynamicCrisisTrustCap}, ${C.dynamicCrisisTrustCap}]`);
     }
+    let cloutCost: number | undefined;
+    if (cd.cloutCost !== undefined) {
+      if (typeof cd.cloutCost !== 'number' || !Number.isInteger(cd.cloutCost) || cd.cloutCost < 0 || cd.cloutCost > 50) {
+        throw new Error('dynamicCrisisDelta.cloutCost must be an integer in [0, 50]');
+      }
+      cloutCost = cd.cloutCost;
+    }
     result.dynamicCrisisDelta = {
       gapDelta: cd.gapDelta,
       infDelta: cd.infDelta,
       approvalDelta: cd.approvalDelta,
       trustDelta: cd.trustDelta,
+      ...(cloutCost !== undefined ? { cloutCost } : {}),
     };
   }
 

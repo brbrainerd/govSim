@@ -118,10 +118,11 @@
         {#each MODEL_DOMAINS as domain (domain.id)}
           <button
             type="button"
+            role="radio"
             class="domain-pill"
             class:active={selectedDomain === domain.id}
             data-testid="model-domain-{domain.id}"
-            aria-pressed={selectedDomain === domain.id}
+            aria-checked={selectedDomain === domain.id}
             onclick={() => (selectedDomain = domain.id)}
           >
             <span class="pill-label">{domain.label}</span>
@@ -311,7 +312,7 @@
     max-height: calc(100dvh - 56px);
     overflow: hidden;
     gap: clamp(8px, 1.2vh, 14px);
-    font-family: 'Atkinson Hyperlegible', sans-serif;
+    font-family: var(--font-body);
     color: var(--ink);
   }
 
@@ -333,7 +334,7 @@
 
   .gov-badge,
   .transparency-badge {
-    font-family: 'Rokkitt', serif;
+    font-family: var(--font-display);
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -355,7 +356,7 @@
   }
 
   .inspector-title {
-    font-family: 'Rokkitt', serif;
+    font-family: var(--font-display);
     font-size: clamp(1.2rem, 2vw, 1.6rem);
     font-weight: 800;
     margin: 2px 0 4px;
@@ -408,7 +409,7 @@
   }
 
   .stat-val {
-    font-family: 'Rokkitt', serif;
+    font-family: var(--font-display);
     font-size: 1.25rem;
     font-weight: 800;
     line-height: 1.1;
@@ -457,7 +458,7 @@
     width: 100%;
     padding: 7px 32px 7px 12px;
     font-size: 0.88rem;
-    font-family: 'Atkinson Hyperlegible', sans-serif;
+    font-family: var(--font-body);
     color: var(--ink);
     background: var(--card);
     border: 1px solid var(--ink-soft);
@@ -500,7 +501,7 @@
     border-radius: var(--r-sm);
     font-size: 0.8rem;
     cursor: pointer;
-    font-family: 'Atkinson Hyperlegible', sans-serif;
+    font-family: var(--font-body);
     font-weight: 600;
     transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   }
@@ -561,7 +562,7 @@
   }
 
   .col-title {
-    font-family: 'Rokkitt', serif;
+    font-family: var(--font-display);
     font-size: 1rem;
     font-weight: 700;
     margin: 0;
@@ -602,7 +603,7 @@
   }
 
   .eq-title {
-    font-family: 'Rokkitt', serif;
+    font-family: var(--font-display);
     font-size: 0.95rem;
     font-weight: 700;
     margin: 0;
@@ -684,7 +685,7 @@
   }
 
   .param-label {
-    font-family: 'Rokkitt', serif;
+    font-family: var(--font-display);
     font-size: 0.98rem;
     font-weight: 700;
     margin: 0 0 2px;
@@ -873,7 +874,7 @@
   }
 
   .empty-title {
-    font-family: 'Rokkitt', serif;
+    font-family: var(--font-display);
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--ink);
@@ -916,7 +917,7 @@
     border: 2px solid var(--ink);
     background: var(--ink);
     color: var(--card);
-    font-family: 'Rokkitt', serif;
+    font-family: var(--font-display);
     font-size: 0.95rem;
     font-weight: 700;
     padding: 6px 18px;

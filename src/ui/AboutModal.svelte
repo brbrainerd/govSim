@@ -146,14 +146,14 @@
   }
 
   .about-title {
-    font: 700 clamp(20px, 1.8vw, 24px) var(--font-headline);
+    font: 700 clamp(20px, 1.8vw, 24px) var(--font-display);
     margin: 0;
     color: var(--ink);
     letter-spacing: -0.01em;
   }
 
   .about-subtitle {
-    font: 600 clamp(12px, 0.9vw, 13px) var(--font-label);
+    font: 600 clamp(12px, 0.9vw, 13px) var(--font-ui);
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--ink-soft);
@@ -191,7 +191,7 @@
   }
 
   .sec-h {
-    font: 700 14px var(--font-label);
+    font: 700 14px var(--font-ui);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin: 0;
@@ -217,7 +217,7 @@
     padding: 2px 8px;
     background: var(--ink);
     color: var(--paper);
-    font: 700 11px var(--font-label);
+    font: 700 11px var(--font-ui);
     letter-spacing: 0.06em;
     border-radius: 3px;
   }
@@ -246,7 +246,7 @@
   }
 
   .act-title {
-    font: 700 13px var(--font-label);
+    font: 700 13px var(--font-ui);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin: 0;
@@ -261,11 +261,11 @@
 
   .report-btn {
     padding: 8px 12px;
-    background: var(--gold-soft);
+    background: var(--gold);
     color: var(--ink);
     border: 2px solid var(--ink);
     box-shadow: 2px 2px 0 var(--ink);
-    font: 700 12px var(--font-label);
+    font: 700 12px var(--font-ui);
     letter-spacing: 0.04em;
     cursor: pointer;
     text-transform: uppercase;
@@ -289,7 +289,7 @@
     color: var(--paper);
     border: 2px solid var(--ink);
     box-shadow: 2px 2px 0 var(--ink);
-    font: 700 14px var(--font-label);
+    font: 700 14px var(--font-ui);
     letter-spacing: 0.06em;
     cursor: pointer;
     text-transform: uppercase;

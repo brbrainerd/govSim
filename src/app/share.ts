@@ -9,6 +9,8 @@ export interface RunDescriptor {
   readonly party: 'D' | 'R';
   readonly scenario?: ScenarioId;
   readonly evilMode?: boolean;
+  readonly unlockAll?: boolean;
+  readonly livingWorld?: boolean;
   readonly inputs: readonly Decisions[];
 }
 
@@ -39,7 +41,7 @@ function base64UrlToUint8Array(str: string): Uint8Array {
 export interface RunSource {
   seed?: number;
   current?: { seed: number };
-  options: { party: string; scenario?: ScenarioId; evilMode?: boolean };
+  options: { party: string; scenario?: ScenarioId; evilMode?: boolean; unlockAll?: boolean; livingWorld?: boolean };
   inputs: readonly Decisions[];
 }
 
@@ -54,6 +56,8 @@ export async function encodeRunCode(run: RunSource): Promise<string> {
       ? { sc: run.options.scenario }
       : {}),
     ...(run.options.evilMode ? { e: 1 } : {}),
+    ...(run.options.unlockAll ? { ua: 1 } : {}),
+    ...(run.options.livingWorld ? { lw: 1 } : {}),
     i: run.inputs,
   });
 
@@ -103,6 +107,8 @@ export async function decodeRunCode(code: string): Promise<RunDescriptor | null>
       party: parsed.p,
       ...(isValidScenarioId(parsed.sc) ? { scenario: parsed.sc } : {}),
       ...(parsed.e === 1 || parsed.e === true ? { evilMode: true } : {}),
+      ...(parsed.ua === 1 || parsed.ua === true ? { unlockAll: true } : {}),
+      ...(parsed.lw === 1 || parsed.lw === true ? { livingWorld: true } : {}),
       inputs: validatedInputs,
     };
   } catch {

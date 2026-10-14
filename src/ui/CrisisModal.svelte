@@ -173,7 +173,7 @@
     border: none;
     font-size: 18px;
     font-weight: 700;
-    color: var(--ink-muted);
+    color: var(--ink-soft);
     cursor: pointer;
     padding: 4px 8px;
     line-height: 1;

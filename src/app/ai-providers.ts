@@ -193,12 +193,15 @@ export async function generatePkcePair(): Promise<{ verifier: string; challenge:
   return { verifier, challenge };
 }
 
-export async function startOpenRouterPkceAuth(callbackUrl = typeof window !== 'undefined' ? window.location.href : 'http://localhost/'): Promise<string> {
+export async function startOpenRouterPkceAuth(
+  callbackUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'http://localhost/',
+): Promise<string> {
   const { verifier, challenge } = await generatePkcePair();
   if (typeof sessionStorage !== 'undefined') {
     sessionStorage.setItem('openrouter_pkce_verifier', verifier);
   }
-  const cleanCallback = callbackUrl.split('?')[0] ?? callbackUrl;
+  const withoutHash = callbackUrl.split('#')[0] ?? callbackUrl;
+  const cleanCallback = withoutHash.split('?')[0] ?? withoutHash;
   return `https://openrouter.ai/auth?callback_url=${encodeURIComponent(cleanCallback)}&code_challenge=${challenge}&code_challenge_method=S256`;
 }
 

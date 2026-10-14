@@ -21,7 +21,7 @@ import { getCrisis } from './crises';
 import type { Modifier, Scheduled } from './modifiers';
 import type { PowerDecisions } from './powers';
 import { isSocialBaseline, sanitizeSocial, type SocialDraft } from './social';
-import { MAX_TURN_ENTROPY, SENATE_BASE_SEATS, SENATE_SIMPLE_MAJORITY, type EvilLeverId } from './units';
+import { MAX_DYNAMIC_CRISIS_CLOUT_COST, MAX_TURN_ENTROPY, SENATE_BASE_SEATS, SENATE_SIMPLE_MAJORITY, type EvilLeverId } from './units';
 
 export interface Bill {
   budget: BudgetDraft;
@@ -59,6 +59,7 @@ export interface DynamicCrisisDelta {
   infDelta: number;
   approvalDelta: number;
   trustDelta: number;
+  cloutCost?: number;
 }
 
 /** Phases 4/5/9/11/14/16/17/29 add keys here (crisis, powers, social, filibusterRule, reform, amendment, foreignPolicy, trade, evil, turnEntropy, dynamicCrisisDelta). There is deliberately no clout field. */
@@ -271,9 +272,13 @@ export function isValidDynamicCrisisDelta(delta: unknown): delta is DynamicCrisi
   const d = delta as Record<string, unknown>;
   const keys = Object.keys(d);
   for (const k of keys) {
-    if (k !== 'gapDelta' && k !== 'infDelta' && k !== 'approvalDelta' && k !== 'trustDelta') return false;
+    if (k !== 'gapDelta' && k !== 'infDelta' && k !== 'approvalDelta' && k !== 'trustDelta' && k !== 'cloutCost') return false;
   }
+  const validClout =
+    d.cloutCost === undefined ||
+    (typeof d.cloutCost === 'number' && Number.isInteger(d.cloutCost) && d.cloutCost >= 0 && d.cloutCost <= MAX_DYNAMIC_CRISIS_CLOUT_COST);
   return (
+    validClout &&
     typeof d.gapDelta === 'number' && Number.isFinite(d.gapDelta) && Math.abs(d.gapDelta) <= C.dynamicCrisisGapCap &&
     typeof d.infDelta === 'number' && Number.isFinite(d.infDelta) && Math.abs(d.infDelta) <= C.dynamicCrisisInfCap &&
     typeof d.approvalDelta === 'number' && Number.isFinite(d.approvalDelta) && Math.abs(d.approvalDelta) <= C.dynamicCrisisApprovalCap &&

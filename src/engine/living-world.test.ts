@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { newGame, endTurn } from './game';
 import { START } from './fixture';
 import { parseSave, serializeSave, validateDecisions } from '../app/save';
+import { encodeRunCode, decodeRunCode } from '../app/share';
 import { isValidDynamicCrisisDelta, isValidTurnEntropy } from './decisions';
 import { C } from './coefficients';
 import { stableHash } from './hash';
@@ -33,7 +34,7 @@ describe('Living World Mode & Dynamic Crisis Delta (AI-01, AI-04)', () => {
     expect(stableHash(run1)).toBe(stableHash(run2));
   });
 
-  it('serializes and replays a Living World game with bit-identical hash verification', () => {
+  it('serializes and replays a Living World game with bit-identical hash verification and share round-trip', async () => {
     const start = START;
     const seed = 54321;
     let state = newGame(seed, start);
@@ -48,18 +49,25 @@ describe('Living World Mode & Dynamic Crisis Delta (AI-01, AI-04)', () => {
 
     const sessionLike = {
       current: state,
-      options: { party: 'D' as const, livingWorld: true },
+      options: { party: 'D' as const, livingWorld: true, unlockAll: true },
       inputs,
     };
 
     const json = serializeSave(sessionLike);
     const restored = parseSave(json);
     expect(restored.options.livingWorld).toBe(true);
+    expect(restored.options.unlockAll).toBe(true);
     expect(restored.inputs[0]?.turnEntropy).toBe(11111);
     expect(restored.check).toBe(stableHash(state));
+
+    const code = await encodeRunCode(sessionLike);
+    const decoded = await decodeRunCode(code);
+    expect(decoded?.livingWorld).toBe(true);
+    expect(decoded?.unlockAll).toBe(true);
+    expect(decoded?.inputs[0]?.turnEntropy).toBe(11111);
   });
 
-  it('applies clamped dynamic crisis delta to output gap, inflation, approval, and trust', () => {
+  it('applies clamped dynamic crisis delta to output gap, inflation, approval, trust, and charges cloutCost', () => {
     const base = newGame(200, START);
     const withCrisis = endTurn(base, {
       dynamicCrisisDelta: {
@@ -67,6 +75,7 @@ describe('Living World Mode & Dynamic Crisis Delta (AI-01, AI-04)', () => {
         infDelta: 0.3,
         approvalDelta: -4,
         trustDelta: -3,
+        cloutCost: 15,
       },
     });
 
@@ -75,11 +84,13 @@ describe('Living World Mode & Dynamic Crisis Delta (AI-01, AI-04)', () => {
     expect(withCrisis.econ.inflation).toBeGreaterThan(withoutCrisis.econ.inflation);
     expect(withCrisis.approval).toBeLessThan(withoutCrisis.approval);
     expect(withCrisis.econ.trust).toBeLessThan(withoutCrisis.econ.trust);
+    expect(withCrisis.clout).toBeLessThan(withoutCrisis.clout);
 
     expect(withCrisis.report.trace.gap?.some((t) => t.source === 'event:ai_dynamic_crisis')).toBe(true);
     expect(withCrisis.report.trace.inflation?.some((t) => t.source === 'event:ai_dynamic_crisis')).toBe(true);
     expect(withCrisis.report.trace.approval?.some((t) => t.source === 'event:ai_dynamic_crisis')).toBe(true);
     expect(withCrisis.report.trace.trust?.some((t) => t.source === 'event:ai_dynamic_crisis')).toBe(true);
+    expect(withCrisis.report.trace.clout?.some((t) => t.source === 'clout:crisis' && t.amount === -15)).toBe(true);
   });
 
   it('validates turnEntropy and dynamicCrisisDelta bounds strictly', () => {
@@ -97,6 +108,7 @@ describe('Living World Mode & Dynamic Crisis Delta (AI-01, AI-04)', () => {
         infDelta: 0,
         approvalDelta: 0,
         trustDelta: 0,
+        cloutCost: 20,
       }),
     ).toBe(true);
 
@@ -116,6 +128,17 @@ describe('Living World Mode & Dynamic Crisis Delta (AI-01, AI-04)', () => {
         infDelta: 0,
         approvalDelta: 0,
         trustDelta: 0,
+      }),
+    ).toBe(false);
+
+    // Invalid cloutCost
+    expect(
+      isValidDynamicCrisisDelta({
+        gapDelta: 0,
+        infDelta: 0,
+        approvalDelta: 0,
+        trustDelta: 0,
+        cloutCost: 99,
       }),
     ).toBe(false);
 
@@ -144,5 +167,16 @@ describe('Living World Mode & Dynamic Crisis Delta (AI-01, AI-04)', () => {
         },
       }),
     ).toThrow('dynamicCrisisDelta.gapDelta out of range');
+    expect(() =>
+      validateDecisions({
+        dynamicCrisisDelta: {
+          gapDelta: 0,
+          infDelta: 0,
+          approvalDelta: 0,
+          trustDelta: 0,
+          cloutCost: 60,
+        },
+      }),
+    ).toThrow('dynamicCrisisDelta.cloutCost must be an integer in [0, 50]');
   });
 });

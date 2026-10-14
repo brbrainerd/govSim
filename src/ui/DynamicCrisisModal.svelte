@@ -13,11 +13,14 @@
     onClose: () => void;
   } = $props();
 
+  const availableClout = $derived(session.clout + session.dynamicCrisisCost);
   let chosenOptionId = $state<string | null>(null);
-  const selectedOptionId = $derived(chosenOptionId ?? crisis.options[0]?.id ?? '');
+  const selectedOptionId = $derived(
+    chosenOptionId ?? crisis.options.find((o) => o.cloutCost <= availableClout)?.id ?? '',
+  );
 
   const chosenOption = $derived(
-    crisis.options.find((o) => o.id === selectedOptionId) ?? crisis.options[0],
+    crisis.options.find((o) => o.id === selectedOptionId),
   );
 
   function handleSelect(id: string) {
@@ -25,12 +28,13 @@
   }
 
   function handleDecide() {
-    if (!chosenOption) return;
+    if (!chosenOption || chosenOption.cloutCost > availableClout) return;
     session.stageDynamicCrisisOption({
       gapDelta: chosenOption.gapDelta,
       infDelta: chosenOption.infDelta,
       approvalDelta: chosenOption.approvalDelta,
       trustDelta: chosenOption.trustDelta,
+      ...(chosenOption.cloutCost > 0 ? { cloutCost: chosenOption.cloutCost } : {}),
     });
     onClose();
   }
@@ -77,7 +81,7 @@
 
         <div class="option-cards" role="radiogroup" aria-label="Crisis response options">
           {#each crisis.options as opt (opt.id)}
-            {@const isAffordable = opt.cloutCost <= session.current.clout}
+            {@const isAffordable = opt.cloutCost <= availableClout}
             {@const isSelected = selectedOptionId === opt.id}
             <div
               class="option-card"
@@ -133,6 +137,7 @@
             type="button"
             class="stamp decide-btn"
             data-testid="decide-crisis-btn"
+            disabled={!chosenOption || chosenOption.cloutCost > availableClout}
             onclick={handleDecide}
           >
             Stage Response

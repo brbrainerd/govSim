@@ -84,6 +84,16 @@
     }
   }
 
+  function handleClearKey() {
+    config.apiKey = '';
+    if (session) {
+      session.updateAiConfig(config);
+    } else {
+      saveAiConfig(config);
+    }
+    testResult = { ok: true, message: 'Saved API key cleared from browser storage.' };
+  }
+
   function handleSave() {
     if (session) {
       session.updateAiConfig(config);
@@ -256,7 +266,7 @@
               bind:value={config.customEndpoint}
               placeholder="http://localhost:11434/v1"
             />
-            <span class="helper-text">Local Ollama or vLLM server endpoint.</span>
+            <span class="helper-text">Local Ollama or vLLM server endpoint on localhost / 127.0.0.1 (enforced by strict CSP).</span>
           </section>
           <section class="config-section">
             <label for="ai-model-select" class="section-label">Model Name</label>
@@ -311,6 +321,16 @@
       >
         {isTesting ? 'Testing...' : 'Test Connection'}
       </button>
+      {#if config.apiKey}
+        <button
+          type="button"
+          class="secondary-btn"
+          data-testid="clear-ai-key-btn"
+          onclick={handleClearKey}
+        >
+          Clear Saved Key
+        </button>
+      {/if}
       <div class="footer-spacer"></div>
       <button
         type="button"
@@ -418,7 +438,7 @@
 
   .select-input:focus,
   .text-input:focus {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--gold);
   }
 
   .pkce-row {
