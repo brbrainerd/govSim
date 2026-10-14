@@ -160,7 +160,12 @@
           onOpenExplainer={(id) => (activeExplainerId = id)}
         />
       {:else if screen.id === 'congress'}
-        <Congress {session} question={screen.question} />
+        <Congress
+          {session}
+          question={screen.question}
+          onOpenMyth={(id) => (activeMythId = id)}
+          onOpenExplainer={(id) => (activeExplainerId = id)}
+        />
       {:else if screen.id === 'powers'}
         <Powers
           {session}

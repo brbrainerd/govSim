@@ -15,7 +15,7 @@ test.describe('Satirical Evil Mode & HUD (EVIL-01, EVIL-02, EVIL-03)', () => {
     await expect(page.locator('.newgame')).toBeVisible();
 
     // 1. Verify New Game mode section and cards
-    await expect(page.locator('.mode-section')).toBeVisible();
+    await expect(page.locator('.mode-section[aria-label="Game Mode"]')).toBeVisible();
     await expect(page.locator('text=Public Servant (Standard)')).toBeVisible();
     await expect(page.locator('text=Satirical "Evil Mode"')).toBeVisible();
 

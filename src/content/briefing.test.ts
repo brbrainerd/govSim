@@ -101,6 +101,46 @@ describe('dynamic briefing generator (EVT-07, OBS-05)', () => {
     expect(briefing.suggestions.some((s) => s.target === 'budget')).toBe(true);
   });
 
+  it('triggers contextual myth suggestions based on macro pain points (MYTH-02)', () => {
+    const base = newGame(1, START);
+
+    // 1. High inflation triggers gas_prices myth suggestion when unviewed
+    const infState = {
+      ...base,
+      econ: { ...base.econ, inflation: 4.2 },
+      viewedMyths: [],
+    };
+    const infBriefing = generateBriefing({ current: infState });
+    expect(infBriefing.suggestions.some((s) => s.mythId === 'gas_prices' && s.title === 'Address gas price anger')).toBe(true);
+
+    // 2. High interest rate triggers interest_rates myth suggestion when gas_prices viewed
+    const rateState = {
+      ...base,
+      econ: { ...base.econ, inflation: 2.0, fedRate: 5.5 },
+      viewedMyths: ['gas_prices'],
+    };
+    const rateBriefing = generateBriefing({ current: rateState });
+    expect(rateBriefing.suggestions.some((s) => s.mythId === 'interest_rates' && s.title === 'Address Fed rate blame')).toBe(true);
+
+    // 3. High unemployment triggers presidential_jobs when gas_prices and interest_rates viewed
+    const jobsState = {
+      ...base,
+      econ: { ...base.econ, unemployment: 5.5 },
+      viewedMyths: ['gas_prices', 'interest_rates'],
+    };
+    const jobsBriefing = generateBriefing({ current: jobsState });
+    expect(jobsBriefing.suggestions.some((s) => s.mythId === 'presidential_jobs' && s.title === 'Address jobs claims')).toBe(true);
+
+    // 4. High debt ratio triggers debt_ceiling_default when jobs viewed
+    const debtState = {
+      ...base,
+      econ: { ...base.econ, debt: base.econ.gdp * 1.25 },
+      viewedMyths: ['gas_prices', 'interest_rates', 'presidential_jobs'],
+    };
+    const debtBriefing = generateBriefing({ current: debtState });
+    expect(debtBriefing.suggestions.some((s) => s.mythId === 'debt_ceiling_default' && s.title === 'Address debt limit claims')).toBe(true);
+  });
+
   it('passes reading grade <= 9.0 and sentence length <= 20 words for all branches', () => {
     const base = newGame(1, START);
     const mockCrisis: ActiveCrisis = {

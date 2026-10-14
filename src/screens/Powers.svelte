@@ -73,6 +73,16 @@
             <span class="section-tag">ARTICLE II SECTION 1</span>
             <h3 class="section-title">Executive Orders</h3>
           </div>
+          {#if onOpenMyth}
+            <button
+              type="button"
+              class="mirage-lever-btn"
+              data-testid="mirage-lever-powers"
+              onclick={() => onOpenMyth?.('rule_by_decree')}
+            >
+              ⚡ Rewrite Law by Decree
+            </button>
+          {/if}
           <span class="active-count">
             <b>{session.current.activeOrders.length}</b> active in force
           </span>
@@ -114,7 +124,7 @@
                 {:else if draftRevoked}
                   <span class="status-badge revoking">Revoking</span>
                 {:else if draftSigned}
-                  <span class="stamp-slam" data-testid="stamp-slam-badge">SIGNED BY ORDER</span>
+                  <span class="status-badge signing stamp-slam" data-testid="stamp-slam-badge">SIGNED BY ORDER</span>
                 {:else if active}
                   <span class="status-badge signed">
                     <CheckCircle size={13} /> Active
@@ -498,6 +508,26 @@
     color: var(--ink);
   }
 
+  .mirage-lever-btn {
+    padding: 3px 8px;
+    font: 700 11px/1.1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--paper);
+    color: var(--alert-dark);
+    border: 1.5px solid var(--alert);
+    border-radius: var(--r-sm);
+    box-shadow: 1px 1px 0 var(--ink);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform var(--dur-fast), background var(--dur-fast);
+  }
+  .mirage-lever-btn:hover {
+    background: var(--gold);
+    color: var(--ink);
+    transform: translateY(-1px);
+  }
+
   .orders-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -634,7 +664,7 @@
   }
 
   .status-badge.signing {
-    background: var(--gold-dark);
+    background: var(--alert);
     color: var(--card);
   }
 

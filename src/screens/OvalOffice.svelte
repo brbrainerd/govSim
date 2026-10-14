@@ -73,7 +73,7 @@
         />
       </div>
       <div class="chyron-strip" data-testid="oval-news-chyron">
-        <span class="chyron-tag">{session.aiTurnPayload ? 'AI LIVE' : 'LIVE'}</span>
+        <span class="chyron-tag" class:evil-tag={session.isEvilMode}>{session.aiTurnPayload ? 'AI LIVE' : 'LIVE'}</span>
         {#if session.aiTurnPayload}
           <span class="ai-director-inline-badge" data-testid="ai-director-badge">AI DIRECTOR LIVE</span>
         {/if}
@@ -355,6 +355,9 @@
     padding: 2px 6px;
     border-radius: 3px;
     flex-shrink: 0;
+  }
+  .chyron-tag.evil-tag {
+    color: var(--ink);
   }
   .chyron-text {
     font: 600 clamp(11px, 0.9vw, 13px)/1.2 var(--font-ui);

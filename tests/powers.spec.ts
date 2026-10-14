@@ -22,10 +22,11 @@ test.describe('Your Powers screen and modals (PWR-01..PWR-07, OBS-07)', () => {
     // Verify Myth Modal is visible
     const modal = page.locator('div[role="dialog"]');
     await expect(modal).toBeVisible();
-    await expect(modal.locator('.myth-stamp')).toHaveText('MYTH');
+    await modal.locator('[data-testid="myth-pred-opt-0"]').click();
+    await expect(modal.locator('.myth-stamp')).toContainText('MYTH BUSTED');
     await expect(modal.locator('.myth-quote')).toContainText('The President sets gas prices.');
     await expect(modal.locator('.reality-title')).toHaveText('REALITY');
-    await expect(modal.locator('.flow-steps')).toBeVisible();
+    await expect(modal.locator('[data-testid="refutation-banner"]')).toBeVisible();
     await expect(modal.locator('.character-wrapper')).toBeVisible();
 
     // Verify first view reward button

@@ -459,6 +459,16 @@
             >
               🎤 Give a speech in {selectedUnit.name}
             </button>
+            {#if onOpenMyth}
+              <button
+                type="button"
+                class="mirage-lever-btn"
+                data-testid="mirage-lever-voters"
+                onclick={() => onOpenMyth?.('popular_vote_mandate')}
+              >
+                ⚡ Claim National Mandate Decree
+              </button>
+            {/if}
           </div>
           <p class="action-hint">
             Speeches build clout and shift approval in key battlegrounds before the next election cycle.
@@ -1169,6 +1179,33 @@
     font-weight: bold;
     text-transform: uppercase;
     color: var(--ink-soft);
+  }
+
+  .action-btn-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .mirage-lever-btn {
+    padding: 6px 10px;
+    font: 700 11px/1.1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--paper);
+    color: var(--alert-dark);
+    border: 1.5px solid var(--alert);
+    border-radius: var(--r-sm);
+    box-shadow: 1px 1px 0 var(--ink);
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+    transition: transform var(--dur-fast), background var(--dur-fast);
+  }
+  .mirage-lever-btn:hover {
+    background: var(--gold);
+    color: var(--ink);
+    transform: translateY(-1px);
   }
 
   .side-btn {

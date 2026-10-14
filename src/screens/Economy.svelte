@@ -166,6 +166,17 @@
           Your Household
         </button>
       </div>
+
+      {#if onOpenMyth}
+        <button
+          type="button"
+          class="mirage-lever-btn"
+          data-testid="mirage-lever-economy"
+          onclick={() => onOpenMyth?.('interest_rates')}
+        >
+          ⚡ Order 2% Fed Rate Cut
+        </button>
+      {/if}
     </div>
 
     {#if viewMode === 'macro'}
@@ -307,10 +318,30 @@
 <style>
   .economy-nav-bar {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 6px;
     flex-shrink: 0;
+  }
+
+  .mirage-lever-btn {
+    padding: 3px 8px;
+    font: 700 11px/1.1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--paper);
+    color: var(--alert-dark);
+    border: 1.5px solid var(--alert);
+    border-radius: var(--r-sm);
+    box-shadow: 1px 1px 0 var(--ink);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform var(--dur-fast), background var(--dur-fast);
+  }
+  .mirage-lever-btn:hover {
+    background: var(--gold);
+    color: var(--ink);
+    transform: translateY(-1px);
   }
 
   .switcher-group {
@@ -408,7 +439,9 @@
     font-size: clamp(12px, 0.85vw, 13px);
     padding: 4px 10px;
     min-height: 30px;
-    opacity: 0.65;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--ink-soft);
     cursor: default;
     box-shadow: none;
   }

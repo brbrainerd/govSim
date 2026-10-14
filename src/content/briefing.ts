@@ -38,12 +38,41 @@ export interface SessionContext {
 }
 
 /**
- * Generates dynamic Oval Office briefing text, thisTurn alert, and suggestions (EVT-07, LEARN-03, ADVISOR-01).
+ * Resolves context-triggered myth cards based on macroeconomic pain points (MYTH-02).
+ */
+export function getContextualMythSuggestion(current: GameState): Suggestion | null {
+  const viewed = current.viewedMyths ?? [];
+  const econ = current.econ;
+  if (!econ) return null;
+
+  const inflation = econ.inflation > 1 ? econ.inflation / 100 : econ.inflation;
+  const fedRate = econ.fedRate > 1 ? econ.fedRate / 100 : econ.fedRate;
+  const unemployment = econ.unemployment > 1 ? econ.unemployment / 100 : econ.unemployment;
+  const debtRatio = econ.gdp > 0 ? econ.debt / econ.gdp : 0;
+
+  if (inflation > 0.035 && !viewed.includes('gas_prices')) {
+    return { title: 'Address gas price anger', cta: 'Bust myth', target: null, mythId: 'gas_prices' };
+  }
+  if (fedRate > 0.045 && !viewed.includes('interest_rates')) {
+    return { title: 'Address Fed rate blame', cta: 'Bust myth', target: null, mythId: 'interest_rates' };
+  }
+  if (unemployment > 0.05 && !viewed.includes('presidential_jobs')) {
+    return { title: 'Address jobs claims', cta: 'Bust myth', target: null, mythId: 'presidential_jobs' };
+  }
+  if (debtRatio > 1.2 && !viewed.includes('debt_ceiling_default')) {
+    return { title: 'Address debt limit claims', cta: 'Bust myth', target: null, mythId: 'debt_ceiling_default' };
+  }
+  return null;
+}
+
+/**
+ * Generates dynamic Oval Office briefing text, thisTurn alert, and suggestions (EVT-07, LEARN-03, ADVISOR-01, MYTH-02).
  */
 export function generateBriefing(session: SessionContext): BriefingInfo {
   const current = session.current;
   const deadlines = getImminentDeadlines(current.turn, current);
   const activeCrisis = current.activeCrisis;
+  const mythSuggestion = getContextualMythSuggestion(current);
 
   // 1. Active breaking crisis takes top priority
   if (activeCrisis) {
@@ -135,7 +164,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
         suggestions: [
           { title: 'Pass federal budget', cta: 'Open Congress', target: 'congress', play: { autoWhip: true } },
           { title: 'Set budget priorities', cta: 'Open Budget', target: 'budget', play: { pack: 'Keep as is' } },
-          { title: 'Myth? Shutdown costs', cta: 'Find out', target: null, mythId: 'foreign_aid_deficit' },
+          mythSuggestion ?? { title: 'Myth? Shutdown costs', cta: 'Find out', target: null, mythId: 'foreign_aid_deficit' },
         ],
       };
     }
@@ -151,7 +180,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
         suggestions: [
           { title: 'Raise debt limit', cta: 'Open Congress', target: 'congress', play: { autoWhip: true } },
           { title: 'Review fiscal outlays', cta: 'Open Budget', target: 'budget', play: { pack: 'Balance the budget' } },
-          { title: 'Myth? The debt ceiling', cta: 'Find out', target: null, mythId: 'debt_ceiling_default' },
+          mythSuggestion ?? { title: 'Myth? The debt ceiling', cta: 'Find out', target: null, mythId: 'debt_ceiling_default' },
         ],
       };
     }
@@ -185,7 +214,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
       suggestions: [
         { title: 'Check price pressures', cta: 'Open Economy', target: 'economy' },
         { title: 'Trim federal spending', cta: 'Open Budget', target: 'budget', play: { pack: 'Balance the budget' } },
-        { title: 'Myth? Lower gas prices', cta: 'Find out', target: null, mythId: 'gas_prices' },
+        mythSuggestion ?? { title: 'Myth? Lower gas prices', cta: 'Find out', target: null, mythId: 'gas_prices' },
       ],
     };
   }
@@ -201,7 +230,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
       suggestions: [
         { title: 'Review employment trends', cta: 'Open Economy', target: 'economy' },
         { title: 'Fund job training programs', cta: 'Open Budget', target: 'budget', play: { pack: 'Infrastructure push' } },
-        { title: 'Myth? Presidents create jobs', cta: 'Find out', target: null, mythId: 'presidential_jobs' },
+        mythSuggestion ?? { title: 'Myth? Presidents create jobs', cta: 'Find out', target: null, mythId: 'presidential_jobs' },
       ],
     };
   }
@@ -216,7 +245,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
     suggestions: [
       { title: 'Pass a budget', cta: 'Open Budget', target: 'budget', play: { pack: 'Infrastructure push' } },
       { title: 'Win over Moderates', cta: 'Open Congress', target: 'congress', play: { autoWhip: true } },
-      { title: 'Myth? Lower gas prices', cta: 'Find out', target: null, mythId: 'gas_prices' },
+      mythSuggestion ?? { title: 'Myth? Lower gas prices', cta: 'Find out', target: null, mythId: 'gas_prices' },
     ],
   };
 }

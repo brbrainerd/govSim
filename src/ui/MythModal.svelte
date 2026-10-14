@@ -117,7 +117,7 @@
             <div class="skip-row">
               <button
                 type="button"
-                class="skip-btn"
+                class="skip-btn skip-challenge-btn"
                 data-testid="myth-skip-btn"
                 onclick={handleSkip}
               >

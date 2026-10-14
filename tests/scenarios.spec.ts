@@ -51,7 +51,7 @@ for (const vp of VIEWPORTS) {
       await expect(scenBadge).toHaveText('70s Stagflation Shock');
 
       // In stagflation_shock, inflation starts at 6.2% (>= 3.5%), so Oval Office briefing triggers "High living costs"
-      await expect(page.locator('.card.info b').first()).toHaveText('High living costs');
+      await expect(page.locator('.card.info:has(.turn-head) b').filter({ hasText: 'High living costs' })).toBeVisible();
       await expect(page.locator('.tiles')).toContainText('6.2%');
 
       const ovalAxe = await new AxeBuilder({ page })

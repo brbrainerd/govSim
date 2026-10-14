@@ -36,7 +36,8 @@ test.describe('Foreign Policy & Sanctions Levers (FORPOL-01, FORPOL-02, FORPOL-0
     // Verify Myth Modal opens with foreign aid details
     const modal = page.locator('div[role="dialog"]');
     await expect(modal).toBeVisible();
-    await expect(modal.locator('.myth-stamp')).toHaveText('MYTH');
+    await modal.locator('button.skip-challenge-btn').click();
+    await expect(modal.locator('.myth-stamp')).toContainText('MYTH BUSTED');
     await expect(modal.locator('.myth-quote')).toContainText('Cutting foreign aid would balance the federal budget.');
     await expect(modal.locator('.reality-title')).toHaveText('REALITY');
     await expect(modal.locator('.reality-summary')).toContainText('less than one percent');

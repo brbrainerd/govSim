@@ -138,6 +138,16 @@
       <span class="label">Route</span>
       <span class="line">Budget bill: 218 House votes, 51 in the Senate.</span>
     </div>
+    {#if onOpenMyth}
+      <button
+        type="button"
+        class="mirage-lever-btn"
+        data-testid="mirage-lever-budget"
+        onclick={() => onOpenMyth?.('foreign_aid_deficit')}
+      >
+        ⚡ Zero Out Foreign Aid
+      </button>
+    {/if}
     <div class="spacer"></div>
     {#if session.draft.sentToCongress}
       <button class="btn sent" onclick={() => go('congress')}>Sent! Open Congress →</button>
@@ -196,6 +206,26 @@
   .good { color: var(--sage-dark); }
   .bad { color: var(--alert); }
   .spacer { flex-grow: 1; min-height: 4px; }
+  .mirage-lever-btn {
+    padding: 3px 8px;
+    font: 700 11px/1.1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--paper);
+    color: var(--alert-dark);
+    border: 1.5px solid var(--alert);
+    border-radius: var(--r-sm);
+    box-shadow: 1px 1px 0 var(--ink);
+    cursor: pointer;
+    white-space: nowrap;
+    align-self: center;
+    transition: transform var(--dur-fast), background var(--dur-fast);
+  }
+  .mirage-lever-btn:hover {
+    background: var(--gold);
+    color: var(--ink);
+    transform: translateY(-1px);
+  }
   .stamp, .sent { align-self: center; flex-shrink: 0; }
   .sent { background: var(--sage); font-size: clamp(15px, 1.2vw, 19px); padding: clamp(8px, 1.2vh, 12px) clamp(12px, 1.5vw, 16px); }
 </style>

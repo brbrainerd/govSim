@@ -6,8 +6,19 @@
   import { getImminentDeadlines } from '../engine/deadlines';
   import FilibusterModal from '../ui/FilibusterModal.svelte';
   import AmendmentModal from '../ui/AmendmentModal.svelte';
+  import type { ExplainerId } from '../content/explainers';
 
-  let { session, question }: { session: Session; question: string } = $props();
+  let {
+    session,
+    question,
+    onOpenMyth,
+    onOpenExplainer,
+  }: {
+    session: Session;
+    question: string;
+    onOpenMyth?: (id: string) => void;
+    onOpenExplainer?: (explainerId: ExplainerId) => void;
+  } = $props();
 
   let showingFilibuster = $state(false);
   let showingAmendment = $state(false);
@@ -40,7 +51,20 @@
       </div>
     {/if}
     <div class="card chamber">
-      <div class="bill"><span class="label">This turn's bill</span><b>{session.draft.pack ?? 'Your budget'}</b></div>
+      <div class="bill">
+        <span class="label">This turn's bill</span>
+        <b>{session.draft.pack ?? 'Your budget'}</b>
+        {#if onOpenMyth}
+          <button
+            type="button"
+            class="mirage-lever-btn"
+            data-testid="mirage-lever-congress"
+            onclick={() => onOpenMyth?.('veto_line_item')}
+          >
+            ⚡ Line-Item Veto Waste Lines
+          </button>
+        {/if}
+      </div>
       <Hemicycle
         {whip}
         deals={session.draft.deals}
@@ -72,6 +96,15 @@
     >
       Article V Amendments {#if session.current.activeAmendment}· <b>Ratifying ({session.current.activeAmendment.ratifiedStates.length}/38)</b>{/if}
     </button>
+    {#if onOpenMyth}
+      <button
+        type="button"
+        class="ticket"
+        onclick={() => onOpenMyth?.('debt_ceiling_default')}
+      >
+        Myth? Debt ceiling stops spending
+      </button>
+    {/if}
   {/snippet}
   {#snippet next()}
     <div class="card info" aria-live="polite">
@@ -208,6 +241,26 @@
     white-space: nowrap;
   }
   .auto-whip-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .mirage-lever-btn {
+    padding: 3px 8px;
+    font: 700 11px/1.1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--paper);
+    color: var(--alert-dark);
+    border: 1.5px solid var(--alert);
+    border-radius: var(--r-sm);
+    box-shadow: 1px 1px 0 var(--ink);
+    cursor: pointer;
+    white-space: nowrap;
+    margin-left: auto;
+    transition: transform var(--dur-fast), background var(--dur-fast);
+  }
+  .mirage-lever-btn:hover {
+    background: var(--gold);
+    color: var(--ink);
+    transform: translateY(-1px);
+  }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
   .spacer { flex-grow: 1; min-height: 4px; }
   .stamp { align-self: center; flex-shrink: 0; }
