@@ -7,9 +7,9 @@
 
 ### Expanded 12-Card Myth Catalog, Bottleneck Predictions & Actionable Pivot Schema (Phase 30)
 
-- [ ] **DECK-01**: Expand `src/content/myths.ts` from 8 to 12 spectrum-balanced civics myth cards (`|count(left) - count(right)| <= 1`, with 4 `left`, 4 `right`, 4 `both`), adding 4 sourced institutional/mechanism myths (`veto_line_item`, `popular_vote_mandate`, `immigration_crime_budget`, `scotus_instant_reversal`) covering Congress, Voters, Social Policy, and Courts/Reforms, all passing Flesch-Kincaid reading grade ≤ 9.0 and ≤ 20 words/sentence gates.
-- [ ] **DECK-02**: Enrich every `MythCard` in `src/content/myths.ts` with a structured 2-option prediction prompt (`predictionPrompt`: question, 2 options, `correctIndex`, plain-language refutation feedback) and a tempting `mirageLabel` string for situated UI discovery.
-- [ ] **PIVOT-01**: Add typed `realLeverActions` metadata to every `MythCard` in `src/content/myths.ts`, mapping each real constitutional lever pill to a concrete `ScreenId` and optional `Session` draft action (budget package/lever, executive order, trade tariff/accord, or reform modal).
+- [x] **DECK-01**: Expand `src/content/myths.ts` from 8 to 12 spectrum-balanced civics myth cards (`|count(left) - count(right)| <= 1`, with 4 `left`, 4 `right`, 4 `both`), adding 4 sourced institutional/mechanism myths (`veto_line_item`, `popular_vote_mandate`, `immigration_crime_budget`, `scotus_instant_reversal`) covering Congress, Voters, Social Policy, and Courts/Reforms, all passing Flesch-Kincaid reading grade ≤ 9.0 and ≤ 20 words/sentence gates. *(Validated in Phase 30)*
+- [x] **DECK-02**: Enrich every `MythCard` in `src/content/myths.ts` with a structured 2-option prediction prompt (`predictionPrompt`: question, 2 options, `correctIndex`, plain-language refutation feedback) and a tempting `mirageLabel` string for situated UI discovery. *(Validated in Phase 30)*
+- [x] **PIVOT-01**: Add typed `realLeverActions` metadata to every `MythCard` in `src/content/myths.ts`, mapping each real constitutional lever pill to a concrete `ScreenId` and optional `Session` draft action (budget package/lever, executive order, trade tariff/accord, or reform modal). *(Validated in Phase 30)*
 
 ### Interactive Reality-Check Modal & 1-Click Tactical Pivots (Phase 31)
 
@@ -40,9 +40,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DECK-01 | Phase 30 | Pending |
-| DECK-02 | Phase 30 | Pending |
-| PIVOT-01 | Phase 30 | Pending |
+| DECK-01 | Phase 30 | Validated |
+| DECK-02 | Phase 30 | Validated |
+| PIVOT-01 | Phase 30 | Validated |
 | MYTH-03 | Phase 31 | Pending |
 | MYTH-04 | Phase 31 | Pending |
 | PIVOT-02 | Phase 31 | Pending |
