@@ -73,6 +73,9 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 - **Milestone v0.6 (Completeness, Advisor Agency & Scenarios): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.6`.**
   - All 4 phases (21 to 24) executed, verified, code-reviewed, and audited with 10/10 requirements satisfied (LEARN-01..03, ADVISOR-01..03, PACE-01..02, SCEN-01..02).
   - Archived to `.planning/milestones/v0.6-ROADMAP.md`, `v0.6-REQUIREMENTS.md`, `v0.6-MILESTONE-AUDIT.md`, and `v0.6-phases/`.
+- **Milestone v0.7 (Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director): INITIALIZED (Phases 25–29).**
+  - 14 requirements defined in `.planning/REQUIREMENTS.md`: `ART-01..03` (Phase 25), `JUICE-01..03` (Phase 26), `ONBOARD-01..02` (Phase 27), `MODEL-01..02` (Phase 28), `AI-01..04` (Phase 29).
+  - Ready for Phase 25 planning (`/gsd-plan-phase 25` or `/gsd-autonomous`).
 - **Gates:** `pnpm test` 428 passing (68 files) · `pnpm test:e2e` 57 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 

@@ -61,11 +61,15 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 
 ### Active
 
-*(None currently — ready for `/gsd-new-milestone`)*
+- [ ] **ART-01..03**: Layered Americana editorial-poster SVG character anatomy, 5 reactive expressions (`confident`, `stressed`, `scheming`, `panicked`, `triumphant`), and live `GameState`-reactive `OvalOfficeScene`, `ReporterScene`, `CourtBench`, and `FedPortrait` (Phase 25)
+- [ ] **JUICE-01..03**: Stamp-slam and hemicycle seat-flip micro-animations, ironic party-blind news chyrons and advisor banter, and an in-game `"Calm mode"` toggle (Phase 26)
+- [ ] **ONBOARD-01..02**: Year-1 progressive onboarding (`docs/design.md` §7b: Turn 1 Budget/Congress, Turn 2 Your Powers, Turn 3+ all screens) with `"Unlock all screens"` toggle (Phase 27)
+- [ ] **MODEL-01..02**: Interactive `"Show your work"` Model Inspector modal/drawer exposing live `coefficients.ts` equations, ranges, and audited citations (Phase 28)
+- [ ] **AI-01..04**: Optional non-deterministic `"Living World"` shock variance and opt-in Free AI Director (`openrouter/free` + `:free` auto-discovery, OAuth PKCE, local `window.ai`, Gemini/Groq BYOK) for generative briefings, satirical chyrons, and schema-clamped dynamic crises (Phase 29)
 
-## Current Milestone: Next Milestone Planning
+## Current Milestone: v0.7 Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director
 
-**Goal:** Plan next milestone (v0.7) to further enhance gameplay depth, dynamic events, and replayability.
+**Goal:** Overhaul character and scene graphics from simple shapes into expressive, state-reactive Americana editorial-poster illustrations, inject tactile micro-interactions and satirical institutional wit (with Calm Mode), add guided Year-1 onboarding and a "Show Your Work" Model Inspector, and introduce an optional Living World variance mode plus a Free AI Director powered by OpenRouter `:free` routes, browser AI, or free-tier keys.
 
 ### Out of Scope
 
