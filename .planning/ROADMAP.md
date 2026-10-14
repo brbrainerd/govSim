@@ -14,7 +14,7 @@
 ### 🚧 v0.7 Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director (Phases 25-29)
 
 - [x] **Phase 25: Dramatic SVG Art Overhaul & Reactive Scenes** — Replace basic geometric pill characters and static backdrops with rich Americana editorial-poster SVG illustrations, 5 reactive facial expressions, and live `GameState`-reactive Oval Office, Reporter, Court, and Fed scenes (`ART-01`, `ART-02`, `ART-03`). (completed 2026-10-14)
-- [ ] **Phase 26: Visual Flair, Micro-Interactions, Satirical Wit & Calm Mode** — Add stamp-slam and hemicycle seat-flip micro-animations, ironic news-ticker chyrons and advisor quips, and an explicit in-game `"Calm mode"` toggle (`JUICE-01`, `JUICE-02`, `JUICE-03`).
+- [x] **Phase 26: Visual Flair, Micro-Interactions, Satirical Wit & Calm Mode** — Add stamp-slam and hemicycle seat-flip micro-animations, ironic news-ticker chyrons and advisor quips, and an explicit in-game `"Calm mode"` toggle (`JUICE-01`, `JUICE-02`, `JUICE-03`). (completed 2026-10-14)
 - [ ] **Phase 27: Year-1 Progressive Onboarding & Guided Turn Flow** — Guide new players progressively through Year 1 (`docs/design.md` §7b: Turn 1 Budget/Congress, Turn 2 Your Powers, Turn 3+ all screens) with an `"Unlock all screens"` toggle (`ONBOARD-01`, `ONBOARD-02`).
 - [ ] **Phase 28: "Show Your Work" Model Inspector & Citation Audit** — Build an interactive Model Inspector drawer/modal exposing live `coefficients.ts` equations, ranges, and literature citations, and audit remaining `judgement` citations (`MODEL-01`, `MODEL-02`).
 - [ ] **Phase 29: Free AI Director, OpenRouter `:free` Auto-Routing & Living World Variance** — Add optional non-deterministic Living World shock variance and an opt-in Free AI Director (`openrouter/free` + `:free` auto-discovery, OAuth PKCE, local `window.ai`, Gemini/Groq BYOK) for generative briefings, satirical chyrons, and schema-clamped dynamic crises (`AI-01`, `AI-02`, `AI-03`, `AI-04`).
@@ -82,7 +82,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 25. Dramatic SVG Art Overhaul & Reactive Scenes | 2/2 | Complete    | 2026-10-14 |
-| 26. Visual Flair, Micro-Interactions, Satirical Wit & Calm Mode | 0/2 | Planned | - |
+| 26. Visual Flair, Micro-Interactions, Satirical Wit & Calm Mode | 2/2 | Complete    | 2026-10-14 |
 | 27. Year-1 Progressive Onboarding & Guided Turn Flow | 0/1 | Planned | - |
 | 28. "Show Your Work" Model Inspector & Citation Audit | 0/1 | Planned | - |
 | 29. Free AI Director, OpenRouter `:free` Auto-Routing & Living World Variance | 0/3 | Planned | - |

@@ -13,9 +13,9 @@
 
 ### Visual Flair, Micro-Interactions, Satirical Wit & Calm Mode (Phase 26)
 
-- [ ] **JUICE-01**: Add tactile policy micro-interactions including a stamp-slam animation when signing bills or Executive Orders, Congress hemicycle seat-flip pulse animations when whipping coalitions, and animated indicator delta badges.
-- [ ] **JUICE-02**: Expand ironic, dryly humorous news-ticker chyrons, advisor quips, and satirical institutional flavor across `src/content/` while remaining strictly party-blind and passing the automated Flesch-Kincaid reading grade ≤ 9.0 and ≤ 20 words/sentence gates.
-- [ ] **JUICE-03**: Add an explicit in-game `"Calm mode"` toggle in `StatusBar.svelte` (persisted in preferences and respecting `prefers-reduced-motion`) that disables decorative animations, ticker marquees, and stamp-slam motion on demand.
+- [x] **JUICE-01**: Add tactile policy micro-interactions including a stamp-slam animation when signing bills or Executive Orders, Congress hemicycle seat-flip pulse animations when whipping coalitions, and animated indicator delta badges.
+- [x] **JUICE-02**: Expand ironic, dryly humorous news-ticker chyrons, advisor quips, and satirical institutional flavor across `src/content/` while remaining strictly party-blind and passing the automated Flesch-Kincaid reading grade ≤ 9.0 and ≤ 20 words/sentence gates.
+- [x] **JUICE-03**: Add an explicit in-game `"Calm mode"` toggle in `StatusBar.svelte` (persisted in preferences and respecting `prefers-reduced-motion`) that disables decorative animations, ticker marquees, and stamp-slam motion on demand.
 
 ### Year-1 Progressive Onboarding & Guided Turn Flow (Phase 27)
 
@@ -41,9 +41,9 @@
 | ART-01 | Phase 25 | Complete |
 | ART-02 | Phase 25 | Complete |
 | ART-03 | Phase 25 | Complete |
-| JUICE-01 | Phase 26 | Pending |
-| JUICE-02 | Phase 26 | Pending |
-| JUICE-03 | Phase 26 | Pending |
+| JUICE-01 | Phase 26 | Complete |
+| JUICE-02 | Phase 26 | Complete |
+| JUICE-03 | Phase 26 | Complete |
 | ONBOARD-01 | Phase 27 | Pending |
 | ONBOARD-02 | Phase 27 | Pending |
 | MODEL-01 | Phase 28 | Pending |
