@@ -57,6 +57,7 @@ export interface GameOptions {
   party: PartyId;
   evilMode?: boolean;
   scenario?: ScenarioId;
+  unlockAll?: boolean;
 }
 
 interface Draft {
@@ -135,6 +136,7 @@ export class Session {
   newlyUnlockedBadges = $state<string[]>([]);
   selectedHouseholdPersona = $state<HouseholdPersona>(DEFAULT_HOUSEHOLD_PERSONA);
   options = $state<GameOptions>({ party: 'D' });
+  unlockAll = $state<boolean>(false);
   calmMode = $state<boolean>(
     typeof localStorage !== 'undefined' && localStorage.getItem('govsim_calm_mode') === 'true'
       ? true
@@ -461,6 +463,7 @@ export class Session {
 
   constructor(seed: number, start: Start, options: GameOptions) {
     this.options = options;
+    this.unlockAll = Boolean(options.unlockAll);
     const effectiveStart = applyScenarioStart(start, options.scenario);
     const initial = newGame(seed, effectiveStart);
     this.history = [initial];
@@ -703,6 +706,12 @@ export class Session {
     if (typeof document !== 'undefined') {
       document.documentElement.dataset.calm = this.calmMode ? 'true' : 'false';
     }
+  }
+
+  unlockAllScreens(): void {
+    this.unlockAll = true;
+    this.options = { ...this.options, unlockAll: true };
+    storeAutosave(this);
   }
 
   setFilibusterRule(rule: FilibusterRule) {

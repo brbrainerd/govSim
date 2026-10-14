@@ -6,21 +6,26 @@
     turn,
     current,
     isEvilMode = false,
+    unlockAll = false,
     onSelect,
     onExport,
     onImport,
     onAbout,
+    onUnlockAll,
   }: {
     turn: number;
     current: ScreenId;
     isEvilMode?: boolean;
+    unlockAll?: boolean;
     onSelect: (id: ScreenId) => void;
     onExport?: () => void;
     onImport?: (f: File) => void;
     onAbout?: () => void;
+    onUnlockAll?: () => void;
   } = $props();
 
-  const nav = $derived(navFor(turn, false, isEvilMode));
+  const nav = $derived(navFor(turn, unlockAll, isEvilMode));
+  const hasLocked = $derived(nav.some((g) => g.screens.some((s) => s.locked)));
   let fileInput = $state<HTMLInputElement>();
   const DownloadIcon = icons.download;
   const UploadIcon = icons.upload;
@@ -36,7 +41,11 @@
         <button class="tab" aria-current={s.id === current ? 'page' : undefined} disabled={s.locked} onclick={() => onSelect(s.id)}>
           <Icon size={24} strokeWidth={2.2} aria-hidden="true" />
           <span class="name">{s.label}</span>
-          {#if s.locked}<span class="lock">Turn {s.unlockTurn}</span>{/if}
+          {#if s.locked}
+            <span class="lock">Turn {s.unlockTurn}</span>
+          {:else if s.newlyUnlocked}
+            <span class="new-badge" data-testid={`rail-new-badge-${s.id}`}>NEW</span>
+          {/if}
         </button>
       {/each}
     {/each}
@@ -72,6 +81,17 @@
         }}
       />
     {/if}
+    {#if hasLocked && onUnlockAll}
+      <button
+        type="button"
+        class="util-btn"
+        onclick={onUnlockAll}
+        data-testid="rail-unlock-all-btn"
+        aria-label="Unlock all screens on Turn 1"
+      >
+        <span>Unlock all screens</span>
+      </button>
+    {/if}
   </div>
 </nav>
 
@@ -96,6 +116,17 @@
   .tab:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
   .name { flex: 1; }
   .lock { white-space: nowrap; font: 700 11px var(--font-body); text-transform: none; letter-spacing: 0; background: var(--paper); border-radius: 6px; padding: 2px 5px; }
+  .new-badge {
+    margin-left: auto;
+    font: 900 10px/1 var(--font-ui);
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: var(--gold);
+    color: var(--ink);
+    letter-spacing: .05em;
+    border: 1px solid var(--ink);
+    box-shadow: 1px 1px 0 var(--ink);
+  }
 
   .save-tray {
     display: flex;

@@ -450,6 +450,7 @@ export function parseSave(json: string): SaveFile {
     party: parsed.options.party,
     ...(typeof parsed.options.evilMode === 'boolean' ? { evilMode: parsed.options.evilMode } : {}),
     ...(isValidScenarioId(parsed.options.scenario) ? { scenario: parsed.options.scenario } : {}),
+    ...(typeof parsed.options.unlockAll === 'boolean' ? { unlockAll: parsed.options.unlockAll } : {}),
   };
 
   if (!Array.isArray(parsed.inputs)) {

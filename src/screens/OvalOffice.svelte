@@ -1,7 +1,7 @@
 <script lang="ts">
   import { headline } from '../app/indicators';
   import type { Session } from '../app/session.svelte';
-  import type { ScreenId } from '../app/screens';
+  import { year1GuideFor, type ScreenId } from '../app/screens';
   import { prosperity as score } from '../engine/game';
   import { generateBriefing } from '../content/briefing';
   import type { ActiveCrisis } from '../engine/director';
@@ -37,6 +37,7 @@
   const change = $derived(index - Math.round(score(session.previous).index));
   const briefingInfo = $derived(generateBriefing(session));
   const chyron = $derived(pickChyron(session));
+  const guide = $derived(year1GuideFor(session.current.turn));
 
   const activeGeopoliticalCrisis = $derived(
     session.current.activeGeopoliticalCrises && session.current.activeGeopoliticalCrises.length > 0
@@ -231,6 +232,11 @@
         <span class="label">This turn</span>
         <span class="scen-pill" data-testid="oval-scenario-badge">{session.activeScenario.name}</span>
       </div>
+      {#if guide}
+        <div class="year1-guide" data-testid="year1-onboarding-guide">
+          <b>{guide.step}:</b> <span>{guide.detail}</span>
+        </div>
+      {/if}
       <b>{briefingInfo.thisTurn.title}</b>
       <span>{briefingInfo.thisTurn.detail}</span>
     </div>
@@ -332,6 +338,26 @@
   .info { display: flex; flex-direction: column; gap: 4px; padding: clamp(8px, 1.2vh, 14px); text-align: center; }
   .turn-head { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; }
   .scen-pill { font: 700 10px/1 var(--font-ui); text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px; background: var(--paper); border: 1px solid var(--ink); color: var(--ink); }
+  .year1-guide {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 10px;
+    background: var(--paper-dark);
+    border-left: 3px solid var(--gold);
+    border-radius: var(--r-sm);
+    text-align: left;
+    font-size: clamp(11px, 0.9vw, 13px);
+    line-height: 1.25;
+    color: var(--ink);
+  }
+  .year1-guide b {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
   .info b { font: 700 clamp(17px, 1.4vw, 21px)/1.2 var(--font-display); }
   .info span:last-child { font-size: clamp(12px, 1vw, 15px); color: var(--ink-soft); max-width: 35ch; }
   .option { display: flex; flex-direction: column; align-items: center; gap: clamp(4px, 0.6vh, 8px); padding: clamp(6px, 1vh, 12px) clamp(8px, 1vw, 12px); text-align: center; }

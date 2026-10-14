@@ -25,15 +25,41 @@ export type ScreenId = Screen['id'];
 
 export const screenById = (id: ScreenId): Screen => screens.find((s) => s.id === id)!;
 
-/** Rail model: groups in fixed order, each with its screens and lock state for this turn. */
 export function navFor(turn: number, unlockAll = false, isEvilMode = false) {
   return groups.map((g) => ({
     ...g,
     screens: screens
       .filter((s) => s.group === g.id)
-      .map((s) => ({
-        ...s,
-        locked: !unlockAll && (isEvilMode && s.id === 'powers' ? false : turn < s.unlockTurn),
-      })),
+      .map((s) => {
+        const locked = !unlockAll && (isEvilMode && s.id === 'powers' ? false : turn < s.unlockTurn);
+        const newlyUnlocked = !unlockAll && s.unlockTurn > 1 && turn === s.unlockTurn;
+        return {
+          ...s,
+          locked,
+          newlyUnlocked,
+        };
+      }),
   }));
+}
+
+export function year1GuideFor(turn: number): { step: string; detail: string } | null {
+  if (turn === 1) {
+    return {
+      step: 'Year 1 · Step 1 of 3',
+      detail: 'Draft your first Budget, then whip 218 votes in Congress.',
+    };
+  }
+  if (turn === 2) {
+    return {
+      step: 'Year 1 · Step 2 of 3',
+      detail: 'Unlocked: Your Powers & Trade. Issue an Executive Order or adjust tariffs.',
+    };
+  }
+  if (turn === 3) {
+    return {
+      step: 'Year 1 · Step 3 of 3',
+      detail: 'Unlocked: Voters map. Check your 270 Electoral College path before Year 2.',
+    };
+  }
+  return null;
 }

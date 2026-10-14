@@ -23,6 +23,7 @@
   let party = $state<PartyId | null>(null);
   let evilMode = $state(false);
   let scenario = $state<ScenarioId>('standard_2026');
+  let unlockAll = $state(false);
   let dismissResume = $state(false);
   let fileInput = $state<HTMLInputElement>();
 
@@ -117,6 +118,22 @@
         </div>
       </div>
 
+      <div class="pacing-section">
+        <span class="label">Screen Progression</span>
+        <label class="card unlock-all-card" class:active-mode={unlockAll}>
+          <input
+            type="checkbox"
+            checked={unlockAll}
+            onchange={(e) => (unlockAll = e.currentTarget.checked)}
+            data-testid="unlock-all-toggle"
+          />
+          <div class="mode-info">
+            <b>Experienced Mode: Unlock all screens on Turn 1</b>
+            <span class="mode-sub">Skip Year-1 progressive screen unlocking (Your Powers, Trade &amp; Tariffs, and Voters).</span>
+          </div>
+        </label>
+      </div>
+
       <div class="import-strip">
         <button type="button" class="import-btn" onclick={() => fileInput?.click()}>
           Load save file (.json)
@@ -153,7 +170,7 @@
         class="stamp"
         class:evil-stamp={evilMode}
         disabled={party === null}
-        onclick={() => party && onStart({ party, evilMode, scenario })}
+        onclick={() => party && onStart({ party, evilMode, scenario, unlockAll })}
       >
         {evilMode ? 'Seize power' : 'Start the term'}
       </button>
@@ -253,6 +270,11 @@
   .stamp:disabled { opacity: .45; cursor: not-allowed; }
 
   .mode-section { margin-top: clamp(8px, 1.2vh, 14px); max-width: 48rem; display: flex; flex-direction: column; gap: 6px; }
+  .pacing-section { margin-top: clamp(8px, 1.2vh, 14px); max-width: 48rem; display: flex; flex-direction: column; gap: 6px; }
+  .unlock-all-card { display: flex; align-items: flex-start; gap: 10px; padding: clamp(8px, 1.1vh, 12px) clamp(10px, 1.2vw, 14px); cursor: pointer; }
+  .unlock-all-card input { width: 18px; height: 18px; accent-color: var(--ink); margin-top: 2px; flex-shrink: 0; }
+  .unlock-all-card.active-mode { background: var(--gold); }
+  .unlock-all-card.active-mode .mode-sub { color: var(--ink); }
   .mode-cards, .scenario-cards { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(8px, 1vw, 12px); }
   .mode-option { display: flex; align-items: flex-start; gap: 10px; padding: clamp(8px, 1.1vh, 12px) clamp(10px, 1.2vw, 14px); cursor: pointer; }
   .mode-option input { width: 18px; height: 18px; accent-color: var(--ink); margin-top: 2px; flex-shrink: 0; }

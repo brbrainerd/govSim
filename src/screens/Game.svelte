@@ -97,9 +97,11 @@
         turn={session.current.turn}
         current={session.screen}
         isEvilMode={session.isEvilMode}
+        unlockAll={session.unlockAll}
         onSelect={go}
         onExport={() => downloadSave(session)}
         onAbout={() => (aboutModalOpen = true)}
+        onUnlockAll={() => session.unlockAllScreens()}
         {onImport}
       />
       {#if screen.id === 'oval'}
