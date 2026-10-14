@@ -66,7 +66,11 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 
 ### Active
 
-- *(None — Milestone v0.7 shipped; run `/gsd-new-milestone` to define next milestone)*
+- [ ] Tempting "Mirage Levers" on policy screens and contextual press/voter blame triggers that surface civics myths at the moment of player intent (`MYTH-01`, `MYTH-02`)
+- [ ] Interactive Reality-Check modal with optional 1-click causal bottleneck prediction, tactile `MYTH BUSTED` stamp-slam animation, and zero-friction skip/dismiss (`MYTH-03`, `MYTH-04`)
+- [ ] Actionable 1-click "Real Lever" tactical pivot buttons inside myth cards that navigate to the target screen and stage or highlight the real constitutional lever (`PIVOT-01`, `PIVOT-02`)
+- [ ] "Debunk vs. Spin" strategic gameplay integration: Statesman path grants an Informed Briefing buff / blame shield, while Evil Mode or cynical play allows weaponizing myths for short-term approval at a credibility/heat cost (`SPIN-01`, `SPIN-02`)
+- [ ] Expanded 12-card spectrum-balanced Myth catalog covering Congress, Voters, Social Policy, and Structural Reform (`|left - right| <= 1`), plus an EndScreen Civic Mastery dossier (`DECK-01`, `DECK-02`)
 
 ### Out of Scope
 
@@ -118,6 +122,17 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 | Deterministic Starting Scenarios | Deterministic macro/fiscal overrides on top of `us-2026.json` preserving bit-for-bit replay | ✓ Good |
 | Living World App-Layer `turnEntropy` | Injects turn-level entropy into `Decisions` (stream 19/20) for both player and autopilot while keeping `src/engine/` 100% pure | ✓ Good |
 | Opt-In Free AI Director + Schema Clamping | Supports OpenRouter `:free` cascade failover, OAuth PKCE, and `window.ai` with zero default egress and strict `C.dynamicCrisis*Cap` clamping | ✓ Good |
+
+## Current Milestone: v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy
+
+**Goal:** Transform civics myth cards from static popups into interactive, intrinsically motivating gameplay mechanics featuring tempting "Mirage Levers", prediction-error reality checks, 1-click pivots to real policy levers, and "Debunk vs. Spin" strategic trade-offs.
+
+**Target features:**
+- Tempting "Mirage Levers" on policy screens and contextual press/voter blame triggers that surface civics myths at the moment of player intent
+- Interactive Reality-Check modal with optional 1-click causal bottleneck prediction, tactile `MYTH BUSTED` stamp-slam animation, and zero-friction skip/dismiss
+- Actionable 1-click "Real Lever" tactical pivot buttons inside myth cards that navigate to the target screen and stage or highlight the real constitutional lever
+- "Debunk vs. Spin" strategic gameplay integration: Statesman path grants an Informed Briefing buff / blame shield, while Evil Mode or cynical play allows weaponizing myths for short-term approval at a credibility/heat cost
+- Expanded 12-card spectrum-balanced Myth catalog covering Congress, Voters, Social Policy, and Structural Reform (`|left - right| <= 1`), plus an EndScreen Civic Mastery dossier
 
 ## Completed Milestone: v0.7 Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director (Shipped 2026-10-14)
 
