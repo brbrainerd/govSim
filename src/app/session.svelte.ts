@@ -12,7 +12,9 @@ import { extractElectionReasons, resolveReelection, type ElectionOutcome } from 
 import { evaluateBadges } from '../engine/badges';
 import { ELECTION_TURN_1 } from '../engine/units';
 import { storeAutosave, type SaveFile } from './save';
-import type { ScreenId } from './screens';
+import { type ScreenId } from './screens';
+import { requestAiTurnDirector, type AiTurnPayload } from './ai-director';
+import { loadAiConfig, saveAiConfig, type AiConfig } from './ai-providers';
 
 import { FILIBUSTER_RULES_CATALOG, type FilibusterRule } from '../engine/congress';
 import { REFORMS_CATALOG, type ReformId } from '../engine/reforms';
@@ -147,6 +149,9 @@ export class Session {
       ? true
       : typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true,
   );
+  aiTurnPayload = $state<AiTurnPayload | null>(null);
+  aiLoading = $state<boolean>(false);
+  aiConfig = $state<AiConfig>(loadAiConfig());
 
   current = $derived(this.history[this.history.length - 1]!);
   previous = $derived(this.history[this.history.length - 2] ?? this.current);
@@ -360,6 +365,14 @@ export class Session {
       });
     }
 
+    if (this.draft.dynamicCrisisDelta) {
+      items.push({
+        id: 'dynamic-crisis',
+        label: 'AI Crisis action staged',
+        screen: 'oval',
+      });
+    }
+
     if (this.draft.signedOrders.length > 0 || this.draft.revokedOrders.length > 0) {
       const count = this.draft.signedOrders.length + this.draft.revokedOrders.length;
       items.push({
@@ -480,6 +493,9 @@ export class Session {
       document.documentElement.dataset.calm = this.calmMode ? 'true' : 'false';
     }
     storeAutosave(this);
+    if (loadAiConfig().provider !== 'off') {
+      this.refreshAiDirector();
+    }
   }
 
   static fromSave(save: SaveFile): Session {
@@ -793,6 +809,32 @@ export class Session {
     this.draft.dynamicCrisisDelta = delta;
   }
 
+  stageDynamicCrisisOption(delta: DynamicCrisisDelta) {
+    if (this.over) return;
+    this.draft.dynamicCrisisDelta = delta;
+  }
+
+  updateAiConfig(config: AiConfig) {
+    saveAiConfig(config);
+    this.aiConfig = config;
+    this.refreshAiDirector();
+  }
+
+  async refreshAiDirector(): Promise<void> {
+    if (this.aiConfig.provider === 'off') {
+      this.aiTurnPayload = null;
+      return;
+    }
+    this.aiLoading = true;
+    try {
+      this.aiTurnPayload = await requestAiTurnDirector(this);
+    } catch {
+      this.aiTurnPayload = null;
+    } finally {
+      this.aiLoading = false;
+    }
+  }
+
   nextTurn() {
     if (this.termEnded || this.over) return;
 
@@ -926,6 +968,7 @@ export class Session {
       this.showingReport = true;
     }
     storeAutosave(this);
+    this.refreshAiDirector();
   }
 
   /**

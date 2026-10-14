@@ -11,7 +11,15 @@
     type AiConfig,
   } from '../app/ai-providers';
 
-  let { onClose }: { onClose: () => void } = $props();
+  import type { Session } from '../app/session.svelte';
+
+  let {
+    session,
+    onClose,
+  }: {
+    session?: Session;
+    onClose: () => void;
+  } = $props();
 
   let config = $state<AiConfig>(loadAiConfig());
   let freeModels = $state<string[]>([...DEFAULT_OPENROUTER_FREE_MODELS]);
@@ -77,7 +85,11 @@
   }
 
   function handleSave() {
-    saveAiConfig(config);
+    if (session) {
+      session.updateAiConfig(config);
+    } else {
+      saveAiConfig(config);
+    }
     saveSuccess = true;
     setTimeout(() => {
       saveSuccess = false;

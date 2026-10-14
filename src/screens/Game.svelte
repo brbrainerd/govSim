@@ -269,6 +269,7 @@
 
     {#if aiSettingsModalOpen}
       <AiSettingsModal
+        {session}
         onClose={() => (aiSettingsModalOpen = false)}
       />
     {/if}

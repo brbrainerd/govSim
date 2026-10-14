@@ -10,7 +10,9 @@
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import HouseholdCard from '../ui/HouseholdCard.svelte';
   import HouseholdModal from '../ui/HouseholdModal.svelte';
+  import DynamicCrisisModal from '../ui/DynamicCrisisModal.svelte';
   import { pickChyron } from '../content/chyrons';
+  import { loadAiConfig } from '../app/ai-providers';
 
   import type { ExplainerId } from '../content/explainers';
 
@@ -31,7 +33,9 @@
   } = $props();
 
   let showHouseholdModal = $state(false);
+  let showDynamicCrisisModal = $state(false);
 
+  const isAiEnabled = $derived(session.aiConfig.provider !== 'off');
   const tiles = $derived(headline(session.history));
   const index = $derived(Math.round(session.index));
   const change = $derived(index - Math.round(score(session.previous).index));
@@ -69,10 +73,13 @@
         />
       </div>
       <div class="chyron-strip" data-testid="oval-news-chyron">
-        <span class="chyron-tag">LIVE</span>
-        <span class="chyron-text">{chyron}</span>
+        <span class="chyron-tag">{session.aiTurnPayload ? 'AI LIVE' : 'LIVE'}</span>
+        {#if session.aiTurnPayload}
+          <span class="ai-director-inline-badge" data-testid="ai-director-badge">AI DIRECTOR LIVE</span>
+        {/if}
+        <span class="chyron-text">{session.aiTurnPayload?.chyron ?? chyron}</span>
       </div>
-      <div class="bubble" role="status">{briefingInfo.bubble}</div>
+      <div class="bubble" role="status">{session.aiTurnPayload?.advisorBubble ?? briefingInfo.bubble}</div>
     </div>
     <div class="doing">
       <div class="doing-head">
@@ -241,6 +248,42 @@
       <span>{briefingInfo.thisTurn.detail}</span>
     </div>
     <HouseholdCard {session} onExplore={() => (showHouseholdModal = true)} />
+
+    {#if session.aiTurnPayload}
+      <div class="card ai-director-card" data-testid="ai-briefing-card">
+        <div class="ai-head-row">
+          <span class="ai-director-badge" data-testid="ai-director-badge">AI DIRECTOR LIVE</span>
+          {#if session.aiTurnPayload.dynamicCrisis}
+            <span class="ai-crisis-badge">CRISIS READY</span>
+          {/if}
+        </div>
+        <b class="ai-headline">{session.aiTurnPayload.turnHeadline}</b>
+        <span class="ai-detail">{session.aiTurnPayload.turnDetail}</span>
+        {#if session.aiTurnPayload.dynamicCrisis}
+          <button
+            type="button"
+            class="btn ai-trigger-btn"
+            data-testid="trigger-ai-crisis-btn"
+            onclick={() => (showDynamicCrisisModal = true)}
+          >
+            Review AI Dynamic Crisis
+          </button>
+        {/if}
+      </div>
+    {:else if isAiEnabled}
+      <div class="card ai-trigger-card">
+        <button
+          type="button"
+          class="btn ai-trigger-btn"
+          data-testid="trigger-ai-crisis-btn"
+          onclick={() => session.refreshAiDirector()}
+          disabled={session.aiLoading}
+        >
+          {session.aiLoading ? 'Synthesizing...' : 'Synthesize AI Turn Briefing'}
+        </button>
+      </div>
+    {/if}
+
     {#each briefingInfo.suggestions as s (s.title)}
       <div class="card option">
         <div class="option-text">
@@ -274,6 +317,14 @@
 
 {#if showHouseholdModal}
   <HouseholdModal {session} onClose={() => (showHouseholdModal = false)} />
+{/if}
+
+{#if showDynamicCrisisModal && session.aiTurnPayload?.dynamicCrisis}
+  <DynamicCrisisModal
+    crisis={session.aiTurnPayload.dynamicCrisis}
+    {session}
+    onClose={() => (showDynamicCrisisModal = false)}
+  />
 {/if}
 
 <style>
@@ -604,5 +655,81 @@
   .evil-stash-score .stash-delta {
     color: var(--gold);
     font-style: normal;
+  }
+
+  .ai-director-inline-badge {
+    font: 700 9px/1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: var(--gold);
+    color: var(--ink);
+    padding: 2px 6px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .ai-director-card,
+  .ai-trigger-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: clamp(8px, 1.2vh, 12px);
+    background: var(--paper-dark);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--r-sm);
+  }
+
+  .ai-head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .ai-director-badge {
+    font: 700 10px/1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: var(--gold);
+    color: var(--ink);
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--ink);
+  }
+
+  .ai-crisis-badge {
+    font: 700 9px/1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--alert);
+    color: var(--card);
+    padding: 2px 5px;
+    border-radius: 2px;
+  }
+
+  .ai-headline {
+    font: 700 14px/1.2 var(--font-display);
+    color: var(--ink);
+  }
+
+  .ai-detail {
+    font: 500 12px/1.3 var(--font-body);
+    color: var(--ink-soft);
+  }
+
+  .ai-trigger-btn {
+    margin-top: 4px;
+    background: var(--ink);
+    color: var(--paper);
+    font: 700 11px/1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 6px 10px;
+    border-radius: 3px;
+    border: 1px solid var(--ink);
+    cursor: pointer;
+  }
+
+  .ai-trigger-btn:hover:not(:disabled) {
+    background: var(--ink-soft);
   }
 </style>
