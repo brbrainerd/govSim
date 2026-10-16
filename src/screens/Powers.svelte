@@ -9,7 +9,13 @@
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import JudicialReformModal from '../ui/JudicialReformModal.svelte';
   import EvilLeversSection from '../ui/EvilLeversSection.svelte';
+  import TradeoffPill from '../ui/TradeoffPill.svelte';
   import { SANCTIONS_CATALOG, type DefensePosture, type SanctionType } from '../engine/foreign';
+  import {
+    DEFENSE_POSTURE_TRADEOFFS,
+    REFORM_TRADEOFFS,
+    SANCTION_TRADEOFFS,
+  } from '../content/tradeoffs';
 
   let {
     session,
@@ -70,7 +76,9 @@
       <section class="orders-section" aria-label="Curated Executive Orders">
         <div class="section-header">
           <div class="header-titles">
-            <span class="section-tag">ARTICLE II SECTION 1</span>
+            <span class="section-tag">
+              {session.vocabMode === 'wonk' ? 'ARTICLE II SECTION 1 · EXECUTIVE DIRECTIVES' : '✍️ SOLO PRESIDENTIAL ACTIONS · NO CONGRESS NEEDED'}
+            </span>
             <h3 class="section-title">Executive Orders</h3>
           </div>
           {#if onOpenMyth}
@@ -106,11 +114,16 @@
               onclick={() => (selectedOrderId = order.id)}
             >
               <div class="card-top">
-                <span class="order-name">{order.name}</span>
+                <span class="order-name">
+                  <span class="order-emoji" aria-hidden="true">{order.emoji}</span>
+                  {order.name}
+                </span>
                 <span class="clout-badge">{order.cloutCost} clout</span>
               </div>
 
-              <p class="order-desc">{order.preview}</p>
+              <p class="order-desc">
+                {session.vocabMode === 'wonk' ? `${order.wonkLabel} — ${order.preview}` : order.preview}
+              </p>
 
               <div class="card-footer">
                 <span class="risk-pill risk-{order.courtRisk.toLowerCase()}">
@@ -145,7 +158,7 @@
           </div>
           <div class="inst-info">
             <div class="inst-header">
-              <span class="inst-tag">CENTRAL BANK</span>
+              <span class="inst-tag">🏦 CENTRAL BANK</span>
               <h4 class="inst-name">The Fed (independent)</h4>
             </div>
             <p class="inst-desc">Sets short-term borrowing costs to steady prices and support employment.</p>
@@ -154,6 +167,7 @@
                 class="fed-btn"
                 class:active={session.draft.fedPressure}
                 disabled={session.over || (!canAffordFedPressure && !session.draft.fedPressure)}
+                title="👍 Nudges rates down for fast jobs · ⚠️ Costs 15 Clout & spooks inflation hawks"
                 onclick={() => session.setFedPressure(!session.draft.fedPressure)}
               >
                 <Landmark size={14} />
@@ -173,7 +187,7 @@
         <div class="institution-card court-card">
           <div class="court-header-row">
             <div>
-              <span class="inst-tag">ARTICLE III</span>
+              <span class="inst-tag">⚖️ ARTICLE III</span>
               <h4 class="inst-name">Supreme Court · leans {composition.conservative}–{composition.liberal}</h4>
             </div>
             {#if pendingChallengesCount > 0}
@@ -188,7 +202,11 @@
             <CourtBench conservative={composition.conservative} liberal={composition.liberal} />
           </div>
           <div class="court-actions-row">
-            <p class="court-subtext">Strikes down executive actions exceeding delegated statutory authority.</p>
+            <p class="court-subtext">
+              {session.vocabMode === 'wonk'
+                ? 'Strikes down executive actions exceeding delegated statutory authority.'
+                : 'Can strike down your boldest orders if Congress never clearly approved them.'}
+            </p>
             <button
               type="button"
               class="btn court-reform-btn"
@@ -203,14 +221,14 @@
         <!-- Electoral Reforms Card (REF-03) -->
         <div class="institution-card electoral-card" data-testid="electoral-reforms-card">
           <div class="electoral-header">
-            <span class="inst-tag">ELECTORAL REFORMS</span>
+            <span class="inst-tag">🗳️ ELECTORAL REFORMS</span>
             <h4 class="inst-name">Democracy &amp; Voting System Grants</h4>
           </div>
           <div class="electoral-grid">
-            <div class="electoral-item" class:enacted={isEnacted('rcv_incentives')}>
+            <div class="electoral-item" class:enacted={isEnacted('rcv_incentives')} title={REFORM_TRADEOFFS.rcv_incentives.whyClick}>
               <div class="electoral-text">
-                <b>Ranked-Choice Voting Grants</b>
-                <span>Federal grants for state RCV transition (+1.5% turnout, centrist boost).</span>
+                <b>{REFORM_TRADEOFFS.rcv_incentives.emoji} Ranked-Choice Voting Grants</b>
+                <span>👍 {REFORM_TRADEOFFS.rcv_incentives.upside} · ⚠️ {REFORM_TRADEOFFS.rcv_incentives.catchText}</span>
               </div>
               <button
                 type="button"
@@ -221,10 +239,10 @@
                 {isEnacted('rcv_incentives') ? '✓ Enacted' : session.draft.reform === 'rcv_incentives' ? 'Staged' : 'Enact (15 Clout)'}
               </button>
             </div>
-            <div class="electoral-item" class:enacted={isEnacted('independent_redistricting')}>
+            <div class="electoral-item" class:enacted={isEnacted('independent_redistricting')} title={REFORM_TRADEOFFS.independent_redistricting.whyClick}>
               <div class="electoral-text">
-                <b>Independent Redistricting</b>
-                <span>Grants for citizen districting commissions (+35 competitive seats).</span>
+                <b>{REFORM_TRADEOFFS.independent_redistricting.emoji} Independent Redistricting</b>
+                <span>👍 {REFORM_TRADEOFFS.independent_redistricting.upside} · ⚠️ {REFORM_TRADEOFFS.independent_redistricting.catchText}</span>
               </div>
               <button
                 type="button"
@@ -235,10 +253,10 @@
                 {isEnacted('independent_redistricting') ? '✓ Enacted' : session.draft.reform === 'independent_redistricting' ? 'Staged' : 'Enact (20 Clout)'}
               </button>
             </div>
-            <div class="electoral-item" class:enacted={isEnacted('small_dollar_matching')}>
+            <div class="electoral-item" class:enacted={isEnacted('small_dollar_matching')} title={REFORM_TRADEOFFS.small_dollar_matching.whyClick}>
               <div class="electoral-text">
-                <b>Small-Dollar Donor Matching</b>
-                <span>Public match for grassroots donations under $200 (+trust, +turnout).</span>
+                <b>{REFORM_TRADEOFFS.small_dollar_matching.emoji} Small-Dollar Donor Matching</b>
+                <span>👍 {REFORM_TRADEOFFS.small_dollar_matching.upside} · ⚠️ {REFORM_TRADEOFFS.small_dollar_matching.catchText}</span>
               </div>
               <button
                 type="button"
@@ -255,7 +273,7 @@
         <!-- Foreign Policy & National Security Card (FORPOL-01, FORPOL-02) -->
         <div class="institution-card foreign-policy-card" data-testid="foreign-policy-section">
           <div class="forpol-header">
-            <span class="inst-tag">ARTICLE II SECTION 2 · COMMANDER IN CHIEF &amp; DIPLOMACY</span>
+            <span class="inst-tag">🛡️ ARTICLE II SECTION 2 · COMMANDER IN CHIEF &amp; DIPLOMACY</span>
             <h4 class="inst-name">Defense Posture &amp; Targeted Sanctions</h4>
           </div>
 
@@ -270,10 +288,11 @@
                   aria-checked={foreignState.defensePosture === 'peacetime'}
                   class="btn posture-btn"
                   class:selected={foreignState.defensePosture === 'peacetime'}
+                  title={DEFENSE_POSTURE_TRADEOFFS.peacetime.whyClick}
                   onclick={() => session.setDefensePosture('peacetime')}
                 >
-                  <span class="posture-title">Peacetime Drawdown</span>
-                  <span class="posture-sub">-$25B/yr deficit · Diplomatic focus</span>
+                  <span class="posture-title">{DEFENSE_POSTURE_TRADEOFFS.peacetime.emoji} Peacetime Drawdown</span>
+                  <span class="posture-sub">👍 -$25B/yr deficit · ⚠️ Less crisis deterrence</span>
                 </button>
                 <button
                   type="button"
@@ -281,10 +300,11 @@
                   aria-checked={foreignState.defensePosture === 'standard'}
                   class="btn posture-btn"
                   class:selected={foreignState.defensePosture === 'standard'}
+                  title={DEFENSE_POSTURE_TRADEOFFS.standard.whyClick}
                   onclick={() => session.setDefensePosture('standard')}
                 >
-                  <span class="posture-title">Standard Readiness</span>
-                  <span class="posture-sub">$0 baseline · Steady deterrence</span>
+                  <span class="posture-title">{DEFENSE_POSTURE_TRADEOFFS.standard.emoji} Standard Readiness</span>
+                  <span class="posture-sub">👍 $0 baseline · Steady deterrence</span>
                 </button>
                 <button
                   type="button"
@@ -292,10 +312,11 @@
                   aria-checked={foreignState.defensePosture === 'surge'}
                   class="btn posture-btn"
                   class:selected={foreignState.defensePosture === 'surge'}
+                  title={DEFENSE_POSTURE_TRADEOFFS.surge.whyClick}
                   onclick={() => session.setDefensePosture('surge')}
                 >
-                  <span class="posture-title">Forward Surge</span>
-                  <span class="posture-sub">+$35B/yr deficit · High deterrence</span>
+                  <span class="posture-title">{DEFENSE_POSTURE_TRADEOFFS.surge.emoji} Forward Surge</span>
+                  <span class="posture-sub">👍 High deterrence · ⚠️ +$35B/yr deficit</span>
                 </button>
               </div>
             </div>
@@ -307,17 +328,21 @@
                 {#each SANCTIONS_CATALOG as sanction (sanction.id)}
                   {@const active = isSanctionActive(sanction.id)}
                   {@const affordable = canAffordSanction(sanction.id)}
-                  <div class="sanction-item" class:active>
+                  {@const sMeta = SANCTION_TRADEOFFS[sanction.id]}
+                  <div class="sanction-item" class:active title={sMeta.whyClick}>
                     <div class="sanction-info">
                       <div class="sanction-title-row">
-                        <b>{sanction.name}</b>
+                        <b><span aria-hidden="true">{sMeta.emoji}</span> {sanction.name}</b>
                         <span class="sanction-cost-pill">10 Clout</span>
                       </div>
                       <p class="sanction-desc">{sanction.description}</p>
                       <div class="sanction-chips">
+                        <span class="fallout-chip upside-chip">👍 {sMeta.upside}</span>
                         <span class="fallout-chip inflation">+{sanction.inflationImpact.toFixed(2)}% CPI Inflation</span>
                         <span class="fallout-chip gdp">{sanction.gapImpact.toFixed(2)}% GDP Trade Drag</span>
-                        <span class="statutory-basis">{sanction.legalBasis}</span>
+                        {#if session.vocabMode === 'wonk'}
+                          <span class="statutory-basis">{sanction.legalBasis}</span>
+                        {/if}
                       </div>
                     </div>
                     <button
@@ -358,30 +383,52 @@
   {#snippet next()}
     <div class="next-column">
       <!-- What It Means Explainer -->
-      <div class="card preview-card">
+      <div class="card preview-card" data-testid="powers-preview-card">
         {#if isOrderDraftSigned(selectedOrderId)}
           <div class="stamp-wrap">
             <span class="stamp-slam" data-testid="stamp-slam-badge">SIGNED BY ORDER</span>
           </div>
         {/if}
-        <span class="label">What it means</span>
+        <div class="preview-head-row">
+          <span class="label">What it means</span>
+          <span class="preview-emoji" aria-hidden="true">{selectedOrder.emoji}</span>
+        </div>
         <h4 class="preview-title">{selectedOrder.name}</h4>
         <p class="preview-desc">{selectedOrder.description}</p>
+        <p class="preview-why" data-testid="powers-why-click">
+          <b>💡 Why click this:</b> {selectedOrder.whyClick}
+        </p>
+
+        <TradeoffPill
+          variant="compact"
+          upside={selectedOrder.upside}
+          catchText={selectedOrder.catchText}
+          whyClick={selectedOrder.whyClick}
+          realTerm={selectedOrder.wonkLabel}
+          legalBasis={selectedOrder.legalBasis}
+          vocabMode={session.vocabMode}
+        />
 
         <div class="legal-box">
-          <span class="box-tag">STATUTORY AUTHORITY</span>
+          <span class="box-tag">{session.vocabMode === 'wonk' ? 'STATUTORY AUTHORITY' : '📜 LEGAL HOOK (WHY YOU CAN SIGN THIS)'}</span>
           <span class="legal-basis">{selectedOrder.legalBasis}</span>
         </div>
 
         <div class="risk-box">
-          <span class="box-tag">JUDICIAL VULNERABILITY</span>
+          <span class="box-tag">{session.vocabMode === 'wonk' ? 'JUDICIAL VULNERABILITY' : '⚖️ COURT CHALLENGE RISK'}</span>
           <p class="risk-explanation">
             {#if selectedOrder.courtRisk === 'High'}
-              Major Questions vulnerability. High probability of commercial or state legal challenge.
+              {session.vocabMode === 'wonk'
+                ? 'Major Questions vulnerability. High probability of commercial or state legal challenge.'
+                : 'High risk: Courts often block big rules if Congress never clearly voted for them.'}
             {:else if selectedOrder.courtRisk === 'Moderate'}
-              Discretionary agency interpretation. Moderate risk of circuit court injunction.
+              {session.vocabMode === 'wonk'
+                ? 'Discretionary agency interpretation. Moderate risk of circuit court injunction.'
+                : 'Moderate risk: Opponents may sue to pause this in federal court.'}
             {:else}
-              Strong delegated statutory precedent. High likelihood of being upheld if challenged.
+              {session.vocabMode === 'wonk'
+                ? 'Strong delegated statutory precedent. High likelihood of being upheld if challenged.'
+                : 'Low risk: Congress clearly gave the President this power.'}
             {/if}
           </p>
         </div>
@@ -955,6 +1002,12 @@
     border-radius: var(--r-sm);
   }
 
+  .fallout-chip.upside-chip {
+    background: var(--sage-tint);
+    color: var(--ink);
+    border: 1px solid var(--sage-dark);
+  }
+
   .fallout-chip.inflation {
     background: var(--alert-tint);
     color: var(--alert-dark);
@@ -999,7 +1052,7 @@
   .next-column {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
     height: 100%;
   }
 
@@ -1007,25 +1060,47 @@
     background: var(--card);
     border: 2px solid var(--ink);
     border-radius: var(--r-sm);
-    padding: 12px;
+    padding: 9px 11px;
     box-shadow: 3px 3px 0 var(--ink);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 5px;
+  }
+
+  .preview-head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .preview-emoji {
+    font-size: 16px;
+    line-height: 1;
   }
 
   .preview-title {
     font-family: var(--font-display);
-    font-size: 17px;
+    font-size: 16px;
     color: var(--ink);
     margin: 0;
   }
 
   .preview-desc {
     font-family: var(--font-body);
-    font-size: 13px;
-    line-height: 1.35;
+    font-size: 12px;
+    line-height: 1.3;
     color: var(--ink);
+    margin: 0;
+  }
+
+  .preview-why {
+    font-family: var(--font-body);
+    font-size: 11.5px;
+    line-height: 1.25;
+    color: var(--ink);
+    background: var(--paper-dark);
+    padding: 4px 7px;
+    border-radius: 4px;
     margin: 0;
   }
 
@@ -1035,7 +1110,7 @@
     background: var(--paper);
     border: 1px solid var(--ink);
     border-radius: 4px;
-    padding: 6px 8px;
+    padding: 4px 7px;
   }
 
   .box-tag {

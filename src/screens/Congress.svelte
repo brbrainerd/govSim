@@ -7,6 +7,7 @@
   import FilibusterModal from '../ui/FilibusterModal.svelte';
   import AmendmentModal from '../ui/AmendmentModal.svelte';
   import type { ExplainerId } from '../content/explainers';
+  import { BLOC_EXPLAINERS, DEAL_TRADEOFFS } from '../content/tradeoffs';
 
   let {
     session,
@@ -74,7 +75,10 @@
       />
       <div class="legend">
         {#each groups as g (g.id)}
-          <span><i style:background="var(--{g.color})"></i><b>{whip.byGroup[g.id]}</b>/{g.seats} · wants {g.wants.toLowerCase()}</span>
+          {@const bMeta = BLOC_EXPLAINERS[g.id]}
+          <span title={session.vocabMode === 'wonk' ? bMeta.wonkNote : bMeta.plainNote}>
+            <i style:background="var(--{g.color})"></i><span aria-hidden="true">{bMeta.emoji}</span> <b>{whip.byGroup[g.id]}</b>/{g.seats} · wants {g.wants.toLowerCase()}
+          </span>
         {/each}
       </div>
     </div>
@@ -150,8 +154,12 @@
     </div>
     {#each deals as d (d.id)}
       {@const done = session.draft.deals.includes(d.id)}
-      <div class="card deal">
-        <div><b>{d.title}</b><span>{d.detail}</span></div>
+      {@const dMeta = DEAL_TRADEOFFS[d.id]}
+      <div class="card deal" title={dMeta.whyClick} data-testid={`deal-card-${d.id}`}>
+        <div>
+          <b><span aria-hidden="true">{dMeta.emoji}</span> {session.vocabMode === 'wonk' ? dMeta.wonkLabel : d.title}</b>
+          <span>👍 {dMeta.upside} · ⚠️ {dMeta.catchText}</span>
+        </div>
         <button class="btn" disabled={done || !session.canDeal(d.id)} onclick={() => session.makeDeal(d.id)}>{done ? 'Done' : `${d.cost} clout`}</button>
       </div>
     {/each}

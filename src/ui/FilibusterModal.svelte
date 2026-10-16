@@ -4,7 +4,9 @@
     FILIBUSTER_RULES_CATALOG,
     type FilibusterRule,
   } from '../engine/congress';
+  import { FILIBUSTER_TRADEOFFS } from '../content/tradeoffs';
   import Overlay from './Overlay.svelte';
+  import TradeoffPill from './TradeoffPill.svelte';
 
   let {
     session,
@@ -34,7 +36,11 @@
     <header class="modal-header">
       <div class="header-titles">
         <h2 class="modal-title">Senate Filibuster &amp; Cloture Rules</h2>
-        <span class="modal-subtitle">Reform Senate rules to adjust legislative cloture hurdles and bipartisan requirements</span>
+        <span class="modal-subtitle">
+          {session.vocabMode === 'wonk'
+            ? 'Reform Senate Rule XXII cloture hurdles and bipartisan threshold requirements'
+            : 'Change how many Senators it takes to end debate and bring a bill to a vote'}
+        </span>
       </div>
       <button type="button" class="close-x" onclick={onClose} aria-label="Close dialog">✕</button>
     </header>
@@ -42,6 +48,7 @@
     <div class="rules-grid">
       {#each rulesList as ruleId (ruleId)}
         {@const r = FILIBUSTER_RULES_CATALOG[ruleId]}
+        {@const meta = FILIBUSTER_TRADEOFFS[ruleId]}
         {@const isActive = currentRule === ruleId}
         {@const isDrafted = draftedRule === ruleId}
         {@const canAfford = session.clout >= r.cloutCost || isDrafted}
@@ -54,7 +61,7 @@
         >
           <div class="card-top">
             <div class="title-row">
-              <h3 class="rule-name">{r.name}</h3>
+              <h3 class="rule-name"><span aria-hidden="true">{meta.emoji}</span> {r.name}</h3>
               <span class="threshold-pill">{r.threshold} Votes</span>
             </div>
             {#if isActive}
@@ -65,6 +72,17 @@
           </div>
 
           <p class="rule-desc">{r.description}</p>
+          <p class="rule-desc"><b>💡 Why click:</b> {meta.whyClick}</p>
+
+          <TradeoffPill
+            variant="compact"
+            upside={meta.upside}
+            catchText={meta.catchText}
+            whyClick={meta.whyClick}
+            realTerm={meta.wonkLabel}
+            legalBasis={meta.statutoryBasis}
+            vocabMode={session.vocabMode}
+          />
 
           <div class="cost-row">
             <span class="cost-label">Clout Cost:</span>

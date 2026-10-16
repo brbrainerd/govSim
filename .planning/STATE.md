@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v0.9
 milestone_name: Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance
-current_phase: 36
-current_phase_name: Surfacing Decision Trade-Offs & Visual Meters Across Act Screens
+current_phase: 37
+current_phase_name: Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens
 status: planning
-stopped_at: Phase 35 complete, ready to plan Phase 36
-last_updated: "2026-10-16T10:30:07.577Z"
+stopped_at: Phase 36 complete, ready to plan Phase 37
+last_updated: "2026-10-16T10:41:32.978Z"
 last_activity: 2026-10-16
-last_activity_desc: Phase 35 complete, transitioned to Phase 36
-state_head: 4c9706c0473293ec0e4ce9fe3f870048c03cf881
+last_activity_desc: Phase 36 complete, transitioned to Phase 37
+state_head: 43598ef62ac57aeefacdb1575511ca6672be9663
 progress:
   total_phases: 5
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
-  percent: 40
+  completed_phases: 3
+  total_plans: 3
+  completed_plans: 3
+  percent: 60
 ---
 
 # Project State
@@ -29,13 +29,13 @@ See: .planning/PROJECT.md (updated 2026-10-16)
 
 ## Current Position
 
-Phase: 36 of 38 (Surfacing Decision Trade-Offs & Visual Meters Across Act Screens)
+Phase: 37 of 38 (Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens)
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-10-16 — Phase 35 complete, transitioned to Phase 36
+Last activity: 2026-10-16 — Phase 36 complete, transitioned to Phase 37
 
 ## Session Continuity
 
 Last session: 2026-10-16T09:58:00.000Z
-Stopped at: Phase 35 complete, ready to plan Phase 36
+Stopped at: Phase 36 complete, ready to plan Phase 37
 Resume file: .planning/ROADMAP.md

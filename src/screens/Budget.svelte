@@ -5,7 +5,13 @@
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
   import type { ExplainerId } from '../content/explainers';
+  import {
+    BUDGET_LEVER_TRADEOFFS,
+    BUDGET_PACKAGE_TRADEOFFS,
+    getBudgetLeverTradeoff,
+  } from '../content/tradeoffs';
   import HouseholdModal from '../ui/HouseholdModal.svelte';
+  import TradeoffPill from '../ui/TradeoffPill.svelte';
 
   let {
     session,
@@ -22,11 +28,42 @@
   } = $props();
 
   let showHouseholdModal = $state(false);
+  let focusedLeverId = $state<string>('inc');
+  let focusedMode = $state<'lever' | 'package'>('lever');
 
   const words = $derived(describe(estimate(session.draft.budget)));
   const persona = $derived(session.selectedHouseholdPersona);
   const netHousehold = $derived(session.householdImpact.netMonthlyDelta);
   const packNames = Object.keys(packages) as PackageName[];
+  const allLevers = [...taxLevers, ...spendLevers];
+
+  const activeTradeoff = $derived.by(() => {
+    if (focusedMode === 'package' && session.draft.pack && BUDGET_PACKAGE_TRADEOFFS[session.draft.pack]) {
+      const p = BUDGET_PACKAGE_TRADEOFFS[session.draft.pack];
+      return {
+        emoji: p.emoji,
+        title: session.vocabMode === 'wonk' ? p.wonkLabel : p.plainLabel,
+        whyClick: p.whyClick,
+        upside: p.upside,
+        catchText: p.catchText,
+        realTerm: p.wonkLabel,
+        legalBasis: p.statutoryBasis,
+      };
+    }
+    const leverDef = allLevers.find((x) => x.id === focusedLeverId) ?? taxLevers[0]!;
+    const inForce = session.current.policy[leverDef.id] ?? leverDef.base;
+    const val = session.draft.budget[leverDef.id] ?? inForce;
+    const t = getBudgetLeverTradeoff(leverDef.id, val, inForce);
+    return {
+      emoji: t.emoji,
+      title: session.vocabMode === 'wonk' ? t.wonkLabel : t.plainLabel,
+      whyClick: t.whyClick,
+      upside: t.upside,
+      catchText: t.catchText,
+      realTerm: t.wonkLabel,
+      legalBasis: t.statutoryBasis,
+    };
+  });
 
   function valueText(l: Lever, v: number, isTax: boolean, inForce: number) {
     const d = +(v - inForce).toFixed(1);
@@ -45,17 +82,40 @@
       {@const inForce = session.current.policy[l.id] ?? l.base}
       {@const v = session.draft.budget[l.id] ?? inForce}
       {@const changed = v !== inForce}
+      {@const meta = BUDGET_LEVER_TRADEOFFS[l.id]}
       <div class="row" class:changed data-in-force={inForce}>
-        <label for={l.id}>{l.label}</label>
+        <label for={l.id} title={meta ? `${meta.wonkLabel} — ${meta.whyClick}` : undefined}>
+          {#if meta}<span class="lever-emoji" aria-hidden="true">{meta.emoji}</span> {/if}{l.label}
+        </label>
         <span class="val">{valueText(l, v, isTax, inForce)}</span>
         <div class="track" style:--fill="{pct(l, v)}%">
           {#if inForce !== l.base}
             <span class="tick base-tick" style:left="{pct(l, l.base)}%" title="2026 baseline"></span>
           {/if}
           <span class="tick" style:left="{pct(l, inForce)}%" title="Current policy in force"></span>
-          <input id={l.id} type="range" disabled={session.over} min={l.min} max={l.max} step={l.step} value={v}
+          <input
+            id={l.id}
+            type="range"
+            disabled={session.over}
+            min={l.min}
+            max={l.max}
+            step={l.step}
+            value={v}
             aria-valuetext={valueText(l, v, isTax, inForce)}
-            oninput={(e) => session.setLever(l.id, +e.currentTarget.value)} />
+            onmouseenter={() => {
+              focusedLeverId = l.id;
+              focusedMode = 'lever';
+            }}
+            onfocus={() => {
+              focusedLeverId = l.id;
+              focusedMode = 'lever';
+            }}
+            oninput={(e) => {
+              focusedLeverId = l.id;
+              focusedMode = 'lever';
+              session.setLever(l.id, +e.currentTarget.value);
+            }}
+          />
         </div>
       </div>
     {/each}
@@ -64,7 +124,7 @@
       {@const assist = session.effectiveForeignPolicy.foreignAssistance}
       {@const changed = assist !== assistInForce}
       <div class="row foreign-assistance-row" class:changed>
-        <label for="foreign-assistance-slider">Foreign Assistance &amp; Aid</label>
+        <label for="foreign-assistance-slider">🌍 Foreign Assistance &amp; Aid</label>
         <span class="val">{assist === assistInForce ? 'Same as now ($45B/yr, <1%)' : `${assist > assistInForce ? '+' : ''}${assist - assistInForce}% · ${assist > assistInForce ? 'up' : 'down'}`}</span>
         <div class="track" style:--fill="{(assist / 200) * 100}%">
           {#if assistInForce !== 100}
@@ -92,7 +152,19 @@
   {#snippet main()}
     <div class="packs" role="group" aria-label="Start from a package">
       {#each packNames as p (p)}
-        <button class="pack" aria-pressed={session.draft.pack === p} disabled={session.over} onclick={() => session.pickPackage(p)}>{p}</button>
+        {@const pMeta = BUDGET_PACKAGE_TRADEOFFS[p]}
+        <button
+          class="pack"
+          aria-pressed={session.draft.pack === p}
+          disabled={session.over}
+          title={pMeta ? `${pMeta.whyClick} (👍 ${pMeta.upside} · ⚠️ ${pMeta.catchText})` : undefined}
+          onclick={() => {
+            focusedMode = 'package';
+            session.pickPackage(p);
+          }}
+        >
+          {#if pMeta}<span aria-hidden="true">{pMeta.emoji}</span> {/if}{p}
+        </button>
       {/each}
     </div>
     <div class="cols">
@@ -134,9 +206,19 @@
         {netHousehold >= 0 ? `+$${netHousehold} a month` : `-$${Math.abs(netHousehold)} a month`}
       </b>
     </div>
-    <div class="card info">
-      <span class="label">Route</span>
-      <span class="line">Budget bill: 218 House votes, 51 in the Senate.</span>
+    <div class="tradeoff-panel" data-testid="budget-tradeoff-card">
+      <TradeoffPill
+        variant="card"
+        emoji={activeTradeoff.emoji}
+        title={activeTradeoff.title}
+        whyClick={activeTradeoff.whyClick}
+        upside={activeTradeoff.upside}
+        catchText={activeTradeoff.catchText}
+        realTerm={activeTradeoff.realTerm}
+        legalBasis={activeTradeoff.legalBasis}
+        vocabMode={session.vocabMode}
+      />
+      <span class="route-note">Budget bill: 218 House votes, 51 in the Senate.</span>
     </div>
     {#if onOpenMyth}
       <button
@@ -198,14 +280,16 @@
   input { position: absolute; inset: 0; width: 100%; margin: 0; appearance: none; background: transparent; cursor: pointer; }
   input::-webkit-slider-thumb { appearance: none; width: clamp(20px, 2.2vh, 26px); height: clamp(20px, 2.2vh, 26px); border-radius: 50%; background: var(--gold); border: 2.5px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); }
   input::-moz-range-thumb { width: clamp(18px, 2vh, 22px); height: clamp(18px, 2vh, 22px); border-radius: 50%; background: var(--gold); border: 2.5px solid var(--ink); }
-  .info { display: flex; flex-direction: column; gap: clamp(2px, 0.4vh, 4px); padding: clamp(8px, 1.2vh, 14px); }
-  .info b { font: 700 clamp(16px, 1.3vw, 20px)/1.2 var(--font-display); }
-  .info .num { font: 700 clamp(20px, 2vw, 28px) var(--font-ui); }
-  .line { font: 600 clamp(14px, 1.1vw, 17px)/1.25 var(--font-ui); max-width: 45ch; }
-  .fine { font-size: clamp(11px, 0.9vw, 13px); color: var(--ink-soft); max-width: 45ch; }
+  .info { display: flex; flex-direction: column; gap: 2px; padding: clamp(6px, 0.9vh, 11px) clamp(8px, 1vw, 12px); }
+  .info b { font: 700 clamp(15px, 1.25vw, 19px)/1.2 var(--font-display); }
+  .info .num { font: 700 clamp(18px, 1.8vw, 24px) var(--font-ui); }
+  .line { font: 600 clamp(13px, 1vw, 16px)/1.2 var(--font-ui); max-width: 45ch; }
+  .fine { font-size: clamp(10px, 0.85vw, 12px); color: var(--ink-soft); max-width: 45ch; }
+  .tradeoff-panel { display: flex; flex-direction: column; gap: 3px; }
+  .route-note { font: 500 11px/1.2 var(--font-ui); color: var(--ink-soft); text-align: center; }
   .good { color: var(--sage-dark); }
   .bad { color: var(--alert); }
-  .spacer { flex-grow: 1; min-height: 4px; }
+  .spacer { flex-grow: 1; min-height: 2px; }
   .mirage-lever-btn {
     padding: 3px 8px;
     font: 700 11px/1.1 var(--font-ui);

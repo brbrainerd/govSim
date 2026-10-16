@@ -12,7 +12,9 @@
     AMENDMENT_SENATE_THRESHOLD,
     AMENDMENT_STATES_TO_RATIFY,
   } from '../engine/units';
+  import { AMENDMENT_TRADEOFFS } from '../content/tradeoffs';
   import Overlay from './Overlay.svelte';
+  import TradeoffPill from './TradeoffPill.svelte';
 
   let {
     session,
@@ -139,6 +141,7 @@
         <div class="proposals-grid">
           {#each candidateIds as candId (candId)}
             {@const def = AMENDMENTS_CATALOG[candId]}
+            {@const meta = AMENDMENT_TRADEOFFS[candId]}
             {@const votes = getVotes(candId)}
             {@const check = checkAmendmentCongressionalProposal(candId, votes.houseVotes, votes.senateVotes)}
             {@const isDrafted = draftedProposal === candId}
@@ -147,8 +150,18 @@
 
             <div class="proposal-card" class:drafted={isDrafted} data-testid="amendment-card-{candId}">
               <div class="prop-top">
-                <h4 class="prop-title">{def.title}</h4>
+                <h4 class="prop-title"><span aria-hidden="true">{meta.emoji}</span> {def.title}</h4>
                 <p class="prop-desc">{def.description}</p>
+                <p class="prop-desc"><b>💡 Why click:</b> {meta.whyClick}</p>
+                <TradeoffPill
+                  variant="compact"
+                  upside={meta.upside}
+                  catchText={meta.catchText}
+                  whyClick={meta.whyClick}
+                  realTerm={meta.wonkLabel}
+                  legalBasis={meta.statutoryBasis}
+                  vocabMode={session.vocabMode}
+                />
                 <div class="prop-effects">
                   <b>Permanent Impact:</b> {def.effectsSummary}
                 </div>

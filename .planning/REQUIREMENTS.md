@@ -19,9 +19,9 @@
 
 ### Surfacing Decision Trade-Offs & Visual Meters Across Act Screens (Phase 36)
 
-- [ ] **UI-CLARITY-01**: Upgrade `src/screens/Budget.svelte` so hovering, focusing, or adjusting any tax or spending slider (or preset package) updates the right-hand `"What it means"` column with a Plain-Talk `"Why move this slider?"` card (`👍 Upside`, `⚠️ The Catch`, emoji indicator, and visual wallet/economy meter) alongside the Expert Forecast.
-- [ ] **UI-CLARITY-02**: Upgrade `src/screens/Powers.svelte` and `src/screens/Trade.svelte` to replace uppercase statutory jargon (`CPI Pass-Through`, `Retaliatory friction weight`, `JUDICIAL VULNERABILITY`) in Plain Talk mode with friendly headers, emoji badges, compact `👍 / ⚠️` trade-off pills, and a clear `"Why sign this? / What's the catch?"` right-column decision card.
-- [ ] **UI-CLARITY-03**: Upgrade `src/screens/Congress.svelte`, `src/ui/FilibusterModal.svelte`, `src/ui/JudicialReformModal.svelte`, and `src/ui/AmendmentModal.svelte` so voting blocs, horse-trading deals, Senate rules, and court reforms explain *why* a player would spend Clout on them in plain, witty terms with visual vote-math and trade-off meters.
+- [x] **UI-CLARITY-01**: Upgrade `src/screens/Budget.svelte` so hovering, focusing, or adjusting any tax or spending slider (or preset package) updates the right-hand `"What it means"` column with a Plain-Talk `"Why move this slider?"` card (`👍 Upside`, `⚠️ The Catch`, emoji indicator, and visual wallet/economy meter) alongside the Expert Forecast.
+- [x] **UI-CLARITY-02**: Upgrade `src/screens/Powers.svelte` and `src/screens/Trade.svelte` to replace uppercase statutory jargon (`CPI Pass-Through`, `Retaliatory friction weight`, `JUDICIAL VULNERABILITY`) in Plain Talk mode with friendly headers, emoji badges, compact `👍 / ⚠️` trade-off pills, and a clear `"Why sign this? / What's the catch?"` right-column decision card.
+- [x] **UI-CLARITY-03**: Upgrade `src/screens/Congress.svelte`, `src/ui/FilibusterModal.svelte`, `src/ui/JudicialReformModal.svelte`, and `src/ui/AmendmentModal.svelte` so voting blocs, horse-trading deals, Senate rules, and court reforms explain *why* a player would spend Clout on them in plain, witty terms with visual vote-math and trade-off meters.
 
 ### Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens (Phase 37)
 
@@ -53,9 +53,9 @@
 | COPY-01 | Phase 35 | Complete |
 | COPY-02 | Phase 35 | Complete |
 | COPY-03 | Phase 35 | Complete |
-| UI-CLARITY-01 | Phase 36 | Pending |
-| UI-CLARITY-02 | Phase 36 | Pending |
-| UI-CLARITY-03 | Phase 36 | Pending |
+| UI-CLARITY-01 | Phase 36 | Complete |
+| UI-CLARITY-02 | Phase 36 | Complete |
+| UI-CLARITY-03 | Phase 36 | Complete |
 | SEE-01 | Phase 37 | Pending |
 | SEE-02 | Phase 37 | Pending |
 | BAL-01 | Phase 38 | Pending |

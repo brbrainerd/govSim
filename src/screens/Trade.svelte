@@ -11,6 +11,7 @@
   } from '../engine/trade';
 
   import type { ExplainerId } from '../content/explainers';
+  import TradeoffPill from '../ui/TradeoffPill.svelte';
 
   let {
     session,
@@ -47,33 +48,33 @@
       <!-- 1. Top Trade Balance Metrics Strip (TRADE-03) -->
       <section class="metrics-strip" aria-label="Trade balance and macro price indicators">
         <div class="metric-card card">
-          <span class="label">US Exports</span>
+          <span class="label">🚢 US Exports</span>
           <span class="num">${tradeBalance.baseExportsBn.toFixed(1)}B</span>
-          <span class="subtext">Nominal goods & services</span>
+          <span class="subtext">{session.vocabMode === 'wonk' ? 'Nominal goods & services' : 'Goods we sell abroad'}</span>
         </div>
         <div class="metric-card card">
-          <span class="label">US Imports</span>
+          <span class="label">📦 US Imports</span>
           <span class="num">${tradeBalance.baseImportsBn.toFixed(1)}B</span>
-          <span class="subtext">Inbound commercial trade</span>
+          <span class="subtext">{session.vocabMode === 'wonk' ? 'Inbound commercial trade' : 'Goods we buy from abroad'}</span>
         </div>
         <div class="metric-card card">
-          <span class="label">Trade Deficit</span>
+          <span class="label">⚖️ Trade Deficit</span>
           <span class="num alert" class:positive={tradeBalance.netExportsBn >= 0}>
             {tradeBalance.netExportsBn >= 0 ? `+$${tradeBalance.netExportsBn.toFixed(1)}B` : `-$${tradeBalance.tradeDeficitBn.toFixed(1)}B`}
           </span>
           <span class="subtext">{tradeBalance.netExportsBn >= 0 ? 'Net trade surplus' : 'Net trade deficit'}</span>
         </div>
         <div class="metric-card card">
-          <span class="label">Price Pass-Through</span>
+          <span class="label">🛒 Price Pass-Through</span>
           <span class="num">{tradeBalance.pricePassThroughPct > 0 ? `+${tradeBalance.pricePassThroughPct.toFixed(2)}%` : '0.00%'}</span>
-          <span class="subtext">CPI consumer inflation</span>
+          <span class="subtext">{session.vocabMode === 'wonk' ? 'CPI consumer inflation' : 'Store price impact on families'}</span>
         </div>
         <div class="metric-card card" class:highlight-alert={tradeBalance.retaliatoryRatePct > 0}>
-          <span class="label">Foreign Retaliation</span>
+          <span class="label">🪃 Foreign Retaliation</span>
           <span class="num" class:alert={tradeBalance.retaliatoryRatePct > 0}>
             {tradeBalance.retaliatoryRatePct.toFixed(1)}%
           </span>
-          <span class="subtext">Reciprocal foreign tariff rate</span>
+          <span class="subtext">{session.vocabMode === 'wonk' ? 'Reciprocal foreign tariff rate' : 'Foreign pushback on US farms'}</span>
         </div>
       </section>
 
@@ -81,7 +82,9 @@
       <section class="tariffs-section" aria-label="Strategic Sector Tariffs">
         <div class="section-header">
           <div class="header-titles">
-            <span class="section-tag">EXECUTIVE DIRECTIVES • STATUTORY AUTHORITIES</span>
+            <span class="section-tag">
+              {session.vocabMode === 'wonk' ? 'EXECUTIVE DIRECTIVES • STATUTORY AUTHORITIES' : '🛡️ PROTECT HOME FACTORIES • SOLO PRESIDENTIAL TARIFFS'}
+            </span>
             <h3 class="section-title">Strategic Sector Tariffs</h3>
           </div>
           <span class="tariff-status-count">
@@ -89,8 +92,9 @@
           </span>
         </div>
         <p class="section-desc">
-          Targeted protective duties enacted under executive trade statutes to shield critical industries from state-subsidized dumping,
-          foster domestic production capacity, and safeguard national security supply chains.
+          {session.vocabMode === 'wonk'
+            ? 'Targeted protective duties enacted under executive trade statutes to shield critical industries from state-subsidized dumping, foster domestic production capacity, and safeguard national security supply chains.'
+            : 'Target specific foreign imports to protect American factory jobs — but watch out for higher store prices and foreign counter-tariffs on our farmers.'}
         </p>
 
         <div class="sector-grid">
@@ -100,12 +104,25 @@
               <div class="card-head">
                 <div class="title-group">
                   <span class="statutory-badge">{sector.statutoryBasis}</span>
-                  <h4 class="sector-name">{sector.name}</h4>
+                  <h4 class="sector-name">
+                    <span aria-hidden="true">{sector.emoji}</span> {sector.name}
+                  </h4>
                 </div>
                 <div class="rate-badge">+{sector.ratePct}% Duty</div>
               </div>
 
               <p class="sector-summary">{sector.description}</p>
+              <p class="why-note"><b>💡 Why click:</b> {sector.whyClick}</p>
+
+              <TradeoffPill
+                variant="compact"
+                upside={sector.upside}
+                catchText={sector.catchText}
+                whyClick={sector.whyClick}
+                realTerm={sector.wonkLabel}
+                legalBasis={sector.statutoryBasis}
+                vocabMode={session.vocabMode}
+              />
 
               <div class="impact-columns">
                 <div class="impact-item benefit">
@@ -142,7 +159,9 @@
       <section class="agreements-section" aria-label="Bilateral Trade Agreements">
         <div class="section-header">
           <div class="header-titles">
-            <span class="section-tag">EXECUTIVE TRADE PACTS • MARKET ACCESS</span>
+            <span class="section-tag">
+              {session.vocabMode === 'wonk' ? 'EXECUTIVE TRADE PACTS • MARKET ACCESS' : '🤝 OPEN FOREIGN MARKETS • COOL DOWN TRADE WARS'}
+            </span>
             <h3 class="section-title">Bilateral Trade Agreements</h3>
           </div>
           <span class="agreement-status-count">
@@ -150,8 +169,9 @@
           </span>
         </div>
         <p class="section-desc">
-          Negotiated bilateral frameworks that eliminate reciprocal tariffs, harmonize regulatory standards, and mitigate foreign
-          counter-tariff retaliation on American farm and industrial exports.
+          {session.vocabMode === 'wonk'
+            ? 'Negotiated bilateral frameworks that eliminate reciprocal tariffs, harmonize regulatory standards, and mitigate foreign counter-tariff retaliation on American farm and industrial exports.'
+            : 'Spend Clout to strike trade deals with friendly regions, opening new buyers for US farms and calming down foreign tariff retaliation.'}
         </p>
 
         <div class="agreements-grid">
@@ -162,7 +182,9 @@
               <div class="card-head">
                 <div class="title-group">
                   <span class="partner-badge">{accord.partnerBloc}</span>
-                  <h4 class="accord-name">{accord.name}</h4>
+                  <h4 class="accord-name">
+                    <span aria-hidden="true">{accord.emoji}</span> {accord.name}
+                  </h4>
                 </div>
                 <div class="cost-badge" class:free={active}>
                   {active ? 'In Force' : `${accord.cloutCost} Clout`}
@@ -170,6 +192,17 @@
               </div>
 
               <p class="accord-summary">{accord.description}</p>
+              <p class="why-note"><b>💡 Why click:</b> {accord.whyClick}</p>
+
+              <TradeoffPill
+                variant="compact"
+                upside={accord.upside}
+                catchText={accord.catchText}
+                whyClick={accord.whyClick}
+                realTerm={accord.wonkLabel}
+                legalBasis={accord.statutoryBasis}
+                vocabMode={session.vocabMode}
+              />
 
               <div class="impact-columns">
                 <div class="impact-item benefit">
@@ -480,6 +513,14 @@
   .sector-summary, .accord-summary {
     font: 400 13px/1.35 var(--font-body);
     color: var(--ink);
+    margin: 0;
+  }
+  .why-note {
+    font: 500 12px/1.3 var(--font-body);
+    color: var(--ink);
+    background: var(--paper-dark);
+    padding: 5px 8px;
+    border-radius: 4px;
     margin: 0;
   }
   .impact-columns {

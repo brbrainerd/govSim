@@ -4,7 +4,9 @@
     REFORMS_CATALOG,
     type JudicialReformId,
   } from '../engine/reforms';
+  import { REFORM_TRADEOFFS } from '../content/tradeoffs';
   import Overlay from './Overlay.svelte';
+  import TradeoffPill from './TradeoffPill.svelte';
 
   let {
     session,
@@ -44,6 +46,7 @@
     <div class="reforms-grid">
       {#each judicialReformIds as rId (rId)}
         {@const r = REFORMS_CATALOG[rId]}
+        {@const meta = REFORM_TRADEOFFS[rId]}
         {@const isEnacted = activeReforms.includes(rId)}
         {@const isDrafted = draftedReform === rId}
         {@const canAfford = session.clout >= r.cloutCost}
@@ -55,7 +58,7 @@
           data-testid="judicial-card-{rId}"
         >
           <div class="card-header">
-            <h3 class="reform-title">{r.name}</h3>
+            <h3 class="reform-title"><span aria-hidden="true">{meta.emoji}</span> {r.name}</h3>
             {#if isEnacted}
               <span class="status-badge enacted">Enacted Law</span>
             {:else if isDrafted}
@@ -64,6 +67,17 @@
           </div>
 
           <p class="reform-desc">{r.description}</p>
+          <p class="reform-desc"><b>💡 Why click:</b> {meta.whyClick}</p>
+
+          <TradeoffPill
+            variant="compact"
+            upside={meta.upside}
+            catchText={meta.catchText}
+            whyClick={meta.whyClick}
+            realTerm={meta.wonkLabel}
+            legalBasis={meta.statutoryBasis}
+            vocabMode={session.vocabMode}
+          />
 
           <div class="impact-box">
             <b>Civics &amp; Legal Tradeoffs:</b>
