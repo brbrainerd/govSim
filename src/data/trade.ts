@@ -1,4 +1,4 @@
-// Trade definitions, statutory authorities, and state export exposure data (Phase 16, TRADE-01, TRADE-02).
+// Trade definitions, statutory authorities, and state export exposure data (Phase 16, TRADE-01, TRADE-02, COPY-01).
 // Data definitions sit in src/data/ and are referenced by the pure engine and UI screens.
 
 export type SectorTariffId = 'chips' | 'minerals' | 'cleanEnergy';
@@ -6,55 +6,80 @@ export type TradeAgreementId = 'eu' | 'indoPacific' | 'americas';
 
 export interface SectorTariffDef {
   readonly id: SectorTariffId;
+  readonly emoji: string;
   readonly name: string;
+  readonly wonkLabel: string;
   readonly ratePct: number;
   readonly statutoryBasis: string;
   readonly description: string;
+  readonly whyClick: string;
   readonly domesticBenefit: string;
   readonly consumerImpact: string;
+  readonly upside: string;
+  readonly catchText: string;
   readonly retaliatoryWeight: number;
 }
 
 export interface TradeAgreementDef {
   readonly id: TradeAgreementId;
+  readonly emoji: string;
   readonly name: string;
+  readonly wonkLabel: string;
   readonly partnerBloc: string;
   readonly cloutCost: number;
   readonly statutoryBasis: string;
   readonly description: string;
+  readonly whyClick: string;
   readonly economicBenefit: string;
+  readonly upside: string;
+  readonly catchText: string;
   readonly retaliatoryMitigation: number;
 }
 
 export const SECTOR_TARIFFS_CATALOG: readonly SectorTariffDef[] = [
   {
     id: 'chips',
-    name: 'Advanced Semiconductors & Microelectronics',
+    emoji: '💻',
+    name: 'Computer Chips & Tech Parts',
+    wonkLabel: 'Section 301 Semiconductor & Microelectronics Tariff',
     ratePct: 25,
     statutoryBasis: 'Section 301, Trade Act of 1974',
-    description: 'Targeted 25% tariff on foreign semiconductor components and microelectronics.',
-    domesticBenefit: 'Incentivizes domestic fabrication capacity and protects semiconductor IP.',
-    consumerImpact: 'Increases commercial electronics and automotive input component costs.',
+    description: 'Puts a 25% import tax on foreign computer chips and electronics.',
+    whyClick: 'Pushes tech firms to build chip plants at home and brings in $20B a year.',
+    domesticBenefit: 'Rewards home chip plants and brings in $20B in customs cash.',
+    consumerImpact: 'Makes laptops, phones, and new cars cost a bit more.',
+    upside: '+$20B/yr customs cash & home chip jobs',
+    catchText: 'Raises tech prices & sparks foreign pushback',
     retaliatoryWeight: 1.5,
   },
   {
     id: 'minerals',
-    name: 'Critical Minerals & Rare Earth Elements',
+    emoji: '⛏️',
+    name: 'Rare Earths & Battery Metals',
+    wonkLabel: 'Section 232 Critical Minerals National Security Tariff',
     ratePct: 15,
     statutoryBasis: 'Section 232, Trade Expansion Act of 1962 (National Defense)',
-    description: '15% tariff on unrefined and processed foreign critical rare earth minerals.',
-    domesticBenefit: 'Reduces strategic defense dependency on adversarial supply monopolies.',
-    consumerImpact: 'Raises battery, defense procurement, and magnet assembly costs.',
+    description: 'Puts a 15% import tax on foreign mined metals used in batteries and jets.',
+    whyClick: 'Backs home metal mines for defense and batteries with low pushback.',
+    domesticBenefit: 'Backs home metal mines for defense and batteries.',
+    consumerImpact: 'Raises costs slightly for battery makers and defense plants.',
+    upside: '+$20B/yr revenue & safer defense supply',
+    catchText: 'Nudges battery and parts costs higher',
     retaliatoryWeight: 1.0,
   },
   {
     id: 'cleanEnergy',
-    name: 'Clean Energy Hardware & Electric Vehicles',
+    emoji: '🔋',
+    name: 'Solar Panels & Electric Cars',
+    wonkLabel: 'Section 301 Photovoltaic & EV Counter-Subsidy Tariff',
     ratePct: 25,
     statutoryBasis: 'Section 301, Trade Act of 1974',
-    description: '25% tariff on imported foreign photovoltaic panels, battery cells, and electric vehicles.',
-    domesticBenefit: 'Shields domestic clean technology factories from state-subsidized foreign dumping.',
-    consumerImpact: 'Increases consumer purchase prices for solar installations and electric cars.',
+    description: 'Puts a 25% import tax on cheap foreign solar panels, batteries, and electric cars.',
+    whyClick: 'Protects Midwest auto and battery plants from cheap foreign imports.',
+    domesticBenefit: 'Protects home auto and clean tech plants from cheap foreign goods.',
+    consumerImpact: 'Raises the sticker price on home solar roofs and electric cars.',
+    upside: 'Protects auto states & adds +$20B/yr cash',
+    catchText: 'Higher EV prices & farm export counter-tariffs',
     retaliatoryWeight: 1.5,
   },
 ] as const;
@@ -62,32 +87,47 @@ export const SECTOR_TARIFFS_CATALOG: readonly SectorTariffDef[] = [
 export const TRADE_AGREEMENTS_CATALOG: readonly TradeAgreementDef[] = [
   {
     id: 'eu',
-    name: 'Transatlantic Trade & Tech Accord',
+    emoji: '🇪🇺',
+    name: 'Europe Trade & Tech Deal',
+    wonkLabel: 'Transatlantic Trade & Technology Executive Accord',
     partnerBloc: 'European Union (27 nations)',
     cloutCost: 25,
     statutoryBasis: 'Bilateral Executive Trade Agreement (Trade Act of 1974)',
-    description: 'Comprehensive regulatory alignment and tariff elimination on industrial and tech goods.',
-    economicBenefit: 'Expands US aerospace, pharmaceutical, and technology export markets.',
+    description: 'Cuts red tape and import taxes on tech, planes, and goods traded with Europe.',
+    whyClick: 'Our biggest shield against foreign trade wars—cuts retaliation by 4 full points.',
+    economicBenefit: 'Opens huge European markets for home planes, medicine, and tech.',
+    upside: 'Shields exports (−4.0% retaliation) & boosts growth',
+    catchText: 'Costs 25 Clout to sign with allies',
     retaliatoryMitigation: 4.0,
   },
   {
     id: 'indoPacific',
-    name: 'Indo-Pacific Supply Chain Partnership',
+    emoji: '🌏',
+    name: 'Pacific Supply Chain Pact',
+    wonkLabel: 'Indo-Pacific Economic Framework Supply Accord',
     partnerBloc: 'Japan, South Korea, Australia, ASEAN',
     cloutCost: 20,
     statutoryBasis: 'Bilateral Framework Executive Agreement',
-    description: 'Nearshore supply chain security treaty with preferred customs clearance.',
-    economicBenefit: 'Secures semiconductor inputs and unlocks agricultural export markets.',
+    description: 'Speeds up port shipping and locks in chip and farm trade with Pacific allies.',
+    whyClick: 'Protects farm and chip exports across the Pacific for a moderate Clout cost.',
+    economicBenefit: 'Keeps chip parts flowing and opens Asian markets for home farmers.',
+    upside: 'Cuts retaliation (−3.5%) & helps farm exports',
+    catchText: 'Costs 20 Clout in diplomatic effort',
     retaliatoryMitigation: 3.5,
   },
   {
     id: 'americas',
-    name: 'Western Hemisphere Nearshoring Pact',
+    emoji: '🌎',
+    name: 'Americas Near-Shore Pact',
+    wonkLabel: 'Western Hemisphere Nearshoring & USMCA+ Protocol',
     partnerBloc: 'USMCA+, Latin American Economic Forum',
     cloutCost: 15,
     statutoryBasis: 'Regional Trade Protocol',
-    description: 'Duty-free nearshoring corridors for manufacturing and agricultural trade.',
-    economicBenefit: 'Lowers food and raw materials import costs; boosts machinery exports.',
+    description: 'Creates tax-free trade lanes for food and factory parts across the Americas.',
+    whyClick: 'Cheapest trade pact (15 Clout) to lower grocery import costs and help factories.',
+    economicBenefit: 'Lowers food and raw material costs while boosting tractor exports.',
+    upside: 'Cools grocery prices & cuts retaliation (−2.5%)',
+    catchText: 'Costs 15 Clout to negotiate',
     retaliatoryMitigation: 2.5,
   },
 ] as const;

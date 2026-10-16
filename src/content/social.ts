@@ -1,5 +1,5 @@
-// Content catalog and empirical citations for domestic social policy levers (Phase 9, SOC-01..04).
-// Plain-language summaries and neutral civics trade-offs for each policy option.
+// Content catalog and empirical citations for domestic social policy levers (Phase 9, SOC-01..04, COPY-02).
+// Plain-language summaries, friendly emojis, advisor why-click notes, and neutral civics trade-offs.
 
 import type { SocialDomain } from '../engine/social';
 
@@ -11,8 +11,12 @@ export interface SocialCitation {
 export interface SocialContent {
   readonly id: string;
   readonly domain: SocialDomain;
+  readonly emoji: string;
   readonly title: string;
+  readonly wonkLabel: string;
+  readonly statutoryBasis: string;
   readonly description: string;
+  readonly whyClick: string;
   readonly tradeoffPro: string;
   readonly tradeoffCon: string;
   readonly citation: SocialCitation;
@@ -23,10 +27,14 @@ export const SOCIAL_CATALOG: readonly SocialContent[] = [
   {
     id: 'aca',
     domain: 'healthcare',
-    title: 'ACA Marketplace Health Subsidies',
-    description: 'Federal premium tax credits lowering out-of-pocket health insurance costs for individuals buying through state and federal marketplaces.',
-    tradeoffPro: 'Expands health insurance coverage, lowering the uninsured rate and protecting families against catastrophic medical debt.',
-    tradeoffCon: 'Increases mandatory federal budget outlays and deficit spending.',
+    emoji: '🏥',
+    title: 'Health Plan Tax Credits',
+    wonkLabel: 'ACA Section 36B Premium Tax Credits',
+    statutoryBasis: '26 U.S.C. § 36B (Affordable Care Act)',
+    description: 'Helps families pay monthly bills for health plans bought on state exchanges.',
+    whyClick: 'Lowers family health bills right away and boosts life expectancy over time.',
+    tradeoffPro: 'Cuts monthly health bills for families and covers more people.',
+    tradeoffCon: 'Adds to the national debt each year.',
     citation: {
       text: 'CBO, Health Insurance Coverage and the Affordable Care Act',
       url: 'https://www.cbo.gov/publication/59273',
@@ -35,10 +43,14 @@ export const SOCIAL_CATALOG: readonly SocialContent[] = [
   {
     id: 'drg',
     domain: 'healthcare',
-    title: 'Medicare Prescription Drug Price Negotiations',
-    description: 'Direct federal statutory authority allowing the Secretary of Health and Human Services to negotiate maximum fair prices for high-expenditure drugs.',
-    tradeoffPro: 'Generates significant federal Medicare savings and reduces copays for seniors taking expensive medications.',
-    tradeoffCon: 'Pharmaceutical industry groups warn reduced revenues could modestly constrain capital investment in long-term drug discovery.',
+    emoji: '💊',
+    title: 'Medicare Drug Price Deals',
+    wonkLabel: 'Title XI Medicare Part D Price Negotiation',
+    statutoryBasis: '42 U.S.C. § 1320f (Social Security Act)',
+    description: 'Lets Medicare bargain with drug firms for lower prices on costly pills.',
+    whyClick: 'A rare win that saves taxpayers money AND cuts senior pharmacy bills.',
+    tradeoffPro: 'Cuts drug costs for seniors and trims the budget gap.',
+    tradeoffCon: 'Drug makers warn lower profits may slow down new lab research.',
     citation: {
       text: 'CBO, How CBO Estimated the Budgetary Impact of Key Prescription Drug Provisions',
       url: 'https://www.cbo.gov/publication/58850',
@@ -47,10 +59,14 @@ export const SOCIAL_CATALOG: readonly SocialContent[] = [
   {
     id: 'pub',
     domain: 'healthcare',
-    title: 'Public Health Insurance Option',
-    description: 'A federally managed insurance plan offered on exchanges alongside private commercial plans, using Medicare provider network rates.',
-    tradeoffPro: 'Increases consumer choice and exerts downward competitive pricing pressure on private health insurance premiums.',
-    tradeoffCon: 'Private hospitals and insurers argue lower public reimbursement rates strain rural medical center finances.',
+    emoji: '🩺',
+    title: 'Public Health Plan Option',
+    wonkLabel: 'Federal Exchange Medicare-Rate Public Option',
+    statutoryBasis: 'Public Health Service Act Title XXVII',
+    description: 'Lets anyone buy into a public health plan that competes with private insurers.',
+    whyClick: 'Forces private insurers to compete on price, firing up your base.',
+    tradeoffPro: 'Gives shoppers a cheaper health plan choice and lowers premiums.',
+    tradeoffCon: 'Hospitals and insurers fight it hard in Congress.',
     citation: {
       text: 'Commonwealth Fund, Public Plan Options: Expanding Coverage and Lowering Premiums',
       url: 'https://www.commonwealthfund.org/publications/issue-briefs/2021/mar/public-plan-options-expanding-coverage',
@@ -61,10 +77,14 @@ export const SOCIAL_CATALOG: readonly SocialContent[] = [
   {
     id: 'bdr',
     domain: 'immigration',
-    title: 'Border Security & Port Enforcement',
-    description: 'Federal appropriations for Customs and Border Protection personnel, physical fencing, surveillance towers, and inspection ports of entry.',
-    tradeoffPro: 'Enhances border enforcement, deters unauthorized crossings, and strengthens contraband detection at commercial ports.',
-    tradeoffCon: 'Requires substantial annual federal spending without addressing underlying economic drivers of regional migration.',
+    emoji: '🛂',
+    title: 'Border Patrol & Port Scanners',
+    wonkLabel: 'CBP Border Infrastructure & Port Inspection Appropriations',
+    statutoryBasis: '8 U.S.C. § 1103 (Immigration and Nationality Act)',
+    description: 'Funds more border agents, smart cameras, and cargo scanners at entry ports.',
+    whyClick: 'Wins conservative and moderate votes in Congress to help pass your bill.',
+    tradeoffPro: 'Tightens border checks and wins key swing votes in Congress.',
+    tradeoffCon: 'Costs billions each year without adding new workers to the workforce.',
     citation: {
       text: 'CRS, Border Security: Overview of Infrastructure and Personnel',
       url: 'https://crsreports.congress.gov/product/pdf/R/R42138',
@@ -73,10 +93,14 @@ export const SOCIAL_CATALOG: readonly SocialContent[] = [
   {
     id: 'vis',
     domain: 'immigration',
-    title: 'High-Skilled & Seasonal Employment Visas',
-    description: 'Expansion of statutory caps for employment-based legal migration, including H-1B specialty workers and agricultural seasonal labor.',
-    tradeoffPro: 'Addresses critical labor shortages in agriculture and technology, boosting national innovation and gross economic output.',
-    tradeoffCon: 'Critics argue large influxes of temporary worker programs can depress entry-level wage gains in specialized domestic fields.',
+    emoji: '🧑‍🌾',
+    title: 'Skilled & Farm Worker Visas',
+    wonkLabel: 'H-1B & H-2A Statutory Employment Visa Cap Expansion',
+    statutoryBasis: '8 U.S.C. § 1184(g) (INA Employment Visas)',
+    description: 'Raises the yearly cap on legal work visas for tech engineers and farm hands.',
+    whyClick: 'Fills open jobs fast, which cools food prices and lifts long-run growth.',
+    tradeoffPro: 'Eases worker shortages, cools food prices, and lifts growth.',
+    tradeoffCon: 'Can draw pushback from voters worried about job competition.',
     citation: {
       text: 'CBO, The Budgetary and Economic Effects of Immigration Policies',
       url: 'https://www.cbo.gov/publication/59697',
@@ -85,10 +109,14 @@ export const SOCIAL_CATALOG: readonly SocialContent[] = [
   {
     id: 'reg',
     domain: 'immigration',
-    title: 'Worker Status Regularization',
-    description: 'Legal pathways for established undocumented workers to register, undergo background checks, obtain work permits, and pay formal income taxes.',
-    tradeoffPro: 'Brings millions of informal workers onto formal tax rolls, raising payroll revenue and boosting wages through labor market mobility.',
-    tradeoffCon: 'Opponents contend legal status without border certainty creates moral hazard and incentives for future unauthorized entry.',
+    emoji: '📋',
+    title: 'Legal Work Permits & Tax Rolls',
+    wonkLabel: 'Earned Registry & Adjustment of Status Pathway',
+    statutoryBasis: '8 U.S.C. § 1259 (Registry & Legalization)',
+    description: 'Lets long-term workers pass a check, get a work permit, and pay taxes.',
+    whyClick: 'Brings millions of workers onto the tax rolls and trims the debt.',
+    tradeoffPro: 'Raises payroll tax revenue and lifts worker wages.',
+    tradeoffCon: 'Draws fierce pushback from border hawks unless paired with border funding.',
     citation: {
       text: 'White House Council of Economic Advisers, Economic Benefits of Immigration Reform',
       url: 'https://www.whitehouse.gov/briefing-room/statements-releases/2021/09/17/economic-benefits-of-immigration-reform/',
@@ -99,10 +127,14 @@ export const SOCIAL_CATALOG: readonly SocialContent[] = [
   {
     id: 'cln',
     domain: 'energy',
-    title: 'Clean Energy Production Tax Credits',
-    description: 'Federal tax credits incentivizing private investment in solar, wind, advanced nuclear, geothermal, and utility-scale battery storage.',
-    tradeoffPro: 'Accelerates the transition toward low-emission generation and fosters domestic clean technology manufacturing ecosystems.',
-    tradeoffCon: 'Expands the federal deficit through uncapped corporate tax expenditures.',
+    emoji: '☀️',
+    title: 'Clean Energy Tax Credits',
+    wonkLabel: 'IRC Section 45Y/48E Clean Electricity Tax Credits',
+    statutoryBasis: '26 U.S.C. § 45Y & § 48E',
+    description: 'Gives tax breaks to companies building solar, wind, nuclear, and battery plants.',
+    whyClick: 'Builds new domestic power plants and lowers electric bills over the decade.',
+    tradeoffPro: 'Spurs clean factory jobs and cuts pollution over time.',
+    tradeoffCon: 'Tax breaks add to the federal budget deficit up front.',
     citation: {
       text: 'JCT, Estimated Budgetary Effects of the Clean Energy Provisions',
       url: 'https://www.jct.gov/publications/2022/jcx-18-22/',
@@ -111,10 +143,14 @@ export const SOCIAL_CATALOG: readonly SocialContent[] = [
   {
     id: 'fos',
     domain: 'energy',
-    title: 'Federal Public Lands Leasing & Permitting',
-    description: 'Streamlined environmental reviews and accelerated lease auctions for oil, natural gas, and mineral extraction on federal lands.',
-    tradeoffPro: 'Expands domestic energy supply, lowers consumer fuel prices, and generates billions in federal royalty receipts.',
-    tradeoffCon: 'Increases carbon dioxide and methane emissions, slowing progress on long-term climate reduction targets.',
+    emoji: '🛢️',
+    title: 'Oil & Gas Drilling Leases',
+    wonkLabel: 'Onshore & Offshore Federal Mineral Leasing Expansion',
+    statutoryBasis: '30 U.S.C. § 181 (Mineral Leasing Act)',
+    description: 'Opens more public land and offshore waters for oil and natural gas drilling.',
+    whyClick: 'Brings down gas prices quickly and wins centrist energy-state votes.',
+    tradeoffPro: 'Cuts fuel prices for drivers and brings in lease cash.',
+    tradeoffCon: 'Adds more carbon smoke and upsets green voters.',
     citation: {
       text: 'CRS, Oil and Gas Leasing on Federal Lands: Authority and Overview',
       url: 'https://crsreports.congress.gov/product/pdf/R/R46777',
@@ -123,10 +159,14 @@ export const SOCIAL_CATALOG: readonly SocialContent[] = [
   {
     id: 'crb',
     domain: 'energy',
-    title: 'Clean Power Carbon Standards',
-    description: 'Regulatory emission rate caps on electricity generating stations and heavy industrial emitters under the Clean Air Act.',
-    tradeoffPro: 'Significantly reduces airborne particulate pollution and industrial greenhouse gas emissions, improving public health.',
-    tradeoffCon: 'Compliance and carbon capture retrofit costs are passed along to consumers and manufacturers via higher electric utility bills.',
+    emoji: '🏭',
+    title: 'Power Plant Pollution Caps',
+    wonkLabel: 'Clean Air Act Section 111(d) Carbon Emission Standards',
+    statutoryBasis: '42 U.S.C. § 7411 (Clean Air Act)',
+    description: 'Sets strict limits on smoke and carbon pollution from big power plants.',
+    whyClick: 'Improves public health and clean air without costing the Treasury a dime.',
+    tradeoffPro: 'Cleans up the air and improves long-term public health.',
+    tradeoffCon: 'Power firms pass plant upgrade costs onto monthly home bills.',
     citation: {
       text: 'EPA, Regulatory Impact Analysis for Clean Air Standards for Power Plants',
       url: 'https://www.epa.gov/clean-air-act-overview',
@@ -137,10 +177,14 @@ export const SOCIAL_CATALOG: readonly SocialContent[] = [
   {
     id: 'k12',
     domain: 'education',
-    title: 'Title I K-12 Disadvantaged School Grants',
-    description: 'Federal funding formula providing financial assistance to local educational agencies and schools with high percentages of children from low-income families.',
-    tradeoffPro: 'Reduces school resource disparities, improving graduation rates and long-term workforce productivity.',
-    tradeoffCon: 'Increases federal education appropriations without direct federal authority over state curriculum or administrative staffing.',
+    emoji: '🏫',
+    title: 'Local Public School Grants',
+    wonkLabel: 'ESEA Title I-A Disadvantaged K-12 Formula Grants',
+    statutoryBasis: '20 U.S.C. § 6301 (Elementary and Secondary Education Act)',
+    description: 'Sends extra funds to local public schools in lower-income towns.',
+    whyClick: 'Well liked by families and moderates; lifts future worker skills.',
+    tradeoffPro: 'Helps local schools hire teachers and lifts future worker pay.',
+    tradeoffCon: 'Costs federal budget dollars now while benefits take years to grow.',
     citation: {
       text: 'Department of Education, Title I Improving the Academic Achievement of the Disadvantaged',
       url: 'https://www2.ed.gov/programs/titleiparta/index.html',
@@ -149,10 +193,14 @@ export const SOCIAL_CATALOG: readonly SocialContent[] = [
   {
     id: 'sdr',
     domain: 'education',
-    title: 'Income-Driven Student Loan Relief',
-    description: 'Reforms capping federal undergraduate student loan monthly payments to a set percentage of discretionary income with balance forgiveness after 10-20 years.',
-    tradeoffPro: 'Directly lowers monthly debt burdens for millions of young college graduates, enabling household savings and home purchases.',
-    tradeoffCon: 'Shifts billions in student debt obligations onto federal taxpayers and may incentivize colleges to raise tuition rates.',
+    emoji: '🎓',
+    title: 'Student Loan Bill Caps',
+    wonkLabel: 'Income-Driven Student Loan Forgiveness & Cap Program',
+    statutoryBasis: '20 U.S.C. § 1087e(d) (Higher Education Act)',
+    description: 'Caps monthly federal student loan bills based on income and forgives old balances.',
+    whyClick: 'Gives young grads quick monthly relief, though budget hawks dislike it.',
+    tradeoffPro: 'Frees up monthly cash for young grads to buy homes and goods.',
+    tradeoffCon: 'Shifts loan costs onto taxpayers and annoys fiscal centrists.',
     citation: {
       text: 'CBO, Budgetary Costs of Changes to the Federal Student Loan Income-Driven Repayment Plans',
       url: 'https://www.cbo.gov/publication/58983',
@@ -161,10 +209,14 @@ export const SOCIAL_CATALOG: readonly SocialContent[] = [
   {
     id: 'prek',
     domain: 'education',
-    title: 'Universal Pre-Kindergarten Grants',
-    description: 'Federal-state partnership grants providing tuition-free preschool education to 3- and 4-year-old children nationwide.',
-    tradeoffPro: 'Lifts maternal and parental labor force participation in the short run and enhances cognitive and social development in the long run.',
-    tradeoffCon: 'Substantial multi-billion dollar annual federal outlays requiring state legislative co-funding cooperation.',
+    emoji: '🧸',
+    title: 'Free Pre-K for 3 & 4 Year Olds',
+    wonkLabel: 'Federal-State Universal Pre-Kindergarten Matching Grants',
+    statutoryBasis: '42 U.S.C. § 9831 (Head Start & Early Learning)',
+    description: 'Partners with states to offer free preschool for three and four year olds.',
+    whyClick: 'Saves working parents thousands in childcare and lets more parents work.',
+    tradeoffPro: 'Cuts family childcare bills and helps more parents join the workforce.',
+    tradeoffCon: 'Adds billions in new federal grant spending each year.',
     citation: {
       text: 'National Institute for Early Education Research, The State of Preschool',
       url: 'https://nieer.org/state-preschool-yearbooks',

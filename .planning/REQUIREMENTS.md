@@ -7,20 +7,20 @@
 
 ### Progressive Disclosure Architecture, Vocabulary Toggle & Trade-Off Components (Phase 34)
 
-- [ ] **VOCAB-01**: Add a persistent `vocabMode: 'plain' | 'wonk'` preference (defaulting to `'plain'`) in `src/app/session.svelte.ts`, `src/screens/NewGame.svelte`, and `src/ui/StatusBar.svelte` so players can switch between friendly Kitchen-Table Plain Talk and full Policy Wonk terminology at any time without altering engine determinism or save compatibility.
-- [ ] **VOCAB-02**: Create a typed Civics Glossary & Progressive Disclosure catalog (`src/content/glossary.ts`) mapping simulationist terms (`Cloture`, `Reconciliation`, `Section 301/232`, `IEEPA / OFAC`, `Major Questions Doctrine`, `Output Gap`, `CPI Pass-Through`, `Taylor Rule`, `Gini Inequality`, `Tipping-Point State`) to Plain-Talk labels, friendly emojis, witty 1-sentence explanations, and `"📜 Real Civics Term"` progressive-disclosure tooltips/chips.
-- [ ] **VOCAB-03**: Build a reusable, keyboard-accessible, viewport-safe `<TradeoffPill>` / `<WhyClickCard>` UI component (`src/ui/TradeoffPill.svelte`) that renders compact `👍 Upside` / `⚠️ The Catch` badges, friendly emoji/SVG impact meters, witty advisor `"Why click this?"` notes, and expandable `"📜 Official Law / Real Term"` progressive disclosure.
+- [x] **VOCAB-01**: Add a persistent `vocabMode: 'plain' | 'wonk'` preference (defaulting to `'plain'`) in `src/app/session.svelte.ts`, `src/screens/NewGame.svelte`, and `src/ui/StatusBar.svelte` so players can switch between friendly Kitchen-Table Plain Talk and full Policy Wonk terminology at any time without altering engine determinism or save compatibility.
+- [x] **VOCAB-02**: Create a typed Civics Glossary & Progressive Disclosure catalog (`src/content/glossary.ts`) mapping simulationist terms (`Cloture`, `Reconciliation`, `Section 301/232`, `IEEPA / OFAC`, `Major Questions Doctrine`, `Output Gap`, `CPI Pass-Through`, `Taylor Rule`, `Gini Inequality`, `Tipping-Point State`) to Plain-Talk labels, friendly emojis, witty 1-sentence explanations, and `"📜 Real Civics Term"` progressive-disclosure tooltips/chips.
+- [x] **VOCAB-03**: Build a reusable, keyboard-accessible, viewport-safe `<TradeoffPill>` / `<WhyClickCard>` UI component (`src/ui/TradeoffPill.svelte`) that renders compact `👍 Upside` / `⚠️ The Catch` badges, friendly emoji/SVG impact meters, witty advisor `"Why click this?"` notes, and expandable `"📜 Official Law / Real Term"` progressive disclosure.
 
 ### De-Jargonizing Content Catalogs with Witty Plain Talk & `👍 / ⚠️` Trade-Offs (Phase 35)
 
-- [ ] **COPY-01**: Enrich `ORDERS_CATALOG` (`src/content/orders.ts`), `SANCTIONS_CATALOG` (`src/engine/foreign.ts`), and `SECTOR_TARIFFS_CATALOG` / `TRADE_AGREEMENTS_CATALOG` (`src/data/trade.ts`) with friendly emoji icons, Plain-Talk titles and summaries, explicit `upside` / `catchText` trade-offs, and witty advisor `"Why click this?"` notes (moving raw statutory citations like `19 U.S.C. § 1862` or `IEEPA` into progressive disclosure in Plain Talk mode).
-- [ ] **COPY-02**: Upgrade `SOCIAL_CATALOG` (`src/content/social.ts`), `REFORMS_CATALOG` (`src/engine/reforms.ts`), `FILIBUSTER_RULES_CATALOG` / `deals` (`src/engine/congress.ts`), and `taxLevers` / `spendLevers` (`src/engine/budget.ts`) to replace dense institutional prose with relatable kitchen-table language, light institutional humor, emoji cues, and clear short-term vs. long-term trade-offs.
-- [ ] **COPY-03**: Enrich domestic and geopolitical crisis options (`src/engine/events.ts`, `src/engine/geopolitics.ts`) and causal trace explanations (`src/content/text/why.ts`) with scannable `👍 Helps:` / `⚠️ Costs:` previews and conversational advisor translations so non-experts always understand what each option does before clicking.
+- [x] **COPY-01**: Enrich `ORDERS_CATALOG` (`src/content/orders.ts`), `SANCTIONS_CATALOG` (`src/engine/foreign.ts`), and `SECTOR_TARIFFS_CATALOG` / `TRADE_AGREEMENTS_CATALOG` (`src/data/trade.ts`) with friendly emoji icons, Plain-Talk titles and summaries, explicit `upside` / `catchText` trade-offs, and witty advisor `"Why click this?"` notes (moving raw statutory citations like `19 U.S.C. § 1862` or `IEEPA` into progressive disclosure in Plain Talk mode).
+- [x] **COPY-02**: Upgrade `SOCIAL_CATALOG` (`src/content/social.ts`), `REFORMS_CATALOG` (`src/engine/reforms.ts`), `FILIBUSTER_RULES_CATALOG` / `deals` (`src/engine/congress.ts`), and `taxLevers` / `spendLevers` (`src/engine/budget.ts`) to replace dense institutional prose with relatable kitchen-table language, light institutional humor, emoji cues, and clear short-term vs. long-term trade-offs.
+- [x] **COPY-03**: Enrich domestic and geopolitical crisis options (`src/engine/events.ts`, `src/engine/geopolitics.ts`) and causal trace explanations (`src/content/text/why.ts`) with scannable `👍 Helps:` / `⚠️ Costs:` previews and conversational advisor translations so non-experts always understand what each option does before clicking.
 
 ### Surfacing Decision Trade-Offs & Visual Meters Across Act Screens (Phase 36)
 
 - [ ] **UI-CLARITY-01**: Upgrade `src/screens/Budget.svelte` so hovering, focusing, or adjusting any tax or spending slider (or preset package) updates the right-hand `"What it means"` column with a Plain-Talk `"Why move this slider?"` card (`👍 Upside`, `⚠️ The Catch`, emoji indicator, and visual wallet/economy meter) alongside the Expert Forecast.
-- [ ] **UI-CLARITY-02**: Upgrade `src/screens/Powers.svelte` and `src/screens/Trade.svelte` to replace uppercase statutory headers and raw macro jargon (`CPI Pass-Through`, `Retaliatory friction weight`, `JUDICIAL VULNERABILITY`) in Plain Talk mode with friendly headers, emoji badges, compact `👍 / ⚠️` trade-off pills, and a clear `"Why sign this? / What's the catch?"` right-column decision card.
+- [ ] **UI-CLARITY-02**: Upgrade `src/screens/Powers.svelte` and `src/screens/Trade.svelte` to replace uppercase statutory jargon (`CPI Pass-Through`, `Retaliatory friction weight`, `JUDICIAL VULNERABILITY`) in Plain Talk mode with friendly headers, emoji badges, compact `👍 / ⚠️` trade-off pills, and a clear `"Why sign this? / What's the catch?"` right-column decision card.
 - [ ] **UI-CLARITY-03**: Upgrade `src/screens/Congress.svelte`, `src/ui/FilibusterModal.svelte`, `src/ui/JudicialReformModal.svelte`, and `src/ui/AmendmentModal.svelte` so voting blocs, horse-trading deals, Senate rules, and court reforms explain *why* a player would spend Clout on them in plain, witty terms with visual vote-math and trade-off meters.
 
 ### Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens (Phase 37)
@@ -47,12 +47,12 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| VOCAB-01 | Phase 34 | Pending |
-| VOCAB-02 | Phase 34 | Pending |
-| VOCAB-03 | Phase 34 | Pending |
-| COPY-01 | Phase 35 | Pending |
-| COPY-02 | Phase 35 | Pending |
-| COPY-03 | Phase 35 | Pending |
+| VOCAB-01 | Phase 34 | Complete |
+| VOCAB-02 | Phase 34 | Complete |
+| VOCAB-03 | Phase 34 | Complete |
+| COPY-01 | Phase 35 | Complete |
+| COPY-02 | Phase 35 | Complete |
+| COPY-03 | Phase 35 | Complete |
 | UI-CLARITY-01 | Phase 36 | Pending |
 | UI-CLARITY-02 | Phase 36 | Pending |
 | UI-CLARITY-03 | Phase 36 | Pending |
@@ -62,6 +62,7 @@
 | BAL-02 | Phase 38 | Pending |
 
 **Coverage:**
+
 - v0.9 requirements: 13 total
 - Mapped to phases: 13
 - Unmapped: 0 ✓

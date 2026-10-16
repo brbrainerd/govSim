@@ -116,6 +116,37 @@ export function whyText(sourceId: string): string {
   return 'Several small factors';
 }
 
+export const WHY_WONK_COPY: Readonly<Record<string, string>> = {
+  momentum: 'AR(1) Output Gap Persistence',
+  budget: 'Enacted Fiscal Multiplier Impulse',
+  'debt:stress': 'Sovereign Debt-to-GDP Term Premium Drag',
+  'fed:drag': 'Real Federal Funds Rate Monetary Transmission',
+  'potential:base': 'CBO Baseline Potential GDP Trend',
+  'potential:policy': 'Public Capital Supply-Side Elasticity',
+  'potential:crowding': 'Sovereign Borrowing Crowding-Out Effect',
+  expectations: 'Anchored CPI Inflation Expectations',
+  demand: 'Phillips Curve Output Gap Pass-Through',
+  tariffs: 'Effective Tariff Rate CPI Pass-Through',
+  'fed:neutral': 'r* Neutral Real Policy Rate Target',
+  'fed:inflationGap': 'Taylor Rule Inflation Gap Coefficient',
+  'fed:outputGap': 'Taylor Rule Output Gap Coefficient',
+  'deficit:base': 'CBO Current-Law Structural Deficit',
+  'deficit:budget': 'Enacted Reconciliation Budget Delta',
+  'deficit:interest': 'Net Interest Outlays on Federal Debt',
+  'gini:reversion': 'Secular Market Income Dispersion Drift',
+  'forpol:sanctions': 'IEEPA / ECRA Sanctions Trade Friction',
+  'trade:sectors': 'Section 301/232 Sector Tariff Pass-Through',
+  'trade:retaliation': 'Foreign Counter-Tariff Export Drag',
+};
+
+/** Returns either the Plain-Talk or Policy Wonk trace explanation (COPY-03). */
+export function whyTextForMode(sourceId: string, mode: 'plain' | 'wonk' = 'plain'): string {
+  if (mode === 'wonk' && Object.hasOwn(WHY_WONK_COPY, sourceId)) {
+    return WHY_WONK_COPY[sourceId]!;
+  }
+  return whyText(sourceId);
+}
+
 /** Summarize luck effects this quarter in plain language (RPT-01). */
 export function formatLuckText(luck: { gap: number; infl: number; appr: number }): string {
   const shocks = [];

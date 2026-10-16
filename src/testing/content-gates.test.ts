@@ -36,7 +36,11 @@ function extractStrings(obj: unknown): string[] {
           k !== 'legalBasis' &&
           k !== 'statutoryBasis' &&
           k !== 'wonkLabel' &&
-          k !== 'realTermNote',
+          k !== 'wonkNote' &&
+          k !== 'WHY_WONK_COPY' &&
+          k !== 'realTermNote' &&
+          k !== 'partnerBloc' &&
+          k !== 'TRADE_EXPOSED_STATES',
       )
       .flatMap(([, v]) => extractStrings(v));
   }
@@ -65,6 +69,9 @@ describe('content and readability gates (OBS-05, GR-24, GR-25)', () => {
     const mods = [
       await import('../content/parties'),
       await import('../content/orders'),
+      await import('../content/social'),
+      await import('../data/trade'),
+      await import('../content/tradeoffs'),
       await import('../content/myths'),
       await import('../content/explainers'),
       await import('../content/scenarios'),
