@@ -66,15 +66,16 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 - ✓ Expanded 12-card spectrum-balanced Myth catalog (`4 left`, `4 right`, `4 both`), tempting "Mirage Levers" across policy screens, and contextual Oval Office macro blame triggers — v0.8
 - ✓ Interactive Reality-Check MythModal with 1-click bottleneck prediction, tactile `MYTH BUSTED` stamp-slam animation, zero-friction skip, and 1-click tactical pivots to real policy levers — v0.8
 - ✓ Pure-engine `"Debunk vs. Spin"` strategic trade-off (`spinMyth` +Approval rally, −Social Trust, +Evil Heat) and EndScreen Civic Mastery Dossier — v0.8
+- ✓ Persistent `"Plain Talk / Policy Wonk"` vocabulary toggle (`vocabMode`) in `Session`, `NewGame`, and `StatusBar`, plus a typed 32-term Civics Glossary & Progressive Disclosure catalog (`VOCAB-01`, `VOCAB-02`) — v0.9
+- ✓ Reusable `<TradeoffPill>` progressive-disclosure UI component with `👍 Upside` / `⚠️ The Catch` badges, emoji impact meters, and expandable `"📜 Official Law / Real Term"` details (`VOCAB-03`) — v0.9
+- ✓ Dual-layer (`plain` + `wonk`) content overhaul across Orders, Sanctions, Tariffs, Pacts, Social Policies, Reforms, Congress Deals, Crises, and Causal Traces with friendly emojis and explicit `👍 / ⚠️` trade-offs (`COPY-01`, `COPY-02`, `COPY-03`) — v0.9
+- ✓ Action-screen trade-off surfacing across `Budget`, `Powers`, `Trade`, `Congress`, and Reform Modals with right-column `"Why click this?"` advisor cards and visual meters (`UI-CLARITY-01`, `UI-CLARITY-02`, `UI-CLARITY-03`) — v0.9
+- ✓ Kitchen-table clarity on `OvalOffice`, `Economy`, `Voters`, `TurnReport`, and `CrisisModal` with Plain-Talk indicator headers, emoji health badges, and crisis response trade-offs (`SEE-01`, `SEE-02`) — v0.9
+- ✓ Presidential trade-off balance audit & tuning (aligning UI badges with engine math) plus automated readability (grade ≤ 9) and multi-viewport (`1376×768` / `1280×720`) zero-scroll verification (`BAL-01`, `BAL-02`) — v0.9
 
 ### Active
 
-- [ ] Persistent `"Plain Talk / Policy Wonk"` vocabulary toggle (`vocabMode`) in `Session`, `NewGame`, and `StatusBar`, plus a typed Civics Glossary & Progressive Disclosure catalog (`VOCAB-01`, `VOCAB-02`)
-- [ ] Reusable `<TradeoffPill>` / `<WhyClickCard>` progressive-disclosure UI component with `👍 Upside` / `⚠️ The Catch` badges, emoji/SVG impact meters, and expandable `"📜 Official Law / Real Term"` details (`VOCAB-03`)
-- [ ] Dual-layer (`plain` + `wonk`) content overhaul across Executive Orders, Sanctions, Tariffs, Trade Pacts, Social Policies, Reforms, Congress Deals, Crises, and Trace copy with friendly emojis, institutional wit, and explicit `👍 / ⚠️` trade-offs (`COPY-01`, `COPY-02`, `COPY-03`)
-- [ ] Action-screen trade-off surfacing across `Budget`, `Powers`, `Trade`, `Congress`, and Reform Modals with right-column `"Why click this?"` advisor cards and visual meters (`UI-CLARITY-01`, `UI-CLARITY-02`, `UI-CLARITY-03`)
-- [ ] Kitchen-table clarity on `OvalOffice`, `Economy`, `Voters`, `TurnReport`, and `CrisisModal` with Plain-Talk indicator headers, emoji health badges, and crisis response trade-offs (`SEE-01`, `SEE-02`)
-- [ ] Presidential trade-off balance audit & tuning (eliminating no-brainer/dead levers, aligning UI badges with engine math) plus automated readability (grade ≤ 9) and multi-viewport (`1376×768` / `1280×720`) zero-scroll verification (`BAL-01`, `BAL-02`)
+None currently active — awaiting next milestone initialization via `/gsd-new-milestone`.
 
 ### Out of Scope
 
@@ -86,10 +87,10 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 
 ## Context
 
-- Shipped Milestone v0.8 ("Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy") with 492 unit/property tests across 77 files, 69 Playwright E2E tests, zero axe violations, zero default network egress, and clean token guardrails.
+- Shipped Milestone v0.9 ("Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance") with 503 unit/property tests across 82 files, 71 Playwright E2E tests, zero axe violations, zero default network egress, and clean token guardrails.
 - Pure client application (TypeScript + Svelte 5 runes + Vite), zero backend dependencies, zero telemetry.
 - Visual direction C (Americana poster) with dual theme tokens (Day Americana and Dark Oxblood/Gold/Ink for Evil Mode).
-- Zero outer viewport scrolling across 1376×768 and 1280×720 viewports.
+- Zero outer viewport scrolling across 1376×768 and 1280×720 viewports in both Plain Talk and Policy Wonk modes.
 - Determinism verified 8/8 bit-for-bit across Node, Chromium, Firefox, WebKit (minified and unminified).
 
 ## Constraints
@@ -127,19 +128,18 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 | Living World App-Layer `turnEntropy` | Injects turn-level entropy into `Decisions` (stream 19/20) for both player and autopilot while keeping `src/engine/` 100% pure | ✓ Good |
 | Opt-In Free AI Director + Schema Clamping | Supports OpenRouter `:free` cascade failover, OAuth PKCE, and `window.ai` with zero default egress and strict `C.dynamicCrisis*Cap` clamping | ✓ Good |
 | Situated Mirage Levers & Debunk-vs-Spin | Places populist "Easy Buttons" at the moment of intent and rewards civic curiosity or cynical TV spin | ✓ Good |
-| Progressive Disclosure + Plain Talk / Policy Wonk Toggle | Defaults to friendly kitchen-table English with emoji trade-offs while preserving full statutory/macro terminology on demand | — Pending (v0.9) |
+| Progressive Disclosure + Plain Talk / Policy Wonk Toggle | Defaults to friendly kitchen-table English with emoji trade-offs while preserving full statutory/macro terminology on demand | ✓ Good (v0.9) |
 
-## Current Milestone: v0.9 Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance
+## Completed Milestone: v0.9 Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance (Shipped 2026-10-16)
 
 **Goal:** Transform `govSim` from a simulationist policy dashboard into an approachable, witty, kitchen-table strategy game using progressive disclosure, a 1-click `"Plain Talk / Policy Wonk"` vocabulary toggle, scannable `👍 Upside / ⚠️ The Catch` trade-off badges with friendly emojis and visual meters, and audited gameplay trade-offs—while strictly preserving the `1376×768` / `1280×720` zero-scroll layout budget.
-
-**Target features:**
-- Persistent `"Plain Talk / Policy Wonk"` vocabulary toggle (`vocabMode`) in `Session`, `NewGame`, and `StatusBar`, plus a typed Civics Glossary & Progressive Disclosure catalog (`VOCAB-01`, `VOCAB-02`)
-- Reusable `<TradeoffPill>` / `<WhyClickCard>` progressive-disclosure UI component with `👍 Upside` / `⚠️ The Catch` badges, emoji/SVG impact meters, and expandable `"📜 Official Law / Real Term"` details (`VOCAB-03`)
-- Dual-layer (`plain` + `wonk`) content overhaul across Executive Orders, Sanctions, Tariffs, Trade Pacts, Social Policies, Reforms, Congress Deals, Crises, and Trace copy with friendly emojis, institutional wit, and explicit `👍 / ⚠️` trade-offs (`COPY-01`, `COPY-02`, `COPY-03`)
+**Delivered:**
+- Persistent `"Plain Talk / Policy Wonk"` vocabulary toggle (`vocabMode`) in `Session`, `NewGame`, and `StatusBar`, backed by a 32-term Civics Glossary (`VOCAB-01`, `VOCAB-02`)
+- Reusable `<TradeoffPill>` progressive-disclosure UI component with `👍 Upside` / `⚠️ The Catch` badges, emoji impact meters, and expandable `"📜 Official Law / Real Term"` details (`VOCAB-03`)
+- Dual-layer (`plain` + `wonk`) content overhaul across Executive Orders, Sanctions, Tariffs, Trade Pacts, Social Policies, Reforms, Congress Deals, Crises, and Causal Traces with friendly emojis, institutional humor, and explicit trade-offs (`COPY-01`, `COPY-02`, `COPY-03`)
 - Action-screen trade-off surfacing across `Budget`, `Powers`, `Trade`, `Congress`, and Reform Modals with right-column `"Why click this?"` advisor cards and visual meters (`UI-CLARITY-01`, `UI-CLARITY-02`, `UI-CLARITY-03`)
 - Kitchen-table clarity on `OvalOffice`, `Economy`, `Voters`, `TurnReport`, and `CrisisModal` with Plain-Talk indicator headers, emoji health badges, and crisis response trade-offs (`SEE-01`, `SEE-02`)
-- Presidential trade-off balance audit & tuning (eliminating no-brainer/dead levers, aligning UI badges with engine math) plus automated readability (grade ≤ 9) and multi-viewport (`1376×768` / `1280×720`) zero-scroll verification (`BAL-01`, `BAL-02`)
+- Presidential trade-off balance audit & tuning plus automated readability (grade ≤ 9) and multi-viewport (`1376×768` / `1280×720`) zero-scroll and axe-core verification (`BAL-01`, `BAL-02`)
 
 ## Completed Milestone: v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy (Shipped 2026-10-14)
 
