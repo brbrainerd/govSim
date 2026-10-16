@@ -1,5 +1,17 @@
 # Milestones
 
+## v0.9 Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance (Shipped: 2026-10-16)
+
+**Phases completed:** 5 phases, 5 plans, 5 tasks
+
+**Key accomplishments:**
+
+- Wired `<TradeoffPill>`, `session.vocabMode`, and the unified trade-off catalog into `Budget.svelte`, `Powers.svelte`, `Trade.svelte`, `Congress.svelte`, `FilibusterModal.svelte`, `JudicialReformModal.svelte`, and `AmendmentModal.svelte`.
+- Translated macroeconomic and electoral telemetry on Economy, TurnReport, and Voters into kitchen-table plain English (`SEE-01`) and wired explicit `👍 Upside` / `⚠️ The Catch` trade-offs into Oval Office advisor plays and CrisisModal options (`SEE-02`).
+- Verified mechanical trade-off alignment across all presidential levers (`BAL-01`) and passed Flesch-Kincaid reading grade (`<= 9.0`), multi-viewport zero-scroll (`1376×768` and `1280×720`), axe-core accessibility, and cross-browser determinism gates (`BAL-02`).
+
+---
+
 ## v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy (Shipped: 2026-10-14)
 
 **Phases completed:** 4 phases, 4 plans, 0 tasks

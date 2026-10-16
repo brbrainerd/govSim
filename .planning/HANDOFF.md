@@ -79,9 +79,10 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 - **Milestone v0.8 (Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.8`.**
   - All 4 phases (30 to 33, 4 plans) executed, verified, and audited (`v0.8-MILESTONE-AUDIT.md`) with 10/10 requirements satisfied (`DECK-01..02`, `MYTH-01..04`, `PIVOT-01..02`, `SPIN-01..02`).
   - Archived to `.planning/milestones/v0.8-ROADMAP.md`, `v0.8-REQUIREMENTS.md`, `v0.8-MILESTONE-AUDIT.md`, and `v0.8-phases/`.
-- **Milestone v0.9 (Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance): INITIALIZED (Phases 34–38).**
-  - 13 requirements (`VOCAB-01..03`, `COPY-01..03`, `UI-CLARITY-01..03`, `SEE-01..02`, `BAL-01..02`) mapped across Phases 34–38 in `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`.
-- **Gates:** `pnpm test` 492 passing (77 files) · `pnpm test:e2e` 69 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
+- **Milestone v0.9 (Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.9`.**
+  - All 5 phases (34 to 38, 5 plans) executed, verified, and audited (`v0.9-MILESTONE-AUDIT.md`) with 13/13 requirements satisfied (`VOCAB-01..03`, `COPY-01..03`, `UI-CLARITY-01..03`, `SEE-01..02`, `BAL-01..02`).
+  - Archived to `.planning/milestones/v0.9-ROADMAP.md`, `v0.9-REQUIREMENTS.md`, `v0.9-MILESTONE-AUDIT.md`, and `v0.9-phases/`.
+- **Gates:** `pnpm test` 503 passing (82 files) · `pnpm test:e2e` 71 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
 ### Open debts (do not lose these)

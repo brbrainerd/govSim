@@ -404,8 +404,6 @@
           upside={selectedOrder.upside}
           catchText={selectedOrder.catchText}
           whyClick={selectedOrder.whyClick}
-          realTerm={selectedOrder.wonkLabel}
-          legalBasis={selectedOrder.legalBasis}
           vocabMode={session.vocabMode}
         />
 
@@ -1052,7 +1050,7 @@
   .next-column {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 5px;
     height: 100%;
   }
 
@@ -1060,11 +1058,11 @@
     background: var(--card);
     border: 2px solid var(--ink);
     border-radius: var(--r-sm);
-    padding: 9px 11px;
+    padding: 6px 9px;
     box-shadow: 3px 3px 0 var(--ink);
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 3px;
   }
 
   .preview-head-row {
@@ -1074,32 +1072,32 @@
   }
 
   .preview-emoji {
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1;
   }
 
   .preview-title {
     font-family: var(--font-display);
-    font-size: 16px;
+    font-size: 14px;
     color: var(--ink);
     margin: 0;
   }
 
   .preview-desc {
     font-family: var(--font-body);
-    font-size: 12px;
-    line-height: 1.3;
+    font-size: 11px;
+    line-height: 1.2;
     color: var(--ink);
     margin: 0;
   }
 
   .preview-why {
     font-family: var(--font-body);
-    font-size: 11.5px;
-    line-height: 1.25;
+    font-size: 10.5px;
+    line-height: 1.18;
     color: var(--ink);
     background: var(--paper-dark);
-    padding: 4px 7px;
+    padding: 3px 6px;
     border-radius: 4px;
     margin: 0;
   }
@@ -1110,30 +1108,30 @@
     background: var(--paper);
     border: 1px solid var(--ink);
     border-radius: 4px;
-    padding: 4px 7px;
+    padding: 2px 6px;
   }
 
   .box-tag {
     display: block;
     font-family: var(--font-ui);
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.08em;
     color: var(--ink-soft);
-    margin-bottom: 2px;
+    margin-bottom: 1px;
   }
 
   .legal-basis {
     font-family: var(--font-body);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--ink);
   }
 
   .risk-explanation {
     font-family: var(--font-body);
-    font-size: 12px;
-    line-height: 1.3;
+    font-size: 11px;
+    line-height: 1.2;
     color: var(--ink);
     margin: 0;
   }
@@ -1143,7 +1141,7 @@
     align-items: center;
     gap: 4px;
     font-family: var(--font-ui);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--ink);
     text-decoration: underline;
@@ -1153,11 +1151,11 @@
     background: var(--card);
     border: 2px solid var(--ink);
     border-radius: var(--r-sm);
-    padding: 12px;
+    padding: 7px 9px;
     box-shadow: 3px 3px 0 var(--ink);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
   }
 
   .speech-header {
@@ -1170,7 +1168,7 @@
     background: none;
     border: none;
     font-family: var(--font-ui);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     color: var(--ink-soft);
@@ -1192,7 +1190,7 @@
 
   .speech-cost {
     font-family: var(--font-ui);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     background: var(--paper);
@@ -1204,8 +1202,8 @@
 
   .speech-desc {
     font-family: var(--font-body);
-    font-size: 12px;
-    line-height: 1.3;
+    font-size: 11px;
+    line-height: 1.2;
     color: var(--ink-soft);
     margin: 0;
   }
@@ -1213,19 +1211,19 @@
   .speech-options {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-top: 4px;
+    gap: 4px;
+    margin-top: 2px;
   }
 
   .speech-btn {
     font-family: var(--font-ui);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     background: var(--paper);
     border: 1.5px solid var(--ink);
     border-radius: 4px;
-    padding: 6px 10px;
+    padding: 4px 8px;
     text-align: left;
     cursor: pointer;
     box-shadow: 1px 1px 0 var(--ink);

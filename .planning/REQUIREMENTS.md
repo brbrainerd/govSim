@@ -30,8 +30,8 @@
 
 ### Presidential Trade-Off Balance Audit, Readability Gate & Multi-Viewport Verification (Phase 38)
 
-- [ ] **BAL-01**: Audit and tune policy lever mechanics (`src/engine/budget.ts`, `src/content/orders.ts`, `src/engine/foreign.ts`, `src/engine/trade.ts`, `src/engine/social.ts`, `src/engine/reforms.ts`) so every presidential choice has a genuine felt upside AND counterbalancing catch, 100% aligned with its surfaced UI `👍 / ⚠️` badges, and verified by the 100-seed Monte Carlo balance harness (`sensible - nothing` in `[2, 10]`, party neutrality `<= 5 pp`).
-- [ ] **BAL-02**: Enforce automated tests verifying Flesch-Kincaid reading grade ≤ 9.0 across all Plain-Talk copy, zero outer viewport scrolling (`scrollHeight <= clientHeight`) across all screens in both `Plain Talk` and `Policy Wonk` modes at `1376×768` and `1280×720`, 0 axe accessibility violations, and 8/8 cross-browser determinism hashes.
+- [x] **BAL-01**: Audit and tune policy lever mechanics (`src/engine/budget.ts`, `src/content/orders.ts`, `src/engine/foreign.ts`, `src/engine/trade.ts`, `src/engine/social.ts`, `src/engine/reforms.ts`) so every presidential choice has a genuine felt upside AND counterbalancing catch, 100% aligned with its surfaced UI `👍 / ⚠️` badges, and verified by the 100-seed Monte Carlo balance harness (`sensible - nothing` in `[2, 10]`, party neutrality `<= 5 pp`).
+- [x] **BAL-02**: Enforce automated tests verifying Flesch-Kincaid reading grade ≤ 9.0 across all Plain-Talk copy, zero outer viewport scrolling (`scrollHeight <= clientHeight`) across all screens in both `Plain Talk` and `Policy Wonk` modes at `1376×768` and `1280×720`, 0 axe accessibility violations, and 8/8 cross-browser determinism hashes.
 
 ## Future Requirements
 
@@ -58,8 +58,8 @@
 | UI-CLARITY-03 | Phase 36 | Complete |
 | SEE-01 | Phase 37 | Complete |
 | SEE-02 | Phase 37 | Complete |
-| BAL-01 | Phase 38 | Pending |
-| BAL-02 | Phase 38 | Pending |
+| BAL-01 | Phase 38 | Complete |
+| BAL-02 | Phase 38 | Complete |
 
 **Coverage:**
 
