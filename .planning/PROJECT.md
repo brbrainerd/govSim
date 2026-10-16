@@ -63,14 +63,18 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 - ✓ Year-1 progressive onboarding (`docs/design.md` §7b: Turn 1 Budget/Congress, Turn 2 Your Powers, Turn 3+ all screens) with `"Unlock all screens"` toggle — v0.7
 - ✓ Interactive `"Show your work"` Model Inspector modal exposing all 138 live `coefficients.ts` parameters, 6 core equations, ranges, and audited citations — v0.7
 - ✓ Optional non-deterministic `"Living World"` shock variance (`turnEntropy`) and opt-in Free AI Director (`openrouter/free` + `:free` auto-discovery, OAuth PKCE, local `window.ai`, Gemini/Groq BYOK) for generative briefings, satirical chyrons, and schema-clamped dynamic crises — v0.7
+- ✓ Expanded 12-card spectrum-balanced Myth catalog (`4 left`, `4 right`, `4 both`), tempting "Mirage Levers" across policy screens, and contextual Oval Office macro blame triggers — v0.8
+- ✓ Interactive Reality-Check MythModal with 1-click bottleneck prediction, tactile `MYTH BUSTED` stamp-slam animation, zero-friction skip, and 1-click tactical pivots to real policy levers — v0.8
+- ✓ Pure-engine `"Debunk vs. Spin"` strategic trade-off (`spinMyth` +Approval rally, −Social Trust, +Evil Heat) and EndScreen Civic Mastery Dossier — v0.8
 
 ### Active
 
-- [ ] Tempting "Mirage Levers" on policy screens and contextual press/voter blame triggers that surface civics myths at the moment of player intent (`MYTH-01`, `MYTH-02`)
-- [ ] Interactive Reality-Check modal with optional 1-click causal bottleneck prediction, tactile `MYTH BUSTED` stamp-slam animation, and zero-friction skip/dismiss (`MYTH-03`, `MYTH-04`)
-- [ ] Actionable 1-click "Real Lever" tactical pivot buttons inside myth cards that navigate to the target screen and stage or highlight the real constitutional lever (`PIVOT-01`, `PIVOT-02`)
-- [ ] "Debunk vs. Spin" strategic gameplay integration: Statesman path grants an Informed Briefing buff / blame shield, while Evil Mode or cynical play allows weaponizing myths for short-term approval at a credibility/heat cost (`SPIN-01`, `SPIN-02`)
-- [ ] Expanded 12-card spectrum-balanced Myth catalog covering Congress, Voters, Social Policy, and Structural Reform (`|left - right| <= 1`), plus an EndScreen Civic Mastery dossier (`DECK-01`, `DECK-02`)
+- [ ] Persistent `"Plain Talk / Policy Wonk"` vocabulary toggle (`vocabMode`) in `Session`, `NewGame`, and `StatusBar`, plus a typed Civics Glossary & Progressive Disclosure catalog (`VOCAB-01`, `VOCAB-02`)
+- [ ] Reusable `<TradeoffPill>` / `<WhyClickCard>` progressive-disclosure UI component with `👍 Upside` / `⚠️ The Catch` badges, emoji/SVG impact meters, and expandable `"📜 Official Law / Real Term"` details (`VOCAB-03`)
+- [ ] Dual-layer (`plain` + `wonk`) content overhaul across Executive Orders, Sanctions, Tariffs, Trade Pacts, Social Policies, Reforms, Congress Deals, Crises, and Trace copy with friendly emojis, institutional wit, and explicit `👍 / ⚠️` trade-offs (`COPY-01`, `COPY-02`, `COPY-03`)
+- [ ] Action-screen trade-off surfacing across `Budget`, `Powers`, `Trade`, `Congress`, and Reform Modals with right-column `"Why click this?"` advisor cards and visual meters (`UI-CLARITY-01`, `UI-CLARITY-02`, `UI-CLARITY-03`)
+- [ ] Kitchen-table clarity on `OvalOffice`, `Economy`, `Voters`, `TurnReport`, and `CrisisModal` with Plain-Talk indicator headers, emoji health badges, and crisis response trade-offs (`SEE-01`, `SEE-02`)
+- [ ] Presidential trade-off balance audit & tuning (eliminating no-brainer/dead levers, aligning UI badges with engine math) plus automated readability (grade ≤ 9) and multi-viewport (`1376×768` / `1280×720`) zero-scroll verification (`BAL-01`, `BAL-02`)
 
 ### Out of Scope
 
@@ -82,7 +86,7 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 
 ## Context
 
-- Shipped Milestone v0.7 ("Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director") with 464 unit/property tests across 75 files, 63 Playwright E2E tests, zero axe violations, zero default network egress, and clean token guardrails.
+- Shipped Milestone v0.8 ("Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy") with 492 unit/property tests across 77 files, 69 Playwright E2E tests, zero axe violations, zero default network egress, and clean token guardrails.
 - Pure client application (TypeScript + Svelte 5 runes + Vite), zero backend dependencies, zero telemetry.
 - Visual direction C (Americana poster) with dual theme tokens (Day Americana and Dark Oxblood/Gold/Ink for Evil Mode).
 - Zero outer viewport scrolling across 1376×768 and 1280×720 viewports.
@@ -122,17 +126,29 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 | Deterministic Starting Scenarios | Deterministic macro/fiscal overrides on top of `us-2026.json` preserving bit-for-bit replay | ✓ Good |
 | Living World App-Layer `turnEntropy` | Injects turn-level entropy into `Decisions` (stream 19/20) for both player and autopilot while keeping `src/engine/` 100% pure | ✓ Good |
 | Opt-In Free AI Director + Schema Clamping | Supports OpenRouter `:free` cascade failover, OAuth PKCE, and `window.ai` with zero default egress and strict `C.dynamicCrisis*Cap` clamping | ✓ Good |
+| Situated Mirage Levers & Debunk-vs-Spin | Places populist "Easy Buttons" at the moment of intent and rewards civic curiosity or cynical TV spin | ✓ Good |
+| Progressive Disclosure + Plain Talk / Policy Wonk Toggle | Defaults to friendly kitchen-table English with emoji trade-offs while preserving full statutory/macro terminology on demand | — Pending (v0.9) |
 
-## Current Milestone: v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy
+## Current Milestone: v0.9 Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance
 
-**Goal:** Transform civics myth cards from static popups into interactive, intrinsically motivating gameplay mechanics featuring tempting "Mirage Levers", prediction-error reality checks, 1-click pivots to real policy levers, and "Debunk vs. Spin" strategic trade-offs.
+**Goal:** Transform `govSim` from a simulationist policy dashboard into an approachable, witty, kitchen-table strategy game using progressive disclosure, a 1-click `"Plain Talk / Policy Wonk"` vocabulary toggle, scannable `👍 Upside / ⚠️ The Catch` trade-off badges with friendly emojis and visual meters, and audited gameplay trade-offs—while strictly preserving the `1376×768` / `1280×720` zero-scroll layout budget.
 
 **Target features:**
-- Tempting "Mirage Levers" on policy screens and contextual press/voter blame triggers that surface civics myths at the moment of player intent
-- Interactive Reality-Check modal with optional 1-click causal bottleneck prediction, tactile `MYTH BUSTED` stamp-slam animation, and zero-friction skip/dismiss
-- Actionable 1-click "Real Lever" tactical pivot buttons inside myth cards that navigate to the target screen and stage or highlight the real constitutional lever
-- "Debunk vs. Spin" strategic gameplay integration: Statesman path grants an Informed Briefing buff / blame shield, while Evil Mode or cynical play allows weaponizing myths for short-term approval at a credibility/heat cost
-- Expanded 12-card spectrum-balanced Myth catalog covering Congress, Voters, Social Policy, and Structural Reform (`|left - right| <= 1`), plus an EndScreen Civic Mastery dossier
+- Persistent `"Plain Talk / Policy Wonk"` vocabulary toggle (`vocabMode`) in `Session`, `NewGame`, and `StatusBar`, plus a typed Civics Glossary & Progressive Disclosure catalog (`VOCAB-01`, `VOCAB-02`)
+- Reusable `<TradeoffPill>` / `<WhyClickCard>` progressive-disclosure UI component with `👍 Upside` / `⚠️ The Catch` badges, emoji/SVG impact meters, and expandable `"📜 Official Law / Real Term"` details (`VOCAB-03`)
+- Dual-layer (`plain` + `wonk`) content overhaul across Executive Orders, Sanctions, Tariffs, Trade Pacts, Social Policies, Reforms, Congress Deals, Crises, and Trace copy with friendly emojis, institutional wit, and explicit `👍 / ⚠️` trade-offs (`COPY-01`, `COPY-02`, `COPY-03`)
+- Action-screen trade-off surfacing across `Budget`, `Powers`, `Trade`, `Congress`, and Reform Modals with right-column `"Why click this?"` advisor cards and visual meters (`UI-CLARITY-01`, `UI-CLARITY-02`, `UI-CLARITY-03`)
+- Kitchen-table clarity on `OvalOffice`, `Economy`, `Voters`, `TurnReport`, and `CrisisModal` with Plain-Talk indicator headers, emoji health badges, and crisis response trade-offs (`SEE-01`, `SEE-02`)
+- Presidential trade-off balance audit & tuning (eliminating no-brainer/dead levers, aligning UI badges with engine math) plus automated readability (grade ≤ 9) and multi-viewport (`1376×768` / `1280×720`) zero-scroll verification (`BAL-01`, `BAL-02`)
+
+## Completed Milestone: v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy (Shipped 2026-10-14)
+
+**Goal:** Transform civics myth cards from static popups into interactive, intrinsically motivating gameplay mechanics featuring tempting "Mirage Levers", prediction-error reality checks, 1-click pivots to real policy levers, and "Debunk vs. Spin" strategic trade-offs.
+**Delivered:**
+- Expanded 12-card spectrum-balanced Myth catalog (`4 left`, `4 right`, `4 both`), structured 2-option bottleneck predictions, tempting `mirageLabel` copy, and typed `realLeverActions` pivot targets (`DECK-01..02`, `PIVOT-01`)
+- Interactive Reality-Check `MythModal.svelte` with 1-click prediction challenges, tactile `MYTH BUSTED` stamp-slam animation, zero-friction skip/dismiss, and 1-click tactical pivots to real policy levers (`MYTH-03..04`, `PIVOT-02`)
+- Situated "Mirage Levers" across `Economy`, `Budget`, `Congress`, `Powers`, `Trade`, and `Voters` plus contextual Chief of Staff blame/myth suggestions in `OvalOffice` (`MYTH-01..02`)
+- Pure-engine `"Debunk vs. Spin"` mechanic (`spinMyth` in `PowerDecisions`, registered coefficients, causal trace copy, and `EndScreen.svelte` Civic Mastery Dossier) (`SPIN-01..02`)
 
 ## Completed Milestone: v0.7 Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director (Shipped 2026-10-14)
 
@@ -149,7 +165,7 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 **Goal:** Eliminate every remaining "Coming soon" stub and disconnected UI loop, elevate day-to-day gameplay feel with one-click Advisor Plays, Congress Auto-Whip, and Fast-Forward pacing controls from `docs/design.md`, and multiply replayability with selectable starting scenarios.
 **Delivered:**
 - Interactive civic explainers & Learn loop: step-by-step interactive "How it works" modals across all screens (+1 Clout bonus), Trade Learn strip, 3 new Myth cards, and wired Oval Office Chief of Staff suggestion modals (LEARN-01, LEARN-02, LEARN-03)
-- Smart Advisor plays & Congress Auto-Whip: actionable one-click "Advisor Plays" navigating and pre-filling draft packages, pure `findCheapestCoalition` solver for 218 House votes, live Household Persona binding, and dual in-force vs 2026 baseline slider indicators (ADVISOR-01, ADVISOR-02, ADVISOR-03)
+- Smart Advisor plays & Congress Auto-Whip: actionable one-click "Advisor Plays" navigating and pre-fill draft packages, pure `findCheapestCoalition` solver for 218 House votes, live Household Persona binding, and dual in-force vs 2026 baseline slider indicators (ADVISOR-01, ADVISOR-02, ADVISOR-03)
 - Turn pacing & staged decisions: top-bar live Staged Decisions tray with unsent warnings and screen jump buttons, safe "Skip to Next Event" fast-forward loop with automatic interrupts on crises/deadlines/elections (PACE-01, PACE-02)
 - Replayable starting scenarios: curated Starting Scenario selector at New Game with 4 scenarios, inauguration briefings, and persistent EndScreen and URL hash replay badges (SCEN-01, SCEN-02)
 
@@ -180,4 +196,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-14 after v0.7 milestone*
+*Last updated: 2026-10-16 after v0.9 milestone initialization*

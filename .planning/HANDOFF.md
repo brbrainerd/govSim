@@ -59,7 +59,7 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 
 ## 3. Current state (update this section at the end of every session)
 
-**As of 2026-10-14, branch `game-pivot`** (not pushed; GitHub default branch is `master`; `git log -5` for the latest commits).
+**As of 2026-10-16, branch `master`** (`git log -5` for the latest commits).
 
 - **Milestone v0.2 (Playable First Term): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.2`.**
   - All 8 phases (1 to 8) executed, verified, and audited with 53/53 requirements satisfied.
@@ -76,10 +76,12 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 - **Milestone v0.7 (Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director): COMPLETE, AUDITED, CODE-REVIEWED, ARCHIVED AND TAGGED `v0.7`.**
   - All 5 phases (25 to 29, 9 plans) executed, verified, code-reviewed (`29-REVIEW.md`), and audited (`v0.7-MILESTONE-AUDIT.md`) with 14/14 requirements satisfied (`ART-01..03`, `JUICE-01..03`, `ONBOARD-01..02`, `MODEL-01..02`, `AI-01..04`).
   - Archived to `.planning/milestones/v0.7-ROADMAP.md`, `v0.7-REQUIREMENTS.md`, `v0.7-MILESTONE-AUDIT.md`, and `v0.7-phases/`.
-- **Milestone v0.8 (Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy): INITIALIZED (Phases 30–33).**
-  - Research synthesized in `.planning/research/v0.8-PEDAGOGY-MYTHS.md`.
-  - 10 requirements (`DECK-01..02`, `MYTH-01..04`, `PIVOT-01..02`, `SPIN-01..02`) mapped across Phases 30–33 in `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`.
-- **Gates:** `pnpm test` 464 passing (75 files) · `pnpm test:e2e` 63 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
+- **Milestone v0.8 (Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.8`.**
+  - All 4 phases (30 to 33, 4 plans) executed, verified, and audited (`v0.8-MILESTONE-AUDIT.md`) with 10/10 requirements satisfied (`DECK-01..02`, `MYTH-01..04`, `PIVOT-01..02`, `SPIN-01..02`).
+  - Archived to `.planning/milestones/v0.8-ROADMAP.md`, `v0.8-REQUIREMENTS.md`, `v0.8-MILESTONE-AUDIT.md`, and `v0.8-phases/`.
+- **Milestone v0.9 (Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance): INITIALIZED (Phases 34–38).**
+  - 13 requirements (`VOCAB-01..03`, `COPY-01..03`, `UI-CLARITY-01..03`, `SEE-01..02`, `BAL-01..02`) mapped across Phases 34–38 in `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`.
+- **Gates:** `pnpm test` 492 passing (77 files) · `pnpm test:e2e` 69 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
 ### Open debts (do not lose these)

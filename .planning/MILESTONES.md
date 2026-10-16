@@ -1,5 +1,16 @@
 # Milestones
 
+## v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy (Shipped: 2026-10-14)
+
+**Phases completed:** 4 phases, 4 plans, 0 tasks
+
+- Expanded 12-card spectrum-balanced Myth catalog (`4 left`, `4 right`, `4 both`), structured 2-option causal bottleneck predictions, tempting `mirageLabel` copy, and typed `realLeverActions` pivot targets (`DECK-01`, `DECK-02`, `PIVOT-01`).
+- Interactive Reality-Check `MythModal.svelte` with 1-click prediction challenges, tactile `MYTH BUSTED` stamp-slam animation, zero-friction skip/dismiss, and 1-click tactical pivots to real policy levers (`MYTH-03`, `MYTH-04`, `PIVOT-02`).
+- Tempting "Mirage Levers" across `Economy`, `Budget`, `Congress`, `Powers`, `Trade`, and `Voters` plus contextual Chief of Staff blame/myth suggestions in `OvalOffice` (`MYTH-01`, `MYTH-02`).
+- Pure-engine `"Debunk vs. Spin"` mechanic (`spinMyth` in `PowerDecisions`, registered coefficients, causal trace copy, and `EndScreen.svelte` Civic Mastery Dossier) (`SPIN-01`, `SPIN-02`).
+
+---
+
 ## v0.7 Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director (Shipped: 2026-10-14)
 
 **Phases completed:** 5 phases, 9 plans, 0 tasks

@@ -1,57 +1,67 @@
-# Requirements: govSim v0.8 — Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy
+# Requirements: govSim v0.9 — Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance
 
-**Defined:** 2026-10-14
+**Defined:** 2026-10-16
 **Core Value:** A player can make real presidential tradeoffs (or play the satirical "Evil Mode" kleptocracy) against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
 
-## v0.8 Requirements
+## v0.9 Requirements
 
-### Expanded 12-Card Myth Catalog, Bottleneck Predictions & Actionable Pivot Schema (Phase 30)
+### Progressive Disclosure Architecture, Vocabulary Toggle & Trade-Off Components (Phase 34)
 
-- [x] **DECK-01**: Expand `src/content/myths.ts` from 8 to 12 spectrum-balanced civics myth cards (`|count(left) - count(right)| <= 1`, with 4 `left`, 4 `right`, 4 `both`), adding 4 sourced institutional/mechanism myths (`veto_line_item`, `popular_vote_mandate`, `immigration_crime_budget`, `scotus_instant_reversal`) covering Congress, Voters, Social Policy, and Courts/Reforms, all passing Flesch-Kincaid reading grade ≤ 9.0 and ≤ 20 words/sentence gates. *(Validated in Phase 30)*
-- [x] **DECK-02**: Enrich every `MythCard` in `src/content/myths.ts` with a structured 2-option prediction prompt (`predictionPrompt`: question, 2 options, `correctIndex`, plain-language refutation feedback) and a tempting `mirageLabel` string for situated UI discovery. *(Validated in Phase 30)*
-- [x] **PIVOT-01**: Add typed `realLeverActions` metadata to every `MythCard` in `src/content/myths.ts`, mapping each real constitutional lever pill to a concrete `ScreenId` and optional `Session` draft action (budget package/lever, executive order, trade tariff/accord, or reform modal). *(Validated in Phase 30)*
+- [ ] **VOCAB-01**: Add a persistent `vocabMode: 'plain' | 'wonk'` preference (defaulting to `'plain'`) in `src/app/session.svelte.ts`, `src/screens/NewGame.svelte`, and `src/ui/StatusBar.svelte` so players can switch between friendly Kitchen-Table Plain Talk and full Policy Wonk terminology at any time without altering engine determinism or save compatibility.
+- [ ] **VOCAB-02**: Create a typed Civics Glossary & Progressive Disclosure catalog (`src/content/glossary.ts`) mapping simulationist terms (`Cloture`, `Reconciliation`, `Section 301/232`, `IEEPA / OFAC`, `Major Questions Doctrine`, `Output Gap`, `CPI Pass-Through`, `Taylor Rule`, `Gini Inequality`, `Tipping-Point State`) to Plain-Talk labels, friendly emojis, witty 1-sentence explanations, and `"📜 Real Civics Term"` progressive-disclosure tooltips/chips.
+- [ ] **VOCAB-03**: Build a reusable, keyboard-accessible, viewport-safe `<TradeoffPill>` / `<WhyClickCard>` UI component (`src/ui/TradeoffPill.svelte`) that renders compact `👍 Upside` / `⚠️ The Catch` badges, friendly emoji/SVG impact meters, witty advisor `"Why click this?"` notes, and expandable `"📜 Official Law / Real Term"` progressive disclosure.
 
-### Interactive Reality-Check Modal & 1-Click Tactical Pivots (Phase 31)
+### De-Jargonizing Content Catalogs with Witty Plain Talk & `👍 / ⚠️` Trade-Offs (Phase 35)
 
-- [x] **MYTH-03**: Upgrade `src/ui/MythModal.svelte` with an interactive "Call the Bluff / Spot the Bottleneck" prediction step that lets the player test their intuition before revealing the causal reality and slamming the `MYTH BUSTED` stamp (respecting `calmMode` and `prefers-reduced-motion`). *(Validated in Phase 31)*
-- [x] **MYTH-04**: Provide a zero-friction `"Skip to Reality"` / direct `"Got It"` path in `src/ui/MythModal.svelte` so players are never gated by a mandatory quiz and can claim or dismiss the card in one click. *(Validated in Phase 31)*
-- [x] **PIVOT-02**: Convert the static `realLevers` pills in `src/ui/MythModal.svelte` into interactive 1-click tactical pivot buttons (`Session.applyMythLeverAction`) that mark the myth examined, stage or highlight the real lever, navigate to the target screen, and close the modal. *(Validated in Phase 31)*
+- [ ] **COPY-01**: Enrich `ORDERS_CATALOG` (`src/content/orders.ts`), `SANCTIONS_CATALOG` (`src/engine/foreign.ts`), and `SECTOR_TARIFFS_CATALOG` / `TRADE_AGREEMENTS_CATALOG` (`src/data/trade.ts`) with friendly emoji icons, Plain-Talk titles and summaries, explicit `upside` / `catchText` trade-offs, and witty advisor `"Why click this?"` notes (moving raw statutory citations like `19 U.S.C. § 1862` or `IEEPA` into progressive disclosure in Plain Talk mode).
+- [ ] **COPY-02**: Upgrade `SOCIAL_CATALOG` (`src/content/social.ts`), `REFORMS_CATALOG` (`src/engine/reforms.ts`), `FILIBUSTER_RULES_CATALOG` / `deals` (`src/engine/congress.ts`), and `taxLevers` / `spendLevers` (`src/engine/budget.ts`) to replace dense institutional prose with relatable kitchen-table language, light institutional humor, emoji cues, and clear short-term vs. long-term trade-offs.
+- [ ] **COPY-03**: Enrich domestic and geopolitical crisis options (`src/engine/events.ts`, `src/engine/geopolitics.ts`) and causal trace explanations (`src/content/text/why.ts`) with scannable `👍 Helps:` / `⚠️ Costs:` previews and conversational advisor translations so non-experts always understand what each option does before clicking.
 
-### Tempting "Mirage Levers" Across Screens & Contextual Blame Triggers (Phase 32)
+### Surfacing Decision Trade-Offs & Visual Meters Across Act Screens (Phase 36)
 
-- [x] **MYTH-01**: Place viewport-safe tempting "Mirage Lever" controls (plausible populist "Easy Buttons" that trigger the corresponding Myth Reality Check at the moment of player intent) across `Economy.svelte`, `Budget.svelte`, `Congress.svelte` (wiring `onOpenMyth` in `Game.svelte`), `Powers.svelte`, `Trade.svelte`, and `Voters.svelte`, maintaining zero outer viewport scrolling at `1376×768` and `1280×720`. *(Validated in Phase 32)*
-- [x] **MYTH-02**: Upgrade `generateBriefing` in `src/content/briefing.ts` and `OvalOffice.svelte` so that when inflation, gas/energy costs, unemployment, or budget deficits spike, the Chief of Staff surfaces a contextual "Public Blame / Myth Check" suggestion tied to the active macro pressure. *(Validated in Phase 32)*
+- [ ] **UI-CLARITY-01**: Upgrade `src/screens/Budget.svelte` so hovering, focusing, or adjusting any tax or spending slider (or preset package) updates the right-hand `"What it means"` column with a Plain-Talk `"Why move this slider?"` card (`👍 Upside`, `⚠️ The Catch`, emoji indicator, and visual wallet/economy meter) alongside the Expert Forecast.
+- [ ] **UI-CLARITY-02**: Upgrade `src/screens/Powers.svelte` and `src/screens/Trade.svelte` to replace uppercase statutory headers and raw macro jargon (`CPI Pass-Through`, `Retaliatory friction weight`, `JUDICIAL VULNERABILITY`) in Plain Talk mode with friendly headers, emoji badges, compact `👍 / ⚠️` trade-off pills, and a clear `"Why sign this? / What's the catch?"` right-column decision card.
+- [ ] **UI-CLARITY-03**: Upgrade `src/screens/Congress.svelte`, `src/ui/FilibusterModal.svelte`, `src/ui/JudicialReformModal.svelte`, and `src/ui/AmendmentModal.svelte` so voting blocs, horse-trading deals, Senate rules, and court reforms explain *why* a player would spend Clout on them in plain, witty terms with visual vote-math and trade-off meters.
 
-### "Debunk vs. Spin" Gameplay Mechanics & EndScreen Civic Dossier (Phase 33)
+### Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens (Phase 37)
 
-- [x] **SPIN-01**: Implement the pure-engine `"Debunk vs. Spin"` mechanic (`spinMyth?: string` in `PowerDecisions`, registered coefficients `mythSpinApprovalBoost`, `mythSpinTrustPenalty`, `mythSpinHeatDelta` in `coefficients.ts`, `'event:myth_spin'` trace copy in `why.ts`, and `save.ts` validation) so players can either Debunk a myth (+5 Clout) or Spin it on TV (+Approval rally for 1 turn, −Social Trust, and +Heat in Evil Mode) while keeping all existing determinism golden hashes bit-identical. *(Validated in Phase 33)*
-- [x] **SPIN-02**: Wire the `"Spin This Myth"` demagogue action in `src/ui/MythModal.svelte` and `Session` (`src/app/session.svelte.ts`), and upgrade `src/screens/EndScreen.svelte` with a Civic Mastery Dossier summarizing Myths Busted vs. Myths Spun at term end. *(Validated in Phase 33)*
+- [ ] **SEE-01**: Upgrade `src/screens/Economy.svelte` and `src/ui/TurnReport.svelte` so technical macro labels (`Output Gap`, `Emp/Pop Ratio`, `Taylor Rule`, `Gini`) use Plain-Talk headers and emoji health badges in Plain Talk mode (with Wonk terms in progressive-disclosure tooltips), plus a one-line `"What this means for regular people"` summary.
+- [ ] **SEE-02**: Upgrade `src/screens/OvalOffice.svelte`, `src/screens/Voters.svelte`, and `src/ui/CrisisModal.svelte` so Chief of Staff plays, Electoral College tipping-point/swing badges, and crisis response buttons clearly state `👍 Upside` vs. `⚠️ Risk` with friendly icons/emojis and witty advisor context.
+
+### Presidential Trade-Off Balance Audit, Readability Gate & Multi-Viewport Verification (Phase 38)
+
+- [ ] **BAL-01**: Audit and tune policy lever mechanics (`src/engine/budget.ts`, `src/content/orders.ts`, `src/engine/foreign.ts`, `src/engine/trade.ts`, `src/engine/social.ts`, `src/engine/reforms.ts`) so every presidential choice has a genuine felt upside AND counterbalancing catch, 100% aligned with its surfaced UI `👍 / ⚠️` badges, and verified by the 100-seed Monte Carlo balance harness (`sensible - nothing` in `[2, 10]`, party neutrality `<= 5 pp`).
+- [ ] **BAL-02**: Enforce automated tests verifying Flesch-Kincaid reading grade ≤ 9.0 across all Plain-Talk copy, zero outer viewport scrolling (`scrollHeight <= clientHeight`) across all screens in both `Plain Talk` and `Policy Wonk` modes at `1376×768` and `1280×720`, 0 axe accessibility violations, and 8/8 cross-browser determinism hashes.
 
 ## Future Requirements
 
-- Multi-card press conference debate chains
+- Dynamic adaptive vocabulary mode that automatically unlocks Policy Wonk terms as players inspect explainers and myths
+- Interactive policy sandbox / "What-if" comparison comparator before starting a term
 
 ## Out of Scope
 
-- Mandatory blocking quizzes that halt turn progression — learning must remain opt-in and intrinsic
-- Partisan blame framing — all myths critique institutional mechanics, never political parties (`GR-20`, `GR-21`)
+- Mandatory tutorials or pop-up quizzes that block turn progression — all progressive disclosure remains zero-friction and player-driven
+- Partisan blame framing — all humor and plain-talk critiques target institutional incentives and trade-offs, never political parties (`GR-20`, `GR-21`)
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DECK-01 | Phase 30 | Validated |
-| DECK-02 | Phase 30 | Validated |
-| PIVOT-01 | Phase 30 | Validated |
-| MYTH-03 | Phase 31 | Validated |
-| MYTH-04 | Phase 31 | Validated |
-| PIVOT-02 | Phase 31 | Validated |
-| MYTH-01 | Phase 32 | Validated |
-| MYTH-02 | Phase 32 | Validated |
-| SPIN-01 | Phase 33 | Validated |
-| SPIN-02 | Phase 33 | Validated |
+| VOCAB-01 | Phase 34 | Pending |
+| VOCAB-02 | Phase 34 | Pending |
+| VOCAB-03 | Phase 34 | Pending |
+| COPY-01 | Phase 35 | Pending |
+| COPY-02 | Phase 35 | Pending |
+| COPY-03 | Phase 35 | Pending |
+| UI-CLARITY-01 | Phase 36 | Pending |
+| UI-CLARITY-02 | Phase 36 | Pending |
+| UI-CLARITY-03 | Phase 36 | Pending |
+| SEE-01 | Phase 37 | Pending |
+| SEE-02 | Phase 37 | Pending |
+| BAL-01 | Phase 38 | Pending |
+| BAL-02 | Phase 38 | Pending |
 
 **Coverage:**
-- v0.8 requirements: 10 total
-- Mapped to phases: 10
+- v0.9 requirements: 13 total
+- Mapped to phases: 13
 - Unmapped: 0 ✓

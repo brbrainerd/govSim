@@ -2,6 +2,7 @@
 
 ## Milestones
 
+- 🚧 **v0.9 Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance** — Phases 34-38 (in progress)
 - ✅ **v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy** — Phases 30-33 (shipped 2026-10-14)
 - ✅ **v0.7 Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director** — Phases 25-29 (shipped 2026-10-14)
 - ✅ **v0.6 Completeness, Advisor Agency & Scenarios** — Phases 21-24 (shipped 2026-10-14)
@@ -12,12 +13,53 @@
 
 ## Phases
 
-### ✅ v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy (Phases 30-33) — SHIPPED 2026-10-14
+### 🚧 v0.9 Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance (Phases 34-38)
 
-- [x] **Phase 30: Expanded 12-Card Myth Catalog, Bottleneck Predictions & Actionable Pivot Schema** — Expand `src/content/myths.ts` to 12 spectrum-balanced cards (`|left - right| <= 1`), add 2-option prediction prompts and tempting `mirageLabel` copy, and define typed `realLeverActions` pivot targets (`DECK-01`, `DECK-02`, `PIVOT-01`). (completed 2026-10-14)
-- [x] **Phase 31: Interactive Reality-Check Modal & 1-Click Tactical Pivots** — Upgrade `MythModal.svelte` with optional 1-click bottleneck prediction, tactile `MYTH BUSTED` stamp-slam animation, zero-friction skip/dismiss, and clickable `realLeverActions` buttons that stage levers and jump to target screens (`MYTH-03`, `MYTH-04`, `PIVOT-02`). (completed 2026-10-14)
-- [x] **Phase 32: Tempting "Mirage Levers" Across Screens & Contextual Blame Triggers** — Place viewport-safe populist "Mirage Lever" buttons across `Economy`, `Budget`, `Congress`, `Powers`, `Trade`, and `Voters` screens, and surface contextual "Public Blame / Myth Check" suggestions in `OvalOffice` briefings (`MYTH-01`, `MYTH-02`). (completed 2026-10-14)
-- [x] **Phase 33: "Debunk vs. Spin" Gameplay Mechanics & EndScreen Civic Dossier** — Add pure-engine `spinMyth` support (+Approval rally, −Social Trust, +Evil Heat) with registered coefficients and causal traces, wire the `"Spin This Myth"` button in `MythModal.svelte`, and add a Civic Mastery Dossier to `EndScreen.svelte` (`SPIN-01`, `SPIN-02`). (completed 2026-10-14)
+- [ ] **Phase 34: Progressive Disclosure Architecture, Vocabulary Toggle & Trade-Off Components** — Add persistent `vocabMode: 'plain' | 'wonk'` in `Session`, `NewGame.svelte`, and `StatusBar.svelte`, create the typed Civics Glossary & Progressive Disclosure catalog (`src/content/glossary.ts`), and build the reusable `<TradeoffPill>` / `<WhyClickCard>` component (`VOCAB-01`, `VOCAB-02`, `VOCAB-03`).
+- [ ] **Phase 35: De-Jargonizing Content Catalogs with Witty Plain Talk & `👍 / ⚠️` Trade-Offs** — Enrich Executive Orders, Sanctions, Tariffs, Trade Pacts, Social Policies, Reforms, Congress Deals, Crises, and Trace copy with dual-layer Plain/Wonk strings, friendly emojis, institutional humor, and explicit `👍 Upside` / `⚠️ The Catch` trade-off pairs (`COPY-01`, `COPY-02`, `COPY-03`).
+- [ ] **Phase 36: Surfacing Decision Trade-Offs & Visual Meters Across Act Screens** — Upgrade `Budget.svelte`, `Powers.svelte`, `Trade.svelte`, `Congress.svelte`, and Reform Modals (`FilibusterModal`, `JudicialReformModal`, `AmendmentModal`) to surface right-column `"Why click this?"` advisor cards, compact `👍 / ⚠️` badges, and friendly visual meters while keeping zero outer viewport scroll (`UI-CLARITY-01`, `UI-CLARITY-02`, `UI-CLARITY-03`).
+- [ ] **Phase 37: Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens** — Upgrade `Economy.svelte`, `TurnReport.svelte`, `OvalOffice.svelte`, `Voters.svelte`, and `CrisisModal.svelte` with Plain-Talk indicator headers, emoji health badges, `"What this means for regular people"` summaries, and scannable crisis option trade-offs (`SEE-01`, `SEE-02`).
+- [ ] **Phase 38: Presidential Trade-Off Balance Audit, Readability Gate & Multi-Viewport Verification** — Audit and tune policy lever mechanics so every presidential action presents a genuine, balanced strategic trade-off aligned with its UI badges, and verify Flesch-Kincaid grade ≤ 9.0, 100-seed Monte Carlo balance, and zero-scroll UI across `1376×768` and `1280×720` (`BAL-01`, `BAL-02`).
+
+#### Phase 34: Progressive Disclosure Architecture, Vocabulary Toggle & Trade-Off Components
+- **Goal**: Build the progressive-disclosure foundation, a 1-click `"Plain Talk / Policy Wonk"` vocabulary toggle, a typed Civics Glossary catalog, and reusable trade-off badge/card UI primitives.
+- **Requirements**: `VOCAB-01`, `VOCAB-02`, `VOCAB-03`
+- **Success Criteria**:
+  1. Players can toggle between `"Plain Talk"` (default) and `"Policy Wonk"` vocabulary modes on `NewGame.svelte` and in `StatusBar.svelte`, persisted in `Session` and `localStorage` without affecting engine determinism or save compatibility.
+  2. `src/content/glossary.ts` provides a typed progressive-disclosure dictionary mapping simulationist terms (`Cloture`, `Reconciliation`, `Section 301/232`, `IEEPA / OFAC`, `Major Questions Doctrine`, `Output Gap`, `CPI Pass-Through`, `Taylor Rule`, `Gini`, `Tipping-Point State`) to Plain-Talk labels, friendly emojis, witty 1-sentence explanations, and `"📜 Real Civics Term"` tooltips.
+  3. `src/ui/TradeoffPill.svelte` renders compact, keyboard-accessible `👍 Upside` / `⚠️ The Catch` badges, emoji/SVG impact meters, witty advisor `"Why click this?"` notes, and expandable `"📜 Official Law / Real Term"` details within existing card height budgets.
+
+#### Phase 35: De-Jargonizing Content Catalogs with Witty Plain Talk & `👍 / ⚠️` Trade-Offs
+- **Goal**: Overhaul every simulationist content catalog so every lever, order, sanction, tariff, deal, and crisis option has dual-layer (`plain` + `wonk`) copy, friendly emoji signposts, a clear `"Why click this?"` pitch, an explicit `👍 Upside`, and an honest `⚠️ The Catch`.
+- **Requirements**: `COPY-01`, `COPY-02`, `COPY-03`
+- **Success Criteria**:
+  1. `ORDERS_CATALOG` (`src/content/orders.ts`), `SANCTIONS_CATALOG` (`src/engine/foreign.ts`), and `SECTOR_TARIFFS_CATALOG` / `TRADE_AGREEMENTS_CATALOG` (`src/data/trade.ts`) include emoji icons, Plain-Talk titles/summaries, `upside` / `catchText` pairs, and witty advisor notes.
+  2. `SOCIAL_CATALOG` (`src/content/social.ts`), `REFORMS_CATALOG` (`src/engine/reforms.ts`), `FILIBUSTER_RULES_CATALOG` / `deals` (`src/engine/congress.ts`), and `taxLevers` / `spendLevers` (`src/engine/budget.ts`) include relatable kitchen-table descriptions, emoji cues, and clear short-term vs. long-term trade-offs.
+  3. Domestic and geopolitical crisis options (`src/engine/events.ts`, `src/engine/geopolitics.ts`) and causal trace copy (`src/content/text/why.ts`) include scannable `👍 Helps:` / `⚠️ Costs:` previews and conversational advisor translations passing Flesch-Kincaid reading grade ≤ 9.0.
+
+#### Phase 36: Surfacing Decision Trade-Offs & Visual Meters Across Act Screens
+- **Goal**: Surface `"Why click this?"` advisor notes, `👍 Upside / ⚠️ The Catch` badges, emoji cues, and friendly visual meters across `Budget`, `Powers`, `Trade`, `Congress`, and Reform Modals without breaking the zero-scroll `1376×768` / `1280×720` layout budget.
+- **Requirements**: `UI-CLARITY-01`, `UI-CLARITY-02`, `UI-CLARITY-03`
+- **Success Criteria**:
+  1. Hovering, focusing, or moving any tax/spending slider or package on `Budget.svelte` updates the right-hand `"What it means"` column with a Plain-Talk `"Why move this slider?"` card (`👍 Upside`, `⚠️ The Catch`, emoji cue, and visual wallet/economy meter).
+  2. `Powers.svelte` and `Trade.svelte` replace uppercase statutory tags and raw macro jargon in Plain Talk mode with friendly headers, emoji badges, compact `👍 / ⚠️` pills, and a clear `"Why sign this? / What's the catch?"` right-column decision card.
+  3. `Congress.svelte`, `FilibusterModal.svelte`, `JudicialReformModal.svelte`, and `AmendmentModal.svelte` explain *why* a player would spend Clout on deals, Senate rules, and court/constitutional reforms using plain, witty copy and visual trade-off meters.
+
+#### Phase 37: Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens
+- **Goal**: Make the hub, diagnostic, and crisis screens (`OvalOffice`, `Economy`, `Voters`, `TurnReport`, `CrisisModal`) effortless to understand for players without a civics background.
+- **Requirements**: `SEE-01`, `SEE-02`
+- **Success Criteria**:
+  1. `Economy.svelte` and `TurnReport.svelte` display Plain-Talk indicator headers and emoji health badges in Plain Talk mode (with Wonk terms in progressive-disclosure tooltips) plus a one-line `"What this means for regular people"` summary.
+  2. `OvalOffice.svelte`, `Voters.svelte`, and `CrisisModal.svelte` clearly present `👍 Upside` vs. `⚠️ Risk` on Chief of Staff plays, Electoral College tipping-point/swing badges, and crisis response buttons with friendly icons/emojis and witty advisor context.
+
+#### Phase 38: Presidential Trade-Off Balance Audit, Readability Gate & Multi-Viewport Verification
+- **Goal**: Audit and tune policy lever mechanics so every presidential action has a genuine, balanced strategic trade-off aligned with its UI badges, and verify all readability, balance, determinism, and multi-viewport zero-scroll gates.
+- **Requirements**: `BAL-01`, `BAL-02`
+- **Success Criteria**:
+  1. Every Budget slider, Executive Order, Sanction, Sector Tariff, Social Policy, and Reform has a verified non-trivial upside and counterbalancing trade-off in the engine that matches its surfaced `👍 / ⚠️` UI badges, and the 100-seed Monte Carlo balance harness passes (`sensible - nothing` in `[2, 10]`, party neutrality `<= 5 pp`).
+  2. Automated gates pass for Flesch-Kincaid reading grade ≤ 9.0 across all Plain-Talk copy, zero outer viewport scrolling (`scrollHeight <= clientHeight`) across all screens in both `Plain Talk` and `Policy Wonk` modes at `1376×768` and `1280×720`, 0 axe violations, and 8/8 cross-browser determinism hashes.
+
+---
 
 <details>
 <summary>✅ v0.8 Interactive Myth-Busting, Mirage Levers & Intrinsic Civic Pedagogy (Phases 30-33) — SHIPPED 2026-10-14</summary>
@@ -27,39 +69,8 @@
 - [x] Phase 32: Tempting "Mirage Levers" Across Screens & Contextual Blame Triggers (1/1 plans) — completed 2026-10-14
 - [x] Phase 33: "Debunk vs. Spin" Gameplay Mechanics & EndScreen Civic Dossier (1/1 plans) — completed 2026-10-14
 
-#### Phase 30: Expanded 12-Card Myth Catalog, Bottleneck Predictions & Actionable Pivot Schema
-- **Goal**: Expand the civics myth deck to cover every core policy screen with 12 spectrum-balanced cards, active prediction prompts, and actionable tactical pivot descriptors.
-- **Requirements**: `DECK-01`, `DECK-02`, `PIVOT-01`
-- **Success Criteria**:
-  1. `MYTHS_CATALOG` in `src/content/myths.ts` contains 12 sourced cards with `|count(left) - count(right)| <= 1` (`4 left`, `4 right`, `4 both`), covering `veto_line_item`, `popular_vote_mandate`, `immigration_crime_budget`, and `scotus_instant_reversal`.
-  2. Every `MythCard` includes a `predictionPrompt` (question, 2 options, `correctIndex`, refutation feedback), a `mirageLabel`, and typed `realLeverActions` pointing to valid `ScreenId`s and `Session` draft actions.
-  3. All new myth strings pass the automated Flesch-Kincaid reading grade ≤ 9.0, ≤ 20 words/sentence, and party-blind/banned-politician content gates.
-
-#### Phase 31: Interactive Reality-Check Modal & 1-Click Tactical Pivots
-- **Goal**: Turn `MythModal.svelte` from a static reading popup into an interactive Reality-Check Dossier with optional prediction-error challenges, tactile stamp animations, and 1-click pivots to real levers.
-- **Requirements**: `MYTH-03`, `MYTH-04`, `PIVOT-02`
-- **Success Criteria**:
-  1. Opening a myth card presents a 1-click "Call the Bluff / Spot the Bottleneck" prediction challenge that reveals refutation feedback and triggers a tactile `MYTH BUSTED` stamp-slam animation (disabled when `calmMode` or `prefers-reduced-motion` is active).
-  2. Players can click `"Skip to Reality"` or `"Got It"` at any time without being forced to answer the quiz.
-  3. Clicking any `realLeverActions` button inside `MythModal.svelte` marks the myth examined, stages/opens the linked lever in `Session`, closes the modal, and navigates directly to the target screen.
-
-#### Phase 32: Tempting "Mirage Levers" Across Screens & Contextual Blame Triggers
-- **Goal**: Surface myths intrinsically at the moment of player intent via tempting "Mirage Lever" buttons on policy screens and dynamic voter-blame briefing cards in the Oval Office.
-- **Requirements**: `MYTH-01`, `MYTH-02`
-- **Success Criteria**:
-  1. `Economy.svelte`, `Budget.svelte`, `Congress.svelte`, `Powers.svelte`, `Trade.svelte`, and `Voters.svelte` each display a tempting "Mirage Lever" control (plus wired `onOpenMyth` on `Congress.svelte`) that opens the corresponding `MythModal` when clicked, with zero outer viewport scrolling at `1376×768` and `1280×720`.
-  2. `generateBriefing` in `src/content/briefing.ts` surfaces a contextual myth-check suggestion on `OvalOffice.svelte` when inflation, unemployment, or deficit indicators spike and the corresponding myth has not yet been examined.
-
-#### Phase 33: "Debunk vs. Spin" Gameplay Mechanics & EndScreen Civic Dossier
-- **Goal**: Give myth cards strategic teeth by letting players choose between Debunking a myth (+5 Clout) or Spinning it on TV (+Approval rally, −Social Trust, +Heat in Evil Mode), tracked through the EndScreen Civic Mastery Dossier.
-- **Requirements**: `SPIN-01`, `SPIN-02`
-- **Success Criteria**:
-  1. `resolvePowerDecisions` in `src/engine/powers.ts` resolves `powers.spinMyth` using registered coefficients (`C.mythSpinApprovalBoost`, `C.mythSpinTrustPenalty`, `C.mythSpinHeatDelta`), emits `'event:myth_spin'` ledger modifiers with `why.ts` copy, validates in `parseSave`, and preserves 8/8 golden determinism hashes.
-  2. First-view `MythModal.svelte` offers both `"Debunk Myth (+5 Clout)"` and `"Spin This Myth (+2% Approval, −Trust)"` actions, and `EndScreen.svelte` displays the player's Myths Busted vs. Myths Spun record.
-
+Full phase execution history and plans archived to [.planning/milestones/v0.8-ROADMAP.md](milestones/v0.8-ROADMAP.md).
 </details>
-
----
 
 <details>
 <summary>✅ v0.7 Dramatic Visuals, Satirical Wit, Progressive Onboarding, Model Inspector & Free AI Director (Phases 25-29) — SHIPPED 2026-10-14</summary>
