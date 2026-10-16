@@ -1,12 +1,25 @@
 <script lang="ts">
   import type { Session } from '../app/session.svelte';
   import { extractTurnAttributions, extractUnforeseenRipples } from '../app/attribution';
-  import { formatLuckText } from '../content/text/why';
+  import { formatLuckText, whyTextForMode } from '../content/text/why';
   import { termLabel } from '../engine/calendar';
   import { getBadge } from '../content/badges';
   import Rosette from './art/Rosette.svelte';
 
   let { session, onClose }: { session: Session; onClose: () => void } = $props();
+
+  const IND_EMOJI: Record<string, string> = {
+    income: '💵',
+    empPop: '👷',
+    inflation: '🛒',
+    debtPct: '💳',
+    lifeExp: '🏥',
+    gini: '⚖️',
+    security: '🛡️',
+    trust: '🤝',
+    approval: '🗳️',
+    clout: '🏛️',
+  };
 
   const attributions = $derived(extractTurnAttributions(session.current, session.previous));
   const ripples = $derived(extractUnforeseenRipples(session.current, session.previous));
@@ -36,7 +49,7 @@
       <div class="rows" role="table" aria-label="Quarterly Indicator Results">
         {#each [...attributions.indicators, attributions.approval, attributions.clout] as item}
           <div class="row" role="row">
-            <span class="name" role="cell">{item.name}</span>
+            <span class="name" role="cell"><span aria-hidden="true">{IND_EMOJI[item.id] ?? '📊'}</span> {item.name}</span>
             <span class="val num" role="cell">{item.formattedValue}</span>
             <span
               class="badge {item.direction}"
@@ -59,7 +72,11 @@
               {/if}
               <span>{item.direction}</span>
             </span>
-            <span class="cause" role="cell">{item.topCauseText}</span>
+            <span class="cause" role="cell">
+              {session.vocabMode === 'wonk' && item.topCauseId !== 'none' && item.topCauseId !== 'mixed' && item.id !== 'security'
+                ? whyTextForMode(item.topCauseId, 'wonk')
+                : item.topCauseText}
+            </span>
           </div>
         {/each}
       </div>
@@ -129,6 +146,9 @@
           <span class="sep">·</span>
           <span>10 yrs: <b>{laterDiff >= 0 ? '+' : '−'}{Math.abs(laterDiff).toFixed(1)}</b></span>
         </div>
+        <p class="kitchen-takeaway" data-testid="report-kitchen-table-summary">
+          🏠 {scoreDiff >= 0 ? 'Regular families are better off than on autopilot.' : 'Regular families are feeling more strain than on autopilot.'}
+        </p>
       </div>
 
       <div class="action-box">
@@ -349,6 +369,11 @@
   }
   .sep {
     opacity: 0.5;
+  }
+  .kitchen-takeaway {
+    margin: 5px 0 0;
+    font: 500 11.5px/1.25 var(--font-body);
+    color: var(--ink);
   }
 
   .action-box {

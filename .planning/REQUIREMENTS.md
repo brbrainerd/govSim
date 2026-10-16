@@ -25,8 +25,8 @@
 
 ### Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens (Phase 37)
 
-- [ ] **SEE-01**: Upgrade `src/screens/Economy.svelte` and `src/ui/TurnReport.svelte` so technical macro labels (`Output Gap`, `Emp/Pop Ratio`, `Taylor Rule`, `Gini`) use Plain-Talk headers and emoji health badges in Plain Talk mode (with Wonk terms in progressive-disclosure tooltips), plus a one-line `"What this means for regular people"` summary.
-- [ ] **SEE-02**: Upgrade `src/screens/OvalOffice.svelte`, `src/screens/Voters.svelte`, and `src/ui/CrisisModal.svelte` so Chief of Staff plays, Electoral College tipping-point/swing badges, and crisis response buttons clearly state `👍 Upside` vs. `⚠️ Risk` with friendly icons/emojis and witty advisor context.
+- [x] **SEE-01**: Upgrade `src/screens/Economy.svelte` and `src/ui/TurnReport.svelte` so technical macro labels (`Output Gap`, `Emp/Pop Ratio`, `Taylor Rule`, `Gini`) use Plain-Talk headers and emoji health badges in Plain Talk mode (with Wonk terms in progressive-disclosure tooltips), plus a one-line `"What this means for regular people"` summary.
+- [x] **SEE-02**: Upgrade `src/screens/OvalOffice.svelte`, `src/screens/Voters.svelte`, and `src/ui/CrisisModal.svelte` so Chief of Staff plays, Electoral College tipping-point/swing badges, and crisis response buttons clearly state `👍 Upside` vs. `⚠️ Risk` with friendly icons/emojis and witty advisor context.
 
 ### Presidential Trade-Off Balance Audit, Readability Gate & Multi-Viewport Verification (Phase 38)
 
@@ -56,8 +56,8 @@
 | UI-CLARITY-01 | Phase 36 | Complete |
 | UI-CLARITY-02 | Phase 36 | Complete |
 | UI-CLARITY-03 | Phase 36 | Complete |
-| SEE-01 | Phase 37 | Pending |
-| SEE-02 | Phase 37 | Pending |
+| SEE-01 | Phase 37 | Complete |
+| SEE-02 | Phase 37 | Complete |
 | BAL-01 | Phase 38 | Pending |
 | BAL-02 | Phase 38 | Pending |
 

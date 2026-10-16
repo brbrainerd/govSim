@@ -1,8 +1,10 @@
 <script lang="ts">
   import type { ActiveCrisis } from '../engine/director';
   import type { Session } from '../app/session.svelte';
+  import { describeCrisisOptionTradeoff } from '../content/tradeoffs';
   import Overlay from './Overlay.svelte';
   import ReporterScene from './art/ReporterScene.svelte';
+  import TradeoffPill from './TradeoffPill.svelte';
 
   let {
     crisis,
@@ -100,6 +102,7 @@
           {#each crisis.options as opt (opt.id)}
             {@const isAffordable = opt.cloutCost <= session.current.clout}
             {@const isSelected = selectedOptionId === opt.id}
+            {@const tradeoff = describeCrisisOptionTradeoff(opt.effects, opt.cloutCost, Boolean(crisis.isGeopolitical))}
             <div
               class="option-card"
               class:selected={isSelected}
@@ -115,12 +118,18 @@
                 onclick={() => handleSelect(opt.id, opt.cloutCost)}
               >
                 <div class="card-header">
-                  <span class="card-title">{opt.label}</span>
+                  <span class="card-title"><span aria-hidden="true">{tradeoff.emoji}</span> {opt.label}</span>
                   <span class="clout-pill" class:free={opt.cloutCost === 0}>
                     {opt.cloutCost > 0 ? `${opt.cloutCost} clout` : 'free'}
                   </span>
                 </div>
                 <p class="card-desc">{opt.description}</p>
+                <TradeoffPill
+                  variant="compact"
+                  upside={tradeoff.upside}
+                  catchText={tradeoff.catchText}
+                  vocabMode={session.vocabMode}
+                />
                 {#if !isAffordable}
                   <span class="unaffordable-hint">Not enough political capital ({session.current.clout} clout available)</span>
                 {/if}

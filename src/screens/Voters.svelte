@@ -6,6 +6,7 @@
   import { calculateElectoralCollege, calculateStateFamilyRelief, type StateVoterState } from '../engine/voters';
   import USMap from '../ui/art/USMap.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
+  import { termTooltipForMode } from '../content/glossary';
 
   interface Props {
     session: Session;
@@ -125,7 +126,7 @@
             aria-checked={viewMode === 'map'}
             onclick={() => (viewMode = 'map')}
           >
-            Map View
+            🗺️ Map View
           </button>
           <button
             type="button"
@@ -135,7 +136,7 @@
             aria-checked={viewMode === 'table'}
             onclick={() => (viewMode = 'table')}
           >
-            Table View
+            📋 Table View
           </button>
           <button
             type="button"
@@ -145,16 +146,22 @@
             aria-checked={viewMode === 'coalitions'}
             onclick={() => (viewMode = 'coalitions')}
           >
-            Coalitions
+            👥 Coalitions
           </button>
         </div>
 
         <div class="meta-status">
-          <span class="tipping-point-badge">
+          <span
+            class="tipping-point-badge"
+            title={termTooltipForMode('tipping_point', session.vocabMode)}
+          >
             ★ Tipping Point: <b>{summary.tippingPointCode}</b>
+            {#if session.vocabMode === 'plain'}
+              <span>(270th deciding vote)</span>
+            {/if}
           </span>
-          <span class="swing-count">
-            {summary.swingStates.length} Swing States
+          <span class="swing-count" title="States where either party is within 5 points of winning">
+            ⚖️ {summary.swingStates.length} Swing States
           </span>
         </div>
       </div>
@@ -403,6 +410,9 @@
             <p class="rpp-note">
               {#if stateExposure?.rpp}
                 Price parity index: <b>{stateExposure.rpp.toFixed(1)}</b>
+                {#if session.vocabMode === 'plain'}
+                  <span>(100 = average cost of living)</span>
+                {/if}
                 {#if stateExposure.rpp < 95}
                   (lower living costs stretch relief dollars)
                 {:else if stateExposure.rpp > 105}

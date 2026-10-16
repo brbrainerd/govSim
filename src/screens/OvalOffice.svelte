@@ -15,6 +15,7 @@
   import { loadAiConfig } from '../app/ai-providers';
 
   import type { ExplainerId } from '../content/explainers';
+  import { BUDGET_PACKAGE_TRADEOFFS } from '../content/tradeoffs';
 
   let {
     session,
@@ -285,13 +286,21 @@
     {/if}
 
     {#each briefingInfo.suggestions as s (s.title)}
-      <div class="card option">
+      {@const packMeta = s.play?.pack ? BUDGET_PACKAGE_TRADEOFFS[s.play.pack] : null}
+      <div
+        class="card option"
+        title={packMeta ? `${packMeta.whyClick} (👍 ${packMeta.upside} · ⚠️ ${packMeta.catchText})` : s.play?.autoWhip ? '👍 Locks in the cheapest deals to pass your bill · ⚠️ Costs Clout from your bank' : undefined}
+      >
         <div class="option-text">
           <b>{s.title}</b>
-          {#if s.play?.pack}
-            <span class="play-badge" data-testid="advisor-play-badge">Play: {s.play.pack}</span>
+          {#if s.play?.pack && packMeta}
+            <span class="play-badge" data-testid="advisor-play-badge">
+              {packMeta.emoji} Play: {s.play.pack} · 👍 {packMeta.upside}
+            </span>
           {:else if s.play?.autoWhip}
-            <span class="play-badge" data-testid="advisor-play-badge">Play: Auto-whip</span>
+            <span class="play-badge" data-testid="advisor-play-badge">
+              🤝 Play: Auto-whip · 👍 Enough votes to pass
+            </span>
           {/if}
         </div>
         <button

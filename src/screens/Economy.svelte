@@ -2,7 +2,7 @@
   import type { Session } from '../app/session.svelte';
   import type { ScreenId } from '../app/screens';
   import { extractTurnAttributions, type Direction } from '../app/attribution';
-  import { whyText } from '../content/text/why';
+  import { whyTextForMode } from '../content/text/why';
   import MiniChart from '../ui/art/MiniChart.svelte';
   import Overlay from '../ui/Overlay.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
@@ -30,6 +30,17 @@
   } = $props();
 
   const totalParams = getInspectorSummary().totalParameters;
+
+  const IND_EMOJI: Record<string, string> = {
+    income: '💵',
+    empPop: '👷',
+    inflation: '🛒',
+    debtPct: '💳',
+    lifeExp: '🏥',
+    gini: '⚖️',
+    security: '🛡️',
+    trust: '🤝',
+  };
 
   let showScoresModal = $state(false);
   let viewMode = $state<'macro' | 'household'>('macro');
@@ -66,6 +77,16 @@
       (prevEcon.debt / prevEcon.gdp) * 100,
     ),
   );
+
+  const kitchenTableSummary = $derived.by(() => {
+    if (currEcon.inflation > 3.2) {
+      return '🏠 For regular people: Store prices are rising faster than paychecks, squeezing monthly grocery budgets.';
+    }
+    if (currEcon.growth < 1.2) {
+      return '🏠 For regular people: Hiring is slowing down, making families cautious about big purchases.';
+    }
+    return '🏠 For regular people: Paychecks are keeping up with store prices and jobs are steady.';
+  });
 
   // Fed explainer
   const fedExplainer = $derived.by(() => {
@@ -110,7 +131,7 @@
     const movers: string[] = [];
 
     for (const term of meaningful) {
-      const text = whyText(term.source);
+      const text = whyTextForMode(term.source, session.vocabMode);
       if (!seen.has(text)) {
         seen.add(text);
         movers.push(text);
@@ -152,7 +173,7 @@
           onclick={() => (viewMode = 'macro')}
           data-testid="tab-macro"
         >
-          Macro Indicators
+          {session.vocabMode === 'wonk' ? 'Macro Indicators (GDP / CPI)' : '📊 Big Picture Economy'}
         </button>
         <button
           type="button"
@@ -163,7 +184,7 @@
           onclick={() => (viewMode = 'household')}
           data-testid="tab-household"
         >
-          Your Household
+          🏠 Your Household
         </button>
       </div>
 
@@ -182,7 +203,7 @@
     {#if viewMode === 'macro'}
       <div class="chart-grid">
         <MiniChart
-          title="Growth"
+          title={session.vocabMode === 'wonk' ? '📈 Growth (Real GDP)' : '📈 Growth'}
           currentValue={`${currEcon.growth.toFixed(1)}% ${growthDir.word}`}
           valueColor={growthDir.dir === 'up' ? 'var(--sage-dark)' : growthDir.dir === 'down' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
           lineColor="var(--sky)"
@@ -193,7 +214,7 @@
         />
 
         <MiniChart
-          title="Jobs"
+          title={session.vocabMode === 'wonk' ? '👷 Jobs (Emp-Pop)' : '👷 Jobs'}
           currentValue={`${currEcon.empPop.toFixed(1)}% ${empPopDir.word}`}
           valueColor={empPopDir.dir === 'up' ? 'var(--sage-dark)' : empPopDir.dir === 'down' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
           lineColor="var(--sage)"
@@ -204,7 +225,7 @@
         />
 
         <MiniChart
-          title="Prices"
+          title={session.vocabMode === 'wonk' ? '🛒 Prices (CPI Inflation)' : '🛒 Prices'}
           currentValue={`${currEcon.inflation.toFixed(1)}% ${inflationDir.word}`}
           valueColor={inflationDir.dir === 'down' ? 'var(--sage-dark)' : inflationDir.dir === 'up' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
           lineColor="var(--alert)"
@@ -215,7 +236,7 @@
         />
 
         <MiniChart
-          title="Debt"
+          title={session.vocabMode === 'wonk' ? '💳 Debt (Debt-to-GDP)' : '💳 Debt'}
           currentValue={`${((currEcon.debt / currEcon.gdp) * 100).toFixed(0)}% ${debtPctDir.word}`}
           valueColor={debtPctDir.dir === 'down' ? 'var(--sage-dark)' : debtPctDir.dir === 'up' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
           lineColor="var(--gold-dark)"
@@ -241,6 +262,7 @@
   {#snippet next()}
     <div class="card panel why-panel">
       <h3 class="panel-title">Why it's happening</h3>
+      <p class="kitchen-summary" data-testid="economy-kitchen-table-summary">{kitchenTableSummary}</p>
       <ol class="mover-list">
         {#each topMovers as mover, idx}
           <li>
@@ -253,7 +275,7 @@
 
     <div class="card panel fed-panel">
       <div class="fed-header">
-        <h3 class="panel-title">Federal Reserve</h3>
+        <h3 class="panel-title">🏦 Federal Reserve</h3>
         <span class="fed-rate">{fedExplainer.rate}%</span>
       </div>
       <p class="fed-detail">{fedExplainer.rationale}</p>
@@ -296,12 +318,16 @@
             <tbody>
               {#each allAttributions.indicators as item (item.id)}
                 <tr>
-                  <td class="ind-name"><b>{item.name}</b></td>
+                  <td class="ind-name"><b><span aria-hidden="true">{IND_EMOJI[item.id] ?? '📊'}</span> {item.name}</b></td>
                   <td class="ind-val">{item.formattedValue}</td>
                   <td class="ind-delta" class:good={item.isPositive} class:bad={!item.isPositive && item.direction !== 'flat'}>
                     {item.formattedDelta} ({item.direction})
                   </td>
-                  <td class="ind-cause">{item.topCauseText}</td>
+                  <td class="ind-cause">
+                    {session.vocabMode === 'wonk' && item.topCauseId !== 'none' && item.topCauseId !== 'mixed' && item.id !== 'security'
+                      ? whyTextForMode(item.topCauseId, 'wonk')
+                      : item.topCauseText}
+                  </td>
                 </tr>
               {/each}
             </tbody>
@@ -394,6 +420,15 @@
   .panel-title {
     margin: 0;
     font: 700 clamp(16px, 1.3vw, 20px) var(--font-display);
+    color: var(--ink);
+  }
+  .kitchen-summary {
+    margin: 0;
+    padding: 4px 8px;
+    background: var(--paper-dark);
+    border-left: 3px solid var(--gold-dark);
+    border-radius: 4px;
+    font: 500 12px/1.3 var(--font-body);
     color: var(--ink);
   }
 
