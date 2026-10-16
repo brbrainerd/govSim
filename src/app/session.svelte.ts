@@ -46,6 +46,9 @@ import {
   type ScenarioDef,
   type ScenarioId,
 } from '../content/scenarios';
+import { type VocabMode } from '../content/glossary';
+
+export type { VocabMode };
 
 export interface StagedActionItem {
   readonly id: string;
@@ -61,6 +64,7 @@ export interface GameOptions {
   scenario?: ScenarioId;
   unlockAll?: boolean;
   livingWorld?: boolean;
+  vocabMode?: VocabMode;
 }
 
 interface Draft {
@@ -147,9 +151,18 @@ export class Session {
   options = $state<GameOptions>({ party: 'D' });
   unlockAll = $state<boolean>(false);
   calmMode = $state<boolean>(
-    typeof localStorage !== 'undefined' && localStorage.getItem('govsim_calm_mode') === 'true'
+    typeof localStorage !== 'undefined' &&
+      typeof localStorage?.getItem === 'function' &&
+      localStorage.getItem('govsim_calm_mode') === 'true'
       ? true
       : typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true,
+  );
+  vocabMode = $state<VocabMode>(
+    typeof localStorage !== 'undefined' &&
+      typeof localStorage?.getItem === 'function' &&
+      localStorage.getItem('govsim_vocab_mode') === 'wonk'
+      ? 'wonk'
+      : 'plain',
   );
   aiTurnPayload = $state<AiTurnPayload | null>(null);
   aiLoading = $state<boolean>(false);
@@ -494,7 +507,13 @@ export class Session {
   }
 
   constructor(seed: number, start: Start, options: GameOptions) {
-    this.options = options;
+    if (options.vocabMode === 'plain' || options.vocabMode === 'wonk') {
+      this.vocabMode = options.vocabMode;
+      if (typeof localStorage !== 'undefined' && typeof localStorage?.setItem === 'function') {
+        localStorage.setItem('govsim_vocab_mode', this.vocabMode);
+      }
+    }
+    this.options = { ...options, vocabMode: this.vocabMode };
     this.unlockAll = Boolean(options.unlockAll);
     const effectiveStart = applyScenarioStart(start, options.scenario);
     const initial = newGame(seed, effectiveStart);
@@ -505,6 +524,7 @@ export class Session {
     this.unlockedBadges = evaluateBadges(this.current, this.history);
     if (typeof document !== 'undefined') {
       document.documentElement.dataset.calm = this.calmMode ? 'true' : 'false';
+      document.documentElement.dataset.vocab = this.vocabMode;
     }
     storeAutosave(this);
     if (loadAiConfig().provider !== 'off') {
@@ -764,12 +784,28 @@ export class Session {
 
   toggleCalmMode(): void {
     this.calmMode = !this.calmMode;
-    if (typeof localStorage !== 'undefined') {
+    if (typeof localStorage !== 'undefined' && typeof localStorage?.setItem === 'function') {
       localStorage.setItem('govsim_calm_mode', this.calmMode ? 'true' : 'false');
     }
     if (typeof document !== 'undefined') {
       document.documentElement.dataset.calm = this.calmMode ? 'true' : 'false';
     }
+  }
+
+  toggleVocabMode(): void {
+    this.setVocabMode(this.vocabMode === 'plain' ? 'wonk' : 'plain');
+  }
+
+  setVocabMode(mode: VocabMode): void {
+    this.vocabMode = mode;
+    this.options = { ...this.options, vocabMode: mode };
+    if (typeof localStorage !== 'undefined' && typeof localStorage?.setItem === 'function') {
+      localStorage.setItem('govsim_vocab_mode', mode);
+    }
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.vocab = mode;
+    }
+    storeAutosave(this);
   }
 
   unlockAllScreens(): void {

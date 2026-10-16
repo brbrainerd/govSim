@@ -30,7 +30,14 @@ function extractStrings(obj: unknown): string[] {
   if (Array.isArray(obj)) return obj.flatMap(extractStrings);
   if (obj && typeof obj === 'object') {
     return Object.entries(obj)
-      .filter(([k]) => k !== 'citation' && k !== 'legalBasis')
+      .filter(
+        ([k]) =>
+          k !== 'citation' &&
+          k !== 'legalBasis' &&
+          k !== 'statutoryBasis' &&
+          k !== 'wonkLabel' &&
+          k !== 'realTermNote',
+      )
       .flatMap(([, v]) => extractStrings(v));
   }
   return [];
@@ -62,6 +69,7 @@ describe('content and readability gates (OBS-05, GR-24, GR-25)', () => {
       await import('../content/explainers'),
       await import('../content/scenarios'),
       await import('../content/chyrons'),
+      await import('../content/glossary'),
       await import('../content/text/why'),
     ];
     const rawStrings = mods.flatMap(extractStrings);

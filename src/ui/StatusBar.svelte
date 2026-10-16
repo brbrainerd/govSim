@@ -2,7 +2,7 @@
   import { realQuarterLabel, termLabel } from '../engine/calendar';
   import { TOTAL_TURNS, type GameState, type ScoreBreakdown } from '../engine/game';
   import type { ScreenId } from '../app/screens';
-  import type { StagedActionItem } from '../app/session.svelte';
+  import type { StagedActionItem, VocabMode } from '../app/session.svelte';
   import CoinStack from './art/CoinStack.svelte';
   import Ribbon from './art/Ribbon.svelte';
 
@@ -14,6 +14,7 @@
     party,
     evilMode = false,
     calmMode = false,
+    vocabMode = 'plain',
     stagedActions = [],
     canFastForward = false,
     onNextTurn,
@@ -21,6 +22,7 @@
     onSelectScreen,
     onClearStaged,
     onToggleCalm,
+    onToggleVocab,
   }: {
     state: GameState;
     clout: number;
@@ -29,6 +31,7 @@
     party: string;
     evilMode?: boolean;
     calmMode?: boolean;
+    vocabMode?: VocabMode;
     stagedActions?: readonly StagedActionItem[];
     canFastForward?: boolean;
     onNextTurn: () => void;
@@ -36,6 +39,7 @@
     onSelectScreen?: (id: ScreenId) => void;
     onClearStaged?: () => void;
     onToggleCalm?: () => void;
+    onToggleVocab?: () => void;
   } = $props();
 
   let trayOpen = $state(false);
@@ -179,6 +183,19 @@
           {/if}
         </div>
         <div class="party-calm-wrap">
+          <button
+            type="button"
+            class="calm-pill vocab-pill"
+            class:active={vocabMode === 'wonk'}
+            data-testid="vocab-mode-toggle"
+            aria-pressed={vocabMode === 'wonk'}
+            onclick={onToggleVocab}
+            title={vocabMode === 'wonk'
+              ? 'Policy Wonk mode: showing statutory terms & citations. Click for Plain Talk.'
+              : 'Plain Talk mode: everyday civics language. Click for Policy Wonk mode.'}
+          >
+            {vocabMode === 'wonk' ? '📜 Policy Wonk' : '🗣️ Plain Talk'}
+          </button>
           <button
             type="button"
             class="calm-pill"

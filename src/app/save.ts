@@ -502,6 +502,9 @@ export function parseSave(json: string): SaveFile {
     ...(isValidScenarioId(parsed.options.scenario) ? { scenario: parsed.options.scenario } : {}),
     ...(typeof parsed.options.unlockAll === 'boolean' ? { unlockAll: parsed.options.unlockAll } : {}),
     ...(typeof parsed.options.livingWorld === 'boolean' ? { livingWorld: parsed.options.livingWorld } : {}),
+    ...(parsed.options.vocabMode === 'plain' || parsed.options.vocabMode === 'wonk'
+      ? { vocabMode: parsed.options.vocabMode }
+      : {}),
   };
 
   if (!Array.isArray(parsed.inputs)) {

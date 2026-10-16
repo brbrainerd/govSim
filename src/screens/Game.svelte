@@ -111,6 +111,7 @@
       party={PARTIES.find((p) => p.id === session.options.party)!.name}
       evilMode={session.isEvilMode}
       calmMode={session.calmMode}
+      vocabMode={session.vocabMode}
       stagedActions={session.stagedActionsSummary}
       canFastForward={session.canFastForward}
       onNextTurn={() => session.nextTurn()}
@@ -118,6 +119,7 @@
       onSelectScreen={go}
       onClearStaged={() => session.resetDraft()}
       onToggleCalm={() => session.toggleCalmMode()}
+      onToggleVocab={() => session.toggleVocabMode()}
     />
     <div class="zones">
       <Rail

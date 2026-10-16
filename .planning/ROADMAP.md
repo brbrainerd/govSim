@@ -15,13 +15,14 @@
 
 ### 🚧 v0.9 Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance (Phases 34-38)
 
-- [ ] **Phase 34: Progressive Disclosure Architecture, Vocabulary Toggle & Trade-Off Components** — Add persistent `vocabMode: 'plain' | 'wonk'` in `Session`, `NewGame.svelte`, and `StatusBar.svelte`, create the typed Civics Glossary & Progressive Disclosure catalog (`src/content/glossary.ts`), and build the reusable `<TradeoffPill>` / `<WhyClickCard>` component (`VOCAB-01`, `VOCAB-02`, `VOCAB-03`).
+- [x] **Phase 34: Progressive Disclosure Architecture, Vocabulary Toggle & Trade-Off Components** — Add persistent `vocabMode: 'plain' | 'wonk'` in `Session`, `NewGame.svelte`, and `StatusBar.svelte`, create the typed Civics Glossary & Progressive Disclosure catalog (`src/content/glossary.ts`), and build the reusable `<TradeoffPill>` / `<WhyClickCard>` component (`VOCAB-01`, `VOCAB-02`, `VOCAB-03`). (completed 2026-10-16)
 - [ ] **Phase 35: De-Jargonizing Content Catalogs with Witty Plain Talk & `👍 / ⚠️` Trade-Offs** — Enrich Executive Orders, Sanctions, Tariffs, Trade Pacts, Social Policies, Reforms, Congress Deals, Crises, and Trace copy with dual-layer Plain/Wonk strings, friendly emojis, institutional humor, and explicit `👍 Upside` / `⚠️ The Catch` trade-off pairs (`COPY-01`, `COPY-02`, `COPY-03`).
 - [ ] **Phase 36: Surfacing Decision Trade-Offs & Visual Meters Across Act Screens** — Upgrade `Budget.svelte`, `Powers.svelte`, `Trade.svelte`, `Congress.svelte`, and Reform Modals (`FilibusterModal`, `JudicialReformModal`, `AmendmentModal`) to surface right-column `"Why click this?"` advisor cards, compact `👍 / ⚠️` badges, and friendly visual meters while keeping zero outer viewport scroll (`UI-CLARITY-01`, `UI-CLARITY-02`, `UI-CLARITY-03`).
 - [ ] **Phase 37: Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens** — Upgrade `Economy.svelte`, `TurnReport.svelte`, `OvalOffice.svelte`, `Voters.svelte`, and `CrisisModal.svelte` with Plain-Talk indicator headers, emoji health badges, `"What this means for regular people"` summaries, and scannable crisis option trade-offs (`SEE-01`, `SEE-02`).
 - [ ] **Phase 38: Presidential Trade-Off Balance Audit, Readability Gate & Multi-Viewport Verification** — Audit and tune policy lever mechanics so every presidential action presents a genuine, balanced strategic trade-off aligned with its UI badges, and verify Flesch-Kincaid grade ≤ 9.0, 100-seed Monte Carlo balance, and zero-scroll UI across `1376×768` and `1280×720` (`BAL-01`, `BAL-02`).
 
 #### Phase 34: Progressive Disclosure Architecture, Vocabulary Toggle & Trade-Off Components
+
 - **Goal**: Build the progressive-disclosure foundation, a 1-click `"Plain Talk / Policy Wonk"` vocabulary toggle, a typed Civics Glossary catalog, and reusable trade-off badge/card UI primitives.
 - **Requirements**: `VOCAB-01`, `VOCAB-02`, `VOCAB-03`
 - **Success Criteria**:
@@ -30,6 +31,7 @@
   3. `src/ui/TradeoffPill.svelte` renders compact, keyboard-accessible `👍 Upside` / `⚠️ The Catch` badges, emoji/SVG impact meters, witty advisor `"Why click this?"` notes, and expandable `"📜 Official Law / Real Term"` details within existing card height budgets.
 
 #### Phase 35: De-Jargonizing Content Catalogs with Witty Plain Talk & `👍 / ⚠️` Trade-Offs
+
 - **Goal**: Overhaul every simulationist content catalog so every lever, order, sanction, tariff, deal, and crisis option has dual-layer (`plain` + `wonk`) copy, friendly emoji signposts, a clear `"Why click this?"` pitch, an explicit `👍 Upside`, and an honest `⚠️ The Catch`.
 - **Requirements**: `COPY-01`, `COPY-02`, `COPY-03`
 - **Success Criteria**:
@@ -38,6 +40,7 @@
   3. Domestic and geopolitical crisis options (`src/engine/events.ts`, `src/engine/geopolitics.ts`) and causal trace copy (`src/content/text/why.ts`) include scannable `👍 Helps:` / `⚠️ Costs:` previews and conversational advisor translations passing Flesch-Kincaid reading grade ≤ 9.0.
 
 #### Phase 36: Surfacing Decision Trade-Offs & Visual Meters Across Act Screens
+
 - **Goal**: Surface `"Why click this?"` advisor notes, `👍 Upside / ⚠️ The Catch` badges, emoji cues, and friendly visual meters across `Budget`, `Powers`, `Trade`, `Congress`, and Reform Modals without breaking the zero-scroll `1376×768` / `1280×720` layout budget.
 - **Requirements**: `UI-CLARITY-01`, `UI-CLARITY-02`, `UI-CLARITY-03`
 - **Success Criteria**:
@@ -46,6 +49,7 @@
   3. `Congress.svelte`, `FilibusterModal.svelte`, `JudicialReformModal.svelte`, and `AmendmentModal.svelte` explain *why* a player would spend Clout on deals, Senate rules, and court/constitutional reforms using plain, witty copy and visual trade-off meters.
 
 #### Phase 37: Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens
+
 - **Goal**: Make the hub, diagnostic, and crisis screens (`OvalOffice`, `Economy`, `Voters`, `TurnReport`, `CrisisModal`) effortless to understand for players without a civics background.
 - **Requirements**: `SEE-01`, `SEE-02`
 - **Success Criteria**:
@@ -53,6 +57,7 @@
   2. `OvalOffice.svelte`, `Voters.svelte`, and `CrisisModal.svelte` clearly present `👍 Upside` vs. `⚠️ Risk` on Chief of Staff plays, Electoral College tipping-point/swing badges, and crisis response buttons with friendly icons/emojis and witty advisor context.
 
 #### Phase 38: Presidential Trade-Off Balance Audit, Readability Gate & Multi-Viewport Verification
+
 - **Goal**: Audit and tune policy lever mechanics so every presidential action has a genuine, balanced strategic trade-off aligned with its UI badges, and verify all readability, balance, determinism, and multi-viewport zero-scroll gates.
 - **Requirements**: `BAL-01`, `BAL-02`
 - **Success Criteria**:

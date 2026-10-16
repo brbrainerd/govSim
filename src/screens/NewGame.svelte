@@ -25,6 +25,13 @@
   let scenario = $state<ScenarioId>('standard_2026');
   let unlockAll = $state(false);
   let livingWorld = $state(false);
+  let vocabMode = $state<'plain' | 'wonk'>(
+    typeof localStorage !== 'undefined' &&
+      typeof localStorage?.getItem === 'function' &&
+      localStorage.getItem('govsim_vocab_mode') === 'wonk'
+      ? 'wonk'
+      : 'plain',
+  );
   let dismissResume = $state(false);
   let fileInput = $state<HTMLInputElement>();
 
@@ -120,35 +127,51 @@
       </div>
 
       <div class="pacing-section">
-        <span class="label">Screen Progression</span>
-        <label class="card unlock-all-card" class:active-mode={unlockAll}>
-          <input
-            type="checkbox"
-            checked={unlockAll}
-            onchange={(e) => (unlockAll = e.currentTarget.checked)}
-            data-testid="unlock-all-toggle"
-          />
-          <div class="mode-info">
-            <b>Experienced Mode: Unlock all screens on Turn 1</b>
-            <span class="mode-sub">Skip Year-1 progressive screen unlocking (Your Powers, Trade &amp; Tariffs, and Voters).</span>
-          </div>
-        </label>
-      </div>
+        <span class="label">Term Options &amp; Civics Language</span>
+        <div class="pacing-grid">
+          <label class="card unlock-all-card" class:active-mode={unlockAll}>
+            <input
+              type="checkbox"
+              checked={unlockAll}
+              onchange={(e) => (unlockAll = e.currentTarget.checked)}
+              data-testid="unlock-all-toggle"
+            />
+            <div class="mode-info">
+              <b>Experienced Mode: Unlock all</b>
+              <span class="mode-sub">Unlock Your Powers, Trade &amp; Voters on Turn 1.</span>
+            </div>
+          </label>
 
-      <div class="pacing-section">
-        <span class="label">World Simulation</span>
-        <label class="card unlock-all-card" class:active-mode={livingWorld}>
-          <input
-            type="checkbox"
-            checked={livingWorld}
-            onchange={(e) => (livingWorld = e.currentTarget.checked)}
-            data-testid="living-world-toggle"
-          />
-          <div class="mode-info">
-            <b>Living World Mode (Non-Deterministic Shocks)</b>
-            <span class="mode-sub">Enable unpredictable quarterly economic shifts, supply chain volatility, and dynamic events.</span>
-          </div>
-        </label>
+          <label class="card unlock-all-card" class:active-mode={livingWorld}>
+            <input
+              type="checkbox"
+              checked={livingWorld}
+              onchange={(e) => (livingWorld = e.currentTarget.checked)}
+              data-testid="living-world-toggle"
+            />
+            <div class="mode-info">
+              <b>Living World Shocks</b>
+              <span class="mode-sub">Enable unpredictable quarterly market &amp; supply shifts.</span>
+            </div>
+          </label>
+
+          <label class="card unlock-all-card" class:active-mode={vocabMode === 'wonk'}>
+            <input
+              type="checkbox"
+              checked={vocabMode === 'wonk'}
+              onchange={(e) => (vocabMode = e.currentTarget.checked ? 'wonk' : 'plain')}
+              data-testid="vocab-mode-toggle-newgame"
+            />
+            <div class="mode-info">
+              <b>{vocabMode === 'wonk' ? '📜 Policy Wonk Mode' : '🗣️ Plain Talk (Default)'}</b>
+              <span class="mode-sub">
+                {vocabMode === 'wonk'
+                  ? 'Show statutory citations & formal macro terms immediately.'
+                  : 'Friendly everyday language with trade-offs upfront.'}
+              </span>
+            </div>
+          </label>
+        </div>
       </div>
 
       <div class="import-strip">
@@ -187,7 +210,7 @@
         class="stamp"
         class:evil-stamp={evilMode}
         disabled={party === null}
-        onclick={() => party && onStart({ party, evilMode, scenario, unlockAll, livingWorld })}
+        onclick={() => party && onStart({ party, evilMode, scenario, unlockAll, livingWorld, vocabMode })}
       >
         {evilMode ? 'Seize power' : 'Start the term'}
       </button>
@@ -288,7 +311,8 @@
 
   .mode-section { margin-top: clamp(8px, 1.2vh, 14px); max-width: 48rem; display: flex; flex-direction: column; gap: 6px; }
   .pacing-section { margin-top: clamp(8px, 1.2vh, 14px); max-width: 48rem; display: flex; flex-direction: column; gap: 6px; }
-  .unlock-all-card { display: flex; align-items: flex-start; gap: 10px; padding: clamp(8px, 1.1vh, 12px) clamp(10px, 1.2vw, 14px); cursor: pointer; }
+  .pacing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(8px, 1vw, 12px); }
+  .unlock-all-card { display: flex; align-items: flex-start; gap: 8px; padding: clamp(7px, 1vh, 10px) clamp(8px, 1vw, 12px); cursor: pointer; }
   .unlock-all-card input { width: 18px; height: 18px; accent-color: var(--ink); margin-top: 2px; flex-shrink: 0; }
   .unlock-all-card.active-mode { background: var(--gold); }
   .unlock-all-card.active-mode .mode-sub { color: var(--ink); }
