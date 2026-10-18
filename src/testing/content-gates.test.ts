@@ -32,9 +32,19 @@ function extractStrings(obj: unknown): string[] {
     return Object.entries(obj)
       .filter(
         ([k]) =>
+          k !== 'id' &&
+          k !== 'icon' &&
+          k !== 'emoji' &&
+          k !== 'startingPerkId' &&
+          k !== 'evilStartingPerkId' &&
+          k !== 'favoredDoctrine' &&
+          k !== 'tags' &&
+          k !== 'tier' &&
+          k !== 'channel' &&
           k !== 'citation' &&
           k !== 'legalBasis' &&
           k !== 'statutoryBasis' &&
+          k !== 'wonk' &&
           k !== 'wonkLabel' &&
           k !== 'wonkNote' &&
           k !== 'WHY_WONK_COPY' &&
@@ -73,6 +83,8 @@ describe('content and readability gates (OBS-05, GR-24, GR-25)', () => {
       await import('../data/trade'),
       await import('../content/tradeoffs'),
       await import('../content/myths'),
+      await import('../content/perks'),
+      await import('../content/archetypes'),
       await import('../content/explainers'),
       await import('../content/scenarios'),
       await import('../content/chyrons'),

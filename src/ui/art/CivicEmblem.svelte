@@ -20,17 +20,113 @@
   const normalized = $derived.by(() => {
     const k = kind.trim();
     if (k === '🏗️' || k === 'industrial' || k.includes('infra') || k.includes('rail') || k.includes('housing')) return 'industrial';
-    if (k === '⚖️' || k === 'institutionalist' || k === 'purist' || k.includes('inspector') || k.includes('bipartisan') || k.includes('court')) return 'scales';
-    if (k === '📣' || k === 'populist' || k.includes('junk_fee') || k.includes('insulin') || k.includes('rally') || k.includes('press')) return 'megaphone';
-    if (k === '📊' || k === '🔬' || k === 'technocrat' || k.includes('chip') || k.includes('ai_') || k.includes('fed') || k.includes('data')) return 'chip';
-    if (k === '🌐' || k === '🚢' || k === 'globalist' || k.includes('port') || k.includes('trade') || k.includes('mineral') || k.includes('export')) return 'globe';
-    if (k === '🌱' || k === '🔋' || k === '⚡' || k === 'green_transition' || k.includes('clean') || k.includes('grid') || k.includes('fusion') || k.includes('solar')) return 'leaf';
-    if (k === '🛡️' || k === '💻' || k === 'national_security' || k.includes('cyber') || k.includes('defense') || k.includes('darpa') || k.includes('border')) return 'shield';
+    if (
+      k === '⚖️' ||
+      k === 'institutionalist' ||
+      k === 'purist' ||
+      k === 'gavel' ||
+      k === 'scroll' ||
+      k.includes('inspector') ||
+      k.includes('bipartisan') ||
+      k.includes('court')
+    )
+      return 'scales';
+    if (
+      k === '📣' ||
+      k === 'populist' ||
+      k === 'main_street' ||
+      k.includes('junk_fee') ||
+      k.includes('insulin') ||
+      k.includes('rally') ||
+      k.includes('press')
+    )
+      return 'megaphone';
+    if (
+      k === '📊' ||
+      k === '🔬' ||
+      k === 'technocrat' ||
+      k === 'chart_up' ||
+      k === 'chart' ||
+      k.includes('chip') ||
+      k.includes('ai_') ||
+      k.includes('fed') ||
+      k.includes('data')
+    )
+      return 'chip';
+    if (
+      k === '🌐' ||
+      k === '🚢' ||
+      k === 'globalist' ||
+      k === 'compass' ||
+      k.includes('port') ||
+      k.includes('trade') ||
+      k.includes('mineral') ||
+      k.includes('export')
+    )
+      return 'globe';
+    if (
+      k === '🌱' ||
+      k === '🔋' ||
+      k === '⚡' ||
+      k === 'green' ||
+      k === 'green_transition' ||
+      k.includes('clean') ||
+      k.includes('grid') ||
+      k.includes('fusion') ||
+      k.includes('solar')
+    )
+      return 'leaf';
+    if (
+      k === '🛡️' ||
+      k === '💻' ||
+      k === 'security' ||
+      k === 'national_security' ||
+      k.includes('cyber') ||
+      k.includes('defense') ||
+      k.includes('darpa') ||
+      k.includes('border')
+    )
+      return 'shield';
     if (k === '🤝' || k === 'dealmaker' || k.includes('whip') || k.includes('coalition')) return 'handshake';
     if (k === '🏛️' || k === 'insider' || k === 'capitol' || k.includes('commission') || k.includes('senate')) return 'capitol';
-    if (k === '🕶️' || k === '🕵️' || k === 'shadow_cartel' || k.includes('shell') || k.includes('dark_money') || k.includes('kompromat')) return 'syndicate';
-    if (k === '💰' || k === '💎' || k === '🏦' || k === 'kleptocracy' || k.includes('offshore') || k.includes('crypto') || k.includes('crony') || k.includes('kickback')) return 'vault';
-    if (k === '🗑️' || k === '🙊' || k === '📁' || k === 'cover_up' || k.includes('shred') || k.includes('watchdog') || k.includes('pardon') || k.includes('nda')) return 'shredder';
+    if (
+      k === '🕶️' ||
+      k === '🕵️' ||
+      k === 'shadow_cartel' ||
+      k === 'fixer_ring' ||
+      k.includes('shell') ||
+      k.includes('dark_money') ||
+      k.includes('kompromat') ||
+      k.includes('bagman')
+    )
+      return 'syndicate';
+    if (
+      k === '💰' ||
+      k === '💎' ||
+      k === '🏦' ||
+      k === 'kleptocracy' ||
+      k === 'treasury' ||
+      k.includes('offshore') ||
+      k.includes('cayman') ||
+      k.includes('crypto') ||
+      k.includes('crony') ||
+      k.includes('kickback')
+    )
+      return 'vault';
+    if (
+      k === '🗑️' ||
+      k === '🙊' ||
+      k === '📁' ||
+      k === 'cover_up' ||
+      k === 'captured_regulators' ||
+      k.includes('shred') ||
+      k.includes('watchdog') ||
+      k.includes('pardon') ||
+      k.includes('nda') ||
+      k.includes('gag') ||
+      k.includes('acting')
+    )
+      return 'shredder';
     if (k === '👍' || k === 'up') return 'up';
     if (k === '👎' || k === 'down') return 'down';
     if (k === '⚠️' || k === 'warn') return 'warn';

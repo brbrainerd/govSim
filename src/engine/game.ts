@@ -528,7 +528,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   const rawPerk: unknown = decisions !== null && typeof decisions === 'object' ? (decisions as { perk?: unknown }).perk : undefined;
   const availableCloutForPerk = Math.max(0, availableCloutForForeign - (forRes ? forRes.cloutSpent : 0));
   const perkRes = !legacyRun && rawPerk !== undefined
-    ? resolvePerkDecision(state, rawPerk, availableCloutForPerk, true)
+    ? resolvePerkDecision(state, rawPerk, availableCloutForPerk, Boolean(state.evil))
     : null;
   let nextActivePerks: readonly string[] | undefined = state.activePerks;
   let nextLockedPerkId: string | null | undefined = state.lockedPerkId;
@@ -736,7 +736,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     ...(nextRatifiedAmendments ? { ratifiedAmendments: nextRatifiedAmendments } : {}),
   };
   const synergyRes = !legacyRun
-    ? resolveDoctrineSynergies(synergyState, nextActivePerks ?? [], activeOrders, triggeredActionIds, true)
+    ? resolveDoctrineSynergies(synergyState, nextActivePerks ?? [], activeOrders, triggeredActionIds, Boolean(state.evil))
     : null;
   if (synergyRes) {
     log.push(...synergyRes.log);

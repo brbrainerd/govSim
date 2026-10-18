@@ -723,12 +723,14 @@ export class Session {
     run: {
       seed: number;
       party: 'D' | 'R';
+      presidentLook?: 0 | 1 | 2 | 3;
       scenario?: ScenarioId;
       archetype?: ArchetypeId;
       evilMode?: boolean;
       unlockAll?: boolean;
       livingWorld?: boolean;
       classicSim?: boolean;
+      showMyths?: boolean;
       inputs: readonly Decisions[];
     },
     start: Start,
@@ -738,12 +740,14 @@ export class Session {
       start,
       {
         party: run.party,
+        ...(run.presidentLook !== undefined ? { presidentLook: run.presidentLook } : {}),
         scenario: run.scenario,
         ...(run.archetype ? { archetype: run.archetype } : {}),
         ...(run.evilMode ? { evilMode: true } : {}),
         ...(run.unlockAll ? { unlockAll: true } : {}),
         ...(run.livingWorld ? { livingWorld: true } : {}),
         ...(run.classicSim ? { classicSim: true } : {}),
+        ...(run.showMyths === false ? { showMyths: false } : {}),
       },
       { skipAutosave: true },
     );

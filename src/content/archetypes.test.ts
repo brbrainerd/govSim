@@ -40,25 +40,27 @@ describe('Presidential Playstyle Archetypes (ARCH-01)', () => {
     }
   });
 
-  it('applies starting relic and indicator deltas unless classicSim is enabled', () => {
+  it('applies starting relic, modifiers, and indicator deltas unless classicSim is enabled', () => {
     const base = newGame(42, fromData(us));
     const dealmakerState = applyArchetypeToInitialState(base, 'dealmaker', false, false);
     expect(dealmakerState.clout).toBe(base.clout + 10);
     expect(dealmakerState.activePerks).toContain('tf_bipartisan_liaison');
+    expect(dealmakerState.modifiers.some((m) => m.source === 'perk:tf_bipartisan_liaison')).toBe(true);
 
     const evilDealmaker = applyArchetypeToInitialState(base, 'dealmaker', true, false);
     expect(evilDealmaker.activePerks).toContain('relic_bagman_retainer');
+    expect(evilDealmaker.modifiers.some((m) => m.source === 'perk:relic_bagman_retainer')).toBe(true);
 
     const classicState = applyArchetypeToInitialState(base, 'dealmaker', false, true);
     expect(classicState.clout).toBe(base.clout);
     expect(classicState.activePerks ?? []).toHaveLength(0);
   });
 
-  it('persists archetype across SaveFile serialization and URL run share encoding', async () => {
+  it('persists archetype, presidentLook, and showMyths across SaveFile and URL run share encoding', async () => {
     const session = new Session(
       1234,
       fromData(us),
-      { party: 'D', archetype: 'technocrat' },
+      { party: 'D', archetype: 'technocrat', presidentLook: 2, showMyths: false },
       { skipAutosave: true },
     );
     expect(session.activeArchetype?.id).toBe('technocrat');
@@ -68,9 +70,17 @@ describe('Presidential Playstyle Archetypes (ARCH-01)', () => {
     const json = serializeSave(session);
     const parsed = parseSave(json);
     expect(parsed.options.archetype).toBe('technocrat');
+    expect(parsed.options.presidentLook).toBe(2);
+    expect(parsed.options.showMyths).toBe(false);
 
     const code = await encodeRunCode(session);
     const decoded = await decodeRunCode(code);
     expect(decoded?.archetype).toBe('technocrat');
+    expect(decoded?.presidentLook).toBe(2);
+    expect(decoded?.showMyths).toBe(false);
+
+    const replayed = Session.fromRun(decoded!, fromData(us));
+    expect(replayed.options.presidentLook).toBe(2);
+    expect(replayed.options.showMyths).toBe(false);
   });
 });

@@ -2,7 +2,9 @@
 // All strings adhere to Flesch-Kincaid reading grade <= 9.0 and <= 20 words per sentence.
 
 import type { GameState } from '../engine/game';
-import type { DoctrineTag } from './perks';
+import type { Modifier } from '../engine/modifiers';
+import { FOREVER } from '../engine/units';
+import { getPerk, type DoctrineTag } from './perks';
 
 export type ArchetypeId = 'dealmaker' | 'technocrat' | 'populist' | 'insider' | 'purist';
 
@@ -132,9 +134,31 @@ export function applyArchetypeToInitialState(
 
   const startingPerk = evilMode ? arch.evilStartingPerkId : arch.startingPerkId;
   const existingPerks = state.activePerks ?? [];
-  const nextPerks = existingPerks.includes(startingPerk)
-    ? existingPerks
-    : [...existingPerks, startingPerk];
+  const isNewPerk = !existingPerks.includes(startingPerk);
+  const nextPerks = isNewPerk ? [...existingPerks, startingPerk] : existingPerks;
+
+  const perkDef = isNewPerk ? getPerk(startingPerk) : undefined;
+  const perkMods: Modifier[] = perkDef
+    ? perkDef.effects.map((eff) => ({
+        id: `perk:${perkDef.id}#${eff.channel}#t1`,
+        group: `perk:${perkDef.id}`,
+        source: `perk:${perkDef.id}`,
+        channel: eff.channel,
+        amount: eff.amount,
+        from: 1,
+        until: FOREVER,
+        tag: 'perk',
+      }))
+    : [];
+
+  const nextEvil =
+    evilMode && state.evil && perkDef
+      ? {
+          ...state.evil,
+          offshoreStashBn: Math.max(0, state.evil.offshoreStashBn + (perkDef.evilStashBonusBn ?? 0)),
+          heat: Math.max(0, Math.min(100, state.evil.heat + (perkDef.evilHeatDelta ?? 0))),
+        }
+      : state.evil;
 
   return {
     ...state,
@@ -144,6 +168,8 @@ export function applyArchetypeToInitialState(
       ...state.econ,
       trust: Math.max(5, Math.min(80, state.econ.trust + arch.startingTrustDelta)),
     },
+    modifiers: perkMods.length > 0 ? [...state.modifiers, ...perkMods] : state.modifiers,
+    ...(nextEvil ? { evil: nextEvil } : {}),
     activePerks: nextPerks,
   };
 }

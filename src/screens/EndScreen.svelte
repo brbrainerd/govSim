@@ -13,9 +13,16 @@
   import { BADGES } from '../content/badges';
   import { MYTHS_CATALOG } from '../content/myths';
   import { DOCTRINE_FAMILIES, getPerk, type PerkDefinition } from '../content/perks';
-  import { formatMasteryStars, masteryLabel, recordRunMastery } from '../app/mastery';
+  import {
+    evaluateRunMastery,
+    formatMasteryStars,
+    loadMastery,
+    masteryLabel,
+    recordRunMastery,
+  } from '../app/mastery';
   import { resolvePresidentLook, type Look, type Mood } from '../ui/art/Character.svelte';
   import CharacterPortrait from '../ui/art/CharacterPortrait.svelte';
+  import CivicEmblem from '../ui/art/CivicEmblem.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
   let {
@@ -197,17 +204,24 @@
   const activeDoctrineFamilies = $derived(
     session.activeSynergies.filter((s) => s.count > 0),
   );
-  const masteryOutcome = $derived(
-    recordRunMastery({
-      archetype: session.options.archetype,
-      scenario: session.options.scenario,
-      isEvilMode: session.isEvilMode,
-      convicted: Boolean(session.current.evil?.convicted),
-      reelectionWon: session.reelectionWon,
-      scoreVsAutopilot: legacyData.scoreVsAutopilot.total,
-      offshoreStashBn: session.current.evil?.offshoreStashBn ?? 0,
-    }),
-  );
+  const masteryInput = $derived({
+    archetype: session.options.archetype,
+    scenario: session.options.scenario,
+    isEvilMode: session.isEvilMode,
+    convicted: Boolean(session.current.evil?.convicted),
+    reelectionWon: session.reelectionWon,
+    scoreVsAutopilot: legacyData.scoreVsAutopilot.total,
+    offshoreStashBn: session.current.evil?.offshoreStashBn ?? 0,
+  });
+
+  $effect(() => {
+    recordRunMastery(masteryInput);
+  });
+
+  const masteryOutcome = $derived({
+    earnedTier: evaluateRunMastery(masteryInput),
+    record: loadMastery(),
+  });
 </script>
 
 <div class="end-screen halftone" data-testid="end-screen">
@@ -219,7 +233,7 @@
       <span class="term-badge" data-testid="end-scenario-badge">{session.activeScenario.name}</span>
       {#if session.activeArchetype}
         <span class="term-badge" data-testid="end-archetype-badge">
-          {session.activeArchetype.icon} {session.activeArchetype.shortName}
+          <CivicEmblem kind={session.activeArchetype.id} size={14} /> {session.activeArchetype.shortName}
         </span>
       {/if}
       <span

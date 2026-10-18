@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Session } from '../app/session.svelte';
-  import { DOCTRINE_FAMILIES, PERK_TIER_LABELS } from '../content/perks';
+  import { DOCTRINE_FAMILIES, getPerk, PERK_TIER_LABELS } from '../content/perks';
   import { C } from '../engine/coefficients';
   import Overlay from './Overlay.svelte';
   import TradeoffPill from './TradeoffPill.svelte';
@@ -61,7 +61,7 @@
       {#each session.perkSlate as card (card.id)}
         {@const isPicked = pickedId === card.id}
         {@const isLocked = lockedId === card.id}
-        {@const prevCost = pickedId ? (session.perkSlate.find((c) => c.id === pickedId)?.cloutCost ?? 0) : 0}
+        {@const prevCost = pickedId ? (getPerk(pickedId)?.cloutCost ?? 0) : 0}
         {@const prevBonus = skipped ? C.perkSkipCloutBonus : 0}
         {@const canAfford = card.cloutCost <= session.clout + prevCost - prevBonus}
         {@const tierMeta = PERK_TIER_LABELS[card.tier]}

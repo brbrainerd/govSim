@@ -8,12 +8,14 @@ export interface RunDescriptor {
   readonly v: 1;
   readonly seed: number;
   readonly party: 'D' | 'R';
+  readonly presidentLook?: 0 | 1 | 2 | 3;
   readonly scenario?: ScenarioId;
   readonly archetype?: ArchetypeId;
   readonly evilMode?: boolean;
   readonly unlockAll?: boolean;
   readonly livingWorld?: boolean;
   readonly classicSim?: boolean;
+  readonly showMyths?: boolean;
   readonly inputs: readonly Decisions[];
 }
 
@@ -46,12 +48,14 @@ export interface RunSource {
   current?: { seed: number };
   options: {
     party: string;
+    presidentLook?: 0 | 1 | 2 | 3;
     scenario?: ScenarioId;
     archetype?: ArchetypeId;
     evilMode?: boolean;
     unlockAll?: boolean;
     livingWorld?: boolean;
     classicSim?: boolean;
+    showMyths?: boolean;
   };
   inputs: readonly Decisions[];
 }
@@ -63,6 +67,12 @@ export async function encodeRunCode(run: RunSource): Promise<string> {
     v: 1,
     s: seed,
     p: run.options.party === 'R' ? 'R' : 'D',
+    ...(run.options.presidentLook === 0 ||
+    run.options.presidentLook === 1 ||
+    run.options.presidentLook === 2 ||
+    run.options.presidentLook === 3
+      ? { pl: run.options.presidentLook }
+      : {}),
     ...(run.options.scenario && run.options.scenario !== 'standard_2026'
       ? { sc: run.options.scenario }
       : {}),
@@ -71,6 +81,7 @@ export async function encodeRunCode(run: RunSource): Promise<string> {
     ...(run.options.unlockAll ? { ua: 1 } : {}),
     ...(run.options.livingWorld ? { lw: 1 } : {}),
     ...(run.options.classicSim ? { cs: 1 } : {}),
+    ...(run.options.showMyths === false ? { sm: 0 } : {}),
     i: run.inputs,
   });
 
@@ -118,12 +129,16 @@ export async function decodeRunCode(code: string): Promise<RunDescriptor | null>
       v: 1,
       seed: parsed.s,
       party: parsed.p,
+      ...(parsed.pl === 0 || parsed.pl === 1 || parsed.pl === 2 || parsed.pl === 3
+        ? { presidentLook: parsed.pl }
+        : {}),
       ...(isValidScenarioId(parsed.sc) ? { scenario: parsed.sc } : {}),
       ...(isValidArchetypeId(parsed.ar) ? { archetype: parsed.ar } : {}),
       ...(parsed.e === 1 || parsed.e === true ? { evilMode: true } : {}),
       ...(parsed.ua === 1 || parsed.ua === true ? { unlockAll: true } : {}),
       ...(parsed.lw === 1 || parsed.lw === true ? { livingWorld: true } : {}),
       ...(parsed.cs === 1 || parsed.cs === true ? { classicSim: true } : {}),
+      ...(parsed.sm === 0 || parsed.sm === false ? { showMyths: false } : {}),
       inputs: validatedInputs,
     };
   } catch {
