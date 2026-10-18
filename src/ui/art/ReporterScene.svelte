@@ -130,7 +130,16 @@
       <rect x="0" y="208" width="400" height="2" fill="var(--gold)" />
       <rect x="10" y="214" width="62" height="20" rx="2" fill="var(--alert)" />
       <text x="41" y="228" font-family="var(--font-ui)" font-size="11" font-weight="900" fill="var(--card)" text-anchor="middle">SPECIAL</text>
-      <text x="82" y="228" font-family="var(--font-body)" font-size="11" font-weight="700" fill="var(--card)">{chyronText}</text>
+      <text
+        x="82"
+        y="228"
+        font-family="var(--font-body)"
+        font-size="11"
+        font-weight="700"
+        fill="var(--card)"
+        textLength={chyronText.length > 42 ? 308 : undefined}
+        lengthAdjust={chyronText.length > 42 ? 'spacingAndGlyphs' : undefined}
+      >{chyronText}</text>
     </g>
   </svg>
 </div>

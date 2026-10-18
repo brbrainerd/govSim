@@ -855,7 +855,8 @@
     gap: clamp(10px, 1.5vw, 20px);
   }
 
-  .stat-pill {
+  .stat-pill,
+  .score-pill {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -1010,7 +1011,8 @@
   .ind-selector {
     display: flex;
     gap: 6px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
   }
 
   .ind-btn {
@@ -1020,6 +1022,7 @@
     font: 600 12px var(--font-label);
     color: var(--ink);
     cursor: pointer;
+    white-space: nowrap;
   }
 
   .ind-btn.active {

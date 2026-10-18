@@ -11,6 +11,7 @@
   } from '../engine/trade';
 
   import type { ExplainerId } from '../content/explainers';
+  import { pickContextualMyth } from '../content/myths';
   import TradeoffPill from '../ui/TradeoffPill.svelte';
 
   let {
@@ -31,6 +32,7 @@
   const effectiveTrade = $derived(session.effectiveTrade);
   const activeSectors = $derived(effectiveTrade.sectorTariffs);
   const activeAgreements = $derived(effectiveTrade.agreements);
+  const tradeMyth = $derived(pickContextualMyth(session.current, 'trade'));
 
   const isSectorActive = (id: SectorTariffId) => activeSectors.includes(id);
   const isAgreementActive = (id: TradeAgreementId) => activeAgreements.includes(id);
@@ -108,7 +110,7 @@
                     <span aria-hidden="true">{sector.emoji}</span> {sector.name}
                   </h4>
                 </div>
-                <div class="rate-badge">+{sector.ratePct}% Duty</div>
+                <div class="rate-badge">+{sector.ratePct}% {session.vocabMode === 'wonk' ? 'Duty' : 'Tariff'}</div>
               </div>
 
               <p class="sector-summary">{sector.description}</p>
@@ -126,18 +128,18 @@
 
               <div class="impact-columns">
                 <div class="impact-item benefit">
-                  <span class="impact-label">Domestic Impact:</span>
+                  <span class="impact-label">{session.vocabMode === 'wonk' ? 'Domestic Impact:' : 'Home Factory Gain:'}</span>
                   <span class="impact-val">{sector.domesticBenefit}</span>
                 </div>
                 <div class="impact-item cost">
-                  <span class="impact-label">Consumer Friction:</span>
+                  <span class="impact-label">{session.vocabMode === 'wonk' ? 'Consumer Friction:' : 'Store Price Cost:'}</span>
                   <span class="impact-val">{sector.consumerImpact}</span>
                 </div>
               </div>
 
               <div class="card-footer">
                 <div class="retaliation-hint">
-                  Retaliatory friction weight: <b>+{sector.retaliatoryWeight.toFixed(1)}%</b>
+                  {session.vocabMode === 'wonk' ? 'Retaliatory friction weight:' : 'Foreign counter-tariff risk:'} <b>+{sector.retaliatoryWeight.toFixed(1)}%</b>
                 </div>
                 <button
                   type="button"
@@ -206,11 +208,11 @@
 
               <div class="impact-columns">
                 <div class="impact-item benefit">
-                  <span class="impact-label">Export Access:</span>
+                  <span class="impact-label">{session.vocabMode === 'wonk' ? 'Export Access:' : 'New Export Sales:'}</span>
                   <span class="impact-val">{accord.economicBenefit}</span>
                 </div>
                 <div class="impact-item mitigation">
-                  <span class="impact-label">Retaliation Mitigation:</span>
+                  <span class="impact-label">{session.vocabMode === 'wonk' ? 'Retaliation Mitigation:' : 'Trade War Relief:'}</span>
                   <span class="impact-val"><b>-{accord.retaliatoryMitigation.toFixed(1)}%</b> Foreign counter-tariff discount</span>
                 </div>
               </div>
@@ -244,8 +246,12 @@
       <section class="exposure-section" aria-label="State Export Exposure and Agricultural Vulnerabilities">
         <div class="section-header">
           <div class="header-titles">
-            <span class="section-tag">REGIONAL IMPACT • COMMODITY EXPOSURE</span>
-            <h3 class="section-title">State Export Vulnerability Matrix</h3>
+            <span class="section-tag">
+              {session.vocabMode === 'wonk' ? 'REGIONAL IMPACT • COMMODITY EXPOSURE' : '🌾 WHICH US STATES GET HIT BY A TRADE WAR'}
+            </span>
+            <h3 class="section-title">
+              {session.vocabMode === 'wonk' ? 'State Export Vulnerability Matrix' : 'States Most Exposed to Foreign Counter-Tariffs'}
+            </h3>
           </div>
           {#if tradeBalance.retaliatoryRatePct > 0}
             <span class="drag-warning alert">
@@ -307,6 +313,16 @@
   {#snippet learn()}
     <button type="button" class="link" data-testid="how-it-works-btn" onclick={() => onOpenExplainer?.('trade')}>How tariffs &amp; trade work</button>
     <button type="button" class="ticket" onclick={() => onOpenMyth?.('trade_deficits')}>Myth? Foreign nations pay tariffs?</button>
+    {#if tradeMyth.id !== 'trade_deficits'}
+      <button
+        type="button"
+        class="ticket"
+        data-testid="contextual-myth-trade"
+        onclick={() => onOpenMyth?.(tradeMyth.id)}
+      >
+        🎲 Myth? {tradeMyth.title}?
+      </button>
+    {/if}
   {/snippet}
 
   {#snippet next()}
@@ -380,24 +396,25 @@
   .trade-container {
     display: flex;
     flex-direction: column;
-    gap: clamp(16px, 2vh, 24px);
-    padding-bottom: 24px;
+    gap: clamp(10px, 1.4vh, 16px);
+    padding-bottom: 16px;
   }
 
   /* Metrics strip */
   .metrics-strip {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: clamp(8px, 1vw, 14px);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: clamp(6px, 0.8vw, 10px);
   }
   .metric-card {
-    padding: clamp(10px, 1.2vh, 14px);
+    padding: clamp(7px, 0.9vh, 10px) clamp(8px, 0.9vw, 12px);
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
+    min-width: 0;
   }
   .subtext {
-    font: 500 clamp(11px, 0.8vw, 12px) var(--font-ui);
+    font: 500 clamp(10.5px, 0.75vw, 11.5px) var(--font-ui);
     color: var(--ink-soft);
   }
   .positive {
@@ -416,7 +433,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     border-bottom: 2px solid var(--ink);
     padding-bottom: 4px;
   }
@@ -432,7 +449,7 @@
     text-transform: uppercase;
   }
   .section-title {
-    font: 700 clamp(18px, 1.6vw, 22px) var(--font-display);
+    font: 700 clamp(17px, 1.5vw, 20px) var(--font-display);
     color: var(--ink);
     margin: 0;
   }
@@ -441,22 +458,22 @@
     color: var(--ink-soft);
   }
   .section-desc {
-    font: 400 clamp(13px, 0.95vw, 15px)/1.4 var(--font-body);
+    font: 400 clamp(12px, 0.9vw, 14px)/1.35 var(--font-body);
     color: var(--ink-soft);
-    margin: 0 0 12px 0;
+    margin: 0 0 8px 0;
   }
 
   /* Sector Grid */
   .sector-grid, .agreements-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: clamp(12px, 1.2vw, 16px);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(8px, 1vw, 12px);
   }
   .sector-card, .accord-card {
-    padding: clamp(12px, 1.4vh, 16px);
+    padding: clamp(9px, 1.1vh, 13px);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 7px;
     transition: transform var(--dur-fast), border-color var(--dur-fast);
   }
   .sector-card.active, .accord-card.active {

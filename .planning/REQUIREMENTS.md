@@ -29,10 +29,10 @@
 
 ### Full-Screen UI/UX, Layout & Alignment Remediation (`LAYOUT` — Phase 43)
 
-- [ ] **LAYOUT-01**: Remediate Global Shell, Top Status Bar & Left Folder Nav alignment (`App.svelte`: uniform single-line status pills for `0 STAGED` / `PLAIN TALK` / `CALM`, non-wrapping turn/season/skip indicators on wide-banner screens like `Trade & Tariffs`, and clean vertical spacing between `HOME`/`SEE`/`ACT` section headers and folder tab ears)
-- [ ] **LAYOUT-02**: Remediate Oval Office & Congress collision and right-sidebar overflow bugs (`OvalOfficeScene.svelte` speech bubble positioned clear of the Chief of Staff's head; `OvalOffice.svelte` right-sidebar cards compacted so the 5th card never clips at `1280×720`; `Hemicycle.svelte` Centrists bloc leader moved inside `.card` top border; `Congress.svelte` right sidebar compacted on deadline turns so `CALL THE VOTE` is never pushed off-screen)
-- [ ] **LAYOUT-03**: Remediate Budget, Powers, Trade & Voters layout and clipping bugs (`Budget.svelte` icon-to-label spacing on preset buttons and slider headers; `Powers.svelte` card grid density and `BULLY PULPIT SPEECH` header gap so bottom cards fit `1280×720`; `Trade.svelte` 5-column KPI row so sector tariff cards fit without clipping; `Voters.svelte` height budget so the bottom Electoral College bar and progress meter never clip at `1280×720`)
-- [ ] **LAYOUT-04**: Remediate Modal & EndScreen alignment bugs (`CrisisModal.svelte` top badge clipping & `ReporterScene.svelte` full-bleed width/chyron fit; `ElectionNightModal.svelte` live EV progress bar fill calculation & inner `.card` border fit; `EndScreen.svelte` top header stat alignment, single-row chart filter pills, and scrollable/fitted Milestones grid)
+- [x] **LAYOUT-01**: Remediate Global Shell, Top Status Bar & Left Folder Nav alignment (`App.svelte`: uniform single-line status pills for `0 STAGED` / `PLAIN TALK` / `CALM`, non-wrapping turn/season/skip indicators on wide-banner screens like `Trade & Tariffs`, and clean vertical spacing between `HOME`/`SEE`/`ACT` section headers and folder tab ears)
+- [x] **LAYOUT-02**: Remediate Oval Office & Congress collision and right-sidebar overflow bugs (`OvalOfficeScene.svelte` speech bubble positioned clear of the Chief of Staff's head; `OvalOffice.svelte` right-sidebar cards compacted so the 5th card never clips at `1280×720`; `Hemicycle.svelte` Centrists bloc leader moved inside `.card` top border; `Congress.svelte` right sidebar compacted on deadline turns so `CALL THE VOTE` is never pushed off-screen)
+- [x] **LAYOUT-03**: Remediate Budget, Powers, Trade & Voters layout and clipping bugs (`Budget.svelte` icon-to-label spacing on preset buttons and slider headers; `Powers.svelte` card grid density and `BULLY PULPIT SPEECH` header gap so bottom cards fit `1280×720`; `Trade.svelte` 5-column KPI row so sector tariff cards fit without clipping; `Voters.svelte` height budget so the bottom Electoral College bar and progress meter never clip at `1280×720`)
+- [x] **LAYOUT-04**: Remediate Modal & EndScreen alignment bugs (`CrisisModal.svelte` top badge clipping & `ReporterScene.svelte` full-bleed width/chyron fit; `ElectionNightModal.svelte` live EV progress bar fill calculation & inner `.card` border fit; `EndScreen.svelte` top header stat alignment, single-row chart filter pills, and scrollable/fitted Milestones grid)
 
 ### Quarterly Mandate & Task Force RNG Draft — Brotato Shop Loop (`PERK` — Phase 44)
 
@@ -81,10 +81,10 @@
 | VIGNETTE-01 | Phase 42 | Complete |
 | VIGNETTE-02 | Phase 42 | Complete |
 | VIGNETTE-03 | Phase 42 | Complete |
-| LAYOUT-01 | Phase 43 | Pending |
-| LAYOUT-02 | Phase 43 | Pending |
-| LAYOUT-03 | Phase 43 | Pending |
-| LAYOUT-04 | Phase 43 | Pending |
+| LAYOUT-01 | Phase 43 | Complete |
+| LAYOUT-02 | Phase 43 | Complete |
+| LAYOUT-03 | Phase 43 | Complete |
+| LAYOUT-04 | Phase 43 | Complete |
 | PERK-01 | Phase 44 | Pending |
 | PERK-02 | Phase 44 | Pending |
 | PERK-03 | Phase 44 | Pending |

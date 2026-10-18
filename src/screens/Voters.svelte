@@ -554,7 +554,9 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    gap: 8px;
+    min-height: 0;
+    overflow: hidden;
+    gap: 6px;
   }
 
   .main-header {
@@ -885,10 +887,10 @@
     background: var(--card);
     border: 1px solid var(--ink);
     border-radius: var(--r-sm);
-    padding: 8px 12px;
+    padding: 6px 10px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     flex-shrink: 0;
   }
 
@@ -904,7 +906,8 @@
   }
 
   .ec-count.you .count-val {
-    font-size: 18px;
+    font-size: 16px;
+    line-height: 1.1;
     font-family: var(--font-ui);
     font-weight: bold;
     color: var(--sage-dark);
@@ -915,7 +918,8 @@
   }
 
   .ec-count.them .count-val {
-    font-size: 18px;
+    font-size: 16px;
+    line-height: 1.1;
     font-family: var(--font-ui);
     font-weight: bold;
     color: var(--alert-dark);
@@ -929,7 +933,7 @@
   }
 
   .target-flag {
-    font-size: 12px;
+    font-size: 11px;
     font-family: var(--font-ui);
     font-weight: bold;
     padding: 2px 8px;
@@ -941,7 +945,7 @@
 
   .ec-meter-track {
     position: relative;
-    height: 16px;
+    height: 14px;
     background: var(--paper);
     border: 1px solid var(--ink);
     border-radius: 4px;

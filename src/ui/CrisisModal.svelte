@@ -166,7 +166,7 @@
 <style>
   .crisis-shell {
     position: relative;
-    padding-top: clamp(8px, 1.5vh, 16px);
+    padding-top: 28px;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -196,7 +196,7 @@
   /* Red ribbon across the top */
   .breaking-ribbon {
     position: absolute;
-    top: -24px;
+    top: 2px;
     left: 50%;
     transform: translateX(-50%);
     background: var(--alert);

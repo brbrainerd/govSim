@@ -3,6 +3,7 @@
   import type { Session } from '../app/session.svelte';
   import type { ScreenId } from '../app/screens';
   import { ORDERS_CATALOG, getOrder, type ExecutiveOrder } from '../content/orders';
+  import { pickContextualMyth } from '../content/myths';
   import { speechApprovalGain, speechCost } from '../engine/powers';
   import CourtBench from '../ui/art/CourtBench.svelte';
   import FedPortrait from '../ui/art/FedPortrait.svelte';
@@ -44,6 +45,7 @@
 
   let selectedOrderId = $state<string>(ORDERS_CATALOG[0]!.id);
   const selectedOrder = $derived(getOrder(selectedOrderId) ?? ORDERS_CATALOG[0]!);
+  const powersMyth = $derived(pickContextualMyth(session.current, 'powers'));
 
   const isOrderActive = (id: string) => session.current.activeOrders.includes(id);
   const isOrderDraftSigned = (id: string) => session.draft.signedOrders.includes(id);
@@ -187,7 +189,7 @@
         <div class="institution-card court-card">
           <div class="court-header-row">
             <div>
-              <span class="inst-tag">⚖️ ARTICLE III</span>
+              <span class="inst-tag">⚖️ {session.vocabMode === 'wonk' ? 'ARTICLE III' : 'HIGH COURT'}</span>
               <h4 class="inst-name">Supreme Court · leans {composition.conservative}–{composition.liberal}</h4>
             </div>
             {#if pendingChallengesCount > 0}
@@ -195,7 +197,9 @@
                 <Scale size={14} /> {pendingChallengesCount} review{pendingChallengesCount > 1 ? 's' : ''} pending
               </span>
             {:else}
-              <span class="court-badge normal">Major Questions Doctrine</span>
+              <span class="court-badge normal">
+                {session.vocabMode === 'wonk' ? 'Major Questions Doctrine' : 'Strict Court Review'}
+              </span>
             {/if}
           </div>
           <div class="bench-illustration">
@@ -273,7 +277,9 @@
         <!-- Foreign Policy & National Security Card (FORPOL-01, FORPOL-02) -->
         <div class="institution-card foreign-policy-card" data-testid="foreign-policy-section">
           <div class="forpol-header">
-            <span class="inst-tag">🛡️ ARTICLE II SECTION 2 · COMMANDER IN CHIEF &amp; DIPLOMACY</span>
+            <span class="inst-tag">
+              🛡️ {session.vocabMode === 'wonk' ? 'ARTICLE II SECTION 2 · COMMANDER IN CHIEF & DIPLOMACY' : 'MILITARY READINESS & FOREIGN SANCTIONS'}
+            </span>
             <h4 class="inst-name">Defense Posture &amp; Targeted Sanctions</h4>
           </div>
 
@@ -323,7 +329,9 @@
 
             <!-- Targeted Economic Sanctions (FORPOL-02) -->
             <div class="sanctions-group" data-testid="targeted-sanctions-list">
-              <span class="group-label">Targeted Economic Sanctions (OFAC / IEEPA)</span>
+              <span class="group-label">
+                {session.vocabMode === 'wonk' ? 'Targeted Economic Sanctions (OFAC / IEEPA)' : 'Foreign Sanctions (Freeze Assets & Trade)'}
+              </span>
               <div class="sanctions-list">
                 {#each SANCTIONS_CATALOG as sanction (sanction.id)}
                   {@const active = isSanctionActive(sanction.id)}
@@ -338,8 +346,12 @@
                       <p class="sanction-desc">{sanction.description}</p>
                       <div class="sanction-chips">
                         <span class="fallout-chip upside-chip">👍 {sMeta.upside}</span>
-                        <span class="fallout-chip inflation">+{sanction.inflationImpact.toFixed(2)}% CPI Inflation</span>
-                        <span class="fallout-chip gdp">{sanction.gapImpact.toFixed(2)}% GDP Trade Drag</span>
+                        <span class="fallout-chip inflation">
+                          +{sanction.inflationImpact.toFixed(2)}% {session.vocabMode === 'wonk' ? 'CPI Inflation' : 'Prices'}
+                        </span>
+                        <span class="fallout-chip gdp">
+                          {sanction.gapImpact.toFixed(2)}% {session.vocabMode === 'wonk' ? 'GDP Trade Drag' : 'Growth Drag'}
+                        </span>
                         {#if session.vocabMode === 'wonk'}
                           <span class="statutory-basis">{sanction.legalBasis}</span>
                         {/if}
@@ -378,6 +390,16 @@
     <button class="ticket" onclick={() => onOpenMyth?.('foreign_aid_deficit')}>
       Myth? Does foreign aid cause the deficit
     </button>
+    {#if !['rule_by_decree', 'gas_prices', 'foreign_aid_deficit'].includes(powersMyth.id)}
+      <button
+        type="button"
+        class="ticket"
+        data-testid="contextual-myth-powers"
+        onclick={() => onOpenMyth?.(powersMyth.id)}
+      >
+        🎲 Myth? {powersMyth.title}?
+      </button>
+    {/if}
   {/snippet}
 
   {#snippet next()}
@@ -445,7 +467,7 @@
         <div class="speech-header">
           <div class="speech-title-box">
             <Mic size={16} />
-            <span class="label">Bully Pulpit Speech</span>
+            <span class="label">{session.vocabMode === 'wonk' ? 'Bully Pulpit Speech' : 'National TV Speech'}</span>
           </div>
           <button class="speech-dialog-link" onclick={() => onOpenSpeech?.()}>
             Choose audience...
@@ -575,12 +597,12 @@
 
   .orders-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
     overflow-y: auto;
     padding-right: 4px;
     flex: 1;
-    min-height: 120px;
+    min-height: 110px;
   }
 
   .order-card {
@@ -590,7 +612,7 @@
     background: var(--card);
     border: 2px solid var(--ink);
     border-radius: var(--r-sm);
-    padding: 10px 12px;
+    padding: 7px 9px;
     text-align: left;
     cursor: pointer;
     box-shadow: 2px 2px 0 var(--ink);
@@ -620,26 +642,26 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 6px;
+    gap: 6px;
+    margin-bottom: 4px;
   }
 
   .order-name {
     font-family: var(--font-display);
-    font-size: 15px;
+    font-size: 13.5px;
     font-weight: 700;
     color: var(--ink);
-    line-height: 1.2;
+    line-height: 1.15;
   }
 
   .clout-badge {
     font-family: var(--font-ui);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     background: var(--paper);
     border: 1px solid var(--ink);
-    padding: 2px 6px;
+    padding: 1px 5px;
     border-radius: 4px;
     white-space: nowrap;
     color: var(--ink);
@@ -647,10 +669,10 @@
 
   .order-desc {
     font-family: var(--font-body);
-    font-size: 13px;
-    line-height: 1.35;
+    font-size: 11.5px;
+    line-height: 1.25;
     color: var(--ink-soft);
-    margin: 0 0 10px 0;
+    margin: 0 0 6px 0;
   }
 
   .card-footer {
@@ -1162,19 +1184,22 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
   }
 
   .speech-dialog-link {
     background: none;
     border: none;
     font-family: var(--font-ui);
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 700;
     text-transform: uppercase;
     color: var(--ink-soft);
     cursor: pointer;
     text-decoration: underline;
     padding: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .speech-dialog-link:hover {

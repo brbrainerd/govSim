@@ -10,7 +10,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 - [x] **Phase 40: Oval Office Evil Mode Scene, Presidential Avatar Selector & Advisor NPCs** (`SCENE-01`, `SCENE-02`) (completed 2026-10-18)
 - [x] **Phase 41: Reactive Congressional Bloc Leaders & Kitchen-Table Citizen NPCs** (`NPC-01`, `NPC-02`) (completed 2026-10-18)
 - [x] **Phase 42: Animated Bully Pulpit, Broadcast Election Night, Senate Trial & Legacy Vignettes** (`VIGNETTE-01`, `VIGNETTE-02`, `VIGNETTE-03`) (completed 2026-10-18)
-- [ ] **Phase 43: Full-Screen UI/UX, Layout & Viewport Alignment Remediation** (`LAYOUT-01`, `LAYOUT-02`, `LAYOUT-03`, `LAYOUT-04`)
+- [x] **Phase 43: Full-Screen UI/UX, Layout & Viewport Alignment Remediation** (`LAYOUT-01`, `LAYOUT-02`, `LAYOUT-03`, `LAYOUT-04`) (completed 2026-10-18)
 - [ ] **Phase 44: Quarterly Mandate & Task Force RNG Draft — Brotato Shop Loop** (`PERK-01`, `PERK-02`, `PERK-03`)
 - [ ] **Phase 45: Policy Doctrine Synergy Tags & How Many Dudes? Chain-Reaction Engine** (`SYN-01`, `SYN-02`, `SYN-03`)
 - [ ] **Phase 46: Evil Mode Heist Relics, Presidential Archetypes & Mastery Stars** (`HEIST-01`, `HEIST-02`, `ARCH-01`, `ARCH-02`)
@@ -142,7 +142,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 | 40. Oval Office Evil Mode Scene, Presidential Avatar Selector & Advisor NPCs | 1/1 | Complete    | 2026-10-18 |
 | 41. Reactive Congressional Bloc Leaders & Kitchen-Table Citizen NPCs | 1/1 | Complete    | 2026-10-18 |
 | 42. Animated Bully Pulpit, Broadcast Election Night, Senate Trial & Legacy Vignettes | 1/1 | Complete    | 2026-10-18 |
-| 43. Full-Screen UI/UX, Layout & Viewport Alignment Remediation | 0/1 | Not started | - |
+| 43. Full-Screen UI/UX, Layout & Viewport Alignment Remediation | 1/1 | Complete    | 2026-10-18 |
 | 44. Quarterly Mandate & Task Force RNG Draft — Brotato Shop Loop | 0/1 | Not started | - |
 | 45. Policy Doctrine Synergy Tags & How Many Dudes? Chain-Reaction Engine | 0/1 | Not started | - |
 | 46. Evil Mode Heist Relics, Presidential Archetypes & Mastery Stars | 0/1 | Not started | - |

@@ -257,18 +257,22 @@
   [role='tooltip'] { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 10; width: max-content; max-width: 280px; padding: 6px 10px; font: 500 14px/1.3 var(--font-body); color: var(--card); background: var(--ink); border-radius: var(--r-sm); text-align: left; }
   .when [role='tooltip'] { left: auto; right: 0; }
   .tip:hover [role='tooltip'], .tip:focus-visible [role='tooltip'] { display: block; }
-  .when-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-  .when-top { display: flex; align-items: center; gap: 8px; }
-  .staged-wrap { position: relative; }
+  .when-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .when-top { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+  .staged-wrap { position: relative; display: flex; align-items: center; }
   .staged-pill {
-    font: 700 11px/1.1 var(--font-ui);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font: 700 11.5px/1.1 var(--font-ui);
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    padding: 2px 7px;
+    padding: 3px 9px;
     border-radius: 999px;
     border: 1.5px solid var(--ink);
     background: var(--paper);
     color: var(--ink-soft);
+    white-space: nowrap;
     cursor: pointer;
   }
   .staged-pill.active {
@@ -343,15 +347,16 @@
     border-color: var(--alert);
     color: var(--alert);
   }
-  .when { font: 600 clamp(15px, 1.3vw, 19px) var(--font-display); color: var(--ink); }
-  .next { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .next-sub { display: flex; align-items: center; gap: 5px; font: 400 12px var(--font-body); color: var(--ink-soft); }
+  .when { font: 600 clamp(14px, 1.2vw, 18px) var(--font-display); color: var(--ink); white-space: nowrap; }
+  .next { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; }
+  .next-sub { display: flex; align-items: center; gap: 5px; font: 400 12px var(--font-body); color: var(--ink-soft); white-space: nowrap; }
   .skip-btn {
     background: none;
     border: none;
     padding: 0;
     font: 700 12px/1 var(--font-ui);
     color: var(--ink);
+    white-space: nowrap;
     cursor: pointer;
     text-decoration: underline;
   }
@@ -389,16 +394,22 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
   }
   .calm-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 3px 9px;
-    font: 700 12px/1.2 var(--font-ui);
+    font: 700 11.5px/1.1 var(--font-ui);
     text-transform: uppercase;
     letter-spacing: .04em;
     background: var(--paper);
     color: var(--ink);
-    border: 1px solid var(--ink);
+    border: 1.5px solid var(--ink);
     border-radius: 999px;
+    white-space: nowrap;
     cursor: pointer;
     transition: background var(--dur-fast), color var(--dur-fast);
   }
