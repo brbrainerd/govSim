@@ -48,10 +48,10 @@
 
 ### Evil Mode Heist Relics, Presidential Archetypes & Mastery Stars (`HEIST` / `ARCH` — Phase 46)
 
-- [ ] **HEIST-01**: Author the Evil Mode **"Heist Relics & Fixer Syndicate"** catalog and draft pool (`🏝️ Shell Network`, `🕵️ Fixer Ring`, `🏛️ Captured Regulators`) with corrupt multiplicative chain triggers that boost offshore `$B` skims and launder Heat when stacking crony levers
-- [ ] **HEIST-02**: Add the Evil Mode dark-market draft skin in `src/ui/PerkDraftModal.svelte` and Syndicate combo breakdowns in the `src/screens/EndScreen.svelte` Kleptocratic Heist Review
-- [ ] **ARCH-01**: Add selectable **Presidential Playstyle Archetypes** on `src/screens/NewGame.svelte` (`src/content/archetypes.ts`: *The Deal-Maker*, *The Technocrat*, *The Populist Firebrand*, *The Beltway Insider*, *The Constitutional Purist*) with rule-warping passive modifiers, starting Doctrine relics, and `SaveFile` / URL hash persistence
-- [ ] **ARCH-02**: Implement persistent `localStorage` **Silver & Gold Mastery Stars** (`src/app/mastery.ts`) tracked per Archetype and Scenario (Silver = win reelection & beat autopilot; Gold = beat autopilot by `>= +5.0` or escape Evil Mode with `>= $20B`), surfaced on `NewGame.svelte` and `EndScreen.svelte`
+- [x] **HEIST-01**: Author the Evil Mode **"Heist Relics & Fixer Syndicate"** catalog and draft pool (`🏝️ Shell Network`, `🕵️ Fixer Ring`, `🏛️ Captured Regulators`) with corrupt multiplicative chain triggers that boost offshore `$B` skims and launder Heat when stacking crony levers
+- [x] **HEIST-02**: Add the Evil Mode dark-market draft skin in `src/ui/PerkDraftModal.svelte` and Syndicate combo breakdowns in the `src/screens/EndScreen.svelte` Kleptocratic Heist Review
+- [x] **ARCH-01**: Add selectable **Presidential Playstyle Archetypes** on `src/screens/NewGame.svelte` (`src/content/archetypes.ts`: *The Deal-Maker*, *The Technocrat*, *The Populist Firebrand*, *The Beltway Insider*, *The Constitutional Purist*) with rule-warping passive modifiers, starting Doctrine relics, and `SaveFile` / URL hash persistence
+- [x] **ARCH-02**: Implement persistent `localStorage` **Silver & Gold Mastery Stars** (`src/app/mastery.ts`) tracked per Archetype and Scenario (Silver = win reelection & beat autopilot; Gold = beat autopilot by `>= +5.0` or escape Evil Mode with `>= $20B`), surfaced on `NewGame.svelte` and `EndScreen.svelte`
 
 ### Balance Calibration, Computer-Vision Visual Audit & Verification (`AUDIT` — Phase 47)
 
@@ -91,10 +91,10 @@
 | SYN-01 | Phase 45 | Complete |
 | SYN-02 | Phase 45 | Complete |
 | SYN-03 | Phase 45 | Complete |
-| HEIST-01 | Phase 46 | Pending |
-| HEIST-02 | Phase 46 | Pending |
-| ARCH-01 | Phase 46 | Pending |
-| ARCH-02 | Phase 46 | Pending |
+| HEIST-01 | Phase 46 | Complete |
+| HEIST-02 | Phase 46 | Complete |
+| ARCH-01 | Phase 46 | Complete |
+| ARCH-02 | Phase 46 | Complete |
 | AUDIT-01 | Phase 47 | Pending |
 | AUDIT-02 | Phase 47 | Pending |
 

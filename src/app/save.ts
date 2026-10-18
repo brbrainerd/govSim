@@ -23,6 +23,7 @@ import { endTurn, newGame, type GameState, type Start } from '../engine/game';
 import { stableHash } from '../engine/hash';
 import { getSocialLever, type SocialDraft } from '../engine/social';
 import { isValidScenarioId } from '../content/scenarios';
+import { applyArchetypeToInitialState, isValidArchetypeId } from '../content/archetypes';
 import { PERK_MAX_REROLLS_PER_TURN } from '../engine/units';
 import type { GameOptions } from './session.svelte';
 
@@ -488,8 +489,15 @@ export function validateDecisions(d: unknown): Decisions {
 }
 
 /** Replays the input log from the initial start data and returns the final GameState. */
-export function replaySave(save: Pick<SaveFile, 'seed' | 'start' | 'inputs'>): GameState {
-  let state = newGame(save.seed, save.start);
+export function replaySave(
+  save: Pick<SaveFile, 'seed' | 'start' | 'inputs'> & { options?: GameOptions },
+): GameState {
+  let state = applyArchetypeToInitialState(
+    newGame(save.seed, save.start),
+    save.options?.archetype,
+    Boolean(save.options?.evilMode),
+    Boolean(save.options?.classicSim),
+  );
   for (const input of save.inputs) {
     state = endTurn(state, input);
   }
@@ -554,6 +562,7 @@ export function parseSave(json: string): SaveFile {
     party: parsed.options.party,
     ...(typeof parsed.options.evilMode === 'boolean' ? { evilMode: parsed.options.evilMode } : {}),
     ...(isValidScenarioId(parsed.options.scenario) ? { scenario: parsed.options.scenario } : {}),
+    ...(isValidArchetypeId(parsed.options.archetype) ? { archetype: parsed.options.archetype } : {}),
     ...(typeof parsed.options.unlockAll === 'boolean' ? { unlockAll: parsed.options.unlockAll } : {}),
     ...(typeof parsed.options.livingWorld === 'boolean' ? { livingWorld: parsed.options.livingWorld } : {}),
     ...(parsed.options.vocabMode === 'plain' || parsed.options.vocabMode === 'wonk'
@@ -588,7 +597,7 @@ export function parseSave(json: string): SaveFile {
     throw new Error('Save check hash must be a 14-character hexadecimal string');
   }
 
-  const endState = replaySave({ seed: parsed.seed, start, inputs });
+  const endState = replaySave({ seed: parsed.seed, start, options, inputs });
   const actualCheck = stableHash(endState);
   if (actualCheck !== parsed.check) {
     throw new Error(`Save verification failed: hash mismatch (expected ${parsed.check}, replayed ${actualCheck})`);

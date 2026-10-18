@@ -46,6 +46,12 @@ import {
   type ScenarioDef,
   type ScenarioId,
 } from '../content/scenarios';
+import {
+  applyArchetypeToInitialState,
+  getArchetype,
+  type ArchetypeId,
+  type PresidentialArchetype,
+} from '../content/archetypes';
 import { type VocabMode } from '../content/glossary';
 import { getPerk, type PerkDefinition } from '../content/perks';
 import { perkRerollCost, rollPerkSlate, totalPerkRerollsCost } from '../engine/perks';
@@ -66,6 +72,7 @@ export interface GameOptions {
   party: PartyId;
   evilMode?: boolean;
   scenario?: ScenarioId;
+  archetype?: ArchetypeId;
   unlockAll?: boolean;
   livingWorld?: boolean;
   vocabMode?: VocabMode;
@@ -562,6 +569,7 @@ export class Session {
       : 0,
   );
   activeScenario = $derived<ScenarioDef>(getScenario(this.options.scenario));
+  activeArchetype = $derived<PresidentialArchetype | undefined>(getArchetype(this.options.archetype));
   offshoreStashBn = $derived(this.current.evil?.offshoreStashBn ?? 0);
   heat = $derived(this.current.evil?.heat ?? 0);
   evilState = $derived(this.current.evil);
@@ -629,7 +637,12 @@ export class Session {
     this.options = { ...options, vocabMode: this.vocabMode };
     this.unlockAll = Boolean(options.unlockAll);
     const effectiveStart = applyScenarioStart(start, options.scenario);
-    const initial = newGame(seed, effectiveStart);
+    const initial = applyArchetypeToInitialState(
+      newGame(seed, effectiveStart),
+      options.archetype,
+      Boolean(options.evilMode),
+      Boolean(options.classicSim),
+    );
     this.history = [initial];
     this.autopilot = [newGame(seed, effectiveStart)];
     this.draft = freshDraft(initial.policy, initial.socialPolicy);
@@ -697,9 +710,11 @@ export class Session {
       seed: number;
       party: 'D' | 'R';
       scenario?: ScenarioId;
+      archetype?: ArchetypeId;
       evilMode?: boolean;
       unlockAll?: boolean;
       livingWorld?: boolean;
+      classicSim?: boolean;
       inputs: readonly Decisions[];
     },
     start: Start,
@@ -710,9 +725,11 @@ export class Session {
       {
         party: run.party,
         scenario: run.scenario,
+        ...(run.archetype ? { archetype: run.archetype } : {}),
         ...(run.evilMode ? { evilMode: true } : {}),
         ...(run.unlockAll ? { unlockAll: true } : {}),
         ...(run.livingWorld ? { livingWorld: true } : {}),
+        ...(run.classicSim ? { classicSim: true } : {}),
       },
       { skipAutosave: true },
     );

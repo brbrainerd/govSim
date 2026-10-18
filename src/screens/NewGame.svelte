@@ -2,6 +2,8 @@
   import type { GameOptions } from '../app/session.svelte';
   import { PARTIES, type PartyId } from '../content/parties';
   import { SCENARIOS, getScenario, type ScenarioId } from '../content/scenarios';
+  import { ARCHETYPES, getArchetype, type ArchetypeId } from '../content/archetypes';
+  import { formatMasteryStars, loadMastery, masteryLabel } from '../app/mastery';
   import { termLabel } from '../engine/calendar';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import Character, { PRESIDENT_LOOKS, resolvePresidentLook } from '../ui/art/Character.svelte';
@@ -32,6 +34,7 @@
   let evilMode = $state(false);
   let presidentLook = $state<0 | 1 | 2 | 3>(0);
   let scenario = $state<ScenarioId>('standard_2026');
+  let archetype = $state<ArchetypeId | undefined>(undefined);
   let unlockAll = $state(false);
   let livingWorld = $state(false);
   let classicSim = $state(false);
@@ -45,7 +48,9 @@
   let dismissResume = $state(false);
   let fileInput = $state<HTMLInputElement>();
 
+  const mastery = loadMastery();
   const selectedScenario = $derived(getScenario(scenario));
+  const selectedArchetype = $derived(getArchetype(archetype));
   const activeLook = $derived(
     resolvePresidentLook(presidentLook, evilMode, evilMode ? 'scheming' : 'confident'),
   );
@@ -95,6 +100,7 @@
         <span class="label">Starting Scenario</span>
         <div class="scenario-cards">
           {#each SCENARIOS as s (s.id)}
+            {@const scenTier = mastery.scenarios[s.id] ?? 'none'}
             <label
               class="card mode-option scenario-option"
               class:active-mode={scenario === s.id}
@@ -110,11 +116,68 @@
               <div class="mode-info">
                 <div class="scen-head">
                   <b>{s.name}</b>
-                  <span class="scen-tag">{s.tag}</span>
+                  <span class="scen-badges">
+                    <span
+                      class="mastery-pill"
+                      class:tier-gold={scenTier === 'gold'}
+                      class:tier-silver={scenTier === 'silver'}
+                      title={`${s.name}: ${masteryLabel(scenTier)}`}
+                      data-testid={`scenario-mastery-${s.id}`}
+                    >
+                      {formatMasteryStars(scenTier)}
+                    </span>
+                    <span class="scen-tag">{s.tag}</span>
+                  </span>
                 </div>
                 <span class="mode-sub">{s.summary}</span>
               </div>
             </label>
+          {/each}
+        </div>
+      </div>
+
+      <div class="mode-section" role="group" aria-label="Presidential Archetype" data-testid="archetype-selector">
+        <div class="section-head-row">
+          <span class="label">Presidential Playstyle Archetype (Optional)</span>
+          {#if selectedArchetype}
+            <button
+              type="button"
+              class="clear-arch-btn"
+              data-testid="archetype-clear-btn"
+              onclick={() => (archetype = undefined)}
+            >
+              Reset to Balanced
+            </button>
+          {/if}
+        </div>
+        <div class="archetype-grid">
+          {#each ARCHETYPES as arch (arch.id)}
+            {@const archTier = mastery.archetypes[arch.id] ?? 'none'}
+            <button
+              type="button"
+              class="card archetype-option"
+              class:active-mode={archetype === arch.id}
+              aria-pressed={archetype === arch.id}
+              title={`${arch.name}: ${arch.summary}`}
+              data-testid={`archetype-card-${arch.id}`}
+              onclick={() => (archetype = archetype === arch.id ? undefined : arch.id)}
+            >
+              <div class="arch-top">
+                <span class="arch-name">{arch.icon} {arch.shortName}</span>
+                <span
+                  class="mastery-pill"
+                  class:tier-gold={archTier === 'gold'}
+                  class:tier-silver={archTier === 'silver'}
+                  title={`${arch.name}: ${masteryLabel(archTier)}`}
+                  data-testid={`mastery-stars-${arch.id}`}
+                >
+                  {formatMasteryStars(archTier)}
+                </span>
+              </div>
+              <span class="arch-passive">
+                {evilMode ? arch.evilPassiveLabel : arch.passiveLabel}
+              </span>
+            </button>
           {/each}
         </div>
       </div>
@@ -327,12 +390,23 @@
           <span class="label">Satirical Mode Warning</span>
           <span class="line">You have selected Satirical Evil Mode. Your goal is personal enrichment.</span>
           <span class="line">Every corrupt move generates public Heat. Too much Heat triggers Special Counsel, Impeachment, and Conviction.</span>
+          {#if selectedArchetype}
+            <span class="line arch-preview-line" data-testid="newgame-archetype-preview">
+              <b>{selectedArchetype.icon} {selectedArchetype.name}:</b> {selectedArchetype.evilPassiveLabel}
+            </span>
+          {/if}
         </div>
       {:else}
         <div class="card info" data-testid="newgame-scenario-preview">
           <span class="label">Scenario Briefing · {selectedScenario.name}</span>
           <span class="line">{selectedScenario.briefing}</span>
-          <span class="line">Your party changes the names you see. The economy plays the same either way.</span>
+          {#if selectedArchetype}
+            <span class="line arch-preview-line" data-testid="newgame-archetype-preview">
+              <b>{selectedArchetype.icon} {selectedArchetype.name}:</b> {selectedArchetype.summary} ({selectedArchetype.passiveLabel})
+            </span>
+          {:else}
+            <span class="line">Your party changes the names you see. The economy plays the same either way.</span>
+          {/if}
         </div>
       {/if}
       <div class="spacer"></div>
@@ -346,6 +420,7 @@
             party,
             evilMode,
             scenario,
+            ...(archetype ? { archetype } : {}),
             unlockAll,
             livingWorld,
             vocabMode,
@@ -360,31 +435,31 @@
 </div>
 
 <style>
-  .newgame { height: 100dvh; max-height: 100dvh; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) clamp(240px, 20vw, 290px); gap: clamp(14px, 2vw, 24px); padding: clamp(14px, 2vh, 24px) clamp(16px, 2.5vw, 28px); }
-  .options { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(10px, 1.2vw, 14px); max-width: 48rem; }
-  .option { display: flex; align-items: center; gap: clamp(10px, 1.2vw, 14px); padding: clamp(10px, 1.4vh, 14px) clamp(14px, 1.8vw, 20px); cursor: pointer; }
-  .option b { font: 700 clamp(18px, 1.8vw, 22px) var(--font-display); color: var(--ink); }
-  .option input { width: 20px; height: 20px; accent-color: var(--ink); }
+  .newgame { height: 100dvh; max-height: 100dvh; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) clamp(240px, 20vw, 290px); gap: clamp(12px, 1.8vw, 22px); padding: clamp(10px, 1.4vh, 18px) clamp(16px, 2.5vw, 28px); }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(8px, 1vw, 12px); max-width: 48rem; }
+  .option { display: flex; align-items: center; gap: clamp(8px, 1vw, 12px); padding: clamp(7px, 1vh, 11px) clamp(12px, 1.5vw, 18px); cursor: pointer; }
+  .option b { font: 700 clamp(17px, 1.6vw, 20px) var(--font-display); color: var(--ink); }
+  .option input { width: 18px; height: 18px; accent-color: var(--ink); }
   .option:has(input:checked) { background: var(--gold); }
   .option:has(input:focus-visible) { outline: 3px solid var(--ink); outline-offset: 3px; }
   
   .resume-card {
-    padding: clamp(10px, 1.5vh, 16px);
-    margin-bottom: clamp(8px, 1.2vh, 12px);
+    padding: clamp(8px, 1.2vh, 14px);
+    margin-bottom: clamp(6px, 1vh, 10px);
     max-width: 48rem;
     border: 3px solid var(--ink);
     background: var(--paper-warm);
   }
   .resume-title {
-    font: 700 clamp(20px, 2vw, 24px) var(--font-display);
+    font: 700 clamp(18px, 1.8vw, 22px) var(--font-display);
     color: var(--ink);
-    margin: 2px 0 6px 0;
+    margin: 2px 0 4px 0;
   }
   .resume-meta {
     display: flex;
     gap: 16px;
-    margin-bottom: 10px;
-    font: 600 clamp(13px, 1vw, 15px) var(--font-body);
+    margin-bottom: 8px;
+    font: 600 clamp(12px, 0.95vw, 14px) var(--font-body);
     color: var(--ink-soft);
   }
   .resume-actions {
@@ -393,10 +468,10 @@
     align-items: center;
   }
   .navy-btn {
-    font: 600 clamp(13px, 1vw, 15px) var(--font-ui);
+    font: 600 clamp(12px, 0.95vw, 14px) var(--font-ui);
     text-transform: uppercase;
     letter-spacing: .06em;
-    padding: 8px 16px;
+    padding: 6px 14px;
     background: var(--ink);
     color: var(--card);
     border: 2px solid var(--ink);
@@ -409,8 +484,8 @@
   }
 
   .alert-banner {
-    padding: 10px 14px;
-    margin-bottom: 10px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
     border: 2px solid var(--alert);
     background: var(--card);
     max-width: 48rem;
@@ -421,13 +496,13 @@
   }
   .error-text {
     display: block;
-    font: 500 14px/1.3 var(--font-body);
+    font: 500 13px/1.3 var(--font-body);
     color: var(--ink);
     margin-top: 2px;
   }
 
   .import-strip {
-    margin-top: clamp(6px, 1vh, 12px);
+    margin-top: clamp(4px, 0.7vh, 8px);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -437,7 +512,7 @@
   .import-btn {
     background: none;
     border: none;
-    font: 600 clamp(12px, 0.95vw, 14px) var(--font-ui);
+    font: 600 clamp(11px, 0.9vw, 13px) var(--font-ui);
     text-transform: uppercase;
     letter-spacing: .06em;
     color: var(--ink-soft);
@@ -476,22 +551,102 @@
     box-shadow: 1px 1px 0 var(--ink);
   }
 
-  .info { display: flex; flex-direction: column; gap: 4px; padding: clamp(12px, 1.5vh, 16px); }
-  .line { font: 500 clamp(14px, 1.1vw, 16px)/1.3 var(--font-body); color: var(--ink-soft); max-width: 55ch; }
-  .spacer { flex-grow: 1; min-height: 8px; }
+  .info { display: flex; flex-direction: column; gap: 4px; padding: clamp(10px, 1.3vh, 14px); }
+  .line { font: 500 clamp(13px, 1vw, 15px)/1.28 var(--font-body); color: var(--ink-soft); max-width: 55ch; }
+  .arch-preview-line { color: var(--ink); }
+  .spacer { flex-grow: 1; min-height: 6px; }
   .stamp { align-self: center; flex-shrink: 0; }
   .stamp:disabled { opacity: .45; cursor: not-allowed; }
 
-  .mode-section { margin-top: clamp(8px, 1.2vh, 14px); max-width: 48rem; display: flex; flex-direction: column; gap: 6px; }
-  .pacing-section { margin-top: clamp(8px, 1.2vh, 14px); max-width: 48rem; display: flex; flex-direction: column; gap: 6px; }
+  .mode-section { margin-top: clamp(5px, 0.85vh, 10px); max-width: 48rem; display: flex; flex-direction: column; gap: 4px; }
+  .pacing-section { margin-top: clamp(5px, 0.85vh, 10px); max-width: 48rem; display: flex; flex-direction: column; gap: 4px; }
+  .section-head-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .clear-arch-btn {
+    background: none;
+    border: none;
+    font: 700 10px/1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+  }
+  .clear-arch-btn:hover { color: var(--ink); }
+
+  .archetype-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: clamp(5px, 0.7vw, 8px);
+  }
+  .archetype-option {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: clamp(5px, 0.7vh, 8px) clamp(6px, 0.8vw, 10px);
+    text-align: left;
+    cursor: pointer;
+    background: var(--card);
+  }
+  .archetype-option.active-mode {
+    background: var(--gold);
+  }
+  .arch-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 4px;
+  }
+  .arch-name {
+    font: 700 clamp(11px, 0.9vw, 13px)/1.15 var(--font-display);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .arch-passive {
+    font: 500 clamp(10px, 0.75vw, 11.5px)/1.2 var(--font-body);
+    color: var(--ink-soft);
+  }
+  .archetype-option.active-mode .arch-passive {
+    color: var(--ink);
+  }
+
+  .scen-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .mastery-pill {
+    font: 700 10px/1 var(--font-ui);
+    letter-spacing: 0.02em;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: var(--paper);
+    border: 1px solid var(--ink-soft);
+    color: var(--ink-soft);
+    flex-shrink: 0;
+  }
+  .mastery-pill.tier-silver {
+    background: var(--paper-warm);
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .mastery-pill.tier-gold {
+    background: var(--gold);
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
   .pacing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(6px, 0.8vw, 10px); }
-  .unlock-all-card { display: flex; align-items: flex-start; gap: 8px; padding: clamp(7px, 1vh, 10px) clamp(8px, 1vw, 12px); cursor: pointer; }
-  .unlock-all-card input { width: 18px; height: 18px; accent-color: var(--ink); margin-top: 2px; flex-shrink: 0; }
+  .unlock-all-card { display: flex; align-items: flex-start; gap: 6px; padding: clamp(5px, 0.8vh, 8px) clamp(7px, 0.9vw, 10px); cursor: pointer; }
+  .unlock-all-card input { width: 16px; height: 16px; accent-color: var(--ink); margin-top: 2px; flex-shrink: 0; }
   .unlock-all-card.active-mode { background: var(--gold); }
   .unlock-all-card.active-mode .mode-sub { color: var(--ink); }
-  .mode-cards, .scenario-cards { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(8px, 1vw, 12px); }
-  .mode-option { display: flex; align-items: flex-start; gap: 10px; padding: clamp(8px, 1.1vh, 12px) clamp(10px, 1.2vw, 14px); cursor: pointer; }
-  .mode-option input { width: 18px; height: 18px; accent-color: var(--ink); margin-top: 2px; flex-shrink: 0; }
+  .mode-cards, .scenario-cards { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(6px, 0.8vw, 10px); }
+  .mode-option { display: flex; align-items: flex-start; gap: 8px; padding: clamp(6px, 0.9vh, 10px) clamp(8px, 1vw, 12px); cursor: pointer; }
+  .mode-option input { width: 16px; height: 16px; accent-color: var(--ink); margin-top: 2px; flex-shrink: 0; }
   .mode-option.active-mode { background: var(--gold); }
   .mode-option.evil-option.active-mode { background: var(--alert-tint); border-color: var(--alert); }
   .mode-option.active-mode .mode-sub { color: var(--ink); }
@@ -508,8 +663,8 @@
     color: var(--ink);
     flex-shrink: 0;
   }
-  .mode-info b { font: 700 clamp(14px, 1.15vw, 16px) var(--font-display); color: var(--ink); }
-  .mode-sub { font: 500 clamp(11px, 0.85vw, 13px)/1.25 var(--font-body); color: var(--ink-soft); }
+  .mode-info b { font: 700 clamp(13px, 1.05vw, 15px) var(--font-display); color: var(--ink); }
+  .mode-sub { font: 500 clamp(10.5px, 0.8vw, 12.5px)/1.2 var(--font-body); color: var(--ink-soft); }
   .evil-warning { border-color: var(--alert); background: var(--card); }
   .evil-warning .label { color: var(--alert); }
   .stamp.evil-stamp { background: var(--alert-dark); border-color: var(--ink); }

@@ -1,6 +1,7 @@
 // Native deflate-raw URL hash run encoding, decoding, and replay (REL-03, GR-33, GR-34).
 import type { Decisions } from '../engine/decisions';
 import { isValidScenarioId, type ScenarioId } from '../content/scenarios';
+import { isValidArchetypeId, type ArchetypeId } from '../content/archetypes';
 import { MAX_SAVE_SIZE_CHARS, validateDecisions } from './save';
 
 export interface RunDescriptor {
@@ -8,9 +9,11 @@ export interface RunDescriptor {
   readonly seed: number;
   readonly party: 'D' | 'R';
   readonly scenario?: ScenarioId;
+  readonly archetype?: ArchetypeId;
   readonly evilMode?: boolean;
   readonly unlockAll?: boolean;
   readonly livingWorld?: boolean;
+  readonly classicSim?: boolean;
   readonly inputs: readonly Decisions[];
 }
 
@@ -41,7 +44,15 @@ function base64UrlToUint8Array(str: string): Uint8Array {
 export interface RunSource {
   seed?: number;
   current?: { seed: number };
-  options: { party: string; scenario?: ScenarioId; evilMode?: boolean; unlockAll?: boolean; livingWorld?: boolean };
+  options: {
+    party: string;
+    scenario?: ScenarioId;
+    archetype?: ArchetypeId;
+    evilMode?: boolean;
+    unlockAll?: boolean;
+    livingWorld?: boolean;
+    classicSim?: boolean;
+  };
   inputs: readonly Decisions[];
 }
 
@@ -55,9 +66,11 @@ export async function encodeRunCode(run: RunSource): Promise<string> {
     ...(run.options.scenario && run.options.scenario !== 'standard_2026'
       ? { sc: run.options.scenario }
       : {}),
+    ...(run.options.archetype ? { ar: run.options.archetype } : {}),
     ...(run.options.evilMode ? { e: 1 } : {}),
     ...(run.options.unlockAll ? { ua: 1 } : {}),
     ...(run.options.livingWorld ? { lw: 1 } : {}),
+    ...(run.options.classicSim ? { cs: 1 } : {}),
     i: run.inputs,
   });
 
@@ -106,9 +119,11 @@ export async function decodeRunCode(code: string): Promise<RunDescriptor | null>
       seed: parsed.s,
       party: parsed.p,
       ...(isValidScenarioId(parsed.sc) ? { scenario: parsed.sc } : {}),
+      ...(isValidArchetypeId(parsed.ar) ? { archetype: parsed.ar } : {}),
       ...(parsed.e === 1 || parsed.e === true ? { evilMode: true } : {}),
       ...(parsed.ua === 1 || parsed.ua === true ? { unlockAll: true } : {}),
       ...(parsed.lw === 1 || parsed.lw === true ? { livingWorld: true } : {}),
+      ...(parsed.cs === 1 || parsed.cs === true ? { classicSim: true } : {}),
       inputs: validatedInputs,
     };
   } catch {

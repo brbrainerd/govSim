@@ -13,7 +13,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 - [x] **Phase 43: Full-Screen UI/UX, Layout & Viewport Alignment Remediation** (`LAYOUT-01`, `LAYOUT-02`, `LAYOUT-03`, `LAYOUT-04`) (completed 2026-10-18)
 - [x] **Phase 44: Quarterly Mandate & Task Force RNG Draft — Brotato Shop Loop** (`PERK-01`, `PERK-02`, `PERK-03`) (completed 2026-10-18)
 - [x] **Phase 45: Policy Doctrine Synergy Tags & How Many Dudes? Chain-Reaction Engine** (`SYN-01`, `SYN-02`, `SYN-03`) (completed 2026-10-18)
-- [ ] **Phase 46: Evil Mode Heist Relics, Presidential Archetypes & Mastery Stars** (`HEIST-01`, `HEIST-02`, `ARCH-01`, `ARCH-02`)
+- [x] **Phase 46: Evil Mode Heist Relics, Presidential Archetypes & Mastery Stars** (`HEIST-01`, `HEIST-02`, `ARCH-01`, `ARCH-02`) (completed 2026-10-18)
 - [ ] **Phase 47: Balance Calibration, Computer-Vision Visual Audit & Multi-Viewport Verification** (`AUDIT-01`, `AUDIT-02`)
 
 ## Phase Details
@@ -145,5 +145,5 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 | 43. Full-Screen UI/UX, Layout & Viewport Alignment Remediation | 1/1 | Complete    | 2026-10-18 |
 | 44. Quarterly Mandate & Task Force RNG Draft — Brotato Shop Loop | 1/1 | Complete    | 2026-10-18 |
 | 45. Policy Doctrine Synergy Tags & How Many Dudes? Chain-Reaction Engine | 1/1 | Complete    | 2026-10-18 |
-| 46. Evil Mode Heist Relics, Presidential Archetypes & Mastery Stars | 0/1 | Not started | - |
+| 46. Evil Mode Heist Relics, Presidential Archetypes & Mastery Stars | 1/1 | Complete    | 2026-10-18 |
 | 47. Balance Calibration, Computer-Vision Visual Audit & Multi-Viewport Verification | 0/1 | Not started | - |

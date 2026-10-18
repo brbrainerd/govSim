@@ -12,6 +12,8 @@
   import type { EvilLeverId } from '../engine/units';
   import { BADGES } from '../content/badges';
   import { MYTHS_CATALOG } from '../content/myths';
+  import { DOCTRINE_FAMILIES, getPerk, type PerkDefinition } from '../content/perks';
+  import { formatMasteryStars, masteryLabel, recordRunMastery } from '../app/mastery';
   import { resolvePresidentLook, type Look, type Mood } from '../ui/art/Character.svelte';
   import CharacterPortrait from '../ui/art/CharacterPortrait.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
@@ -186,6 +188,26 @@
       zeroY: yMin <= 0 && yMax >= 0 ? getY(0) : null,
     };
   });
+
+  const draftedPerks = $derived(
+    session.activePerks
+      .map((id) => getPerk(id))
+      .filter((p): p is PerkDefinition => p !== undefined),
+  );
+  const activeDoctrineFamilies = $derived(
+    session.activeSynergies.filter((s) => s.count > 0),
+  );
+  const masteryOutcome = $derived(
+    recordRunMastery({
+      archetype: session.options.archetype,
+      scenario: session.options.scenario,
+      isEvilMode: session.isEvilMode,
+      convicted: Boolean(session.current.evil?.convicted),
+      reelectionWon: session.reelectionWon,
+      scoreVsAutopilot: legacyData.scoreVsAutopilot.total,
+      offshoreStashBn: session.current.evil?.offshoreStashBn ?? 0,
+    }),
+  );
 </script>
 
 <div class="end-screen halftone" data-testid="end-screen">
@@ -195,6 +217,19 @@
       <span class="presidency-title">{session.isEvilMode ? 'KLEPTOCRATIC HEIST REVIEW' : 'PRESIDENTIAL LEGACY REVIEW'}</span>
       <span class="term-badge">{session.current.evil?.convicted ? 'Term Terminated (Convicted)' : `${yearsCompleted} Years Completed`}</span>
       <span class="term-badge" data-testid="end-scenario-badge">{session.activeScenario.name}</span>
+      {#if session.activeArchetype}
+        <span class="term-badge" data-testid="end-archetype-badge">
+          {session.activeArchetype.icon} {session.activeArchetype.shortName}
+        </span>
+      {/if}
+      <span
+        class="term-badge mastery-header-badge"
+        class:tier-gold={masteryOutcome.earnedTier === 'gold'}
+        class:tier-silver={masteryOutcome.earnedTier === 'silver'}
+        data-testid="endscreen-mastery-badge"
+      >
+        {formatMasteryStars(masteryOutcome.earnedTier)} {masteryLabel(masteryOutcome.earnedTier)}
+      </span>
     </div>
     <div class="header-stats">
       {#if session.isEvilMode}
@@ -346,6 +381,22 @@
           <div class="record-panel card" data-testid="extraction-ledger-panel">
             <h3 class="panel-h">Kleptocratic Extraction Ledger</h3>
             <p class="panel-sub">Catalog of corrupt executive powers and siphoning operations executed during your tenure.</p>
+            <div class="syndicate-breakdown" data-testid="endscreen-syndicate-summary">
+              <div class="syndicate-row">
+                <span class="rec-label">Fixer Relics Recruited ({draftedPerks.length}):</span>
+                <span class="rec-val">
+                  {draftedPerks.length > 0 ? draftedPerks.map((p) => `${p.emoji} ${p.name}`).join(' · ') : 'None recruited'}
+                </span>
+              </div>
+              <div class="syndicate-row">
+                <span class="rec-label">Syndicate Doctrines Active:</span>
+                <span class="rec-val">
+                  {activeDoctrineFamilies.length > 0
+                    ? activeDoctrineFamilies.map((f) => `${DOCTRINE_FAMILIES[f.tag].emoji} ${DOCTRINE_FAMILIES[f.tag].label} (${f.count})`).join(' · ')
+                    : 'No syndicate sets stacked'}
+                </span>
+              </div>
+            </div>
             {#if allEnactedEvilLevers.length === 0}
               <div class="empty-ledger">
                 <p>No corrupt levers were enacted. You left office with standard administrative records.</p>
@@ -499,10 +550,24 @@
           <div class="record-panel card">
             <h3 class="panel-h">Legislative & Executive Record</h3>
             <p class="panel-sub">Major decisions and statutory actions enacted during your term.</p>
-            <div class="record-list">
+            <div class="record-list" data-testid="endscreen-doctrine-summary">
               <div class="record-item">
                 <span class="rec-label">Active Executive Orders:</span>
                 <span class="rec-val">{session.current.activeOrders.length} in force</span>
+              </div>
+              <div class="record-item">
+                <span class="rec-label">Task Forces & Relics Drafted:</span>
+                <span class="rec-val">
+                  {draftedPerks.length > 0 ? draftedPerks.map((p) => `${p.emoji} ${p.name}`).join(' · ') : 'None drafted'}
+                </span>
+              </div>
+              <div class="record-item">
+                <span class="rec-label">Policy Doctrines Stacked:</span>
+                <span class="rec-val">
+                  {activeDoctrineFamilies.length > 0
+                    ? activeDoctrineFamilies.map((f) => `${DOCTRINE_FAMILIES[f.tag].emoji} ${DOCTRINE_FAMILIES[f.tag].label} (${f.count})`).join(' · ')
+                    : 'Balanced baseline'}
+                </span>
               </div>
               <div class="record-item">
                 <span class="rec-label">Civics Insights Discovered:</span>
@@ -1660,5 +1725,38 @@
     color: var(--ink);
     margin: 0;
     line-height: 1.3;
+  }
+
+  .mastery-header-badge.tier-silver {
+    background: var(--paper-warm);
+    border-color: var(--ink);
+    color: var(--ink);
+    font-weight: 800;
+  }
+
+  .mastery-header-badge.tier-gold {
+    background: var(--gold);
+    border-color: var(--ink);
+    color: var(--ink);
+    font-weight: 800;
+  }
+
+  .syndicate-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+  }
+
+  .syndicate-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
   }
 </style>
