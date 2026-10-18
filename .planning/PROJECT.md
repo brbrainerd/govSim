@@ -75,7 +75,28 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 
 ### Active
 
-None currently active — awaiting next milestone initialization via `/gsd-new-milestone`.
+- [ ] **GFX-01**: High-craft SVG character anatomy (`Character.svelte`, `FedPortrait.svelte`, `CourtBench.svelte`) with sculpted neck/jawline shading, upper eyelids + gaze catchlights, multi-layer mouths, back-hair layers (`long`, `bob`, `afro`, `bald` horseshoe), and enamel US flag lapel pin
+- [ ] **GFX-02**: Articulated character poses (`hips`, `crossed`, `celebrate`, `facepalm`, `cash`, `podium`) and occupational outfits/props (`scrubs` + stethoscope, `hardhat` + safety vest, `blazer` + broadcast earpiece/mic, `cardigan` + glasses)
+- [ ] **GFX-03**: Reusable `<CharacterPortrait>` medallion component supporting circular framed bust/expression avatars (`triumphant` confetti, `facepalm`, `panicked` blue-forehead gradient + twin sweat drops, `scheming`, `confident`, `stressed`)
+- [ ] **SCENE-01**: Selectable 4-option Presidential Look / Avatar picker on `NewGame.svelte` (persisted in `GameOptions` / `Session` / `SaveFile`) plus an animated White House portico inauguration banner (`.design-targets/g-newgame.png`) that shifts to dark oxblood/scheming when Evil Mode is toggled
+- [ ] **SCENE-02**: Upgraded `OvalOfficeScene.svelte` with high-back leather executive chair, Evil Mode banker's-lamp cone of light + cash stacks on the Resolute Desk + animated cash-fanning hands (`.design-targets/g-evil.png`), and reactive Advisor NPC portrait badges on `OvalOffice.svelte`
+- [ ] **NPC-01**: Live mood- and pose-reactive Congressional Bloc Leaders in `Hemicycle.svelte` and `Congress.svelte` (`crossed` + scowl when whip share `< 30%`, pensive when undecided, `wave`/`celebrate` + bounce pulse when a deal flips their bloc)
+- [ ] **NPC-02**: Dedicated Citizen NPC portraits for the 4 Household Personas (`Nurse`, `Auto/Grid Worker`, `Retiree`, `Small Business Owner`) + custom families in `HouseholdCard.svelte`, `HouseholdModal.svelte`, and `Budget.svelte` whose expressions react live to `netMonthlyDelta`
+- [ ] **VIGNETTE-01**: Animated Presidential Bully Pulpit Podium scene in `SpeechModal.svelte` with dual microphones, camera flashes, and target audience silhouettes (`General Public`, `Congress`, `Business Leaders`)
+- [ ] **VIGNETTE-02**: Live Broadcast News Anchor + You-vs-Opponent EV portrait medallions in `ElectionNightModal.svelte` (`.design-targets/g-election.png`) and state voter mood portraits in `Voters.svelte`
+- [ ] **VIGNETTE-03**: Dramatic Senate Trial / Chief Justice verdict scene in `ImpeachmentModal.svelte`, Historian/Advisor header badge in `TurnReport.svelte`, and Presidential Legacy / Kleptocrat Heist vignette in `EndScreen.svelte`
+- [ ] **PERK-01**: Pure deterministic Mandate & Task Force RNG draft engine (`src/engine/perks.ts`, dedicated `rng.ts` stream 21) rolling 3 tiered cards (`Tier I Routine` → `Tier IV Historic Mandate`) per eligible quarter with registered `coefficients.ts` parameters and causal `Ledger` traces
+- [ ] **PERK-02**: Interactive *Brotato*-style **White House Task Force / Mandate Draft** modal (`src/ui/PerkDraftModal.svelte`) with `👍 Upside` / `⚠️ The Catch` trade-off pills, **Spend Clout to Reroll**, **Lock Card for Next Quarter**, **Skip for +Clout**, and a `"Classic Sim (No Perks)"` toggle on `NewGame.svelte` (`GameOptions.classicSim`)
+- [ ] **PERK-03**: Curated 24-card nonpartisan Presidential Task Force & Institutional Doctrine catalog (`src/content/perks.ts`) spanning fiscal, industrial, regulatory, judicial, diplomatic, and populist playstyles with Plain-Talk + Policy-Wonk dual copy and verified civic notes
+- [ ] **SYN-01**: Policy Doctrine Family tagging (`🏗️ Industrial`, `🌱 Green Transition`, `🛡️ National Security`, `📈 Main Street`, `⚖️ Institutionalist`, `🌐 Globalist`) across Executive Orders, Budget packages, Trade pacts/tariffs, Social policies, Reforms, and drafted Task Forces
+- [ ] **SYN-02**: *How Many Dudes?*-style **Doctrine Set Thresholds (`2 / 4 / 6`) & Chain-Reaction Triggers** (`src/engine/synergies.ts`) where stacking families unlocks multiplicative institutional flywheels and event-driven chain triggers (*"Action A triggers Bonus B"*) recorded in `report.trace`
+- [ ] **SYN-03**: Live **Administration Doctrine & Synergy Bar** (`src/ui/SynergyBar.svelte`) on `OvalOffice.svelte` and `TurnReport.svelte` with cascading combo popups (`+Clout`, `+Prosperity`, `+$B Stash`) that fire sequentially when chain triggers resolve (respecting `Calm mode`)
+- [ ] **HEIST-01**: Evil Mode **"Heist Relics & Fixer Syndicate"** catalog and draft pool (`🏝️ Shell Network`, `🕵️ Fixer Ring`, `🏛️ Captured Regulators`) with corrupt multiplicative chain triggers that boost offshore `$B` skims and launder Heat when stacking crony levers
+- [ ] **HEIST-02**: Evil Mode dark-market draft skin in `PerkDraftModal.svelte` and Syndicate combo breakdowns in the `EndScreen.svelte` Kleptocratic Heist Review
+- [ ] **ARCH-01**: Selectable **Presidential Playstyle Archetypes** on `NewGame.svelte` (`src/content/archetypes.ts`: *The Deal-Maker*, *The Technocrat*, *The Populist Firebrand*, *The Beltway Insider*, *The Constitutional Purist*) with rule-warping passive modifiers, starting Doctrine relics, and `SaveFile` / URL hash persistence
+- [ ] **ARCH-02**: Persistent `localStorage` **Silver & Gold Mastery Stars** (`src/app/mastery.ts`) tracked per Archetype and Scenario (Silver = win reelection & beat autopilot; Gold = beat autopilot by `>= +5.0` or escape Evil Mode with `>= $20B`), surfaced on `NewGame.svelte` and `EndScreen.svelte`
+- [ ] **AUDIT-01**: Computer-vision visual audit across all screens and modals at `1376×768` and `1280×720` with before/after verification, zero outer viewport scroll, and `Calm mode` / `prefers-reduced-motion` animation compliance
+- [ ] **AUDIT-02**: 100-seed Monte Carlo balance verification across both Standard (with Perks/Synergies) and Classic Sim modes, Flesch-Kincaid reading grade ≤ 9.0, 0 axe violations, and 8/8 cross-browser determinism gate pass
 
 ### Out of Scope
 
@@ -87,7 +108,7 @@ None currently active — awaiting next milestone initialization via `/gsd-new-m
 
 ## Context
 
-- Shipped Milestone v0.9 ("Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance") with 503 unit/property tests across 82 files, 71 Playwright E2E tests, zero axe violations, zero default network egress, and clean token guardrails.
+- Initializing Milestone v1.0 ("High-Craft Character Art, Living Animations & Incremental Mandate Synergies") building on v0.9 (503 unit/property tests across 82 files, 71 Playwright E2E tests, zero axe violations, zero default network egress, and clean token guardrails).
 - Pure client application (TypeScript + Svelte 5 runes + Vite), zero backend dependencies, zero telemetry.
 - Visual direction C (Americana poster) with dual theme tokens (Day Americana and Dark Oxblood/Gold/Ink for Evil Mode).
 - Zero outer viewport scrolling across 1376×768 and 1280×720 viewports in both Plain Talk and Policy Wonk modes.
@@ -129,6 +150,23 @@ None currently active — awaiting next milestone initialization via `/gsd-new-m
 | Opt-In Free AI Director + Schema Clamping | Supports OpenRouter `:free` cascade failover, OAuth PKCE, and `window.ai` with zero default egress and strict `C.dynamicCrisis*Cap` clamping | ✓ Good |
 | Situated Mirage Levers & Debunk-vs-Spin | Places populist "Easy Buttons" at the moment of intent and rewards civic curiosity or cynical TV spin | ✓ Good |
 | Progressive Disclosure + Plain Talk / Policy Wonk Toggle | Defaults to friendly kitchen-table English with emoji trade-offs while preserving full statutory/macro terminology on demand | ✓ Good (v0.9) |
+| Separated SVG Positioning `<g>` & Inner CSS Animation `<g>` | Prevents CSS keyframe `transform` from overriding SVG `transform="translate(x, y)"` in Chromium | ✓ Adopted (v1.0) |
+| Dedicated Keyed RNG Stream 21 + Classic Sim Toggle for Roguelite Perks | Delivers Brotato/How Many Dudes draft excitement and multiplicative synergies by default while preserving pure classroom simulation on demand | ✓ Adopted (v1.0) |
+
+## Current Milestone: v1.0 High-Craft Character Art, Living Animations & Incremental Mandate Synergies
+
+**Goal:** Elevate character anatomy, facial expressions, outfits, and poses to high-craft Americana poster illustrations, expand reactive NPC presence across all screens and modals, and integrate *Brotato* / *How Many Dudes?*-inspired incremental reward loops—featuring a quarterly Mandate/Task Force RNG draft (with `👍/⚠️` trade-offs, Clout rerolls, and card locking), Policy Doctrine synergy tags (`2/4/6` set bonuses and chain-reaction triggers with cascading popups), rule-warping Presidential Archetypes with Silver/Gold Mastery Stars, Evil Mode Heist Relics & Fixer combos, and a `"Classic Sim (No Perks)"` toggle—verified across `1376×768` and `1280×720` viewports.
+
+**Target features:**
+- High-craft SVG character anatomy, facial expressions (`facepalm`, `triumphant` confetti, `panicked` blue-forehead gradient + twin sweat drops), back-hair layers, outfits (`scrubs`, `hardhat`, `blazer`, `cardigan`), and articulated poses (`hips`, `crossed`, `celebrate`, `facepalm`, `cash`, `podium`) (`GFX-01..03`)
+- Selectable Presidential Look / Avatar picker + White House inauguration banner on `NewGame.svelte`, Evil Mode banker's-lamp cash-counting scene on `OvalOfficeScene.svelte`, and Advisor NPC portraits on `OvalOffice.svelte` (`SCENE-01..02`)
+- Live whip-reactive Congressional Bloc Leaders in `Hemicycle.svelte` / `Congress.svelte` and `netMonthlyDelta`-reactive Citizen NPC portraits in `HouseholdCard.svelte` / `HouseholdModal.svelte` / `Budget.svelte` (`NPC-01..02`)
+- Animated Bully Pulpit Podium scene in `SpeechModal.svelte`, Live Broadcast Anchor + You-vs-Opponent EV medallions in `ElectionNightModal.svelte` / `Voters.svelte`, and Senate Trial / Legacy vignettes in `ImpeachmentModal.svelte`, `TurnReport.svelte`, and `EndScreen.svelte` (`VIGNETTE-01..03`)
+- Quarterly Mandate & Task Force RNG Draft (*Brotato* shop loop on dedicated `rng.ts` stream 21) with 24 tiered cards, `👍/⚠️` trade-offs, Clout rerolls, card locking, and a `"Classic Sim (No Perks)"` toggle (`PERK-01..03`)
+- Policy Doctrine Synergy Tags (`2/4/6` set bonuses) & *How Many Dudes?* Chain-Reaction Triggers (*"Action A triggers Bonus B"*) with a live `SynergyBar` and cascading combo popups (`SYN-01..03`)
+- Evil Mode "Heist Relics & Fixer Syndicate" dark-market perks and corrupt chain multipliers (`HEIST-01..02`)
+- Selectable Presidential Playstyle Archetypes with rule-warping passives + starting relics and persistent Silver/Gold Mastery Stars (`ARCH-01..02`)
+- Computer-vision visual audit across `1376×768` and `1280×720` viewports, Calm Mode compliance, and full 100-seed Monte Carlo balance + determinism gate verification (`AUDIT-01..02`)
 
 ## Completed Milestone: v0.9 Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance (Shipped 2026-10-16)
 
@@ -196,4 +234,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-16 after v0.9 milestone initialization*
+*Last updated: 2026-10-18 after v1.0 milestone initialization*

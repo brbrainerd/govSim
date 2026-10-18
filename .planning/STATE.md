@@ -1,38 +1,33 @@
 ---
 gsd_state_version: "1.0"
-milestone: v0.9
-milestone_name: Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance
-status: Awaiting next milestone
-stopped_at: Phase 38 complete — all phases complete
-last_updated: "2026-10-16T11:08:25.598Z"
-last_activity: 2026-10-16
-last_activity_desc: Milestone v0.9 completed and archived
-state_head: 1b49a22b890e3a532a6cbd4e6a6471798f74b1f3
+milestone: v1.0
+milestone_name: High-Craft Character Art, Living Animations & Incremental Mandate Synergies
+status: planning
+last_updated: "2026-10-18T15:33:36.299Z"
+last_activity: 2026-10-18
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
-current_phase: 38
-current_phase_name: Presidential Trade-Off Balance Audit, Readability Gate & Multi-Viewport Verification
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-16)
+See: .planning/PROJECT.md (updated 2026-10-18)
 
 **Core value:** A player can make real presidential tradeoffs (or play the satirical "Evil Mode" kleptocracy) against an honest, explainable model of the current US, and always understand *why* the country got better or worse.
-**Current focus:** Milestone v0.9 — Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance (Phases 34–38).
+**Current focus:** Milestone v1.0 — High-Craft Character Art, Living Animations & Incremental Mandate Synergies (Phases 39–46).
 
 ## Current Position
 
-Phase: Milestone v0.9 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-10-16 — Milestone v0.9 completed and archived
+Status: Defining requirements
+Last activity: 2026-10-18 — Milestone v1.0 started
 
 ## Session Continuity
 
