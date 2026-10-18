@@ -26,7 +26,7 @@ p, .line, .prose { max-width: 65ch; }
   position: relative; font: 700 clamp(18px, 1.8vw, 24px)/1 var(--font-ui); letter-spacing: .06em; text-transform: uppercase;
   color: var(--card); background: var(--alert); border: 3px solid var(--alert-dark); border-radius: 10px;
   padding: clamp(8px, 1.2vh, 12px) clamp(14px, 1.5vw, 22px); min-height: clamp(40px, 4.8vh, 48px); cursor: pointer; box-shadow: 3px 3px 0 var(--ink);
-  outline: 2px solid var(--card); outline-offset: -8px; transition: transform var(--dur-fast);
+  outline: 2px solid var(--card); outline-offset: -7px; transition: transform var(--dur-fast);
 }
 .stamp:hover:not(:disabled) { transform: translateY(-2px); }
 .stamp:disabled { opacity: .5; cursor: not-allowed; }

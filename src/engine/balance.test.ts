@@ -7,6 +7,7 @@ import { autopilotDecisions, type Decisions } from './decisions';
 import { enact, START } from './fixture';
 import { endTurn, finalScore, newGame, projectedScore, scoreVsAutopilot, TOTAL_TURNS, type GameState } from './game';
 import { resolveReelection } from './election';
+import { rollPerkSlate } from './perks';
 
 export interface StrategyDef {
   budget: BudgetDraft;
@@ -372,5 +373,43 @@ describe('balance', () => {
       expect(rateD, `${setName} D reelection rate`).toBeGreaterThanOrEqual(0.40);
       expect(rateD, `${setName} D reelection rate`).toBeLessThanOrEqual(0.85);
     }
+  });
+
+  it('verifies 100-seed Monte Carlo balance with Task Force perks and Policy Doctrine synergies (AUDIT-02)', () => {
+    const seeds100 = Array.from({ length: 100 }, (_, i) => i + 1);
+
+    function runSensibleWithPerks(seed: number): GameState {
+      let s = newGame(seed, START);
+      for (let t = 1; t < TOTAL_TURNS; t++) {
+        const dec: Decisions = t === 1 ? enact(strategies.sensible!.budget, strategies.sensible!.social) : {};
+        if (s.activeCrisis) {
+          const cDec = pickSensibleCrisisOption(s);
+          if (cDec.crisis) dec.crisis = cDec.crisis;
+        }
+        // Draft up to 4 affordable Task Forces across the term
+        if ((s.activePerks?.length ?? 0) < 4 && t % 3 === 1) {
+          const slate = rollPerkSlate(s.seed, s.turn, s.approval, 0, s.activePerks ?? [], s.lockedPerkId, false);
+          const pick = slate.find((c) => c.cloutCost <= s.clout);
+          if (pick) {
+            dec.perk = { pickId: pick.id };
+          }
+        }
+        s = endTurn(s, dec);
+        const e = s.econ;
+        expect(e.unemployment).toBeGreaterThanOrEqual(2.5);
+        expect(e.unemployment).toBeLessThanOrEqual(15);
+        expect(e.inflation).toBeGreaterThan(-2.1);
+        expect(e.inflation).toBeLessThan(12);
+      }
+      return s;
+    }
+
+    const perkFinals = seeds100.map((sd) => runSensibleWithPerks(sd));
+    const autoFinals = seeds100.map((sd) => run(sd, null).at(-1)!);
+    const perkMean = mean(perkFinals.map((s) => finalScore(s).total));
+    const autoMean = mean(autoFinals.map((s) => finalScore(s).total));
+    const headroom = perkMean - autoMean;
+    expect(headroom).toBeGreaterThanOrEqual(2.0);
+    expect(headroom).toBeLessThanOrEqual(10.0);
   });
 });

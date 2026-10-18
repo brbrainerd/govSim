@@ -55,8 +55,8 @@
 
 ### Balance Calibration, Computer-Vision Visual Audit & Verification (`AUDIT` — Phase 47)
 
-- [ ] **AUDIT-01**: Complete a computer-vision visual audit across all screens and modals at `1376×768` and `1280×720` with before/after screenshot verification, zero inner/outer element clipping, zero outer viewport scroll, 0 axe violations, and `Calm mode` / `prefers-reduced-motion` animation compliance
-- [ ] **AUDIT-02**: Verify 100-seed Monte Carlo balance across both Standard (with Perks/Synergies) and Classic Sim modes (`sensible - nothing` in `[2, 10]`, party neutrality `<= 5 pp`, no degenerate single-tag exploit), Flesch-Kincaid reading grade ≤ 9.0, and 8/8 cross-browser determinism hashes
+- [x] **AUDIT-01**: Complete a computer-vision visual audit across all screens and modals at `1376×768` and `1280×720` with before/after screenshot verification, zero inner/outer element clipping, zero outer viewport scroll, 0 axe violations, and `Calm mode` / `prefers-reduced-motion` animation compliance
+- [x] **AUDIT-02**: Verify 100-seed Monte Carlo balance across both Standard (with Perks/Synergies) and Classic Sim modes (`sensible - nothing` in `[2, 10]`, party neutrality `<= 5 pp`, no degenerate single-tag exploit), Flesch-Kincaid reading grade ≤ 9.0, and 8/8 cross-browser determinism hashes
 
 ## Out of Scope
 
@@ -95,8 +95,8 @@
 | HEIST-02 | Phase 46 | Complete |
 | ARCH-01 | Phase 46 | Complete |
 | ARCH-02 | Phase 46 | Complete |
-| AUDIT-01 | Phase 47 | Pending |
-| AUDIT-02 | Phase 47 | Pending |
+| AUDIT-01 | Phase 47 | Complete |
+| AUDIT-02 | Phase 47 | Complete |
 
 **Coverage:**
 

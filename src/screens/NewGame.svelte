@@ -8,6 +8,7 @@
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import Character, { PRESIDENT_LOOKS, resolvePresidentLook } from '../ui/art/Character.svelte';
   import CharacterPortrait from '../ui/art/CharacterPortrait.svelte';
+  import CivicEmblem from '../ui/art/CivicEmblem.svelte';
   import type { BrowserProfile, SaveFile } from '../app/save';
 
   let {
@@ -163,7 +164,9 @@
               onclick={() => (archetype = archetype === arch.id ? undefined : arch.id)}
             >
               <div class="arch-top">
-                <span class="arch-name">{arch.icon} {arch.shortName}</span>
+                <span class="arch-name">
+                  <CivicEmblem kind={arch.id} size={14} /> {arch.shortName}
+                </span>
                 <span
                   class="mastery-pill"
                   class:tier-gold={archTier === 'gold'}
@@ -239,7 +242,10 @@
               data-testid="vocab-mode-toggle-newgame"
             />
             <div class="mode-info">
-              <b>{vocabMode === 'wonk' ? '📜 Policy Wonk Mode' : '🗣️ Plain Talk (Default)'}</b>
+              <b>
+                <CivicEmblem kind={vocabMode === 'wonk' ? 'grad' : 'speech'} size={13} />
+                {vocabMode === 'wonk' ? 'Policy Wonk Mode' : 'Plain Talk (Default)'}
+              </b>
               <span class="mode-sub">
                 {vocabMode === 'wonk'
                   ? 'Show statutory citations & formal macro terms immediately.'
@@ -309,42 +315,69 @@
       >
         <svg viewBox="0 0 320 185" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
           <rect width="320" height="185" fill={evilMode ? 'var(--ink)' : 'var(--paper-warm)'} />
-          <!-- Swallowtail govSim ribbon banner -->
-          <polygon points="26,20 56,18 48,30 56,42 26,40 34,30" fill={evilMode ? 'var(--alert-dark)' : 'var(--ink-soft)'} stroke="var(--ink)" stroke-width="1.5" />
-          <polygon points="294,20 264,18 272,30 264,42 294,40 286,30" fill={evilMode ? 'var(--alert-dark)' : 'var(--ink-soft)'} stroke="var(--ink)" stroke-width="1.5" />
-          <path d="M46 12 Q160 2 274 12 L268 38 Q160 28 52 38 Z" fill={evilMode ? 'var(--alert)' : 'var(--ink)'} stroke="var(--ink)" stroke-width="2" />
-          <circle cx="70" cy="24" r="4" fill="var(--gold)" />
-          <circle cx="250" cy="24" r="4" fill="var(--gold)" />
-          <text x="160" y="28" text-anchor="middle" font-family="var(--font-display)" font-size="18" font-weight="800" fill="var(--card)">
+          <!-- Swallowtail govSim ribbon banner (g-newgame.png) -->
+          <polygon points="18,22 54,18 46,32 54,44 18,42 28,32" fill={evilMode ? 'var(--alert-dark)' : 'var(--ink-soft)'} stroke="var(--ink)" stroke-width="1.8" />
+          <polygon points="302,22 266,18 274,32 266,44 302,42 292,32" fill={evilMode ? 'var(--alert-dark)' : 'var(--ink-soft)'} stroke="var(--ink)" stroke-width="1.8" />
+          <path d="M40 12 Q160 1 280 12 L272 40 Q160 28 48 40 Z" fill={evilMode ? 'var(--alert)' : 'var(--ink)'} stroke="var(--ink)" stroke-width="2" />
+          <circle cx="66" cy="25" r="4" fill="var(--gold)" />
+          <circle cx="254" cy="25" r="4" fill="var(--gold)" />
+          <text x="160" y="29" text-anchor="middle" font-family="var(--font-display)" font-size="18.5" font-weight="800" fill="var(--card)">
             {evilMode ? 'govSim · EVIL' : 'govSim'}
           </text>
 
-          <!-- White House roof flag -->
-          <line x1="160" y1="36" x2="160" y2="54" stroke="var(--ink)" stroke-width="1.8" />
-          <rect x="161" y="37" width="18" height="10" rx="1" fill="var(--alert)" stroke="var(--ink)" stroke-width="1" />
-          <rect x="161" y="37" width="7" height="5" fill="var(--ink)" />
-
-          <!-- Neoclassical White House facade & triangular pediment -->
-          <rect x="34" y="72" width="252" height="76" fill="var(--card)" stroke="var(--ink)" stroke-width="2" />
-          <polygon points="88,72 160,48 232,72" fill="var(--card)" stroke="var(--ink)" stroke-width="2" />
-          <polygon points="98,70 160,52 222,70" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2" />
-
-          <!-- Side wings windows -->
-          {#each [48, 70, 236, 258] as wx (wx)}
-            <rect x={wx} y="84" width="14" height="22" rx="1" fill="var(--ink)" />
-            <rect x={wx} y="114" width="14" height="24" rx="1" fill="var(--ink)" />
+          <!-- Three waving US flags on roof (left wing, center pediment, right wing) -->
+          {#each [
+            { x: 64, y: 49, w: 14, h: 8 },
+            { x: 160, y: 34, w: 18, h: 10 },
+            { x: 256, y: 49, w: 14, h: 8 },
+          ] as fl (fl.x)}
+            <line x1={fl.x} y1={fl.y} x2={fl.x} y2={fl.y + 18} stroke="var(--ink)" stroke-width="1.6" />
+            <circle cx={fl.x} cy={fl.y} r="1.8" fill="var(--gold)" stroke="var(--ink)" stroke-width="0.9" />
+            <rect x={fl.x + 1} y={fl.y + 1} width={fl.w} height={fl.h} rx="1" fill="var(--alert)" stroke="var(--ink)" stroke-width="1.1" />
+            <line x1={fl.x + 1} y1={fl.y + 1 + fl.h * 0.35} x2={fl.x + 1 + fl.w} y2={fl.y + 1 + fl.h * 0.35} stroke="var(--card)" stroke-width="1.4" />
+            <line x1={fl.x + 1} y1={fl.y + 1 + fl.h * 0.7} x2={fl.x + 1 + fl.w} y2={fl.y + 1 + fl.h * 0.7} stroke="var(--card)" stroke-width="1.4" />
+            <rect x={fl.x + 1} y={fl.y + 1} width={fl.w * 0.44} height={fl.h * 0.55} fill="var(--ink)" />
           {/each}
 
-          <!-- Portico columns -->
-          {#each [100, 136, 174, 210] as cx (cx)}
-            <rect x={cx} y="72" width="10" height="74" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.6" />
-            <rect x={cx - 2} y="72" width="14" height="4" fill="var(--card)" stroke="var(--ink)" stroke-width="1.2" />
-            <rect x={cx - 2} y="142" width="14" height="6" fill="var(--card)" stroke="var(--ink)" stroke-width="1.2" />
+          <!-- White House roof balustrade railing -->
+          <rect x="26" y="64" width="268" height="8" fill="var(--card)" stroke="var(--ink)" stroke-width="1.5" />
+          {#each [36, 48, 60, 72, 84, 236, 248, 260, 272, 284] as bx (bx)}
+            <line x1={bx} y1="64" x2={bx} y2="72" stroke="var(--ink)" stroke-width="1.2" />
+          {/each}
+
+          <!-- Neoclassical White House facade & triangular pediment -->
+          <rect x="22" y="72" width="276" height="80" fill="var(--card)" stroke="var(--ink)" stroke-width="2" />
+          <polygon points="82,72 160,46 238,72" fill="var(--card)" stroke="var(--ink)" stroke-width="2" />
+          <polygon points="94,70 160,50 226,70" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.3" />
+          <circle cx="160" cy="62" r="5" fill="var(--card)" stroke="var(--ink)" stroke-width="1.3" />
+
+          <!-- Side wings pedimented windows -->
+          {#each [36, 60, 246, 270] as wx (wx)}
+            <rect x={wx} y="82" width="14" height="18" rx="1" fill="var(--ink)" stroke="var(--ink)" stroke-width="1" />
+            <line x1={wx + 7} y1="82" x2={wx + 7} y2="100" stroke="var(--card)" stroke-width="1" />
+            <line x1={wx} y1="91" x2={wx + 14} y2="91" stroke="var(--card)" stroke-width="1" />
+            <polygon points={`${wx - 2},112 ${wx + 7},106 ${wx + 16},112`} fill="var(--paper)" stroke="var(--ink)" stroke-width="1.1" />
+            <rect x={wx} y="112" width="14" height="24" rx="1" fill="var(--ink)" stroke="var(--ink)" stroke-width="1" />
+            <line x1={wx + 7} y1="112" x2={wx + 7} y2="136" stroke="var(--card)" stroke-width="1" />
+            <line x1={wx} y1="124" x2={wx + 14} y2="124" stroke="var(--card)" stroke-width="1" />
+          {/each}
+
+          <!-- Central doorway fanlight behind President -->
+          <path d="M144 148 L144 106 A 16 14 0 0 1 176 106 L176 148 Z" fill="var(--ink)" />
+          <path d="M147 106 A 13 11 0 0 1 173 106 Z" fill="var(--gold)" opacity="0.7" />
+
+          <!-- Four fluted Ionic portico columns -->
+          {#each [94, 128, 180, 214] as cx (cx)}
+            <rect x={cx} y="72" width="12" height="76" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.7" />
+            <line x1={cx + 4} y1="76" x2={cx + 4} y2="144" stroke="var(--ink)" stroke-width="0.7" opacity="0.45" />
+            <line x1={cx + 8} y1="76" x2={cx + 8} y2="144" stroke="var(--ink)" stroke-width="0.7" opacity="0.45" />
+            <rect x={cx - 3} y="72" width="18" height="5" rx="2" fill="var(--card)" stroke="var(--ink)" stroke-width="1.3" />
+            <rect x={cx - 3} y="143" width="18" height="6" rx="1" fill="var(--card)" stroke="var(--ink)" stroke-width="1.3" />
           {/each}
 
           <!-- Lawn / steps foreground -->
-          <rect x="0" y="148" width="320" height="37" fill={evilMode ? 'var(--alert-dark)' : 'var(--paper)'} />
-          <line x1="0" y1="148" x2="320" y2="148" stroke="var(--ink)" stroke-width="2" />
+          <rect x="0" y="149" width="320" height="36" fill={evilMode ? 'var(--alert-dark)' : 'var(--paper)'} />
+          <line x1="0" y1="149" x2="320" y2="149" stroke="var(--ink)" stroke-width="2" />
 
           <!-- Chosen Presidential Character waving (or fanning cash in Evil Mode) -->
           <Character
@@ -378,7 +411,7 @@
               <CharacterPortrait
                 look={portLook}
                 mood={evilMode ? 'scheming' : 'confident'}
-                size={46}
+                size={38}
               />
             </button>
           {/each}
@@ -392,7 +425,7 @@
           <span class="line">Every corrupt move generates public Heat. Too much Heat triggers Special Counsel, Impeachment, and Conviction.</span>
           {#if selectedArchetype}
             <span class="line arch-preview-line" data-testid="newgame-archetype-preview">
-              <b>{selectedArchetype.icon} {selectedArchetype.name}:</b> {selectedArchetype.evilPassiveLabel}
+              <b><CivicEmblem kind={selectedArchetype.id} size={13} /> {selectedArchetype.name}:</b> {selectedArchetype.evilPassiveLabel}
             </span>
           {/if}
         </div>
@@ -402,7 +435,7 @@
           <span class="line">{selectedScenario.briefing}</span>
           {#if selectedArchetype}
             <span class="line arch-preview-line" data-testid="newgame-archetype-preview">
-              <b>{selectedArchetype.icon} {selectedArchetype.name}:</b> {selectedArchetype.summary} ({selectedArchetype.passiveLabel})
+              <b><CivicEmblem kind={selectedArchetype.id} size={13} /> {selectedArchetype.name}:</b> {selectedArchetype.summary} ({selectedArchetype.passiveLabel})
             </span>
           {:else}
             <span class="line">Your party changes the names you see. The economy plays the same either way.</span>
@@ -435,7 +468,7 @@
 </div>
 
 <style>
-  .newgame { height: 100dvh; max-height: 100dvh; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) clamp(240px, 20vw, 290px); gap: clamp(12px, 1.8vw, 22px); padding: clamp(10px, 1.4vh, 18px) clamp(16px, 2.5vw, 28px); }
+  .newgame { height: 100dvh; max-height: 100dvh; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) clamp(256px, 21vw, 296px); gap: clamp(12px, 1.8vw, 22px); padding: clamp(10px, 1.4vh, 18px) clamp(16px, 2.5vw, 28px); }
   .options { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(8px, 1vw, 12px); max-width: 48rem; }
   .option { display: flex; align-items: center; gap: clamp(8px, 1vw, 12px); padding: clamp(7px, 1vh, 11px) clamp(12px, 1.5vw, 18px); cursor: pointer; }
   .option b { font: 700 clamp(17px, 1.6vw, 20px) var(--font-display); color: var(--ink); }
@@ -689,12 +722,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
   }
   .look-btn {
-    padding: 2px;
+    padding: 1px;
     border-radius: 50%;
-    border: 2.5px solid transparent;
+    border: 2px solid transparent;
     background: none;
     cursor: pointer;
     display: inline-flex;

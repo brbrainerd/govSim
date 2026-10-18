@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { VocabMode } from '../content/glossary';
+  import CivicEmblem from './art/CivicEmblem.svelte';
 
   let {
     variant = 'compact',
@@ -33,19 +34,16 @@
 
 {#if variant === 'compact'}
   <div class="tradeoff-compact" data-testid="tradeoff-pill">
-    {#if emoji}
-      <span class="pill-emoji" aria-hidden="true">{emoji}</span>
-    {/if}
     <span class="badge upside-badge" data-testid="tradeoff-pill-upside">
-      <b aria-hidden="true">👍</b> {upside}
+      <CivicEmblem kind="up" size={11} /> {upside}
     </span>
     <span class="badge catch-badge" data-testid="tradeoff-pill-catch">
-      <b aria-hidden="true">⚠️</b> {catchText}
+      <CivicEmblem kind="warn" size={11} /> {catchText}
     </span>
     {#if hasWonkMeta}
       {#if vocabMode === 'wonk'}
         <span class="badge wonk-badge" data-testid="tradeoff-wonk-inline">
-          📜 {realTerm ?? ''}{realTerm && legalBasis ? ' · ' : ''}{legalBasis ?? ''}
+          <CivicEmblem kind="grad" size={11} /> {realTerm ?? ''}{realTerm && legalBasis ? ' · ' : ''}{legalBasis ?? ''}
         </span>
       {:else}
         <button
@@ -54,7 +52,7 @@
           aria-describedby={tipId}
           data-testid="tradeoff-wonk-tip-btn"
         >
-          📜 Real term
+          <CivicEmblem kind="grad" size={11} /> Real term
           <span role="tooltip" id={tipId} class="wonk-tooltip">
             {#if whyClick}
               <span class="tip-line"><b>Why click:</b> {whyClick}</span>
@@ -75,9 +73,7 @@
     {#if title || emoji || impactScore !== undefined}
       <div class="card-head">
         <div class="card-title-wrap">
-          {#if emoji}
-            <span class="card-emoji" aria-hidden="true">{emoji}</span>
-          {/if}
+          <CivicEmblem kind="bolt" size={14} />
           {#if title}
             <b class="card-title">{title}</b>
           {/if}
@@ -97,18 +93,18 @@
 
     {#if whyClick}
       <div class="why-click-row" data-testid="tradeoff-why-click">
-        <span class="why-label">💡 Why click this:</span>
+        <span class="why-label"><CivicEmblem kind="bolt" size={12} /> Why click this:</span>
         <span class="why-body">{whyClick}</span>
       </div>
     {/if}
 
     <div class="tradeoff-grid">
       <div class="tradeoff-box upside-box" data-testid="tradeoff-pill-upside">
-        <span class="box-tag">👍 Upside</span>
+        <span class="box-tag"><CivicEmblem kind="up" size={11} /> Upside</span>
         <span class="box-text">{upside}</span>
       </div>
       <div class="tradeoff-box catch-box" data-testid="tradeoff-pill-catch">
-        <span class="box-tag">⚠️ The Catch</span>
+        <span class="box-tag"><CivicEmblem kind="warn" size={11} /> The Catch</span>
         <span class="box-text">{catchText}</span>
       </div>
     </div>
@@ -123,7 +119,7 @@
             data-testid="tradeoff-wonk-toggle"
             onclick={() => (expandedWonk = !expandedWonk)}
           >
-            {expandedWonk ? '▾ Hide Policy Wonk note' : '▸ 📜 Policy Wonk note'}
+            {expandedWonk ? '▾ Hide Policy Wonk note' : '▸ Policy Wonk note'}
           </button>
         {/if}
         {#if showWonkDetails}
@@ -148,10 +144,6 @@
     align-items: center;
     gap: 5px;
     margin-top: 3px;
-  }
-  .pill-emoji {
-    font-size: 13px;
-    line-height: 1;
   }
   .badge {
     display: inline-flex;
@@ -244,10 +236,6 @@
     display: flex;
     align-items: center;
     gap: 5px;
-  }
-  .card-emoji {
-    font-size: 15px;
-    line-height: 1;
   }
   .card-title {
     font: 700 13px/1.2 var(--font-display);

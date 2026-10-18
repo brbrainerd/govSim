@@ -5,6 +5,7 @@
   import type { StagedActionItem, VocabMode } from '../app/session.svelte';
   import CoinStack from './art/CoinStack.svelte';
   import Ribbon from './art/Ribbon.svelte';
+  import CivicEmblem from './art/CivicEmblem.svelte';
 
   let {
     state: gameState,
@@ -94,7 +95,7 @@
     <Ribbon text={title} />
     {#if evilMode}
       <div class="score evil-score" data-testid="evil-mode-indicator">
-        <span class="star">⚡</span> <b>SATIRICAL EVIL MODE</b> <span class="star">⚡</span>
+        <span class="star">★</span> <b>SATIRICAL EVIL MODE</b> <span class="star">★</span>
       </div>
       {#if gameState.evil?.specialCounselAppointed}
         <button
@@ -103,7 +104,7 @@
           aria-describedby="tip-special-counsel"
           data-testid="status-special-counsel"
         >
-          <span class="badge-icon" aria-hidden="true">⚠</span>
+          <CivicEmblem kind="warn" size={12} />
           <span>SPECIAL COUNSEL SUBPOENAS ACTIVE (−25 CLOUT/QTR)</span>
           <span role="tooltip" id="tip-special-counsel">Special counsel and congressional subpoenas drain 25 political clout each quarter</span>
         </button>
@@ -133,7 +134,7 @@
             onclick={() => (trayOpen = !trayOpen)}
           >
             {#if hasUnsentWarning}
-              ⚠ {stagedActions.length} staged (unsent)
+              <CivicEmblem kind="warn" size={11} /> {stagedActions.length} staged (unsent)
             {:else}
               {stagedActions.length} staged
             {/if}
@@ -194,7 +195,8 @@
               ? 'Policy Wonk mode: showing statutory terms & citations. Click for Plain Talk.'
               : 'Plain Talk mode: everyday civics language. Click for Policy Wonk mode.'}
           >
-            {vocabMode === 'wonk' ? '📜 Policy Wonk' : '🗣️ Plain Talk'}
+            <CivicEmblem kind={vocabMode === 'wonk' ? 'grad' : 'speech'} size={12} />
+            <span>{vocabMode === 'wonk' ? 'Policy Wonk' : 'Plain Talk'}</span>
           </button>
           <button
             type="button"
@@ -227,7 +229,7 @@
             disabled={!canFastForward || gameState.turn >= TOTAL_TURNS}
             onclick={onFastForward}
           >
-            Skip to event ⏭
+            Skip to event »
           </button>
         {/if}
       </div>
@@ -236,11 +238,11 @@
 </header>
 
 <style>
-  .bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: clamp(8px, 1.2vw, 16px); padding: clamp(4px, 0.8vh, 10px) clamp(12px, 1.8vw, 24px) clamp(2px, 0.4vh, 6px); }
-  .resources, .time { display: flex; align-items: center; gap: clamp(12px, 1.8vw, 26px); padding-top: 4px; }
-  .time { justify-content: flex-end; gap: clamp(10px, 1.4vw, 18px); }
-  .stat { display: flex; align-items: center; gap: clamp(6px, 0.8vw, 10px); }
-  .num { font-size: clamp(24px, 2.4vw, 36px); }
+  .bar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; gap: clamp(6px, 1vw, 14px); padding: clamp(4px, 0.8vh, 10px) clamp(10px, 1.5vw, 22px) clamp(2px, 0.4vh, 6px); max-width: 100vw; box-sizing: border-box; }
+  .resources, .time { display: flex; align-items: center; gap: clamp(8px, 1.2vw, 18px); padding-top: 4px; min-width: 0; }
+  .time { justify-content: flex-end; gap: clamp(6px, 1vw, 14px); }
+  .stat { display: flex; align-items: center; gap: clamp(5px, 0.6vw, 8px); flex-shrink: 0; }
+  .num { font-size: clamp(20px, 2.1vw, 32px); }
   .center { display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .score { font: 400 clamp(13px, 1vw, 16px) var(--font-body); color: var(--ink); }
   .score b { color: var(--sage); font-family: var(--font-ui); font-size: clamp(15px, 1.2vw, 18px); }
@@ -385,10 +387,6 @@
     border: 1px solid var(--ink);
     box-shadow: 1px 1px 0 var(--ink);
     cursor: help;
-  }
-  .special-counsel-badge .badge-icon {
-    font-size: 11px;
-    color: var(--paper);
   }
   .party-calm-wrap {
     display: flex;

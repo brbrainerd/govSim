@@ -80,7 +80,7 @@ describe('Phase 37: Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens (S
         },
       });
       expect(html).toContain('data-testid="advisor-play-badge"');
-      expect(html).toContain('👍');
+      expect(html).toContain('data-emblem="up"');
     });
   });
 
@@ -136,8 +136,8 @@ describe('Phase 37: Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens (S
         },
       });
       expect(html).toContain('data-testid="tradeoff-pill"');
-      expect(html).toContain('👍');
-      expect(html).toContain('⚠️');
+      expect(html).toContain('data-emblem="up"');
+      expect(html).toContain('data-emblem="warn"');
     });
   });
 });

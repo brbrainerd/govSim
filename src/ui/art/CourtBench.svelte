@@ -1,6 +1,7 @@
 <script lang="ts">
-  // Vector illustration of the 9 Supreme Court justices behind the mahogany bench (PWR-01, OBS-07, ART-03, GFX-01).
-  // Ideological balance with fluted marble columns, brass scales of justice, sculpted necks/eyelids, and expressive justices.
+  // Vector illustration of the 9 Supreme Court justices behind the mahogany bench matching .design-targets/g-powers.png.
+  // Continuous finger/thumb-shaped heads flowing directly into black judicial robes & white collars,
+  // seated in front of crimson high-back leather chairs behind a carved mahogany bench.
   // All colors strictly sourced from tokens via CSS variables.
 
   interface Justice {
@@ -24,16 +25,16 @@
 
   const JUSTICES = $derived.by(() => {
     const list: Justice[] = [];
-    const styles: ('short' | 'side' | 'bun' | 'bald' | 'swept' | 'bob')[] = [
-      'short',
-      'side',
-      'bun',
-      'swept',
+    const styles: ('bob' | 'bald' | 'bald' | 'bald' | 'bald' | 'bob')[] = [
+      'bob',
+      'bald',
+      'bald',
+      'bald',
       'bald',
       'bob',
     ];
-    const skins = ['skin-1', 'skin-2', 'skin-3', 'skin-4'];
-    const hairs = ['hair-1', 'hair-2', 'hair-3'];
+    const skins = ['skin-1', 'skin-4', 'skin-2', 'skin-3', 'skin-2', 'skin-1', 'skin-4', 'skin-3', 'skin-2'];
+    const hairs = ['hair-1', 'hair-3', 'hair-1'];
 
     let cLeft = conservative;
     let lLeft = liberal;
@@ -47,7 +48,7 @@
           skin: skins[i % skins.length]!,
           hair: hairs[i % hairs.length]!,
           hairStyle: styles[i % styles.length]!,
-          glasses: i % 2 === 0,
+          glasses: i === 1 || i === 7,
           lean: 'liberal',
           isChief,
         });
@@ -57,7 +58,7 @@
           skin: skins[i % skins.length]!,
           hair: hairs[i % hairs.length]!,
           hairStyle: styles[i % styles.length]!,
-          glasses: i % 4 === 0,
+          glasses: i === 4,
           lean: 'conservative',
           isChief,
         });
@@ -76,152 +77,99 @@
   data-testid="court-bench"
   preserveAspectRatio="xMidYMid meet"
 >
-  <!-- Background Chamber Architecture: Fluted Marble Columns & Heavy Drapery -->
+  <!-- Cream card backdrop matching g-powers.png -->
   <rect x="0" y="0" width="360" height="88" fill="var(--card)" />
-  <rect x="4" y="4" width="352" height="80" rx="4" fill="var(--paper)" opacity="0.7" />
 
-  <!-- Classical Fluted Columns in Background -->
-  {#each [18, 68, 120, 230, 282, 332] as colX (colX)}
-    <rect x={colX} y="6" width="12" height="42" fill="var(--card)" stroke="var(--ink)" stroke-width="1.2" />
-    <line x1={colX + 3} y1="8" x2={colX + 3} y2="46" stroke="var(--ink-soft)" stroke-width="1" opacity=".4" />
-    <line x1={colX + 6} y1="8" x2={colX + 6} y2="46" stroke="var(--ink-soft)" stroke-width="1" opacity=".4" />
-    <line x1={colX + 9} y1="8" x2={colX + 9} y2="46" stroke="var(--ink-soft)" stroke-width="1" opacity=".4" />
-    <rect x={colX - 2} y="5" width="16" height="3" fill="var(--card)" stroke="var(--ink)" stroke-width="1" />
-  {/each}
-
-  <!-- Central Hanging Brass Scales of Justice -->
-  <g class="scales" transform="translate(180, 16)">
-    <line x1="0" y1="0" x2="0" y2="18" stroke="var(--gold-dark)" stroke-width="2" />
-    <circle cx="0" cy="0" r="2.5" fill="var(--gold)" />
-    <line x1="-16" y1="5" x2="16" y2="5" stroke="var(--gold)" stroke-width="2" />
-    <line x1="-15" y1="5" x2="-20" y2="15" stroke="var(--ink-soft)" stroke-width="0.8" />
-    <line x1="-15" y1="5" x2="-10" y2="15" stroke="var(--ink-soft)" stroke-width="0.8" />
-    <path d="M-22 15 Q-15 19 -8 15 Z" fill="var(--gold)" stroke="var(--ink)" stroke-width="0.8" />
-    <line x1="15" y1="5" x2="10" y2="15" stroke="var(--ink-soft)" stroke-width="0.8" />
-    <line x1="15" y1="5" x2="20" y2="15" stroke="var(--ink-soft)" stroke-width="0.8" />
-    <path d="M8 15 Q15 19 22 15 Z" fill="var(--gold)" stroke="var(--ink)" stroke-width="0.8" />
-  </g>
-
-  <!-- Justices seated behind the bench -->
+  <!-- Justices seated behind the mahogany bench (matching g-powers.png) -->
   {#each JUSTICES as j, i}
-    {@const cx = 20 + ((i + 0.5) / totalSeats) * 320}
+    {@const cx = 24 + ((i + 0.5) / totalSeats) * 312}
     {@const isMajority = conservative >= liberal ? j.lean === 'conservative' : j.lean === 'liberal'}
-    <g class="justice" transform="translate({cx}, 36)">
-      <!-- Back-hair layer for bob/bun -->
-      {#if j.hairStyle === 'bob'}
-        <path d="M-11,-16 C-12,-6 -10,0 -7,1 L7,1 C10,0 12,-6 11,-16 Z" fill="var(--{j.hair})" stroke="var(--ink)" stroke-width="0.9" />
-      {:else if j.hairStyle === 'bun'}
-        <circle cx="0" cy="-27" r="4.5" fill="var(--{j.hair})" stroke="var(--ink)" stroke-width="1" />
+    <g class="justice" transform="translate({cx}, 44)">
+      <!-- Crimson high-back judicial chair behind justice (g-powers.png) -->
+      <rect x="-13" y="-22" width="26" height="28" rx="4" fill="var(--alert)" />
+      <rect x="-11" y="-20" width="22" height="24" rx="3" fill="var(--alert-dark)" opacity=".45" />
+
+      <!-- Back-hair layer for bob/bun (g-powers.png left & right female justices) -->
+      {#if j.hairStyle === 'bob' || j.hairStyle === 'bun'}
+        <path d="M-12,-18 C-14,-6 -13,4 -9,6 L9,6 C13,4 14,-6 12,-18 Z" fill="var(--{j.hair})" />
       {/if}
 
-      <!-- Black Judicial Robe with pleated folds -->
-      <path d="M-13,12 Q-15,-2 -7,-8 L7,-8 Q15,-2 13,12 Z" fill="var(--ink)" stroke="var(--ink)" stroke-width="1.2" />
-      <line x1="-4" y1="-4" x2="-6" y2="12" stroke="var(--ink-soft)" stroke-width="1" opacity=".5" />
-      <line x1="4" y1="-4" x2="6" y2="12" stroke="var(--ink-soft)" stroke-width="1" opacity=".5" />
-      {#if j.isChief}
-        <!-- Chief Justice gold sleeve/collar trim -->
-        <line x1="-8" y1="2" x2="-12" y2="9" stroke="var(--gold)" stroke-width="1.2" />
-        <line x1="8" y1="2" x2="12" y2="9" stroke="var(--gold)" stroke-width="1.2" />
+      <!-- Continuous Black Judicial Robe Torso (exact 22px width matching head width!) -->
+      <path d="M-11,-5 L11,-5 L12,12 L-12,12 Z" fill="var(--art-suit-black)" />
+
+      <!-- Crisp White V-Collar Jabot & Red/Blue Tie Accent (g-powers.png) -->
+      <polygon points="-5,-5 5,-5 0,7" fill="var(--art-shirt)" />
+      {#if !j.hairStyle || j.hairStyle === 'bald'}
+        <polygon points="-1.2,-3 1.2,-3 1.5,6 0,8 -1.5,6" fill={j.lean === 'conservative' ? 'var(--alert)' : 'var(--sky)'} />
       {/if}
 
-      <!-- Sculpted Neck + Cast Chin Shadow -->
-      <rect x="-3.5" y="-10" width="7" height="5" rx="2" fill="var(--{j.skin})" stroke="var(--ink)" stroke-width="0.9" />
-      <path d="M-3.5 -9 Q0 -6.5 3.5 -9 Z" fill="var(--ink)" opacity=".22" />
+      <!-- Seamless Collar-to-Thumb-Head Contour Seam (no stick neck!) -->
+      <path d="M-10.5 -5.5 Q0 -2 10.5 -5.5 L10.5 -4 Q0 -0.5 -10.5 -4 Z" fill="var(--ink)" opacity=".18" />
 
-      <!-- White Pleated Judicial Jabot / Collar -->
-      <polygon points="-3,-6 3,-6 2,-1 -2,-1" fill="var(--art-shirt)" />
-      <polygon points="-5,-6 -3,-6 -2,-1 -5,-3" fill="var(--card)" />
-      <polygon points="5,-6 3,-6 2,-1 5,-3" fill="var(--card)" />
-      <polygon points="-3,-1 3,-1 2,5 -2,5" fill="var(--art-shirt)" stroke="var(--ink)" stroke-width="0.5" />
+      <!-- Continuous 21px-wide Finger/Thumb Head Dome (exact match to g-powers.png!) -->
+      <path
+        d="M-10.5 -17 A10.5 10.5 0 0 1 10.5 -17 L10.5 -5 Q0 -2 -10.5 -5 Z"
+        fill="var(--{j.skin})"
+      />
 
-      <!-- Ears -->
-      <circle cx="-9.5" cy="-14" r="1.8" fill="var(--{j.skin})" stroke="var(--ink)" stroke-width="0.9" />
-      <circle cx="9.5" cy="-14" r="1.8" fill="var(--{j.skin})" stroke="var(--ink)" stroke-width="0.9" />
-
-      <!-- Head with contoured chin & subtle cheek shadow -->
-      <rect x="-9" y="-24" width="18" height="21" rx="8" fill="var(--{j.skin})" stroke="var(--ink)" stroke-width="1.2" />
-      <path d="M-8 -13 C-7 -6 -3 -4 0 -3.5 C-5 -4 -8 -7 -8 -13 Z" fill="var(--ink)" opacity=".09" />
-
-      <!-- Hairstyles -->
-      {#if j.hairStyle === 'bun' || j.hairStyle === 'bob'}
-        <path d="M-9,-19 Q-9,-26 0,-26 Q9,-26 9,-19 Q6,-23 0,-23 Q-6,-23 -9,-19 Z" fill="var(--{j.hair})" />
-      {:else if j.hairStyle === 'side' || j.hairStyle === 'swept'}
-        <path d="M-9,-18 Q-8,-26 0,-26 Q9,-26 9,-20 Q5,-24 0,-24 Q-5,-24 -9,-18 Z" fill="var(--{j.hair})" />
-      {:else if j.hairStyle === 'short'}
-        <path d="M-9,-19 Q-8,-26 0,-26 Q8,-26 9,-19 Q6,-23 0,-23 Q-6,-23 -9,-19 Z" fill="var(--{j.hair})" />
-      {:else if j.hairStyle === 'bald'}
-        <path d="M-9,-18 C-10,-21 -7,-22 -6,-19 Z" fill="var(--{j.hair})" />
-        <path d="M9,-18 C10,-21 7,-22 6,-19 Z" fill="var(--{j.hair})" />
+      <!-- Front Swept Hair for bob/bun justices (g-powers.png) -->
+      {#if j.hairStyle === 'bob' || j.hairStyle === 'bun'}
+        <path
+          d="M-11,-15 A11,11 0 0,1 11,-15 C8,-21 2,-24 -4,-24 C-8,-21 -10,-18 -11,-15 Z"
+          fill="var(--{j.hair})"
+        />
       {/if}
 
-      <!-- Eyebrows reacting to majority/minority ideological stance -->
-      {#if isMajority}
-        <line x1="-6" y1="-17" x2="-2" y2="-17" stroke="var(--ink)" stroke-width="1.2" stroke-linecap="round" />
-        <line x1="2" y1="-17" x2="6" y2="-17" stroke="var(--ink)" stroke-width="1.2" stroke-linecap="round" />
-      {:else}
-        <line x1="-6" y1="-16" x2="-2" y2="-18" stroke="var(--ink)" stroke-width="1.2" stroke-linecap="round" />
-        <line x1="2" y1="-18" x2="6" y2="-16" stroke="var(--ink)" stroke-width="1.2" stroke-linecap="round" />
+      <!-- Eyebrows reacting to majority/minority stance (g-powers.png) -->
+      {#if !isMajority}
+        <line x1="-6.5" y1="-16.5" x2="-2.5" y2="-15" stroke="var(--hair-3)" stroke-width="1.3" stroke-linecap="round" />
+        <line x1="6.5" y1="-16.5" x2="2.5" y2="-15" stroke="var(--hair-3)" stroke-width="1.3" stroke-linecap="round" />
       {/if}
 
-      <!-- Expressive eyes with upper eyelid crease & catchlight -->
-      <path d="M-5.2 -15.2 Q-3.5 -16 -1.8 -15.2" fill="none" stroke="var(--ink)" stroke-width="0.7" />
-      <circle cx="-3.5" cy="-14" r="1.4" fill="var(--ink)" />
-      <circle cx="-3.1" cy="-14.4" r="0.45" fill="var(--card)" />
-      <path d="M1.8 -15.2 Q3.5 -16 5.2 -15.2" fill="none" stroke="var(--ink)" stroke-width="0.7" />
-      <circle cx="3.5" cy="-14" r="1.4" fill="var(--ink)" />
-      <circle cx="3.9" cy="-14.4" r="0.45" fill="var(--card)" />
+      <!-- Solid Dark Dot Eyes (g-powers.png) -->
+      <circle cx="-4" cy="-13" r="1.4" fill="var(--hair-3)" />
+      <circle cx="4" cy="-13" r="1.4" fill="var(--hair-3)" />
 
-      <!-- Glasses if present -->
+      <!-- Round Glasses if present -->
       {#if j.glasses}
-        <circle cx="-3.5" cy="-14" r="3.2" fill="none" stroke="var(--ink)" stroke-width="0.9" />
-        <circle cx="3.5" cy="-14" r="3.2" fill="none" stroke="var(--ink)" stroke-width="0.9" />
-        <line x1="-0.3" y1="-14" x2="0.3" y2="-14" stroke="var(--ink)" stroke-width="0.9" />
+        <circle cx="-4" cy="-13" r="3" fill="none" stroke="var(--hair-3)" stroke-width="0.9" />
+        <circle cx="4" cy="-13" r="3" fill="none" stroke="var(--hair-3)" stroke-width="0.9" />
+        <line x1="-1" y1="-13" x2="1" y2="-13" stroke="var(--hair-3)" stroke-width="0.9" />
       {/if}
 
-      <!-- Expressive mouth line -->
+      <!-- Expressive Mouth (g-powers.png) -->
       {#if isMajority}
-        <path d="M-2.5 -8 Q0 -6.8 2.5 -8" fill="none" stroke="var(--ink)" stroke-width="1" stroke-linecap="round" />
+        <path d="M-3 -8.5 Q0 -6.5 3 -8.5" fill="none" stroke="var(--hair-3)" stroke-width="1.2" stroke-linecap="round" />
       {:else}
-        <path d="M-2.5 -7.5 Q0 -8.5 2.5 -7.5" fill="none" stroke="var(--ink)" stroke-width="1" stroke-linecap="round" />
+        <line x1="-3" y1="-8" x2="3" y2="-8.8" stroke="var(--hair-3)" stroke-width="1.2" stroke-linecap="round" />
       {/if}
     </g>
   {/each}
 
-  <!-- Mahogany Bench Front -->
-  <rect x="8" y="48" width="344" height="6" rx="2" fill="var(--art-wood-light)" stroke="var(--ink)" stroke-width="1.5" />
+  <!-- Carved Mahogany Bench Front (exact match to g-powers.png) -->
+  <rect x="10" y="53" width="340" height="6" rx="1.5" fill="var(--art-wood-light)" stroke="var(--ink)" stroke-width="1.5" />
+  <rect x="14" y="59" width="332" height="25" fill="var(--art-wood)" stroke="var(--ink)" stroke-width="1.5" />
 
-  <!-- Chief Justice Gavel and Sounding Block -->
-  <g transform="translate(170, 43)">
-    <ellipse cx="10" cy="5" rx="7" ry="2.5" fill="var(--art-wood-dark)" stroke="var(--ink)" stroke-width="1" />
-    <rect x="4" y="2" width="12" height="3.5" rx="1" fill="var(--art-wood)" stroke="var(--ink)" stroke-width="0.8" />
-    <line x1="10" y1="2" x2="10" y2="-4" stroke="var(--art-wood-dark)" stroke-width="1" stroke-linecap="round" />
-  </g>
-
-  <!-- Main bench panel with fluted insets -->
-  <rect x="12" y="54" width="336" height="26" fill="var(--art-wood-dark)" />
-  {#each Array.from({ length: 9 }) as _, i}
+  <!-- Recessed Wood Panels along Bench Front (g-powers.png) -->
+  {#each [22, 68, 114, 160, 206, 252, 298] as px (px)}
     <rect
-      x={18 + i * 37}
-      y="57"
-      width="29"
-      height="20"
-      rx="2"
-      fill="var(--art-wood)"
-      stroke="var(--art-wood-light)"
+      x={px}
+      y="63"
+      width="38"
+      height="17"
+      rx="1.5"
+      fill="var(--art-wood-dark)"
+      opacity="0.45"
+      stroke="var(--ink)"
       stroke-width="1"
     />
-    <circle cx={18 + i * 37 + 14.5} cy="67" r="2.5" fill="var(--gold)" opacity=".8" />
   {/each}
-
-  <!-- Lower bench baseboard -->
-  <rect x="10" y="80" width="340" height="5" rx="1" fill="var(--art-wood-dark)" />
-  <line x1="8" y1="85" x2="352" y2="85" stroke="var(--ink)" stroke-width="1.5" />
 </svg>
 
 <style>
   svg {
-    display: block;
+    display: inline-block;
     width: 100%;
-    height: auto;
+    height: 100%;
   }
 </style>

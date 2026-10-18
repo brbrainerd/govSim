@@ -125,7 +125,9 @@
   }
   .tab:hover:not(:disabled) { transform: translateX(4px); }
   .tab[aria-current='page'] { background: var(--alert); color: var(--card); border-color: var(--alert-dark); }
+  :global([data-theme="evil"]) .tab[aria-current='page'] { color: var(--ink); border-color: var(--ink); }
   .tab[aria-current='page']::before { border-color: var(--alert-dark); }
+  :global([data-theme="evil"]) .tab[aria-current='page']::before { border-color: var(--ink); }
   .tab:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
   .name { flex: 1; }
   .lock { white-space: nowrap; font: 700 11px var(--font-body); text-transform: none; letter-spacing: 0; background: var(--paper); border-radius: 6px; padding: 2px 5px; }

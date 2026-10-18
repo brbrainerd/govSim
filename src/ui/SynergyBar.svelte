@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Session } from '../app/session.svelte';
   import { DOCTRINE_FAMILIES } from '../content/perks';
+  import CivicEmblem from './art/CivicEmblem.svelte';
 
   let {
     session,
@@ -40,9 +41,9 @@
             class:evil-chip={meta.evilOnly}
             data-testid={`synergy-chip-${fam.tag}`}
             data-tier={fam.tier}
-            title={`${meta.emoji} ${isWonk ? meta.wonkLabel : meta.label}: ${fam.count} active (${fam.tier > 0 ? `${fam.tier}-Piece Set Bonus Active` : `Next bonus at ${fam.nextThreshold}`}) — ${meta.summary}`}
+            title={`${isWonk ? meta.wonkLabel : meta.label}: ${fam.count} active (${fam.tier > 0 ? `${fam.tier}-Piece Set Bonus Active` : `Next bonus at ${fam.nextThreshold}`}) — ${meta.summary}`}
           >
-            <span class="chip-emoji" aria-hidden="true">{meta.emoji}</span>
+            <CivicEmblem kind={fam.tag} size={13} />
             <span class="chip-name">{isWonk ? meta.wonkLabel : meta.label}</span>
             <span class="chip-count">
               {fam.count}{#if fam.nextThreshold}/{fam.nextThreshold}{/if}
@@ -63,7 +64,7 @@
             style="--chain-idx: {idx}"
             data-testid="synergy-chain-popup"
           >
-            ⚡ {entry.detail}
+            <CivicEmblem kind="bolt" size={12} /> {entry.detail}
           </span>
         {/each}
       </div>

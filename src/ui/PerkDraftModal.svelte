@@ -4,6 +4,7 @@
   import { C } from '../engine/coefficients';
   import Overlay from './Overlay.svelte';
   import TradeoffPill from './TradeoffPill.svelte';
+  import CivicEmblem from './art/CivicEmblem.svelte';
 
   let {
     session,
@@ -48,7 +49,7 @@
       </div>
       <div class="header-meta">
         <span class="clout-avail" data-testid="perk-draft-clout">
-          ⚡ {session.clout} Clout Available
+          <CivicEmblem kind="bolt" size={14} /> {session.clout} Clout Available
         </span>
         <button type="button" class="close-x" onclick={onClose} aria-label="Close Task Force draft">
           ✕
@@ -82,7 +83,7 @@
           </div>
 
           <div class="card-title-row">
-            <span class="card-emoji" aria-hidden="true">{card.emoji}</span>
+            <CivicEmblem kind={card.id} size={34} medallion={true} />
             <div class="card-title-text">
               <h3 class="card-name">{card.name}</h3>
               {#if isWonk}
@@ -95,7 +96,7 @@
             {#each card.tags as tagId (tagId)}
               {@const fam = DOCTRINE_FAMILIES[tagId]}
               <span class="doctrine-pill" class:evil-pill={fam.evilOnly} title={fam.summary}>
-                <span aria-hidden="true">{fam.emoji}</span>
+                <CivicEmblem kind={tagId} size={12} />
                 {isWonk ? fam.wonkLabel : fam.label}
               </span>
             {/each}
@@ -134,7 +135,11 @@
               title="Hold this card in slot 1 for next quarter's draft"
               onclick={() => session.toggleLockPerk(card.id)}
             >
-              {isLocked ? '🔒 Locked' : '🔓 Lock'}
+              {#if isLocked}
+                <CivicEmblem kind="lock" size={12} /> Locked
+              {:else}
+                <CivicEmblem kind="unlock" size={12} /> Lock
+              {/if}
             </button>
           </div>
         </article>
@@ -150,7 +155,7 @@
           data-testid="perk-reroll-btn"
           onclick={() => session.rerollPerkSlate()}
         >
-          🎲 Reroll Slate ({session.nextPerkRerollCost} Clout)
+          <CivicEmblem kind="dice" size={14} /> Reroll Slate ({session.nextPerkRerollCost} Clout)
         </button>
 
         <button
@@ -160,9 +165,11 @@
           data-testid="perk-skip-btn"
           onclick={() => session.skipPerkDraft()}
         >
-          {skipped
-            ? `✓ Skipping Draft (+${C.perkSkipCloutBonus} Clout)`
-            : `⏭️ Skip for +${C.perkSkipCloutBonus} Clout`}
+          {#if skipped}
+            ✓ Skipping Draft (+{C.perkSkipCloutBonus} Clout)
+          {:else}
+            <CivicEmblem kind="skip" size={13} /> Skip for +{C.perkSkipCloutBonus} Clout
+          {/if}
         </button>
       </div>
 
@@ -332,7 +339,7 @@
 
   .cost-badge.free {
     background: var(--sage-tint);
-    color: var(--sage-dark);
+    color: var(--ink);
     border: 1px solid var(--sage-dark);
   }
 
@@ -340,11 +347,6 @@
     display: flex;
     align-items: center;
     gap: 8px;
-  }
-
-  .card-emoji {
-    font-size: 22px;
-    line-height: 1;
   }
 
   .card-title-text {

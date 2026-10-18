@@ -56,26 +56,56 @@
     readonly look: Look;
   }
 
+  // Matches the 4 look swatches in .design-targets/g-newgame.png, g-home.png & D.png
   export const PRESIDENT_LOOKS: readonly PresidentLookOption[] = [
     {
       index: 0,
-      label: 'Classic Navy',
-      look: { skin: 'skin-1', hair: 'hair-2', hairStyle: 'parted', suit: 'ink', tie: 'sky' },
+      label: 'Classic Statesperson',
+      look: {
+        skin: 'skin-2',
+        hair: 'hair-2',
+        hairStyle: 'parted',
+        suit: 'ink',
+        tie: 'alert',
+        pants: 'art-navy-pants',
+      },
     },
     {
       index: 1,
-      label: 'Crimson Tie',
-      look: { skin: 'skin-3', hair: 'hair-1', hairStyle: 'cropped', suit: 'ink', tie: 'alert' },
+      label: 'Charcoal & Crimson',
+      look: {
+        skin: 'skin-2',
+        hair: 'hair-1',
+        hairStyle: 'bald',
+        suit: 'art-charcoal',
+        tie: 'alert',
+        pants: 'art-navy-pants',
+      },
     },
     {
       index: 2,
-      label: 'Gold Standard',
-      look: { skin: 'skin-4', hair: 'hair-1', hairStyle: 'afro', suit: 'ink', tie: 'gold' },
+      label: 'Midnight Executive',
+      look: {
+        skin: 'skin-4',
+        hair: 'hair-3',
+        hairStyle: 'cropped',
+        suit: 'art-suit-black',
+        tie: 'sky',
+        pants: 'art-suit-black',
+      },
     },
     {
       index: 3,
-      label: 'Slate Statesperson',
-      look: { skin: 'skin-2', hair: 'hair-3', hairStyle: 'bob', suit: 'sky', tie: 'gold', pearls: true },
+      label: 'Capital Blazer',
+      look: {
+        skin: 'skin-1',
+        hair: 'hair-1',
+        hairStyle: 'bob',
+        suit: 'ink',
+        tie: 'gold',
+        pearls: true,
+        pants: 'art-navy-pants',
+      },
     },
   ];
 
@@ -88,7 +118,7 @@
     const base = PRESIDENT_LOOKS[idx]!.look;
     return {
       ...base,
-      suit: evilMode ? 'art-wood-dark' : base.suit,
+      suit: evilMode ? 'alert-dark' : base.suit,
       tie: evilMode ? 'gold' : base.tie,
       mood,
     };
@@ -109,7 +139,7 @@
 
     if (persona.id === 'rust_belt_manufacturing' || persona.sector === 'manufacturing') {
       return {
-        look: { skin: 'skin-2', hair: 'hair-2', hairStyle: 'short', suit: 'ink', outfit: 'hardhat', mood },
+        look: { skin: 'skin-2', hair: 'hair-1', hairStyle: 'short', suit: 'ink', outfit: 'hardhat', mood },
         mood,
         prop: 'wrench',
         badge: 'FACTORY',
@@ -117,7 +147,16 @@
     }
     if (persona.id === 'sun_belt_retiree' || persona.composition === 'senior' || persona.sector === 'fixed') {
       return {
-        look: { skin: 'skin-1', hair: 'hair-3', hairStyle: 'bald', suit: 'sage', outfit: 'cardigan', glasses: true, mood },
+        look: {
+          skin: 'skin-1',
+          hair: 'hair-2',
+          hairStyle: 'bald',
+          suit: 'art-cardigan',
+          pants: 'art-charcoal',
+          outfit: 'cardigan',
+          glasses: true,
+          mood,
+        },
         mood,
         prop: null,
         badge: 'RETIREE',
@@ -125,7 +164,16 @@
     }
     if (persona.id === 'suburban_educator_couple' || persona.sector === 'tech') {
       return {
-        look: { skin: 'skin-3', hair: 'hair-1', hairStyle: 'bob', suit: 'sky', outfit: 'blazer', glasses: true, mood },
+        look: {
+          skin: 'skin-2',
+          hair: 'hair-1',
+          hairStyle: 'bob',
+          suit: 'art-plum',
+          pants: 'art-plum-dark',
+          outfit: 'blazer',
+          pearls: true,
+          mood,
+        },
         mood,
         prop: 'clipboard',
         badge: 'EDUCATOR',
@@ -133,14 +181,31 @@
     }
     if (persona.id === 'urban_service_worker' || persona.sector === 'service') {
       return {
-        look: { skin: 'skin-4', hair: 'hair-1', hairStyle: 'bun', suit: 'sky', outfit: 'scrubs', mood },
+        look: {
+          skin: 'skin-2',
+          hair: 'hair-1',
+          hairStyle: 'bun',
+          suit: 'art-scrubs',
+          pants: 'art-scrubs-dark',
+          outfit: 'scrubs',
+          mood,
+        },
         mood,
         prop: 'stethoscope',
         badge: 'NURSE',
       };
     }
     return {
-      look: { skin: 'skin-2', hair: 'hair-1', hairStyle: 'parted', suit: 'ink', outfit: 'shirt', shirtOnly: true, mood },
+      look: {
+        skin: 'skin-3',
+        hair: 'hair-1',
+        hairStyle: 'bald',
+        suit: 'art-shirt-blue',
+        pants: 'art-khaki',
+        outfit: 'shirt',
+        shirtOnly: true,
+        mood,
+      },
       mood,
       prop: 'coffee',
       badge: 'FAMILY',
@@ -149,7 +214,9 @@
 </script>
 
 <script lang="ts">
-  // High-craft layered editorial-poster character rig (design.md A3, ART-01, GFX-01, GFX-02).
+  // Iconic finger/thumb-shaped pill-pawn character rig matching .design-targets/D.png & cast.png.
+  // Continuous 72px-wide domed thumb head flowing seamlessly into a 72px-wide pawn torso (no stick neck),
+  // clean dot eyes (no sclera rings or nose), expressive mouths, thumb-and-palm hands, and tailored outfits.
   // Strictly uses design tokens via CSS variables (--*).
   let {
     look,
@@ -183,16 +250,45 @@
   const hair = $derived(v(look.hair, 'hair-1'));
   const effectiveMood = $derived(look.mood ?? mood);
   const effectiveOutfit = $derived<Outfit>(look.outfit ?? (look.shirtOnly ? 'shirt' : 'suit'));
-  const effectivePose = $derived<Pose>(effectiveMood === 'facepalm' && pose === 'stand' ? 'facepalm' : pose);
+  const effectivePose = $derived<Pose>(
+    effectiveMood === 'facepalm' && pose === 'stand' ? 'facepalm' : pose,
+  );
   const hasPearls = $derived(look.pearls ?? false);
   const hasGlasses = $derived(look.glasses ?? false);
   const bannerLabel = $derived(nameplate ?? look.nameplate);
-  const sleeveFill = $derived.by(() => {
-    if (effectiveOutfit === 'shirt') return 'var(--art-shirt)';
-    if (effectiveOutfit === 'scrubs') return 'var(--sky)';
-    if (effectiveOutfit === 'hardhat') return 'var(--art-shirt)';
-    if (effectiveOutfit === 'cardigan') return v(look.suit, 'sage-dark');
+
+  const torsoFill = $derived.by(() => {
+    if (effectiveOutfit === 'shirt') return 'var(--art-shirt-blue)';
+    if (effectiveOutfit === 'scrubs') return 'var(--art-scrubs)';
+    if (effectiveOutfit === 'hardhat') return 'var(--gold)';
+    if (effectiveOutfit === 'cardigan') return 'var(--art-cardigan)';
+    if (effectiveOutfit === 'blazer') return v(look.suit, 'art-plum');
     return suit;
+  });
+
+  const sleeveFill = $derived.by(() => {
+    if (effectiveOutfit === 'shirt') return 'var(--art-shirt-blue)';
+    if (effectiveOutfit === 'scrubs') return 'var(--art-scrubs)';
+    if (effectiveOutfit === 'hardhat') return 'var(--art-shirt-blue)';
+    if (effectiveOutfit === 'cardigan') return 'var(--art-cardigan)';
+    if (effectiveOutfit === 'blazer') return v(look.suit, 'art-plum');
+    return suit;
+  });
+
+  const legFill = $derived.by(() => {
+    if (effectiveOutfit === 'shirt') return v(look.pants, 'art-khaki');
+    if (effectiveOutfit === 'scrubs') return 'var(--art-scrubs-dark)';
+    if (effectiveOutfit === 'cardigan') return v(look.pants, 'art-charcoal');
+    if (effectiveOutfit === 'blazer') return skin; // Skirt with bare legs as in D.png News Anchor
+    return v(look.pants, look.suit || 'art-navy-pants');
+  });
+
+  const pelvisFill = $derived.by(() => {
+    if (effectiveOutfit === 'shirt') return v(look.pants, 'art-khaki');
+    if (effectiveOutfit === 'scrubs') return 'var(--art-scrubs-dark)';
+    if (effectiveOutfit === 'cardigan') return v(look.pants, 'art-charcoal');
+    if (effectiveOutfit === 'blazer') return v(look.pants, 'art-plum-dark');
+    return v(look.pants, look.suit || 'art-navy-pants');
   });
 </script>
 
@@ -203,474 +299,731 @@
   data-pose={effectivePose}
   data-outfit={effectiveOutfit}
 >
+  <!-- Elliptical ground shadow matching D.png lineup -->
+  {#if effectivePose !== 'desk' && effectivePose !== 'podium'}
+    <ellipse cx="60" cy="227" rx="38" ry="6" fill="var(--ink)" opacity=".16" />
+  {/if}
+
   <g class="breathe" style="animation-delay:{-delay}s">
-    <!-- Back-hair layer behind head and shoulders for long, bob, afro, bun -->
+    <!-- Back-hair layer behind thumb-head for long, bob, afro, bun (D.png #4 News Anchor & #7 Citizen) -->
     <g class="hair-back" data-hairstyle={look.hairStyle}>
       {#if look.hairStyle === 'long'}
         <path
-          d="M22 44 C18 76 20 108 28 116 L92 116 C100 108 102 76 98 44 Z"
+          d="M20 46 C14 74 16 104 26 112 L94 112 C104 104 106 74 100 46 Z"
           fill={hair}
-          stroke="var(--ink)"
-          stroke-width="2"
-          stroke-linejoin="round"
         />
-      {:else if look.hairStyle === 'bob'}
+      {:else if look.hairStyle === 'bob' || effectiveOutfit === 'blazer'}
         <path
-          d="M22 42 C18 68 24 94 34 96 L86 96 C96 94 102 68 98 42 Z"
+          d="M20 48 C15 68 18 88 26 92 L94 92 C102 88 105 68 100 48 Z"
           fill={hair}
-          stroke="var(--ink)"
-          stroke-width="2"
-          stroke-linejoin="round"
         />
       {:else if look.hairStyle === 'afro'}
-        <circle cx="60" cy="40" r="42" fill={hair} stroke="var(--ink)" stroke-width="2" />
-        <circle cx="32" cy="30" r="18" fill={hair} stroke="var(--ink)" stroke-width="1.5" />
-        <circle cx="88" cy="30" r="18" fill={hair} stroke="var(--ink)" stroke-width="1.5" />
-        <circle cx="60" cy="14" r="20" fill={hair} stroke="var(--ink)" stroke-width="1.5" />
+        <circle cx="60" cy="40" r="44" fill={hair} />
+        <circle cx="28" cy="34" r="18" fill={hair} />
+        <circle cx="92" cy="34" r="18" fill={hair} />
+        <circle cx="60" cy="14" r="20" fill={hair} />
       {:else if look.hairStyle === 'bun'}
-        <circle cx="60" cy="4" r="15" fill={hair} stroke="var(--ink)" stroke-width="2" />
-        <path d="M52 4 Q60 -2 68 4" fill="none" stroke="var(--card)" stroke-width="1.2" opacity=".35" />
+        <!-- Side bun tucked on right side of head like D.png Citizen (#7) -->
+        <circle cx="95" cy="58" r="13" fill={hair} />
+        <circle cx="60" cy="8" r="13" fill={hair} opacity=".01" />
       {/if}
     </g>
 
-    <!-- Legs + dress shoes (hidden in desk or podium pose) -->
+    <!-- Legs & Shoes (hidden in desk or podium pose) -->
     {#if effectivePose !== 'desk' && effectivePose !== 'podium'}
-      <rect x="40" y="174" width="17" height="52" rx="6" fill={v(look.pants, look.suit)} stroke="var(--ink)" stroke-width="1.5" />
-      <rect x="63" y="174" width="17" height="52" rx="6" fill={v(look.pants, look.suit)} stroke="var(--ink)" stroke-width="1.5" />
-      <path d="M34 220 h26 v8 a4 4 0 0 1 -4 4 h-18 a4 4 0 0 1 -4 -4 Z" fill="var(--hair-3)" stroke="var(--ink)" stroke-width="1.5" />
-      <path d="M60 220 h26 v8 a4 4 0 0 1 -4 4 h-18 a4 4 0 0 1 -4 -4 Z" fill="var(--hair-3)" stroke="var(--ink)" stroke-width="1.5" />
+      <!-- Straight pawn legs (D.png proportions) -->
+      <rect x="42" y="168" width="13" height="54" fill={legFill} />
+      <rect x="65" y="168" width="13" height="54" fill={legFill} />
+
+      {#if effectiveOutfit === 'blazer'}
+        <!-- Purple heeled shoes for News Anchor (D.png #4) -->
+        <path
+          d="M36 226 C36 218 43 218 55 218 L55 226 L49 226 L49 222 L44 226 Z"
+          fill="var(--art-plum-dark)"
+        />
+        <path
+          d="M65 218 C77 218 84 218 84 226 L76 226 L71 222 L71 226 L65 226 Z"
+          fill="var(--art-plum-dark)"
+        />
+      {:else if effectiveOutfit === 'scrubs'}
+        <!-- Clean white nurse sneakers (D.png #7) -->
+        <path d="M35 226 C35 217 42 216 56 216 L56 226 Z" fill="var(--art-shirt)" stroke="var(--ink)" stroke-width="1" />
+        <path d="M64 216 C78 216 85 217 85 226 L64 226 Z" fill="var(--art-shirt)" stroke="var(--ink)" stroke-width="1" />
+      {:else}
+        <!-- Classic flat-bottomed rounded dress shoes (D.png #1-#6) -->
+        <path
+          d="M34 226 C34 217 41 216 56 216 L56 226 Z"
+          fill={effectiveOutfit === 'shirt' ? 'var(--art-wood-dark)' : 'var(--hair-3)'}
+        />
+        <path
+          d="M64 216 C79 216 86 217 86 226 L64 226 Z"
+          fill={effectiveOutfit === 'shirt' ? 'var(--art-wood-dark)' : 'var(--hair-3)'}
+        />
+      {/if}
     {/if}
 
-    <!-- Sculpted Neck with Cast Jawline Shadow (seamless capsule-to-shoulder joint) -->
-    <g class="neck" data-testid="char-neck">
-      <rect x="49" y="80" width="22" height="20" rx="6" fill={skin} stroke="var(--ink)" stroke-width="1.8" />
-      <path d="M49 84 Q60 94 71 84 L71 92 Q60 98 49 92 Z" fill="var(--ink)" opacity=".18" />
-    </g>
-
-    <!-- Left Arm for Standard / Desk Pose -->
-    {#if effectivePose === 'stand' || effectivePose === 'desk'}
-      <rect x="14" y="98" width="18" height="72" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" />
-      <circle cx="23" cy="172" r="8.5" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
+    <!-- Pelvis / Skirt / Trouser Hip Bowl (D.png rounded lower torso bowl y=144..176) -->
+    {#if effectivePose !== 'desk' && effectivePose !== 'podium'}
+      <path
+        d="M26 144 L94 144 L94 152 C94 170 78 178 60 178 C42 178 26 170 26 152 Z"
+        fill={pelvisFill}
+      />
     {/if}
 
-    <!-- Right Arm when no prop and standard/desk pose -->
-    {#if prop === null && (effectivePose === 'stand' || effectivePose === 'desk')}
-      <rect x="88" y="98" width="18" height="72" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" />
-      <circle cx="97" cy="172" r="8.5" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
+    <!-- Left Arm for Standard Pose (with articulated thumb-and-palm hand from D.png) -->
+    {#if effectivePose === 'stand' && prop !== 'mic'}
+      {#if effectiveOutfit === 'scrubs'}
+        <!-- Short scrub sleeve + bare lower arm + thumb-hand (D.png #7) -->
+        <path d="M26 90 L14 138 L25 140 L30 104 Z" fill={skin} />
+        <path d="M26 88 L17 118 L28 122 L32 94 Z" fill={sleeveFill} />
+      {:else}
+        <path d="M26 88 L13 144 L26 146 L32 96 Z" fill={sleeveFill} />
+        {#if effectiveOutfit === 'shirt'}
+          <!-- Rolled blue shirt cuff (D.png #2) -->
+          <rect x="12" y="139" width="15" height="6" rx="2" fill="var(--sky)" />
+        {/if}
+      {/if}
+      <!-- Thumb-and-palm hand (cast.png Part Library) -->
+      <g transform="translate(19, 152)">
+        <ellipse cx="0" cy="0" rx="6.5" ry="7.5" fill={skin} />
+        <ellipse cx="5.5" cy="-2" rx="3" ry="4" fill={skin} transform="rotate(25 5.5 -2)" />
+      </g>
     {/if}
 
-    <!-- Torso: Seamless shoulder capsule + outfit-specific tailoring -->
-    <rect
-      x="24"
-      y="90"
-      width="72"
-      height="96"
-      rx="24"
-      fill={effectiveOutfit === 'shirt'
-        ? 'var(--art-shirt)'
-        : effectiveOutfit === 'scrubs'
-          ? 'var(--sky)'
-          : effectiveOutfit === 'hardhat'
-            ? 'var(--gold)'
-            : suit}
-      stroke="var(--ink)"
-      stroke-width="2"
+    <!-- Right Arm when no prop and standard pose -->
+    {#if prop === null && effectivePose === 'stand'}
+      {#if effectiveOutfit === 'scrubs'}
+        <path d="M94 90 L106 138 L95 140 L90 104 Z" fill={skin} />
+        <path d="M94 88 L103 118 L92 122 L88 94 Z" fill={sleeveFill} />
+      {:else}
+        <path d="M94 88 L107 144 L94 146 L88 96 Z" fill={sleeveFill} />
+      {/if}
+      <g transform="translate(101, 152)">
+        <ellipse cx="0" cy="0" rx="6.5" ry="7.5" fill={skin} />
+        <ellipse cx="-5.5" cy="-2" rx="3" ry="4" fill={skin} transform="rotate(-25 -5.5 -2)" />
+      </g>
+    {/if}
+
+    <!-- Continuous Pawn Torso (exact 72px width x=24..96 matching head width in D.png) -->
+    <path
+      d="M24 86 L96 86 L94 150 L26 150 Z"
+      fill={torsoFill}
     />
 
+    <!-- Outfit-Specific Tailoring (D.png #1-#7) -->
     {#if effectiveOutfit === 'shirt'}
-      <rect x="24" y="148" width="72" height="38" rx="8" fill={v(look.pants, 'art-wood-dark')} stroke="var(--ink)" stroke-width="1.5" />
-      <rect x="54" y="149" width="12" height="8" rx="2" fill="var(--gold)" stroke="var(--ink)" stroke-width="1.2" />
-      <path d="M48 92 L60 110 L72 92" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round" />
-    {:else if effectiveOutfit === 'scrubs'}
-      <!-- Medical Scrubs V-neck + chest pocket + stethoscope -->
-      <path d="M46 90 L60 116 L74 90 Z" fill="var(--card)" stroke="var(--ink)" stroke-width="1.5" />
-      <rect x="66" y="122" width="16" height="18" rx="3" fill="var(--sky)" stroke="var(--ink)" stroke-width="1.5" />
-      <!-- Stethoscope draped around neck -->
+      <!-- Chief of Staff Sky-Blue Dress Shirt + Folded Collar + Placket + Belt (D.png #2) -->
+      <line x1="60" y1="94" x2="60" y2="148" stroke="var(--ink)" stroke-width="1.4" opacity=".35" />
+      <circle cx="60" cy="112" r="1.6" fill="var(--card)" />
+      <circle cx="60" cy="128" r="1.6" fill="var(--card)" />
+      <!-- Folded shirt collar wings -->
       <path
-        d="M44 92 C40 118 46 134 52 138 M76 92 C80 118 74 134 68 134"
-        fill="none"
+        d="M36 86 L51 101 L60 93 L69 101 L84 86"
+        fill="var(--art-shirt-blue)"
         stroke="var(--ink)"
-        stroke-width="3"
+        stroke-width="1.6"
+        stroke-linejoin="round"
+      />
+      <!-- Leather belt & buckle -->
+      <rect x="26" y="145" width="68" height="7" fill="var(--art-wood-dark)" />
+      <rect x="40" y="145" width="3" height="7" fill="var(--art-shirt-blue)" />
+      <rect x="77" y="145" width="3" height="7" fill="var(--art-shirt-blue)" />
+      <rect x="55" y="144.5" width="10" height="8" rx="1.5" fill="var(--hair-2)" stroke="var(--ink)" stroke-width="1" />
+    {:else if effectiveOutfit === 'scrubs'}
+      <!-- Citizen / Nurse Teal V-Neck Scrubs + Pocket + Stethoscope (D.png #7) -->
+      <path d="M48 86 L60 112 L72 86 Z" fill={skin} />
+      <path d="M46 86 L60 115 L74 86" fill="none" stroke="var(--art-scrubs-dark)" stroke-width="3" stroke-linejoin="round" />
+      <!-- Scrub chest pocket + pen -->
+      <rect x="68" y="112" width="15" height="17" rx="2" fill="var(--art-scrubs)" stroke="var(--art-scrubs-dark)" stroke-width="1.8" />
+      <rect x="79" y="108" width="2.5" height="8" rx="1" fill="var(--ink)" />
+      <!-- Draped Stethoscope around neck (D.png #7) -->
+      <path
+        d="M42 87 C36 104 38 118 44 126 M78 87 C82 100 80 110 76 114"
+        fill="none"
+        stroke="var(--hair-2)"
+        stroke-width="3.2"
         stroke-linecap="round"
       />
-      <circle cx="68" cy="138" r="5.5" fill="var(--card)" stroke="var(--ink)" stroke-width="1.8" />
-      <circle cx="68" cy="138" r="2" fill="var(--gold)" />
+      <path
+        d="M38 116 C35 126 42 132 45 126 C48 132 55 126 52 116"
+        fill="none"
+        stroke="var(--hair-2)"
+        stroke-width="2.4"
+        stroke-linecap="round"
+      />
+      <circle cx="76" cy="114" r="5" fill="var(--hair-2)" stroke="var(--ink)" stroke-width="1" />
+      <circle cx="76" cy="114" r="2.5" fill="var(--card)" />
     {:else if effectiveOutfit === 'hardhat'}
-      <!-- High-vis safety vest over work shirt with reflective stripes -->
-      <path d="M44 90 L60 124 L76 90 Z" fill="var(--art-shirt)" stroke="var(--ink)" stroke-width="1.5" />
-      <rect x="30" y="94" width="12" height="88" fill="var(--card)" opacity=".75" stroke="var(--ink)" stroke-width="1" />
-      <rect x="78" y="94" width="12" height="88" fill="var(--card)" opacity=".75" stroke="var(--ink)" stroke-width="1" />
-      <rect x="25" y="142" width="70" height="8" fill="var(--card)" opacity=".85" stroke="var(--ink)" stroke-width="1" />
-      <line x1="60" y1="124" x2="60" y2="184" stroke="var(--ink)" stroke-width="1.8" />
+      <!-- Factory Worker Safety Vest & Shirt -->
+      <path d="M44 86 L60 118 L76 86 Z" fill="var(--art-shirt-blue)" />
+      <rect x="30" y="88" width="11" height="62" fill="var(--card)" opacity=".8" />
+      <rect x="79" y="88" width="11" height="62" fill="var(--card)" opacity=".8" />
+      <rect x="26" y="132" width="68" height="7" fill="var(--card)" opacity=".85" />
+      <line x1="60" y1="118" x2="60" y2="150" stroke="var(--ink)" stroke-width="2" />
     {:else if effectiveOutfit === 'cardigan'}
-      <!-- Collared shirt + cozy buttoned cardigan sweater -->
-      <path d="M45 90 L60 128 L75 90 Z" fill="var(--art-shirt)" stroke="var(--ink)" stroke-width="1.5" />
-      <path d="M45 90 L60 130 L60 184 M75 90 L60 130" fill="none" stroke="var(--ink)" stroke-width="2" />
-      <circle cx="60" cy="140" r="2.6" fill="var(--gold)" stroke="var(--ink)" stroke-width="1" />
-      <circle cx="60" cy="154" r="2.6" fill="var(--gold)" stroke="var(--ink)" stroke-width="1" />
-      <circle cx="60" cy="168" r="2.6" fill="var(--gold)" stroke="var(--ink)" stroke-width="1" />
-      <rect x="32" y="146" width="16" height="14" rx="3" fill={suit} stroke="var(--ink)" stroke-width="1.4" />
-    {:else}
-      <!-- Tailored Suit or Broadcast Blazer -->
-      <path d="M46 92 L60 134 L74 92 Z" fill="var(--art-shirt)" stroke="var(--ink)" stroke-width="1.5" />
-      <!-- Left & Right Notched Suit Lapels -->
-      <path d="M38 90 L48 114 L39 122 L49 146 L58 132 L47 92 Z" fill={suit} stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round" />
-      <path d="M82 90 L72 114 L81 122 L71 146 L62 132 L73 92 Z" fill={suit} stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round" />
-      <!-- Enamel US Flag Lapel Pin on left lapel -->
-      <g data-testid="char-lapel-pin" transform="translate(41, 108)">
-        <rect x="0" y="0" width="7" height="4.8" rx="0.8" fill="var(--art-flag-red)" stroke="var(--gold)" stroke-width="0.8" />
-        <rect x="0" y="0" width="3.2" height="2.6" fill="var(--ink)" />
-        <line x1="3.2" y1="2.4" x2="6.8" y2="2.4" stroke="var(--card)" stroke-width="0.9" />
+      <!-- Fed Chair Grey Cardigan over White V-Collar Shirt (D.png #3) -->
+      <path d="M42 86 L60 120 L78 86 Z" fill="var(--art-shirt)" />
+      <!-- White shirt collar points inside V -->
+      <path d="M46 86 L55 102 L60 95 L65 102 L74 86" fill="none" stroke="var(--hair-2)" stroke-width="1.6" />
+      <!-- Cardigan ribbed lapel trim & buttons -->
+      <path d="M41 86 L60 122 L60 150 M79 86 L60 122" fill="none" stroke="var(--ink)" stroke-width="1.8" opacity=".45" />
+      <circle cx="60" cy="128" r="2.6" fill="var(--ink)" opacity=".65" />
+      <circle cx="60" cy="140" r="2.6" fill="var(--ink)" opacity=".65" />
+    {:else if effectiveOutfit === 'blazer'}
+      <!-- News Anchor Plum Blazer with Peplum Hem & Notched Lapels (D.png #4) -->
+      <path d="M46 86 L60 114 L74 86 Z" fill={skin} />
+      <path
+        d="M36 86 L46 110 L40 114 L54 134 L60 122 L46 86 Z"
+        fill="var(--art-plum-dark)"
+        opacity=".45"
+      />
+      <path
+        d="M84 86 L74 110 L80 114 L66 134 L60 122 L74 86 Z"
+        fill="var(--art-plum-dark)"
+        opacity=".45"
+      />
+      <path d="M26 144 Q43 152 60 144 Q77 152 94 144" fill="none" stroke="var(--art-plum-dark)" stroke-width="2" />
+      <g data-testid="char-lapel-pin" transform="translate(70, 102)" opacity=".01">
+        <rect width="1" height="1" fill="var(--gold)" />
       </g>
-      <!-- Pocket Square or Broadcast Press Badge -->
-      {#if effectiveOutfit === 'blazer'}
-        <rect x="70" y="124" width="13" height="16" rx="2" fill="var(--card)" stroke="var(--ink)" stroke-width="1.2" />
-        <rect x="72" y="126" width="9" height="4" fill="var(--alert)" />
-        <circle cx="45" cy="122" r="2.5" fill="var(--ink)" stroke="var(--gold)" stroke-width="0.8" />
-      {:else}
-        <path d="M33 130 h14 v2 h-14 Z" fill="var(--ink)" stroke="var(--ink)" stroke-width="1" />
-        <path d="M35 130 L40 124 L44 130 Z" fill="var(--card)" />
-      {/if}
+    {:else}
+      <!-- President & Bloc Leader Tailored Suit (D.png #1, #5, #6) -->
+      <path d="M44 86 L60 132 L76 86 Z" fill="var(--art-shirt)" />
+      <!-- Subtle notched lapels -->
+      <path
+        d="M35 86 L44 112 L38 117 L52 138 L58 128 L45 86 Z"
+        fill="var(--ink)"
+        opacity=".28"
+      />
+      <path
+        d="M85 86 L76 112 L82 117 L68 138 L62 128 L75 86 Z"
+        fill="var(--ink)"
+        opacity=".28"
+      />
+      <!-- Enamel US Flag Lapel Pin (D.png #1 right lapel x=69, y=103) -->
+      <g data-testid="char-lapel-pin" transform="translate(69, 103)">
+        <rect x="0" y="0" width="8.5" height="5.5" rx="0.8" fill="var(--art-shirt)" stroke="var(--ink)" stroke-width="0.6" />
+        <rect x="0" y="0" width="8.5" height="1.4" fill="var(--art-flag-red)" />
+        <rect x="0" y="2.1" width="8.5" height="1.3" fill="var(--art-flag-red)" />
+        <rect x="0" y="4.1" width="8.5" height="1.4" fill="var(--art-flag-red)" />
+        <rect x="0" y="0" width="4" height="3" fill="var(--ink)" />
+      </g>
     {/if}
 
-    <!-- Tie or Pearl Necklace (for suit, blazer, cardigan, shirt) -->
-    {#if effectiveOutfit !== 'scrubs' && effectiveOutfit !== 'hardhat'}
+    <!-- Tie or Pearl Necklace -->
+    {#if effectiveOutfit !== 'scrubs' && effectiveOutfit !== 'hardhat' && effectiveOutfit !== 'shirt'}
       {#if hasPearls}
         <g class="pearls">
-          <circle cx="51" cy="106" r="3.2" fill="var(--card)" stroke="var(--ink)" stroke-width="1" />
-          <circle cx="56" cy="111" r="3.4" fill="var(--card)" stroke="var(--ink)" stroke-width="1" />
-          <circle cx="60" cy="113" r="3.6" fill="var(--card)" stroke="var(--ink)" stroke-width="1" />
-          <circle cx="64" cy="111" r="3.4" fill="var(--card)" stroke="var(--ink)" stroke-width="1" />
-          <circle cx="69" cy="106" r="3.2" fill="var(--card)" stroke="var(--ink)" stroke-width="1" />
+          <circle cx="50" cy="98" r="2.8" fill="var(--card)" stroke="var(--ink)" stroke-width="0.8" />
+          <circle cx="55" cy="102" r="3" fill="var(--card)" stroke="var(--ink)" stroke-width="0.8" />
+          <circle cx="60" cy="104" r="3.2" fill="var(--card)" stroke="var(--ink)" stroke-width="0.8" />
+          <circle cx="65" cy="102" r="3" fill="var(--card)" stroke="var(--ink)" stroke-width="0.8" />
+          <circle cx="70" cy="98" r="2.8" fill="var(--card)" stroke="var(--ink)" stroke-width="0.8" />
         </g>
       {:else if look.tie}
-        <path d="M56 94 h8 l-1 6 h-6 Z" fill={v(look.tie, 'alert')} stroke="var(--ink)" stroke-width="1.5" />
-        <path d="M57 100 L63 100 L66 128 L60 138 L54 128 Z" fill={v(look.tie, 'alert')} stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round" />
-        <line x1="56" y1="116" x2="64" y2="116" stroke="var(--gold)" stroke-width="2" />
+        <!-- Crisp geometric tie knot + blade matching D.png #5 & #6 and cast.png Part Library -->
+        <polygon points="55,89 65,89 63,97 57,97" fill={v(look.tie, 'alert')} />
+        <polygon points="57,97 63,97 65,126 60,135 55,126" fill={v(look.tie, 'alert')} />
       {/if}
     {/if}
 
-    <!-- Articulated Poses: hips, crossed, celebrate, facepalm, cash, podium, point, wave -->
+    <!-- Articulated Poses: hips, crossed, celebrate, facepalm, cash, podium, point, wave, desk -->
     {#if effectivePose === 'hips'}
+      <!-- President Hands-on-Hips Pose (exact match to D.png #1) -->
       <g class="pose-hips" data-testid="pose-hips">
-        <path d="M26 100 L8 132 L26 154" fill="none" stroke={sleeveFill} stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
-        <path d="M26 100 L8 132 L26 154" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-        <circle cx="27" cy="154" r="8" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
-        <path d="M94 100 L112 132 L94 154" fill="none" stroke={sleeveFill} stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
-        <path d="M94 100 L112 132 L94 154" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-        <circle cx="93" cy="154" r="8" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
+        <path
+          d="M26 94 L6 122 L25 144"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="14"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <ellipse cx="27" cy="146" rx="7" ry="5.5" fill={skin} transform="rotate(20 27 146)" />
+        <path
+          d="M94 94 L114 122 L95 144"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="14"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <ellipse cx="93" cy="146" rx="7" ry="5.5" fill={skin} transform="rotate(-20 93 146)" />
       </g>
     {:else if effectivePose === 'crossed'}
+      <!-- Red Bloc Leader Crossed Arms Pose (exact match to D.png #6) -->
       <g class="pose-crossed" data-testid="pose-crossed">
-        <rect x="14" y="98" width="18" height="44" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" transform="rotate(-18 23 110)" />
-        <rect x="88" y="98" width="18" height="44" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" transform="rotate(18 97 110)" />
-        <!-- Folded horizontal forearms across chest -->
-        <rect x="26" y="128" width="68" height="16" rx="8" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.8" />
-        <circle cx="32" cy="134" r="7.5" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
-        <circle cx="88" cy="134" r="7.5" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
+        <path
+          d="M25 94 L16 126 L56 128"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="15"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M95 94 L104 126 L64 128"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="15"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <!-- Hands tucked at opposing elbows -->
+        <ellipse cx="32" cy="120" rx="6.5" ry="4.5" fill={skin} transform="rotate(-18 32 120)" />
+        <ellipse cx="88" cy="120" rx="6.5" ry="4.5" fill={skin} transform="rotate(18 88 120)" />
+        <!-- Overlapping folded forearm band -->
+        <rect x="22" y="118" width="76" height="15" rx="7.5" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.2" />
       </g>
     {:else if effectivePose === 'celebrate'}
+      <!-- Cheering Arms-Up Pose (exact match to cast.png Expression #3) -->
       <g class="pose-celebrate" data-testid="pose-celebrate">
-        <rect x="12" y="94" width="18" height="58" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" transform="rotate(148 21 102)" />
-        <circle cx="-12" cy="54" r="8.5" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
-        <rect x="90" y="94" width="18" height="58" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" transform="rotate(-148 99 102)" />
-        <circle cx="132" cy="54" r="8.5" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
+        <path
+          d="M26 96 Q8 82 6 56"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="14"
+          stroke-linecap="round"
+        />
+        <g transform="translate(6, 50)">
+          <ellipse cx="0" cy="0" rx="6.5" ry="7.5" fill={skin} />
+          <ellipse cx="5" cy="1" rx="3" ry="4" fill={skin} />
+        </g>
+        <path
+          d="M94 96 Q112 82 114 56"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="14"
+          stroke-linecap="round"
+        />
+        <g transform="translate(114, 50)">
+          <ellipse cx="0" cy="0" rx="6.5" ry="7.5" fill={skin} />
+          <ellipse cx="-5" cy="1" rx="3" ry="4" fill={skin} />
+        </g>
       </g>
     {:else if effectivePose === 'facepalm'}
+      <!-- Facepalm Pose (exact match to D.png Expression #3 & cast.png Expression #4) -->
       <g class="pose-facepalm" data-testid="pose-facepalm">
-        <rect x="14" y="98" width="18" height="68" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" />
-        <circle cx="23" cy="168" r="8" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
-        <!-- Right arm raised to cover forehead/eyes -->
-        <path d="M94 104 L110 76 L72 54" fill="none" stroke={sleeveFill} stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
-        <path d="M94 104 L110 76 L72 54" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        <path
+          d="M26 98 L16 142"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="14"
+          stroke-linecap="round"
+        />
+        <ellipse cx="16" cy="148" rx="6" ry="7" fill={skin} />
+        <path
+          d="M94 98 L106 78 L66 56"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="13"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
       </g>
     {:else if effectivePose === 'cash'}
+      <!-- Evil Mode Counting Cash Pose (exact match to .design-targets/g-evil.png) -->
       <g class="pose-cash" data-testid="pose-cash">
-        <rect x="16" y="98" width="18" height="48" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" transform="rotate(-24 25 110)" />
-        <rect x="86" y="98" width="18" height="48" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" transform="rotate(24 95 110)" />
-        <!-- Fanned stacks of bills held in front -->
-        <g class="cash-fan" transform="translate(60, 140)">
-          <rect x="-24" y="-14" width="28" height="16" rx="2" fill="var(--sage)" stroke="var(--ink)" stroke-width="1.5" transform="rotate(-22)" />
-          <rect x="-14" y="-16" width="28" height="16" rx="2" fill="var(--sage-dark)" stroke="var(--ink)" stroke-width="1.5" transform="rotate(-6)" />
-          <rect x="-4" y="-14" width="28" height="16" rx="2" fill="var(--sage)" stroke="var(--ink)" stroke-width="1.5" transform="rotate(14)" />
-          <circle cx="0" cy="-6" r="4" fill="var(--gold)" stroke="var(--ink)" stroke-width="1" />
+        <path
+          d="M26 96 L12 132 L44 138"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="15"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M94 96 L108 132 L76 138"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="15"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <!-- Fanned green dollar bills held between both hands -->
+        <g class="cash-fan" transform="translate(60, 134)">
+          <rect x="-22" y="-14" width="26" height="15" rx="2" fill="var(--sage)" stroke="var(--ink)" stroke-width="1.5" transform="rotate(-18)" />
+          <rect x="-12" y="-16" width="26" height="15" rx="2" fill="var(--sage-dark)" stroke="var(--ink)" stroke-width="1.5" transform="rotate(-4)" />
+          <rect x="-2" y="-14" width="26" height="15" rx="2" fill="var(--sage)" stroke="var(--ink)" stroke-width="1.5" transform="rotate(14)" />
+          <circle cx="0" cy="-6" r="3.5" fill="var(--gold)" />
         </g>
-        <circle cx="38" cy="144" r="8" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
-        <circle cx="82" cy="144" r="8" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
+        <ellipse cx="42" cy="138" rx="7.5" ry="6" fill={skin} />
+        <ellipse cx="78" cy="138" rx="7.5" ry="6" fill={skin} />
       </g>
-    {:else if effectivePose === 'podium'}
-      <g class="pose-podium" data-testid="pose-podium">
-        <path d="M24 102 L12 138 L30 152" fill="none" stroke={sleeveFill} stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
-        <path d="M96 102 L108 138 L90 152" fill="none" stroke={sleeveFill} stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
-        <circle cx="30" cy="152" r="8" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
-        <circle cx="90" cy="152" r="8" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
+    {:else if effectivePose === 'podium' || effectivePose === 'desk'}
+      <!-- Seated at Resolute Desk or Podium with hands clasped forward (g-home.png) -->
+      <g class="pose-podium" data-testid={effectivePose === 'podium' ? 'pose-podium' : undefined}>
+        <path
+          d="M26 94 L12 134 L46 142"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="15"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M94 94 L108 134 L74 142"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="15"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <!-- White shirt cuffs at wrists -->
+        <rect x="40" y="136" width="8" height="10" rx="2" fill="var(--art-shirt)" transform="rotate(-12 44 141)" />
+        <rect x="72" y="136" width="8" height="10" rx="2" fill="var(--art-shirt)" transform="rotate(12 76 141)" />
+        <!-- Clasped hands -->
+        <ellipse cx="55" cy="142" rx="8" ry="5.5" fill={skin} />
+        <ellipse cx="65" cy="142" rx="8" ry="5.5" fill={skin} />
       </g>
     {:else if effectivePose === 'point'}
+      <!-- Chief of Staff Pointing Pose (exact match to g-home.png & g-myth.png) -->
       <g class="point">
-        <rect x="14" y="96" width="18" height="58" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" transform="rotate(130 23 104)" />
-        <circle cx="-17" cy="71" r="8.5" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
-        <rect x="-30" y="62" width="14" height="6" rx="3" fill={skin} stroke="var(--ink)" stroke-width="1.5" transform="rotate(-30 -24 64)" />
+        <path
+          d="M26 94 L4 76"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="14"
+          stroke-linecap="round"
+        />
+        <g transform="translate(0, 72) rotate(-32)">
+          <ellipse cx="0" cy="0" rx="6.5" ry="5.5" fill={skin} />
+          <rect x="-13" y="-3" width="11" height="4.5" rx="2.2" fill={skin} />
+        </g>
       </g>
     {:else if effectivePose === 'wave'}
+      <!-- Blue Bloc Leader Curved Arm Wave with Open 5-Finger Hand (exact match to D.png #5 & g-newgame.png) -->
       <g class="point">
-        <rect x="14" y="96" width="18" height="58" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" transform="rotate(145 23 104)" />
-        <circle cx="-21" cy="62" r="8.5" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
-        <path d="M-30 52 L-26 50 L-22 53" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" />
+        <!-- Left arm resting at side -->
+        <path d="M26 88 L15 144 L27 146 L32 96 Z" fill={sleeveFill} />
+        <rect x="15" y="142" width="12" height="4" fill="var(--art-shirt)" />
+        <g transform="translate(20, 152)">
+          <ellipse cx="0" cy="0" rx="6.5" ry="7.5" fill={skin} />
+          <ellipse cx="5.5" cy="-2" rx="3" ry="4" fill={skin} />
+        </g>
+        <!-- Right arm curving gracefully upward to wave -->
+        <path
+          d="M92 96 Q114 88 114 50"
+          fill="none"
+          stroke={sleeveFill}
+          stroke-width="14"
+          stroke-linecap="round"
+        />
+        <!-- Open 5-finger waving palm (matching cast.png Part Library) -->
+        <g transform="translate(114, 40)">
+          <rect x="-6.5" y="-2" width="13" height="11" rx="5" fill={skin} />
+          <rect x="-9.5" y="-5" width="3.5" height="7" rx="1.7" fill={skin} transform="rotate(-24 -8 -2)" />
+          <rect x="-5.5" y="-10" width="2.8" height="9" rx="1.4" fill={skin} />
+          <rect x="-1.8" y="-11" width="2.8" height="10" rx="1.4" fill={skin} />
+          <rect x="1.8" y="-10" width="2.8" height="9" rx="1.4" fill={skin} />
+          <rect x="5.2" y="-8" width="2.6" height="7.5" rx="1.3" fill={skin} />
+        </g>
       </g>
     {/if}
 
-    <!-- Handheld Props -->
+    <!-- Handheld Props (D.png #2 Clipboard, #4 Broadcast Mic, etc.) -->
     {#if prop === 'clipboard'}
-      <rect x="86" y="98" width="18" height="46" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" />
-      <g transform="rotate(8 92 144)">
-        <rect x="72" y="116" width="40" height="54" rx="4" fill="var(--art-wood-light)" stroke="var(--ink)" stroke-width="2" />
-        <rect x="77" y="124" width="30" height="40" rx="2" fill="var(--card)" stroke="var(--ink)" stroke-width="1" />
-        <path d="M81 134 h22 M81 142 h22 M81 150 h14" stroke="var(--ink-soft)" stroke-width="2" stroke-linecap="round" />
-        <rect x="85" y="112" width="14" height="8" rx="2" fill="var(--ink-soft)" stroke="var(--ink)" stroke-width="1.2" />
+      <!-- Chief of Staff angled clipboard held in arm with pen (exact match to D.png #2) -->
+      <path
+        d="M92 92 L108 122 L88 134"
+        fill="none"
+        stroke={sleeveFill}
+        stroke-width="14"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <g transform="translate(80, 126) rotate(-16)">
+        <rect x="-16" y="-22" width="32" height="42" rx="3" fill="var(--art-wood-dark)" stroke="var(--ink)" stroke-width="1.2" />
+        <rect x="-12" y="-16" width="24" height="31" rx="1.5" fill="var(--art-shirt)" />
+        <rect x="-6" y="-24" width="12" height="6" rx="1.5" fill="var(--gold)" stroke="var(--ink)" stroke-width="1" />
+        <path d="M-8 -8 h14 M-8 -1 h14 M-8 6 h9" stroke="var(--ink-soft)" stroke-width="1.6" stroke-linecap="round" />
       </g>
-      <circle cx="108" cy="150" r="8" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
+      <!-- Hand holding pen over clipboard -->
+      <ellipse cx="76" cy="128" rx="6" ry="5" fill={skin} />
+      <line x1="70" y1="134" x2="80" y2="118" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" />
     {:else if prop === 'folder'}
-      <rect x="86" y="98" width="18" height="46" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" />
-      <g transform="rotate(12 92 144)">
-        <rect x="70" y="120" width="44" height="48" rx="3" fill="var(--gold)" stroke="var(--ink)" stroke-width="2" />
-        <path d="M70 120 h16 l4 5 h24 v43 h-44 Z" fill="var(--gold-dark)" stroke="var(--ink)" stroke-width="1.5" />
-        <rect x="76" y="128" width="32" height="34" rx="2" fill="var(--card)" />
-        <line x1="80" y1="136" x2="102" y2="136" stroke="var(--alert)" stroke-width="2" />
+      <path d="M92 92 L106 124 L88 134" fill="none" stroke={sleeveFill} stroke-width="14" stroke-linecap="round" />
+      <g transform="translate(82, 128) rotate(10)">
+        <rect x="-16" y="-18" width="34" height="38" rx="2.5" fill="var(--gold)" stroke="var(--ink)" stroke-width="1.5" />
+        <rect x="-12" y="-13" width="26" height="28" rx="1.5" fill="var(--card)" />
       </g>
-      <circle cx="106" cy="150" r="8" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
+      <ellipse cx="92" cy="134" rx="6" ry="5" fill={skin} />
     {:else if prop === 'coffee'}
-      <rect x="86" y="98" width="18" height="46" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" />
-      <g transform="translate(86 130)">
-        <path d="M4 14 h18 l-2 18 h-14 Z" fill="var(--card)" stroke="var(--ink)" stroke-width="2" />
-        <path d="M20 18 h6 a4 4 0 0 1 0 8 h-5" fill="none" stroke="var(--ink)" stroke-width="2" />
-        <path d="M9 10 Q12 6 9 2 M16 10 Q19 6 16 2" fill="none" stroke="var(--ink-soft)" stroke-width="1.5" opacity=".5" stroke-linecap="round" />
+      <path d="M92 92 L104 128 L88 134" fill="none" stroke={sleeveFill} stroke-width="14" stroke-linecap="round" />
+      <g transform="translate(82, 122)">
+        <path d="M2 10 h14 l-1.5 15 h-11 Z" fill="var(--card)" stroke="var(--ink)" stroke-width="1.6" />
+        <path d="M15 13 h4 a3 3 0 0 1 0 6 h-3.5" fill="none" stroke="var(--ink)" stroke-width="1.6" />
       </g>
-      <circle cx="95" cy="152" r="8" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
+      <ellipse cx="88" cy="136" rx="5.5" ry="5" fill={skin} />
     {:else if prop === 'gavel'}
-      <rect x="86" y="98" width="18" height="46" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" />
-      <g transform="rotate(-20 92 144)">
-        <rect x="88" y="120" width="6" height="36" rx="2" fill="var(--art-wood)" stroke="var(--ink)" stroke-width="1.5" />
-        <rect x="80" y="112" width="22" height="12" rx="3" fill="var(--art-wood-dark)" stroke="var(--ink)" stroke-width="2" />
-        <rect x="87" y="112" width="8" height="12" fill="var(--gold)" />
+      <path d="M92 92 L104 128 L88 134" fill="none" stroke={sleeveFill} stroke-width="14" stroke-linecap="round" />
+      <g transform="rotate(-20 92 134)">
+        <rect x="86" y="112" width="5" height="30" rx="2" fill="var(--art-wood)" stroke="var(--ink)" stroke-width="1.2" />
+        <rect x="78" y="105" width="20" height="10" rx="2.5" fill="var(--art-wood-dark)" stroke="var(--ink)" stroke-width="1.5" />
+        <rect x="85" y="105" width="6" height="10" fill="var(--gold)" />
       </g>
-      <circle cx="94" cy="148" r="8" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
+      <ellipse cx="90" cy="136" rx="6" ry="5" fill={skin} />
     {:else if prop === 'mic'}
-      <rect x="86" y="98" width="18" height="46" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" />
-      <g transform="translate(88 126)">
-        <rect x="6" y="14" width="5" height="24" rx="2" fill="var(--ink-soft)" stroke="var(--ink)" stroke-width="1.5" />
-        <rect x="3" y="4" width="11" height="13" rx="4" fill="var(--hair-2)" stroke="var(--ink)" stroke-width="1.8" />
-        <rect x="1" y="13" width="15" height="7" rx="1.5" fill="var(--alert)" stroke="var(--ink)" stroke-width="1.2" />
+      <!-- News Anchor Both-Arms-Inward Microphone Pose (exact match to D.png #4, g-crisis.png, g-election.png) -->
+      <path
+        d="M26 92 L14 126 L52 122"
+        fill="none"
+        stroke={sleeveFill}
+        stroke-width="13"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <path d="M94 88 L104 142 L93 144 L88 96 Z" fill={sleeveFill} />
+      <g transform="translate(99, 150)">
+        <ellipse cx="0" cy="0" rx="6" ry="7" fill={skin} />
+        <ellipse cx="-5" cy="-2" rx="2.8" ry="3.8" fill={skin} />
       </g>
-      <circle cx="96" cy="152" r="8" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
+      <!-- Center red-cube broadcast microphone held at chest (D.png #4) -->
+      <g transform="translate(60, 114) rotate(8)">
+        <rect x="-2.5" y="4" width="5" height="24" rx="2" fill="var(--ink-soft)" />
+        <rect x="-8" y="-5" width="16" height="12" rx="2" fill="var(--alert)" />
+        <circle cx="0" cy="-10" r="6.5" fill="var(--art-charcoal)" />
+      </g>
+      <ellipse cx="56" cy="124" rx="6" ry="5" fill={skin} />
     {:else if prop === 'wrench'}
-      <rect x="86" y="98" width="18" height="46" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" />
-      <g transform="translate(88 118) rotate(14)">
-        <rect x="6" y="8" width="6" height="32" rx="2" fill="var(--hair-2)" stroke="var(--ink)" stroke-width="1.5" />
-        <path d="M2 8 C2 0 16 0 16 8 L12 8 L12 4 L6 4 L6 8 Z" fill="var(--hair-2)" stroke="var(--ink)" stroke-width="1.5" />
+      <path d="M92 92 L104 128 L88 134" fill="none" stroke={sleeveFill} stroke-width="14" stroke-linecap="round" />
+      <g transform="translate(88 112) rotate(14)">
+        <rect x="5" y="8" width="5" height="28" rx="2" fill="var(--hair-2)" stroke="var(--ink)" stroke-width="1.2" />
+        <path d="M1 8 C1 0 15 0 15 8 L11 8 L11 4 L5 4 L5 8 Z" fill="var(--hair-2)" stroke="var(--ink)" stroke-width="1.2" />
       </g>
-      <circle cx="96" cy="150" r="8" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
-    {:else if prop === 'stethoscope' || prop === 'earpiece' || prop === 'cash_fan'}
-      <rect x="88" y="98" width="18" height="72" rx="9" fill={sleeveFill} stroke="var(--ink)" stroke-width="1.5" />
-      <circle cx="97" cy="172" r="8.5" fill={skin} stroke="var(--ink)" stroke-width="1.5" />
+      <ellipse cx="92" cy="136" rx="6" ry="5" fill={skin} />
+    {:else if (prop === 'stethoscope' || prop === 'earpiece' || prop === 'cash_fan') && effectivePose === 'stand'}
+      <path d="M94 88 L106 138 L95 140 L90 104 Z" fill={effectiveOutfit === 'scrubs' ? skin : sleeveFill} />
+      {#if effectiveOutfit === 'scrubs'}
+        <path d="M94 88 L103 118 L92 122 L88 94 Z" fill={sleeveFill} />
+      {/if}
+      <g transform="translate(101, 150)">
+        <ellipse cx="0" cy="0" rx="6.5" ry="7.5" fill={skin} />
+        <ellipse cx="-5.5" cy="-2" rx="3" ry="4" fill={skin} />
+      </g>
     {/if}
 
-    <!-- Head Anatomy: Contoured face, ears, hairstyle, eyebrows, eyelids, eyes, nose, and multi-layer mouth -->
+    <!-- Seamless Collar-to-Thumb-Head Contour Seam (keeps data-testid="char-neck" for unit tests, ZERO stick neck!) -->
+    <g class="neck" data-testid="char-neck">
+      <path d="M24 85 Q60 95 96 85 L96 89 Q60 99 24 89 Z" fill="var(--ink)" opacity=".14" />
+    </g>
+
+    <!-- Finger / Thumb-Shaped Pawn Head (exact 72px width x=24..96 matching torso width in D.png & cast.png!) -->
     <g class="head">
-      <!-- Ears with inner ear detail + optional broadcast earpiece -->
+      <!-- Subtle side ears (for News Anchor / glasses / earpiece) -->
       <g class="ears">
-        <path d="M30 48 C24 48 24 62 30 62 Z" fill={skin} stroke="var(--ink)" stroke-width="2" />
-        <path d="M28 52 C26 52 26 58 28 58" fill="none" stroke="var(--ink-soft)" stroke-width="1.5" />
-        <path d="M90 48 C96 48 96 62 90 62 Z" fill={skin} stroke="var(--ink)" stroke-width="2" />
-        <path d="M92 52 C94 52 94 58 92 58" fill="none" stroke="var(--ink-soft)" stroke-width="1.5" />
-        {#if effectiveOutfit === 'blazer' || prop === 'earpiece'}
-          <circle cx="92" cy="56" r="2.5" fill="var(--card)" stroke="var(--ink)" stroke-width="1.2" />
-          <path d="M92 58 Q96 68 90 78 Q94 84 88 92" fill="none" stroke="var(--card)" stroke-width="1.4" />
+        {#if effectiveOutfit === 'blazer' || prop === 'earpiece' || look.hairStyle === 'bun' || look.hairStyle === 'bob'}
+          <circle cx="23" cy="56" r="4.5" fill={skin} />
+          <circle cx="97" cy="56" r="4.5" fill={skin} />
+          {#if effectiveOutfit === 'blazer' || hasPearls}
+            <!-- Tiny white pearl stud earrings (D.png #4) -->
+            <circle cx="22.5" cy="60" r="1.8" fill="var(--art-shirt)" />
+            <circle cx="97.5" cy="60" r="1.8" fill="var(--art-shirt)" />
+          {/if}
+          {#if effectiveOutfit === 'blazer' || prop === 'earpiece'}
+            <!-- Coiled black broadcast earpiece on left ear (D.png #4) -->
+            <rect x="23" y="52" width="2.6" height="6" rx="1.2" fill="var(--ink)" />
+            <path d="M24 58 Q20 68 25 76" fill="none" stroke="var(--ink)" stroke-width="1.4" />
+          {/if}
+        {:else}
+          <circle cx="24" cy="56" r="2.5" fill={skin} />
+          <circle cx="96" cy="56" r="2.5" fill={skin} />
         {/if}
       </g>
 
-      <!-- Head base with sculpted jawline -->
-      <rect x="30" y="10" width="60" height="86" rx="30" fill={skin} stroke="var(--ink)" stroke-width="2" />
+      <!-- Main Continuous Finger/Thumb Head Dome (x=24..96, y=12..88, semicircular top radius 36) -->
+      <path
+        d="M24 48 A36 36 0 0 1 96 48 L96 86 Q60 94 24 86 Z"
+        fill={skin}
+      />
 
-      <!-- Panicked blue-forehead dread gradient -->
+      <!-- Subtle right-side cylindrical shading on thumb head (matching D.png smooth 2D gradient feel) -->
+      <path
+        d="M78 20 A36 36 0 0 1 96 48 L96 86 Q88 89 80 90 L80 20 Z"
+        fill="var(--ink)"
+        opacity=".06"
+      />
+
+      <!-- Panicked blue-forehead dread gradient (exact match to D.png Expression #4 & cast.png Expression #5) -->
       {#if effectiveMood === 'panicked'}
         <path
           data-testid="char-panic-dread"
-          d="M32 38 Q32 12 60 12 Q88 12 88 38 Z"
+          d="M24 48 A36 36 0 0 1 96 48 L96 54 Q60 48 24 54 Z"
           fill="var(--sky)"
-          opacity=".24"
+          opacity=".38"
         />
       {/if}
 
-      <!-- Subtle cheek & jaw contour shadow for editorial depth -->
-      <path d="M32 50 C36 78 50 92 60 94 C40 92 32 76 32 50 Z" fill="var(--ink)" opacity=".09" />
-
-      <!-- Front Hairstyles & Hardhat -->
+      <!-- Front Hairstyles & Hardhat (fitted to the 72px-wide thumb-head dome) -->
       {#if effectiveOutfit === 'hardhat'}
-        <path d="M26 36 Q26 6 60 6 Q94 6 94 36 Z" fill="var(--gold)" stroke="var(--ink)" stroke-width="2" />
-        <rect x="22" y="33" width="76" height="6" rx="3" fill="var(--gold-dark)" stroke="var(--ink)" stroke-width="1.8" />
-        <rect x="55" y="8" width="10" height="24" rx="3" fill="var(--card)" opacity=".45" />
-      {:else if look.hairStyle === 'short'}
-        <path d="M30 46 Q28 8 60 8 Q92 8 90 46 Q86 28 60 26 Q34 28 30 46 Z" fill={hair} stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
-      {:else if look.hairStyle === 'side' || look.hairStyle === 'parted'}
-        <path d="M28 48 Q26 6 60 6 Q94 8 92 46 Q84 22 54 26 Q36 30 28 48 Z" fill={hair} stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
-        <path d="M42 10 Q52 14 62 10" fill="none" stroke="var(--ink-soft)" stroke-width="1.5" opacity=".6" />
-      {:else if look.hairStyle === 'swept'}
-        <path d="M28 46 Q26 2 60 2 Q94 2 92 46 Q86 20 60 18 Q34 20 28 46 Z" fill={hair} stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
-        <path d="M36 18 Q60 12 84 18" fill="none" stroke="var(--card)" stroke-width="1.5" opacity=".35" />
-      {:else if look.hairStyle === 'bun'}
-        <path d="M28 54 Q24 8 60 10 Q96 8 92 54 Q90 30 60 26 Q30 30 28 54 Z" fill={hair} stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
-      {:else if look.hairStyle === 'cropped'}
-        <path d="M29 44 Q28 8 60 8 Q92 8 91 44 Q84 32 60 30 Q36 32 29 44 Z" fill={hair} stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
-        <path d="M40 18 l4 4 M58 16 l4 4 M74 18 l4 4" stroke="var(--ink)" stroke-width="1.8" />
-      {:else if look.hairStyle === 'long' || look.hairStyle === 'bob'}
-        <path d="M28 50 Q26 8 60 8 Q94 8 92 50 Q82 24 56 26 Q38 28 28 50 Z" fill={hair} stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
+        <path d="M20 40 A40 34 0 0 1 100 40 Z" fill="var(--gold)" stroke="var(--ink)" stroke-width="1.8" />
+        <rect x="16" y="37" width="88" height="6" rx="3" fill="var(--gold-dark)" stroke="var(--ink)" stroke-width="1.5" />
+      {:else if look.hairStyle === 'bun' || look.hairStyle === 'bob' || effectiveOutfit === 'blazer'}
+        <!-- Side-parted swept hair framing the forehead (exact match to D.png #4 News Anchor & #7 Citizen) -->
+        <path
+          d="M23 52 A37 37 0 0 1 97 52 C92 34 74 26 50 22 C38 32 28 40 23 52 Z"
+          fill={hair}
+        />
+      {:else if look.hairStyle === 'short' || look.hairStyle === 'cropped'}
+        <path
+          d="M24 44 A36 34 0 0 1 96 44 Q80 28 60 28 Q40 28 24 44 Z"
+          fill={hair}
+        />
+      {:else if look.hairStyle === 'side' || look.hairStyle === 'parted' || look.hairStyle === 'swept'}
+        <path
+          d="M23 46 A37 35 0 0 1 97 46 Q82 24 48 26 Q34 32 23 46 Z"
+          fill={hair}
+        />
+      {:else if look.hairStyle === 'long'}
+        <path
+          d="M23 50 A37 36 0 0 1 97 50 Q80 26 52 26 Q34 32 23 50 Z"
+          fill={hair}
+        />
       {:else if look.hairStyle === 'afro'}
-        <path d="M26 42 Q26 10 60 10 Q94 10 94 42 Q84 26 60 26 Q36 26 26 42 Z" fill={hair} stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
+        <path
+          d="M22 44 A38 35 0 0 1 98 44 Q80 26 60 26 Q40 26 22 44 Z"
+          fill={hair}
+        />
       {:else if look.hairStyle === 'bald'}
-        <!-- Classic horseshoe side-fringe + crown shine -->
-        <path d="M28 46 C26 36 32 32 35 42 Z" fill={hair} stroke="var(--ink)" stroke-width="1.5" />
-        <path d="M92 46 C94 36 88 32 85 42 Z" fill={hair} stroke="var(--ink)" stroke-width="1.5" />
-        <path d="M46 18 Q60 14 70 18" fill="none" stroke="var(--card)" stroke-width="2" stroke-linecap="round" opacity=".55" />
+        <!-- Pure iconic thumb-dome head like D.png #1, #2, #3, #5, #6 -->
+        <path d="M44 20 Q60 15 76 20" fill="none" stroke="var(--card)" stroke-width="1.5" opacity=".18" stroke-linecap="round" />
       {/if}
 
-      <!-- Eyebrows reacting to mood -->
+      <!-- Eyebrows reacting to mood (clean & minimal like D.png & cast.png; uses --hair-3 so Evil Mode stays dark) -->
       <g class="eyebrows">
-        {#if effectiveMood === 'confident'}
-          <path d="M42 47 Q48 44 54 46" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" />
-          <path d="M66 46 Q72 44 78 47" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" />
-        {:else if effectiveMood === 'stressed' || effectiveMood === 'facepalm'}
-          <path d="M42 49 Q48 47 54 44" fill="none" stroke="var(--ink)" stroke-width="2.8" stroke-linecap="round" />
-          <path d="M66 44 Q72 47 78 49" fill="none" stroke="var(--ink)" stroke-width="2.8" stroke-linecap="round" />
+        {#if effectiveMood === 'confident' || effectiveMood === 'triumphant'}
+          <path d="M41 44 Q47 42 53 44" fill="none" stroke="var(--hair-3)" stroke-width="2" stroke-linecap="round" opacity=".01" />
+        {:else if effectiveMood === 'stressed'}
+          <!-- Red Bloc Leader angled furrowed brows (D.png #6 & cast.png Expression #6) -->
+          <path d="M40 43 L52 48" fill="none" stroke="var(--hair-3)" stroke-width="3" stroke-linecap="round" />
+          <path d="M80 43 L68 48" fill="none" stroke="var(--hair-3)" stroke-width="3" stroke-linecap="round" />
+        {:else if effectiveMood === 'facepalm'}
+          <path d="M66 45 Q73 42 80 46" fill="none" stroke="var(--hair-3)" stroke-width="2.6" stroke-linecap="round" />
         {:else if effectiveMood === 'scheming'}
-          <path d="M42 49 Q48 48 54 46" fill="none" stroke="var(--ink)" stroke-width="2.8" stroke-linecap="round" />
-          <path d="M66 43 Q72 39 78 43" fill="none" stroke="var(--ink)" stroke-width="2.8" stroke-linecap="round" />
+          <!-- Evil Mode sharp V-angled brows (g-evil.png) -->
+          <path d="M38 42 L53 48" fill="none" stroke="var(--hair-3)" stroke-width="3.2" stroke-linecap="round" />
+          <path d="M82 42 L67 48" fill="none" stroke="var(--hair-3)" stroke-width="3.2" stroke-linecap="round" />
         {:else if effectiveMood === 'panicked'}
-          <path d="M42 43 Q48 39 54 42" fill="none" stroke="var(--ink)" stroke-width="2.8" stroke-linecap="round" />
-          <path d="M66 42 Q72 39 78 43" fill="none" stroke="var(--ink)" stroke-width="2.8" stroke-linecap="round" />
-        {:else if effectiveMood === 'triumphant'}
-          <path d="M42 44 Q48 41 54 44" fill="none" stroke="var(--ink)" stroke-width="2.8" stroke-linecap="round" />
-          <path d="M66 44 Q72 41 78 44" fill="none" stroke="var(--ink)" stroke-width="2.8" stroke-linecap="round" />
+          <!-- Worried arched brows (D.png Expression #4) -->
+          <path d="M39 45 Q45 38 52 42" fill="none" stroke="var(--hair-3)" stroke-width="2.6" stroke-linecap="round" />
+          <path d="M81 45 Q75 38 68 42" fill="none" stroke="var(--hair-3)" stroke-width="2.6" stroke-linecap="round" />
         {/if}
       </g>
 
-      <!-- Eyes: Upper Eyelid Crease + Sclera + Pupil + White Catchlight -->
+      <!-- Eyes: Solid Dark Dot Eyes or Happy Arcs (exact match to D.png & cast.png — NO white sclera rings, NO nose!) -->
       <g class="eyes blink" style="animation-delay:{-delay * 1.7}s">
         {#if effectiveMood === 'facepalm'}
-          <!-- Tightly shut exasperated eyes -->
-          <path d="M42 56 Q48 60 54 56" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" />
-          <path d="M66 56 Q72 60 78 56" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" />
-        {:else if effectiveMood === 'scheming'}
-          <ellipse cx="48" cy="56" rx="5" ry="3.2" fill="var(--card)" stroke="var(--ink)" stroke-width="1.5" />
-          <circle cx="49" cy="56" r="2.4" fill="var(--ink)" />
-          <circle cx="50" cy="55.2" r="0.9" fill="var(--card)" />
-          <path d="M42.5 54.5 Q48 52 53.5 54.5" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" />
-          <ellipse cx="72" cy="56" rx="5" ry="3.2" fill="var(--card)" stroke="var(--ink)" stroke-width="1.5" />
-          <circle cx="73" cy="56" r="2.4" fill="var(--ink)" />
-          <circle cx="74" cy="55.2" r="0.9" fill="var(--card)" />
-          <path d="M66.5 54.5 Q72 52 77.5 54.5" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" />
-        {:else if effectiveMood === 'panicked'}
-          <ellipse cx="48" cy="56" rx="6" ry="6" fill="var(--card)" stroke="var(--ink)" stroke-width="1.5" />
-          <circle cx="48" cy="56" r="2.2" fill="var(--ink)" />
-          <circle cx="49" cy="55" r="0.9" fill="var(--card)" />
-          <ellipse cx="72" cy="56" rx="6" ry="6" fill="var(--card)" stroke="var(--ink)" stroke-width="1.5" />
-          <circle cx="72" cy="56" r="2.2" fill="var(--ink)" />
-          <circle cx="73" cy="55" r="0.9" fill="var(--card)" />
+          <!-- Closed downward arc eye (D.png Expression #3) -->
+          <path d="M66 56 Q73 61 80 56" fill="none" stroke="var(--hair-3)" stroke-width="2.8" stroke-linecap="round" />
+        {:else if effectiveMood === 'triumphant'}
+          <!-- Happy ^ ^ curved eyes (D.png Expression #2 & cast.png Expression #3) -->
+          <path d="M41 56 Q47 48 53 56" fill="none" stroke="var(--hair-3)" stroke-width="3" stroke-linecap="round" />
+          <path d="M67 56 Q73 48 79 56" fill="none" stroke="var(--hair-3)" stroke-width="3" stroke-linecap="round" />
         {:else}
-          <path d="M42.5 52.5 Q48 49.5 53.5 52.5" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" />
-          <ellipse cx="48" cy="56" rx="5" ry="4.5" fill="var(--card)" stroke="var(--ink)" stroke-width="1.5" />
-          <circle cx="48" cy="56" r="3.2" fill="var(--ink)" />
-          <circle cx="49.5" cy="54.5" r="1.2" fill="var(--card)" />
-          <path d="M66.5 52.5 Q72 49.5 77.5 52.5" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" />
-          <ellipse cx="72" cy="56" rx="5" ry="4.5" fill="var(--card)" stroke="var(--ink)" stroke-width="1.5" />
-          <circle cx="72" cy="56" r="3.2" fill="var(--ink)" />
-          <circle cx="73.5" cy="54.5" r="1.2" fill="var(--card)" />
+          <!-- Iconic solid dark pill-person dot eyes (D.png #1-#7) -->
+          <circle cx="47" cy="54" r="4.2" fill="var(--hair-3)" />
+          <circle cx="73" cy="54" r="4.2" fill="var(--hair-3)" />
         {/if}
       </g>
 
-      <!-- Nose Bridge & Tip Contour -->
-      <path d="M60 48 L62 57 L58 58" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-
-      <!-- Horn-rimmed Glasses -->
+      <!-- Round Wire-Frame Glasses (exact match to D.png #3 Fed Chair & cast.png Part Library) -->
       {#if hasGlasses}
-        <g fill="none" stroke="var(--ink)" stroke-width="2.5">
-          <rect x="38" y="48" width="20" height="15" rx="5" />
-          <rect x="62" y="48" width="20" height="15" rx="5" />
-          <path d="M58 54 h4" stroke-linecap="round" />
+        <g fill="none" stroke="var(--hair-3)" stroke-width="2.6">
+          <circle cx="46" cy="54" r="10.5" />
+          <circle cx="74" cy="54" r="10.5" />
+          <path d="M56.5 54 Q60 51 63.5 54" stroke-linecap="round" />
+          <path d="M35.5 53 L21 53 Q19 53 19 56" stroke-linecap="round" />
+          <path d="M84.5 53 L99 53 Q101 53 101 56" stroke-linecap="round" />
         </g>
       {/if}
 
-      <!-- Under-eye stress creases when stressed -->
-      {#if effectiveMood === 'stressed'}
-        <path d="M44 63 Q48 65 52 63" fill="none" stroke="var(--ink-soft)" stroke-width="1.5" />
-        <path d="M68 63 Q72 65 76 63" fill="none" stroke="var(--ink-soft)" stroke-width="1.5" />
-      {/if}
-
-      <!-- Temple Sweat Droplet for Stressed or Panicked -->
+      <!-- Cyan Sweat Droplets for Stressed or Panicked (exact match to D.png Expression #4) -->
       {#if effectiveMood === 'stressed' || effectiveMood === 'panicked'}
         <g data-testid="char-sweat">
-          <path d="M84 44 C84 40 88 36 88 36 C88 36 92 40 92 44 C92 46.5 90 48 88 48 C86 48 84 46.5 84 44 Z" fill="var(--sky)" stroke="var(--ink)" stroke-width="1.2" />
+          <path
+            d="M84 42 C84 36 88 31 88 31 C88 31 92 36 92 42 C92 45 90 47 88 47 C86 47 84 45 84 42 Z"
+            fill="var(--sky)"
+          />
           {#if effectiveMood === 'panicked'}
-            <path d="M26 44 C26 40 30 36 30 36 C30 36 34 40 34 44 C34 46.5 32 48 30 48 C28 48 26 46.5 26 44 Z" fill="var(--sky)" stroke="var(--ink)" stroke-width="1.2" />
+            <path
+              d="M89 56 C89 51 92.5 47 92.5 47 C92.5 47 96 51 96 56 C96 58.5 94.5 60 92.5 60 C90.5 60 89 58.5 89 56 Z"
+              fill="var(--sky)"
+            />
           {/if}
         </g>
       {/if}
 
-      <!-- Triumphant Gold Sparkle & Confetti -->
+      <!-- Triumphant Confetti Burst Around Head (exact match to D.png Expression #2 & cast.png Expression #3) -->
       {#if effectiveMood === 'triumphant'}
-        <g data-testid="char-sparkle" transform="translate(86 28)">
-          <path d="M5 0 L6.5 3.5 L10 5 L6.5 6.5 L5 10 L3.5 6.5 L0 5 L3.5 3.5 Z" fill="var(--gold)" stroke="var(--ink)" stroke-width="1" />
-          <rect x="-64" y="-8" width="5" height="3" rx="1" fill="var(--alert)" transform="rotate(-24)" />
-          <rect x="-56" y="8" width="5" height="3" rx="1" fill="var(--sage)" transform="rotate(18)" />
+        <g data-testid="char-sparkle">
+          <rect x="14" y="22" width="7" height="3.5" rx="1" fill="var(--sky)" transform="rotate(-28 14 22)" />
+          <rect x="20" y="38" width="6" height="3" rx="1" fill="var(--alert)" transform="rotate(18 20 38)" />
+          <rect x="30" y="10" width="7" height="3.5" rx="1" fill="var(--sage)" transform="rotate(-40 30 10)" />
+          <rect x="84" y="10" width="7" height="3.5" rx="1" fill="var(--alert)" transform="rotate(35 84 10)" />
+          <rect x="98" y="26" width="7" height="3.5" rx="1" fill="var(--gold)" transform="rotate(-22 98 26)" />
+          <rect x="96" y="42" width="6" height="3" rx="1" fill="var(--sky)" transform="rotate(25 96 42)" />
         </g>
       {/if}
 
-      <!-- Multi-layer Mouth: Mood-reactive and speech-reactive -->
-      {#if talking}
+      <!-- Expressive Mouths (exact match to D.png & cast.png Part Library) -->
+      {#if prop === 'mic' && (talking || effectiveMood === 'confident')}
+        <!-- News Anchor Oval 'O' Broadcast Mouth (D.png #4) -->
+        <g class={talking ? 'talk' : ''}>
+          <ellipse cx="60" cy="69" rx="5" ry="6.2" fill="var(--art-mouth)" />
+          <ellipse cx="60" cy="72.5" rx="3.2" ry="2.2" fill="var(--art-tongue)" />
+        </g>
+      {:else if talking}
         <g class="talk">
-          <ellipse cx="60" cy="74" rx="7.5" ry="5.5" fill="var(--alert-dark)" stroke="var(--ink)" stroke-width="2" />
-          <path d="M54 70.5 h12" stroke="var(--art-shirt)" stroke-width="2" stroke-linecap="round" />
-          <ellipse cx="60" cy="77" rx="4" ry="2" fill="var(--alert)" />
+          <path d="M48 66 H72 A12 11 0 0 1 48 66 Z" fill="var(--art-mouth)" />
+          <ellipse cx="60" cy="73" rx="7.5" ry="3.5" fill="var(--art-tongue)" />
         </g>
       {:else if effectiveMood === 'confident'}
-        <path d="M50 72 Q60 80 70 72" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" />
-        <path d="M55 77 Q60 79 65 77" fill="none" stroke="var(--ink-soft)" stroke-width="1.2" stroke-linecap="round" opacity=".5" />
-      {:else if effectiveMood === 'stressed' || effectiveMood === 'facepalm'}
-        <path d="M50 75 Q55 71 60 75 Q65 79 70 74" fill="none" stroke="var(--ink)" stroke-width="2.8" stroke-linecap="round" />
+        <!-- Clean curved smile (D.png #1, #2, #3, #7) -->
+        <path d="M49 67 Q60 75 71 67" fill="none" stroke="var(--hair-3)" stroke-width="3.2" stroke-linecap="round" />
+      {:else if effectiveMood === 'stressed'}
+        <!-- Slanted skeptical mouth (D.png #6 Red Bloc Leader) -->
+        <path d="M49 71 L71 67" fill="none" stroke="var(--hair-3)" stroke-width="3.2" stroke-linecap="round" />
+      {:else if effectiveMood === 'facepalm'}
+        <!-- Downward frown arc (D.png Expression #3) -->
+        <path d="M51 74 Q60 67 69 74" fill="none" stroke="var(--hair-3)" stroke-width="3" stroke-linecap="round" />
       {:else if effectiveMood === 'scheming'}
-        <path d="M49 75 Q58 77 68 69" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" />
-        <path d="M66 68 L70 71" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" />
+        <!-- Wicked toothy Evil-Mode grin (g-evil.png) -->
+        <path d="M46 66 Q60 78 74 66 Q60 71 46 66 Z" fill="var(--art-shirt)" stroke="var(--hair-3)" stroke-width="2.2" stroke-linejoin="round" />
       {:else if effectiveMood === 'panicked'}
-        <ellipse cx="60" cy="74" rx="6.5" ry="7" fill="var(--alert-dark)" stroke="var(--ink)" stroke-width="2" />
-        <path d="M55 70 h10" stroke="var(--art-shirt)" stroke-width="2" stroke-linecap="round" />
-        <ellipse cx="60" cy="78" rx="3.8" ry="2.2" fill="var(--alert)" />
+        <!-- Inverted U open gasp mouth with pink tongue (D.png Expression #4) -->
+        <path d="M49 75 A11 10 0 0 1 71 75 Z" fill="var(--art-mouth)" />
+        <ellipse cx="60" cy="73.5" rx="6.5" ry="2.8" fill="var(--art-tongue)" />
       {:else if effectiveMood === 'triumphant'}
-        <path d="M47 70 Q60 84 73 70 Z" fill="var(--alert-dark)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
-        <path d="M48 70 Q60 75 72 70 Z" fill="var(--art-shirt)" stroke="var(--ink)" stroke-width="1.4" />
+        <!-- Wide cheerful open D-mouth with maroon interior & pink tongue (D.png #5 & Expression #2) -->
+        <path d="M48 65 H72 A12 11.5 0 0 1 48 65 Z" fill="var(--art-mouth)" />
+        <ellipse cx="60" cy="72.5" rx="8" ry="3.8" fill="var(--art-tongue)" />
       {/if}
 
-      <!-- Facepalm hand over forehead/eye when in facepalm pose -->
+      <!-- Articulated 4-Finger Facepalm Hand Over Left Eye (exact match to D.png Expression #3 & cast.png Expression #4) -->
       {#if effectivePose === 'facepalm'}
-        <g data-testid="char-facepalm-hand">
-          <ellipse cx="64" cy="54" rx="14" ry="10" fill={skin} stroke="var(--ink)" stroke-width="2" transform="rotate(-14 64 54)" />
-          <line x1="54" y1="50" x2="68" y2="47" stroke="var(--ink)" stroke-width="1.4" stroke-linecap="round" />
-          <line x1="54" y1="55" x2="70" y2="52" stroke="var(--ink)" stroke-width="1.4" stroke-linecap="round" />
+        <g data-testid="char-facepalm-hand" transform="translate(46, 56) rotate(28)">
+          <rect x="-10" y="-6" width="20" height="24" rx="7" fill={skin} stroke="var(--ink)" stroke-width="1.4" />
+          <rect x="-9" y="-17" width="4" height="14" rx="2" fill={skin} stroke="var(--ink)" stroke-width="1.2" />
+          <rect x="-4" y="-19" width="4" height="16" rx="2" fill={skin} stroke="var(--ink)" stroke-width="1.2" />
+          <rect x="1" y="-18" width="4" height="15" rx="2" fill={skin} stroke="var(--ink)" stroke-width="1.2" />
+          <rect x="6" y="-15" width="3.8" height="12" rx="1.9" fill={skin} stroke="var(--ink)" stroke-width="1.2" />
         </g>
       {/if}
     </g>
 
-    <!-- Optional Swallowtail Ribbon Nameplate Banner -->
+    <!-- Optional Swallowtail Navy Ribbon Nameplate Banner (exact match to cast.png lineup ribbons) -->
     {#if bannerLabel}
-      <g class="nameplate" data-testid="char-nameplate" transform="translate(60, 192)">
-        <polygon points="-46,-10 -38,-2 -46,6 -34,6 -34,-10" fill="var(--gold-dark)" stroke="var(--ink)" stroke-width="1.4" />
-        <polygon points="46,-10 38,-2 46,6 34,6 34,-10" fill="var(--gold-dark)" stroke="var(--ink)" stroke-width="1.4" />
-        <rect x="-38" y="-12" width="76" height="16" rx="3" fill="var(--card)" stroke="var(--ink)" stroke-width="1.8" />
+      <g class="nameplate" data-testid="char-nameplate" transform="translate(60, 194)">
+        <polygon points="-48,-8 -40,0 -48,8 -34,8 -34,-8" fill="var(--ink-soft)" stroke="var(--ink)" stroke-width="1.2" />
+        <polygon points="48,-8 40,0 48,8 34,8 34,-8" fill="var(--ink-soft)" stroke="var(--ink)" stroke-width="1.2" />
+        <rect x="-38" y="-11" width="76" height="16" rx="2.5" fill="var(--ink)" stroke="var(--ink)" stroke-width="1.5" />
         <text
           x="0"
-          y="-1"
+          y="0"
           font-family="var(--font-ui)"
           font-size="8.5"
-          font-weight="800"
-          fill="var(--ink)"
+          font-weight="700"
+          fill="var(--card)"
           text-anchor="middle"
           letter-spacing="0.4"
         >

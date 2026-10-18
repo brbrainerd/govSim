@@ -7,6 +7,7 @@
   import type { ActiveCrisis } from '../engine/director';
   import OvalOfficeScene from '../ui/art/OvalOfficeScene.svelte';
   import CharacterPortrait from '../ui/art/CharacterPortrait.svelte';
+  import CivicEmblem from '../ui/art/CivicEmblem.svelte';
   import type { Look, Mood } from '../ui/art/Character.svelte';
   import Rosette from '../ui/art/Rosette.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
@@ -68,24 +69,24 @@
     if (session.isEvilMode) {
       return {
         role: 'FIXER',
-        look: { skin: 'skin-2', hair: 'hair-1', hairStyle: 'swept', suit: 'ink', tie: 'alert', glasses: true, mood: advisorMood },
+        look: { skin: 'skin-2', hair: 'hair-3', hairStyle: 'bald', suit: 'art-suit-black', tie: 'alert', mood: advisorMood },
       };
     }
     if (idx === 0) {
       return {
         role: 'COS',
-        look: { skin: 'skin-3', hair: 'hair-3', hairStyle: 'swept', suit: 'art-shirt', shirtOnly: true, glasses: true, mood: advisorMood },
+        look: { skin: 'skin-3', hair: 'hair-3', hairStyle: 'bald', suit: 'art-shirt-blue', shirtOnly: true, outfit: 'shirt', mood: advisorMood },
       };
     }
     if (idx === 1) {
       return {
-        role: 'OMB',
-        look: { skin: 'skin-2', hair: 'hair-1', hairStyle: 'bun', suit: 'ink', tie: 'gold', glasses: true, mood: advisorMood },
+        role: 'WHIP',
+        look: { skin: 'skin-4', hair: 'hair-3', hairStyle: 'bald', suit: 'art-suit-black', tie: 'sky', mood: advisorMood },
       };
     }
     return {
-      role: 'COUNSEL',
-      look: { skin: 'skin-4', hair: 'hair-1', hairStyle: 'cropped', suit: 'ink-soft', tie: 'sky', mood: advisorMood },
+      role: 'FED',
+      look: { skin: 'skin-1', hair: 'hair-2', hairStyle: 'bald', suit: 'art-cardigan', outfit: 'cardigan', glasses: true, mood: advisorMood },
     };
   }
 
@@ -119,9 +120,11 @@
         {/if}
         <span class="chyron-text">{session.aiTurnPayload?.chyron ?? chyron}</span>
       </div>
-      <div class="bubble" role="status">{session.aiTurnPayload?.advisorBubble ?? briefingInfo.bubble}</div>
+      <div class="bubble" class:evil-bubble={session.isEvilMode} role="status">
+        {session.aiTurnPayload?.advisorBubble ?? briefingInfo.bubble}
+      </div>
     </div>
-    <div class="doing">
+    <div class="doing" class:evil-doing={session.isEvilMode}>
       <div class="doing-head">
         <h3>{session.isEvilMode ? 'How the loot is doing' : 'How America is doing'}</h3>
         <SynergyBar {session} compact={true} />
@@ -203,7 +206,7 @@
       <div class="card evil-situation-card" class:urgent={isImminent} data-testid="evil-situation-card">
         <div class="evil-card-header">
           <span class="evil-intel-tag">
-            <span class="evil-intel-icon" aria-hidden="true">⚡</span>
+            <CivicEmblem kind="syndicate" size={14} />
             KLEPTOCRATIC INTEL
           </span>
           <span
@@ -289,11 +292,12 @@
             onclick={() => (showPerkDraftModal = true)}
           >
             {#if session.draft.perkPickId}
-              ✓ {getPerk(session.draft.perkPickId)?.name ?? 'Drafted'}
+              <CivicEmblem kind="up" size={12} /> {getPerk(session.draft.perkPickId)?.name ?? 'Drafted'}
             {:else if session.draft.perkSkipForClout}
-              ⏭️ Draft Skipped (+10 Clout)
+              <CivicEmblem kind="skip" size={12} /> Draft Skipped (+10 Clout)
             {:else}
-              🏛️ {session.isEvilMode ? 'Heist Relic Draft' : 'Task Force Draft'} ({session.activePerks.length} Active)
+              <CivicEmblem kind={session.isEvilMode ? 'syndicate' : 'capitol'} size={13} />
+              {session.isEvilMode ? 'Heist Relic Draft' : 'Task Force Draft'} ({session.activePerks.length} Active)
             {/if}
           </button>
         {/if}
@@ -348,7 +352,7 @@
       {@const adv = advisorForSuggestion(idx)}
       <div
         class="card option"
-        title={packMeta ? `${packMeta.whyClick} (👍 ${packMeta.upside} · ⚠️ ${packMeta.catchText})` : s.play?.autoWhip ? '👍 Locks in the cheapest deals to pass your bill · ⚠️ Costs Clout from your bank' : undefined}
+        title={packMeta ? `${packMeta.whyClick} (Upside: ${packMeta.upside} · Trade-off: ${packMeta.catchText})` : s.play?.autoWhip ? 'Locks in the cheapest deals to pass your bill · Costs Clout from your bank' : undefined}
       >
         <div class="option-row">
           <div class="advisor-medallion" data-testid="oval-advisor-portrait">
@@ -364,11 +368,11 @@
             <b>{s.title}</b>
             {#if s.play?.pack && packMeta}
               <span class="play-badge" data-testid="advisor-play-badge">
-                {packMeta.emoji} Play: {s.play.pack} · 👍 {packMeta.upside}
+                <CivicEmblem kind={packMeta.emoji} size={12} /> Play: {s.play.pack} · <CivicEmblem kind="up" size={11} /> {packMeta.upside}
               </span>
             {:else if s.play?.autoWhip}
               <span class="play-badge" data-testid="advisor-play-badge">
-                🤝 Play: Auto-whip · 👍 Enough votes to pass
+                <CivicEmblem kind="handshake" size={12} /> Play: Auto-whip · <CivicEmblem kind="up" size={11} /> Enough votes to pass
               </span>
             {/if}
           </div>
@@ -451,19 +455,24 @@
   }
   .bubble {
     position: absolute;
-    right: clamp(136px, 17vw, 200px);
-    top: clamp(10px, 1.4vh, 18px);
-    max-width: 24ch;
+    right: clamp(14px, 1.8vw, 24px);
+    top: clamp(12px, 1.6vh, 20px);
+    max-width: 22ch;
     padding: clamp(6px, 0.9vh, 10px) clamp(8px, 1vw, 14px);
     background: var(--card);
     border: 2.5px solid var(--ink);
     border-radius: 12px;
-    font: 700 clamp(12px, 1.05vw, 16px)/1.25 var(--font-body);
+    font: 700 clamp(12px, 1vw, 15px)/1.25 var(--font-body);
     color: var(--ink);
     text-align: center;
     box-shadow: 3px 3px 0 var(--ink);
+    z-index: 2;
   }
-  .bubble::after { content: ''; position: absolute; bottom: -12px; right: 18px; border: 12px solid transparent; border-top-color: var(--ink); border-bottom: 0; }
+  .bubble.evil-bubble {
+    border-color: var(--gold);
+    background: var(--paper);
+  }
+  .bubble::after { content: ''; position: absolute; bottom: -12px; left: 24px; border: 12px solid transparent; border-top-color: var(--ink); border-bottom: 0; }
   .doing { min-height: 0; }
   .doing-head { display: flex; justify-content: space-between; align-items: baseline; }
   h3 { margin: 0; font: 700 clamp(18px, 1.5vw, 22px) var(--font-display); }
@@ -485,6 +494,9 @@
   .turn-head { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; }
   .scen-pill { font: 700 10px/1 var(--font-ui); text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px; background: var(--paper); border: 1px solid var(--ink); color: var(--ink); }
   .perk-draft-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font: 700 10px/1 var(--font-ui);
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -495,6 +507,10 @@
     color: var(--ink);
     cursor: pointer;
     box-shadow: 1px 1px 0 var(--ink);
+  }
+  :global([data-theme="evil"]) .perk-draft-pill {
+    color: var(--paper);
+    border-color: var(--paper);
   }
   .perk-draft-pill:hover {
     background: var(--paper-warm);
@@ -641,10 +657,6 @@
     letter-spacing: 0.08em;
     color: var(--gold);
     text-transform: uppercase;
-  }
-
-  .evil-intel-icon {
-    font-size: 13px;
   }
 
   .evil-heat-pill {
