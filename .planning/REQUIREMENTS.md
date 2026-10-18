@@ -7,9 +7,9 @@
 
 ### Character Anatomy, Outfits & Poses (`GFX` — Phase 39)
 
-- [ ] **GFX-01**: Upgrade `Character.svelte`, `FedPortrait.svelte`, and `CourtBench.svelte` to match `.design-targets/cast.png` and `D.png` with seamless capsule-to-shoulder joints, sculpted neck/jawline shading, upper eyelids + gaze catchlights, expressive dot/arc/open-tongue mouths, back-hair layers (`long`, `bob`, `afro`, `bun`, `bald` horseshoe), swallowtail ribbon nameplate banners, and enamel US flag lapel pin
-- [ ] **GFX-02**: Add articulated character poses (`hips`, `crossed`, `celebrate`, `facepalm`, `cash`, `podium`) and occupational outfits/props (`scrubs` + stethoscope, `hardhat` + safety vest, `blazer` + broadcast earpiece/mic, `cardigan` + glasses) while separating outer SVG positioning `<g>` from inner CSS animation `<g>`
-- [ ] **GFX-03**: Create reusable `<CharacterPortrait>` medallion component (`src/ui/art/CharacterPortrait.svelte`) supporting circular framed bust/expression avatars (`triumphant` confetti burst, `facepalm` hand over face, `panicked` blue-forehead dread gradient + twin sweat drops, `scheming`, `confident`, `stressed`)
+- [x] **GFX-01**: Upgrade `Character.svelte`, `FedPortrait.svelte`, and `CourtBench.svelte` to match `.design-targets/cast.png` and `D.png` with seamless capsule-to-shoulder joints, sculpted neck/jawline shading, upper eyelids + gaze catchlights, expressive dot/arc/open-tongue mouths, back-hair layers (`long`, `bob`, `afro`, `bun`, `bald` horseshoe), swallowtail ribbon nameplate banners, and enamel US flag lapel pin
+- [x] **GFX-02**: Add articulated character poses (`hips`, `crossed`, `celebrate`, `facepalm`, `cash`, `podium`) and occupational outfits/props (`scrubs` + stethoscope, `hardhat` + safety vest, `blazer` + broadcast earpiece/mic, `cardigan` + glasses) while separating outer SVG positioning `<g>` from inner CSS animation `<g>`
+- [x] **GFX-03**: Create reusable `<CharacterPortrait>` medallion component (`src/ui/art/CharacterPortrait.svelte`) supporting circular framed bust/expression avatars (`triumphant` confetti burst, `facepalm` hand over face, `panicked` blue-forehead dread gradient + twin sweat drops, `scheming`, `confident`, `stressed`)
 
 ### Oval Office Scenes, Avatar Picker & Advisors (`SCENE` — Phase 40)
 
@@ -71,9 +71,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GFX-01 | Phase 39 | Pending |
-| GFX-02 | Phase 39 | Pending |
-| GFX-03 | Phase 39 | Pending |
+| GFX-01 | Phase 39 | Complete |
+| GFX-02 | Phase 39 | Complete |
+| GFX-03 | Phase 39 | Complete |
 | SCENE-01 | Phase 40 | Pending |
 | SCENE-02 | Phase 40 | Pending |
 | NPC-01 | Phase 41 | Pending |

@@ -22,7 +22,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 
 **Goal**: Upgrade the foundational SVG character components (`Character.svelte`, `CharacterPortrait.svelte`, `FedPortrait.svelte`, `CourtBench.svelte`) to match `.design-targets/cast.png` and `D.png`.
 **Depends on**: Phase 38 (v0.9 complete)
-**Requirements**: `GFX-01`, `GFX-02`, `GFX-03`
+**Requirements**: GFX-01, GFX-02, GFX-03
 **Success Criteria** (what must be TRUE):
 
   1. `Character.svelte` renders seamless capsule-to-shoulder joints, sculpted neck/jawline shading, upper eyelids + gaze catchlights, expressive dot/arc/open-tongue mouths, back-hair layers (`long`, `bob`, `afro`, `bun`, `bald` horseshoe), swallowtail ribbon nameplate banners, and enamel US flag lapel pins.
@@ -35,7 +35,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 
 **Goal**: Add a selectable Presidential Look / Avatar picker and White House portico banner on `NewGame.svelte`, and upgrade `OvalOfficeScene.svelte` and `OvalOffice.svelte` with Evil Mode banker's-lamp lighting, cash stacks, and reactive Advisor NPC portraits.
 **Depends on**: Phase 39
-**Requirements**: `SCENE-01`, `SCENE-02`
+**Requirements**: SCENE-01, SCENE-02
 **Success Criteria** (what must be TRUE):
 
   1. `NewGame.svelte` lets the player pick from 4 distinct nonpartisan Presidential Looks (persisted in `GameOptions`, `Session`, and `SaveFile`) and displays an animated White House portico inauguration banner that shifts to dark oxblood/scheming when Evil Mode is toggled.
@@ -48,7 +48,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 
 **Goal**: Bring Congressional Bloc Leaders and Household Personas to life with live state-reactive poses, outfits, and expressions across `Congress`, `Budget`, and `Household` views.
 **Depends on**: Phase 40
-**Requirements**: `NPC-01`, `NPC-02`
+**Requirements**: NPC-01, NPC-02
 **Success Criteria** (what must be TRUE):
 
   1. Congressional Bloc Leaders in `Hemicycle.svelte` and `Congress.svelte` dynamically switch between `crossed` + scowl (whip share `< 30%`), pensive (`30%–60%`), and `wave`/`celebrate` (`> 60%`), with a spring bounce pulse when a deal flips their support.
@@ -60,7 +60,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 
 **Goal**: Add high-craft animated SVG scenes and NPC portraits to `SpeechModal`, `ElectionNightModal`, `Voters`, `ImpeachmentModal`, `TurnReport`, and `EndScreen`.
 **Depends on**: Phase 41
-**Requirements**: `VIGNETTE-01`, `VIGNETTE-02`, `VIGNETTE-03`
+**Requirements**: VIGNETTE-01, VIGNETTE-02, VIGNETTE-03
 **Success Criteria** (what must be TRUE):
 
   1. `SpeechModal.svelte` renders an animated Presidential Bully Pulpit Podium vignette with dual microphones, camera flashes, and target audience silhouettes.
@@ -73,7 +73,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 
 **Goal**: Fix all UI/UX, layout, collision, and sub-container clipping issues identified across `1280×720` and `1376×768` screenshots (`LAYOUT-01..04`).
 **Depends on**: Phase 42
-**Requirements**: `LAYOUT-01`, `LAYOUT-02`, `LAYOUT-03`, `LAYOUT-04`
+**Requirements**: LAYOUT-01, LAYOUT-02, LAYOUT-03, LAYOUT-04
 **Success Criteria** (what must be TRUE):
 
   1. `App.svelte` renders uniform single-line status pills (`0 STAGED`, `PLAIN TALK`, `CALM`), non-wrapping turn/season/skip indicators on wide-banner screens (`Trade & Tariffs`), and clean spacing between `HOME`/`SEE`/`ACT` headers and folder tab ears.
@@ -87,7 +87,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 
 **Goal**: Introduce a deterministic *Brotato*-style between-quarter **White House Task Force / Mandate Draft** where players pick, reroll, or lock tiered perks with explicit `👍 Upside` / `⚠️ The Catch` trade-offs (or toggle `"Classic Sim"` for purist classroom runs).
 **Depends on**: Phase 43
-**Requirements**: `PERK-01`, `PERK-02`, `PERK-03`
+**Requirements**: PERK-01, PERK-02, PERK-03
 **Success Criteria** (what must be TRUE):
 
   1. `src/engine/perks.ts` deterministically rolls 3 tiered Mandate/Task Force cards (`Tier I Routine` → `Tier IV Historic Mandate`) on dedicated `rng.ts` stream 21 without perturbing macro shocks or autopilot streams, applying registered `coefficients.ts` modifiers and recording named `Ledger` trace terms.
@@ -100,7 +100,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 
 **Goal**: Add *How Many Dudes?*-style multiplicative engine-building through 6 Policy Doctrine Families, `2 / 4 / 6` set bonuses, event-driven chain-reaction triggers (*"Action A triggers Bonus B"*), and cascading combo popups.
 **Depends on**: Phase 44
-**Requirements**: `SYN-01`, `SYN-02`, `SYN-03`
+**Requirements**: SYN-01, SYN-02, SYN-03
 **Success Criteria** (what must be TRUE):
 
   1. Executive Orders, Budget packages, Trade pacts/tariffs, Social policies, Reforms, and drafted Task Forces carry typed **Policy Doctrine Family** tags (`🏗️ Industrial`, `🌱 Green Transition`, `🛡️ National Security`, `📈 Main Street`, `⚖️ Institutionalist`, `🌐 Globalist`) surfaced as scannable badges on action cards.
@@ -113,7 +113,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 
 **Goal**: Extend the roguelite draft and synergy engine to Evil Mode with corrupt Heist Relics & Fixer combos, add 5 rule-warping Presidential Playstyle Archetypes at New Game, and reward replayability with persistent Silver & Gold Mastery Stars.
 **Depends on**: Phase 45
-**Requirements**: `HEIST-01`, `HEIST-02`, `ARCH-01`, `ARCH-02`
+**Requirements**: HEIST-01, HEIST-02, ARCH-01, ARCH-02
 **Success Criteria** (what must be TRUE):
 
   1. Evil Mode swaps in a dedicated **"Heist Relics & Fixer Syndicate"** draft pool (`🏝️ Shell Network`, `🕵️ Fixer Ring`, `🏛️ Captured Regulators`) with corrupt chain triggers that multiply offshore `$B` extraction and launder Heat, rendered with a dark-market oxblood/gold skin in `PerkDraftModal.svelte` and summarized in `EndScreen.svelte`.
@@ -126,7 +126,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 
 **Goal**: Calibrate synergy and perk numbers so no single tag or archetype creates a degenerate exploit, and audit every screen and modal across `1376×768` and `1280×720` viewports via Playwright and computer vision.
 **Depends on**: Phase 46
-**Requirements**: `AUDIT-01`, `AUDIT-02`
+**Requirements**: AUDIT-01, AUDIT-02
 **Success Criteria** (what must be TRUE):
 
   1. Every screen and modal at `1376×768` and `1280×720` passes computer-vision inspection (`view_file`) with zero text-on-character collisions, zero sub-container clipping, and zero outer viewport scrolling (`scrollHeight <= innerHeight`), and `Calm mode` / `prefers-reduced-motion: reduce` cleanly pauses all continuous ambient SVG animations.
