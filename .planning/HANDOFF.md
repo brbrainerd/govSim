@@ -82,10 +82,11 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 - **Milestone v0.9 (Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.9`.**
   - All 5 phases (34 to 38, 5 plans) executed, verified, and audited (`v0.9-MILESTONE-AUDIT.md`) with 13/13 requirements satisfied (`VOCAB-01..03`, `COPY-01..03`, `UI-CLARITY-01..03`, `SEE-01..02`, `BAL-01..02`).
   - Archived to `.planning/milestones/v0.9-ROADMAP.md`, `v0.9-REQUIREMENTS.md`, `v0.9-MILESTONE-AUDIT.md`, and `v0.9-phases/`.
-- **Milestone v1.0 (High-Craft Character Art, Living Animations, UI/UX Alignment & Incremental Mandate Synergies): COMPLETE & VERIFIED (Phases 39–47, 26/26 requirements).**
+- **Milestone v1.0 (High-Craft Character Art, Living Animations, UI/UX Alignment & Incremental Mandate Synergies): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v1.0` (Phases 39–47, 26/26 requirements).**
   - Overhauled all player & NPC models (`Character.svelte`, `CharacterPortrait.svelte`, `FedPortrait.svelte`, `CourtBench.svelte`) around the continuous 72px-wide finger/thumb-shaped head + 72px-wide torso pawn anatomy of `.design-targets/D.png` and `cast.png`, rebuilt `OvalOfficeScene.svelte`, `NewGame.svelte`, and `ReporterScene.svelte` to match `.design-targets/g-home.png`, `hub2.png`, `g-evil.png`, `g-newgame.png`, and `g-crisis.png`, and replaced raw Unicode emojis with multi-layered Americana SVG emblems (`src/ui/art/CivicEmblem.svelte`).
-  - Integrated *Brotato*-style quarterly Mandate/Task Force RNG drafts (`PERK-01..03`), *How Many Dudes?*-style Policy Doctrine `2/4/6` set bonuses & chain-reaction triggers (`SYN-01..03`), Evil Mode Heist Relics & Fixer combos (`HEIST-01..02`), Presidential Playstyle Archetypes & Mastery Stars (`ARCH-01..02`), and 100-seed Monte Carlo balance + multi-viewport computer-vision verification (`AUDIT-01..02`).
-- **Gates:** `pnpm test` 531 passing (89 files) · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
+  - Integrated *Brotato*-style quarterly Mandate/Task Force RNG drafts (`PERK-01..03`), *How Many Dudes?*-style Policy Doctrine `2/4/6` set bonuses & chain-reaction triggers (`SYN-01..03`), Evil Mode Heist Relics & Fixer combos (`HEIST-01..02`), Presidential Playstyle Archetypes & Mastery Stars (`ARCH-01..02`), contextual de-emphasized 24-card Civics Myth surfacing with a persistent `showMyths` hide toggle, and 100-seed Monte Carlo balance + multi-viewport computer-vision verification (`AUDIT-01..02`).
+  - Archived to `.planning/milestones/v1.0-ROADMAP.md`, `v1.0-REQUIREMENTS.md`, `v1.0-MILESTONE-AUDIT.md`, and `v1.0-phases/`.
+- **Gates:** `pnpm test` 534 passing (89 files) · `pnpm test:e2e` 77 passing (32 files) · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
 ### Open debts (do not lose these)

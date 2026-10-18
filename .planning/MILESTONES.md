@@ -1,5 +1,20 @@
 # Milestones
 
+## v1.0 High-Craft Character Art, Living Animations, UI/UX Alignment & Incremental Mandate Synergies (Shipped: 2026-10-18)
+
+**Phases completed:** 9 phases (Phases 39–47), 9 plans, 26/26 requirements
+
+**Key accomplishments:**
+
+- Overhauled all SVG character models (`Character.svelte`, `CharacterPortrait.svelte`, `FedPortrait.svelte`, `CourtBench.svelte`) around the continuous 72px-wide finger/thumb-shaped head + 72px-wide torso pawn anatomy of `.design-targets/D.png` and `cast.png` with articulated poses (`hips`, `crossed`, `celebrate`, `facepalm`, `cash`, `podium`) and occupational outfits (`scrubs`, `hardhat`, `blazer`, `cardigan`, `shirt`) (`GFX-01..03`).
+- Rebuilt `OvalOfficeScene.svelte`, `ReporterScene.svelte`, and `NewGame.svelte` to match `.design-targets/g-home.png`, `hub2.png`, `g-evil.png`, `g-newgame.png`, and `g-crisis.png`, and created `CivicEmblem.svelte` with multi-layered Americana SVG emblems replacing raw Unicode emojis (`SCENE-01..02`, `VIGNETTE-01..03`).
+- Added live whip-reactive Congressional Bloc Leaders (`Hemicycle.svelte`), `netMonthlyDelta`-reactive Citizen NPC portraits (`HouseholdCard.svelte`, `HouseholdModal.svelte`, `Budget.svelte`), and remediated all layout/alignment bugs across `1376×768` and `1280×720` (`NPC-01..02`, `LAYOUT-01..04`).
+- Integrated *Brotato*-style Quarterly Mandate & Task Force RNG drafts (`PERK-01..03`), *How Many Dudes?*-style Policy Doctrine `2/4/6` set bonuses & chain-reaction triggers (`SYN-01..03`), Evil Mode Heist Relics & Fixer Syndicate (`HEIST-01..02`), and 5 Presidential Playstyle Archetypes with Silver & Gold Mastery Stars (`ARCH-01..02`).
+- Expanded and contextually de-emphasized the Civics Myth system to 24 spectrum-balanced cards (`8 left`, `8 right`, `8 both`) with `By the Numbers`, `Historical Precedent`, `Why the Myth Persists`, auto-hidden resolved tickets, and a persistent `showMyths` hide toggle across all surfaces.
+- Verified 100-seed Monte Carlo balance across Standard, Classic Sim, and all 5 Archetypes, plus 77/77 Playwright E2E tests across 32 spec files and 8/8 cross-browser determinism hashes (`AUDIT-01..02`).
+
+---
+
 ## v0.9 Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance (Shipped: 2026-10-16)
 
 **Phases completed:** 5 phases, 5 plans, 5 tasks

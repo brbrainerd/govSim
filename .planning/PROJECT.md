@@ -72,24 +72,21 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 - ✓ Action-screen trade-off surfacing across `Budget`, `Powers`, `Trade`, `Congress`, and Reform Modals with right-column `"Why click this?"` advisor cards and visual meters (`UI-CLARITY-01`, `UI-CLARITY-02`, `UI-CLARITY-03`) — v0.9
 - ✓ Kitchen-table clarity on `OvalOffice`, `Economy`, `Voters`, `TurnReport`, and `CrisisModal` with Plain-Talk indicator headers, emoji health badges, and crisis response trade-offs (`SEE-01`, `SEE-02`) — v0.9
 - ✓ Presidential trade-off balance audit & tuning (aligning UI badges with engine math) plus automated readability (grade ≤ 9) and multi-viewport (`1376×768` / `1280×720`) zero-scroll verification (`BAL-01`, `BAL-02`) — v0.9
+- ✓ High-craft SVG character anatomy (`Character.svelte`, `FedPortrait.svelte`, `CourtBench.svelte`) matching `.design-targets/cast.png` and `D.png` with continuous 72px-wide finger/thumb-shaped head + 72px-wide torso pawn silhouettes, articulated poses, and occupational outfits (`GFX-01..03`) — v1.0
+- ✓ Reusable `<CharacterPortrait>` medallion component (`triumphant` confetti, `facepalm`, `panicked` blue-forehead dread gradient + twin sweat drops, `scheming`, `confident`, `stressed`) and `<CivicEmblem>` multi-layered Americana SVG emblem catalog (`GFX-03`, `SYN-01`) — v1.0
+- ✓ Selectable 4-option Presidential Look / Avatar picker and animated White House portico inauguration banner on `NewGame.svelte`, plus `OvalOfficeScene.svelte` with curved wainscot wall, Presidential Eagle carpet seal, Resolute Desk, Evil Mode banker's-lamp cash stacks, and paper shredder (`SCENE-01..02`) — v1.0
+- ✓ Live whip-reactive Congressional Bloc Leaders in `Hemicycle.svelte` / `Congress.svelte` and `netMonthlyDelta`-reactive Citizen NPC portraits in `HouseholdCard.svelte` / `HouseholdModal.svelte` / `Budget.svelte` (`NPC-01..02`) — v1.0
+- ✓ Animated Presidential Bully Pulpit Podium scene in `SpeechModal.svelte`, Live Broadcast News Anchor + You-vs-Opponent EV medallions in `ElectionNightModal.svelte` / `Voters.svelte`, and Senate Trial / Legacy vignettes in `ImpeachmentModal.svelte`, `TurnReport.svelte`, and `EndScreen.svelte` (`VIGNETTE-01..03`) — v1.0
+- ✓ Full-screen UI/UX, layout, and alignment remediation across `App.svelte`, `OvalOffice`, `Congress`, `Budget`, `Powers`, `Trade`, `Voters`, `CrisisModal`, `ElectionNightModal`, and `EndScreen` (`LAYOUT-01..04`) — v1.0
+- ✓ *Brotato*-style Quarterly Mandate & Task Force RNG draft (`src/engine/perks.ts` stream 21, `PerkDraftModal.svelte`, 24-card catalog, Reroll/Lock/Skip, Classic Sim toggle) (`PERK-01..03`) — v1.0
+- ✓ *How Many Dudes?*-style Policy Doctrine `2/4/6` set bonuses, event-driven chain-reaction triggers (`src/engine/synergies.ts`), and `SynergyBar.svelte` cascading combo popups (`SYN-01..03`) — v1.0
+- ✓ Evil Mode Heist Relics & Fixer Syndicate draft pool (`🏝️ Shell Network`, `🕵️ Fixer Ring`, `🏛️ Captured Regulators`), 5 Presidential Playstyle Archetypes (`src/content/archetypes.ts`), and persistent Silver & Gold Mastery Stars (`HEIST-01..02`, `ARCH-01..02`) — v1.0
+- ✓ Contextually de-emphasized 24-card Civics Myth catalog (`8 left`, `8 right`, `8 both`) with `By the Numbers`, `Historical Precedent`, `Why the Myth Persists`, and a persistent `showMyths` hide toggle across all surfaces — v1.0
+- ✓ 100-seed Monte Carlo balance verification across Standard, Classic Sim, and all 5 Archetypes, plus multi-viewport (`1376×768` / `1280×720`) computer-vision and 77-test Playwright E2E verification (`AUDIT-01..02`) — v1.0
 
 ### Active
 
-- [ ] **GFX-01**: High-craft SVG character anatomy (`Character.svelte`, `FedPortrait.svelte`, `CourtBench.svelte`) matching `.design-targets/cast.png` and `D.png` with seamless capsule-to-shoulder joints, expressive dot/arc/open-tongue mouths, back-hair layers (`long`, `bob`, `afro`, `bun`), ribbon nameplate banners, and enamel US flag lapel pin
-- [ ] **GFX-02**: Articulated character poses (`hips`, `crossed`, `celebrate`, `facepalm`, `cash`, `podium`) and occupational outfits/props (`scrubs` + stethoscope, `hardhat` + safety vest, `blazer` + broadcast earpiece/mic, `cardigan` + glasses)
-- [ ] **GFX-03**: Reusable `<CharacterPortrait>` medallion component supporting circular framed bust/expression avatars (`triumphant` confetti, `facepalm`, `panicked` blue-forehead gradient + twin sweat drops, `scheming`, `confident`, `stressed`)
-- [ ] **SCENE-01**: Selectable 4-option Presidential Look / Avatar picker on `NewGame.svelte` (persisted in `GameOptions` / `Session` / `SaveFile`) plus an animated White House portico inauguration banner (`.design-targets/g-newgame.png`) that shifts to dark oxblood/scheming when Evil Mode is toggled
-- [ ] **SCENE-02**: Upgraded `OvalOfficeScene.svelte` with high-back leather executive chair, Evil Mode banker's-lamp cone of light + cash stacks on the Resolute Desk + animated cash-fanning hands (`.design-targets/g-evil.png`), and reactive Advisor NPC portrait badges on `OvalOffice.svelte`
-- [ ] **NPC-01**: Live mood- and pose-reactive Congressional Bloc Leaders in `Hemicycle.svelte` and `Congress.svelte` (`crossed` + scowl when whip share `< 30%`, pensive when undecided, `wave`/`celebrate` + bounce pulse when a deal flips their bloc)
-- [ ] **NPC-02**: Dedicated Citizen NPC portraits for the 4 Household Personas (`Nurse`, `Auto/Grid Worker`, `Retiree`, `Small Business Owner`) + custom families in `HouseholdCard.svelte`, `HouseholdModal.svelte`, and `Budget.svelte` whose expressions react live to `netMonthlyDelta`
-- [ ] **VIGNETTE-01**: Animated Presidential Bully Pulpit Podium scene in `SpeechModal.svelte` with dual microphones, camera flashes, and target audience silhouettes (`General Public`, `Congress`, `Business Leaders`)
-- [ ] **VIGNETTE-02**: Live Broadcast News Anchor + You-vs-Opponent EV portrait medallions in `ElectionNightModal.svelte` (`.design-targets/g-election.png`) and state voter mood portraits in `Voters.svelte`
-- [ ] **VIGNETTE-03**: Dramatic Senate Trial / Chief Justice verdict scene in `ImpeachmentModal.svelte`, Historian/Advisor header badge in `TurnReport.svelte`, and Presidential Legacy / Kleptocrat Heist vignette in `EndScreen.svelte`
-- [ ] **LAYOUT-01**: Global Shell, Top Status Bar & Left Folder Nav alignment remediation (`App.svelte`: uniform single-line status pills for `0 STAGED` / `PLAIN TALK` / `CALM`, non-wrapping turn/season/skip indicators on wide-banner screens like `Trade & Tariffs`, and clean spacing between `HOME`/`SEE`/`ACT` section headers and folder tab ears)
-- [ ] **LAYOUT-02**: Oval Office & Congress collision and right-sidebar overflow fixes (`OvalOfficeScene.svelte` speech bubble repositioned clear of the Chief of Staff's head; `OvalOffice.svelte` right-sidebar cards compacted so the 5th card never clips at `1280×720`; `Hemicycle.svelte` Centrists bloc leader moved inside `.card` top border; `Congress.svelte` right sidebar compacted on deadline turns so `CALL THE VOTE` is never pushed off-screen)
-- [ ] **LAYOUT-03**: Budget, Powers, Trade & Voters layout and clipping remediation (`Budget.svelte` icon-to-label spacing on preset buttons and slider headers; `Powers.svelte` card grid density and `BULLY PULPIT SPEECH` header gap so bottom cards fit `1280×720`; `Trade.svelte` 5-column KPI row so sector tariff cards fit without clipping; `Voters.svelte` height budget so the bottom Electoral College bar and progress meter never clip at `1280×720`)
-- [ ] **LAYOUT-04**: Modal & EndScreen alignment remediation (`CrisisModal.svelte` top badge clipping & `ReporterScene.svelte` full-bleed width/chyron fit; `ElectionNightModal.svelte` live EV progress bar fill calculation & inner `.card` border fit; `EndScreen.svelte` top header stat alignment, single-row chart filter pills, and scrollable/fitted Milestones grid)
-- [ ] **AUDIT-01**: Computer-vision visual audit across all screens and modals at `1376×768` and `1280×720` with before/after verification, zero inner/outer element clipping, zero outer viewport scroll, and `Calm mode` / `prefers-reduced-motion` animation compliance
+(None — Milestone v1.0 complete)
 
 ### Out of Scope
 
@@ -101,7 +98,7 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 
 ## Context
 
-- Initializing Milestone v1.0 ("High-Craft Character Art, NPC Presence, Living Animations & Full UI/UX Alignment") building on v0.9 (503 unit/property tests across 82 files, 71 Playwright E2E tests, zero axe violations, zero default network egress, and clean token guardrails).
+- Shipped Milestone v1.0 ("High-Craft Character Art, Living Animations, UI/UX Alignment & Incremental Mandate Synergies") with 534 unit/property/balance/readability tests across 89 files, 77 Playwright E2E tests across 32 spec files, 0 axe violations, 0 default network egress, and 8/8 cross-browser determinism hashes.
 - Pure client application (TypeScript + Svelte 5 runes + Vite), zero backend dependencies, zero telemetry.
 - Visual direction C (Americana poster) with dual theme tokens (Day Americana and Dark Oxblood/Gold/Ink for Evil Mode).
 - Zero outer viewport scrolling across 1376×768 and 1280×720 viewports in both Plain Talk and Policy Wonk modes.
@@ -143,20 +140,23 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 | Opt-In Free AI Director + Schema Clamping | Supports OpenRouter `:free` cascade failover, OAuth PKCE, and `window.ai` with zero default egress and strict `C.dynamicCrisis*Cap` clamping | ✓ Good |
 | Situated Mirage Levers & Debunk-vs-Spin | Places populist "Easy Buttons" at the moment of intent and rewards civic curiosity or cynical TV spin | ✓ Good |
 | Progressive Disclosure + Plain Talk / Policy Wonk Toggle | Defaults to friendly kitchen-table English with emoji trade-offs while preserving full statutory/macro terminology on demand | ✓ Good (v0.9) |
-| Separated SVG Positioning `<g>` & Inner CSS Animation `<g>` | Prevents CSS keyframe `transform` from overriding SVG `transform="translate(x, y)"` in Chromium | ✓ Adopted (v1.0) |
-| Computer-Vision Screenshot Audit Gate (`1280×720` + `1376×768`) | Catches sub-container clipping, SVG boundary overflows, and speech-bubble collisions that DOM scrollHeight assertions miss | ✓ Adopted (v1.0) |
+| Separated SVG Positioning `<g>` & Inner CSS Animation `<g>` | Prevents CSS keyframe `transform` from overriding SVG `transform="translate(x, y)"` in Chromium | ✓ Good (v1.0) |
+| Computer-Vision Screenshot Audit Gate (`1280×720` + `1376×768`) | Catches sub-container clipping, SVG boundary overflows, and speech-bubble collisions that DOM scrollHeight assertions miss | ✓ Good (v1.0) |
+| Continuous 72px Thumb-Head Pawn Silhouette + `<CivicEmblem>` SVGs | Matches `.design-targets/D.png` and `cast.png` pawn proportions and replaces raw Unicode emojis with crisp Americana vector art | ✓ Good (v1.0) |
+| Contextual De-Emphasized 24-Card Myth Surfacing + `showMyths` Toggle | Surfaces myths only when contextually triggered, auto-hides resolved myths, and lets players hide myth UI across all surfaces | ✓ Good (v1.0) |
 
-## Current Milestone: v1.0 High-Craft Character Art, NPC Presence, Living Animations & Full UI/UX Alignment
+## Completed Milestone: v1.0 High-Craft Character Art, Living Animations, UI/UX Alignment & Incremental Mandate Synergies (Shipped 2026-10-18)
 
-**Goal:** Elevate all SVG character models, facial expressions, occupational outfits, articulated poses, reactive NPCs, and animated scene vignettes across `govSim` to match `.design-targets/cast.png`, `D.png`, `g-evil.png`, `g-election.png`, and `g-newgame.png`, and remediate every UI/UX, layout, and alignment issue audited across `1280×720` and `1376×768` screenshots.
+**Goal:** Elevate all SVG character models, facial expressions, occupational outfits, articulated poses, reactive NPCs, and animated scene vignettes across `govSim` to match `.design-targets/cast.png`, `D.png`, `g-evil.png`, `g-election.png`, and `g-newgame.png`, remediate every UI/UX, layout, and alignment issue audited across `1280×768` and `1376×768` screenshots, and integrate *Brotato* / *How Many Dudes?*-style Mandate Drafts, Policy Doctrine synergies, Evil Mode Heist Relics, Presidential Archetypes, and contextual de-emphasized Civics Myths.
 
-**Target features:**
-- High-craft SVG character anatomy, facial expressions (`facepalm`, `triumphant` confetti, `panicked` blue-forehead gradient + twin sweat drops), back-hair layers, outfits (`scrubs`, `hardhat`, `blazer`, `cardigan`), ribbon nameplates, and articulated poses (`hips`, `crossed`, `celebrate`, `facepalm`, `cash`, `podium`) (`GFX-01..03`)
-- Selectable Presidential Look / Avatar picker + White House inauguration banner on `NewGame.svelte`, Evil Mode banker's-lamp cash-counting scene on `OvalOfficeScene.svelte`, and Advisor NPC portraits on `OvalOffice.svelte` (`SCENE-01..02`)
+**Delivered:**
+- High-craft SVG character anatomy (`Character.svelte`, `CharacterPortrait.svelte`, `FedPortrait.svelte`, `CourtBench.svelte`) with continuous 72px-wide finger/thumb-shaped head + 72px-wide torso pawn proportions, facial expressions, outfits, and articulated poses (`GFX-01..03`)
+- Selectable Presidential Look / Avatar picker + White House inauguration banner on `NewGame.svelte`, `OvalOfficeScene.svelte` with curved wainscot wall, Presidential Eagle carpet seal, Resolute Desk, Evil Mode banker's-lamp cash stacks & shredder, and Advisor NPC portraits (`SCENE-01..02`)
 - Live whip-reactive Congressional Bloc Leaders in `Hemicycle.svelte` / `Congress.svelte` and `netMonthlyDelta`-reactive Citizen NPC portraits in `HouseholdCard.svelte` / `HouseholdModal.svelte` / `Budget.svelte` (`NPC-01..02`)
 - Animated Bully Pulpit Podium scene in `SpeechModal.svelte`, Live Broadcast Anchor + You-vs-Opponent EV medallions in `ElectionNightModal.svelte` / `Voters.svelte`, and Senate Trial / Legacy vignettes in `ImpeachmentModal.svelte`, `TurnReport.svelte`, and `EndScreen.svelte` (`VIGNETTE-01..03`)
 - Full UI/UX, Layout & Alignment Remediation across `App.svelte`, `OvalOffice`, `Congress`, `Budget`, `Powers`, `Trade`, `Voters`, `CrisisModal`, `ElectionNightModal`, and `EndScreen` (`LAYOUT-01..04`)
-- Computer-vision visual audit across `1376×768` and `1280×720` viewports with zero inner/outer element clipping and `Calm mode` compliance (`AUDIT-01`)
+- *Brotato*-style Quarterly Mandate & Task Force RNG draft (`PERK-01..03`), *How Many Dudes?*-style Policy Doctrine `2/4/6` set bonuses & chain-reaction triggers (`SYN-01..03`), Evil Mode Heist Relics & Fixer Syndicate (`HEIST-01..02`), Presidential Playstyle Archetypes & Mastery Stars (`ARCH-01..02`), and contextual de-emphasized 24-card Myth catalog with `showMyths` hide toggle
+- 100-seed Monte Carlo balance verification and computer-vision + 77-test Playwright E2E audit across `1376×768` and `1280×720` viewports (`AUDIT-01..02`)
 
 ## Completed Milestone: v0.9 Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance (Shipped 2026-10-16)
 
