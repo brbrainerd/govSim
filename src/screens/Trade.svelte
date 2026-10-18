@@ -13,6 +13,8 @@
   import type { ExplainerId } from '../content/explainers';
   import { pickContextualMyth } from '../content/myths';
   import TradeoffPill from '../ui/TradeoffPill.svelte';
+  import { DOCTRINE_FAMILIES } from '../content/perks';
+  import { getActionDoctrineTags } from '../engine/synergies';
 
   let {
     session,
@@ -105,7 +107,15 @@
             <div class="sector-card card" class:active>
               <div class="card-head">
                 <div class="title-group">
-                  <span class="statutory-badge">{sector.statutoryBasis}</span>
+                  <span class="statutory-badge">
+                    {sector.statutoryBasis}
+                    {#if !session.isClassicSim}
+                      {#each getActionDoctrineTags(sector.id) as tagId (tagId)}
+                        {@const fam = DOCTRINE_FAMILIES[tagId]}
+                        · <span data-testid={`trade-doctrine-${sector.id}-${tagId}`}>{fam.emoji} {fam.label}</span>
+                      {/each}
+                    {/if}
+                  </span>
                   <h4 class="sector-name">
                     <span aria-hidden="true">{sector.emoji}</span> {sector.name}
                   </h4>
@@ -183,7 +193,15 @@
             <div class="accord-card card" class:active>
               <div class="card-head">
                 <div class="title-group">
-                  <span class="partner-badge">{accord.partnerBloc}</span>
+                  <span class="partner-badge">
+                    {accord.partnerBloc}
+                    {#if !session.isClassicSim}
+                      {#each getActionDoctrineTags(accord.id) as tagId (tagId)}
+                        {@const fam = DOCTRINE_FAMILIES[tagId]}
+                        · <span data-testid={`trade-doctrine-${accord.id}-${tagId}`}>{fam.emoji} {fam.label}</span>
+                      {/each}
+                    {/if}
+                  </span>
                   <h4 class="accord-name">
                     <span aria-hidden="true">{accord.emoji}</span> {accord.name}
                   </h4>

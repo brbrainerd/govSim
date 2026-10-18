@@ -42,9 +42,9 @@
 
 ### Policy Doctrine Synergy Tags & How Many Dudes? Chain-Reaction Engine (`SYN` — Phase 45)
 
-- [ ] **SYN-01**: Tag Executive Orders, Budget packages, Trade pacts/tariffs, Social policies, Reforms, and drafted Task Forces with **Policy Doctrine Families** (`🏗️ Industrial`, `🌱 Green Transition`, `🛡️ National Security`, `📈 Main Street`, `⚖️ Institutionalist`, `🌐 Globalist`) and surface tag badges on action cards
-- [ ] **SYN-02**: Implement *How Many Dudes?*-style **Doctrine Set Thresholds (`2 / 4 / 6`) & Chain-Reaction Triggers** (`src/engine/synergies.ts`) where stacking families unlocks multiplicative institutional flywheels and event-driven chain triggers (*"Action A triggers Bonus B"*) recorded in `report.trace` with `src/content/text/why.ts` explanations
-- [ ] **SYN-03**: Build a live **Administration Doctrine & Synergy Bar** (`src/ui/SynergyBar.svelte`) on `src/screens/OvalOffice.svelte` and `src/ui/TurnReport.svelte` with cascading combo popups (`+Clout`, `+Prosperity`, `+$B Stash`) that fire sequentially when chain triggers resolve (respecting `Calm mode`)
+- [x] **SYN-01**: Tag Executive Orders, Budget packages, Trade pacts/tariffs, Social policies, Reforms, and drafted Task Forces with **Policy Doctrine Families** (`🏗️ Industrial`, `🌱 Green Transition`, `🛡️ National Security`, `📈 Main Street`, `⚖️ Institutionalist`, `🌐 Globalist`) and surface tag badges on action cards
+- [x] **SYN-02**: Implement *How Many Dudes?*-style **Doctrine Set Thresholds (`2 / 4 / 6`) & Chain-Reaction Triggers** (`src/engine/synergies.ts`) where stacking families unlocks multiplicative institutional flywheels and event-driven chain triggers (*"Action A triggers Bonus B"*) recorded in `report.trace` with `src/content/text/why.ts` explanations
+- [x] **SYN-03**: Build a live **Administration Doctrine & Synergy Bar** (`src/ui/SynergyBar.svelte`) on `src/screens/OvalOffice.svelte` and `src/ui/TurnReport.svelte` with cascading combo popups (`+Clout`, `+Prosperity`, `+$B Stash`) that fire sequentially when chain triggers resolve (respecting `Calm mode`)
 
 ### Evil Mode Heist Relics, Presidential Archetypes & Mastery Stars (`HEIST` / `ARCH` — Phase 46)
 
@@ -88,9 +88,9 @@
 | PERK-01 | Phase 44 | Complete |
 | PERK-02 | Phase 44 | Complete |
 | PERK-03 | Phase 44 | Complete |
-| SYN-01 | Phase 45 | Pending |
-| SYN-02 | Phase 45 | Pending |
-| SYN-03 | Phase 45 | Pending |
+| SYN-01 | Phase 45 | Complete |
+| SYN-02 | Phase 45 | Complete |
+| SYN-03 | Phase 45 | Complete |
 | HEIST-01 | Phase 46 | Pending |
 | HEIST-02 | Phase 46 | Pending |
 | ARCH-01 | Phase 46 | Pending |

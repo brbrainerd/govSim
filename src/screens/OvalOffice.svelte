@@ -14,6 +14,7 @@
   import HouseholdModal from '../ui/HouseholdModal.svelte';
   import DynamicCrisisModal from '../ui/DynamicCrisisModal.svelte';
   import PerkDraftModal from '../ui/PerkDraftModal.svelte';
+  import SynergyBar from '../ui/SynergyBar.svelte';
   import { getPerk } from '../content/perks';
   import { pickChyron } from '../content/chyrons';
   import { loadAiConfig } from '../app/ai-providers';
@@ -123,6 +124,7 @@
     <div class="doing">
       <div class="doing-head">
         <h3>{session.isEvilMode ? 'How the loot is doing' : 'How America is doing'}</h3>
+        <SynergyBar {session} compact={true} />
         <a href="#economy" onclick={(e) => { e.preventDefault(); go('economy'); }}>See all 8</a>
       </div>
       <div class="tiles">

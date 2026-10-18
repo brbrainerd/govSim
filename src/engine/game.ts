@@ -44,6 +44,7 @@ import {
 } from './evil';
 import type { EvilDecision } from './decisions';
 import { resolvePerkDecision } from './perks';
+import { resolveDoctrineSynergies } from './synergies';
 import {
   HEAT_CONVICTION_THRESHOLD,
   HEAT_IMPEACHMENT_THRESHOLD,
@@ -701,6 +702,57 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     }
   }
 
+  // Policy Doctrine 2/4/6 Set Thresholds & Chain-Reaction Triggers (Phases 45-46, SYN-02, HEIST-01)
+  const triggeredActionIds: string[] = [];
+  if (perkRes?.valid && rawPerk && typeof (rawPerk as { pickId?: unknown }).pickId === 'string') {
+    triggeredActionIds.push((rawPerk as { pickId: string }).pickId);
+  }
+  for (const eoId of activeOrders) {
+    if (!state.activeOrders.includes(eoId)) triggeredActionIds.push(eoId);
+  }
+  if (tradeRes) {
+    for (const st of tradeRes.sectorTariffs) {
+      if (!currentTrade.sectorTariffs.includes(st)) triggeredActionIds.push(st);
+    }
+    for (const ag of tradeRes.agreements) {
+      if (!currentTrade.agreements.includes(ag)) triggeredActionIds.push(ag);
+    }
+  }
+  if (reformResult?.valid && reformResult.status === 'enacted') {
+    triggeredActionIds.push(reformResult.reformId);
+  }
+  if (evilDec?.enactedLevers) {
+    for (const levId of evilDec.enactedLevers) {
+      triggeredActionIds.push(levId);
+    }
+  }
+
+  const synergyState: GameState = {
+    ...state,
+    policy,
+    socialPolicy,
+    trade: nextTrade,
+    ...(nextActiveReforms ? { activeReforms: nextActiveReforms } : {}),
+    ...(nextRatifiedAmendments ? { ratifiedAmendments: nextRatifiedAmendments } : {}),
+  };
+  const synergyRes = !legacyRun
+    ? resolveDoctrineSynergies(synergyState, nextActivePerks ?? [], activeOrders, triggeredActionIds, true)
+    : null;
+  if (synergyRes) {
+    log.push(...synergyRes.log);
+  }
+
+  const synergyStashDelta = synergyRes ? synergyRes.passiveStashBonusBn + synergyRes.chainStashBonusBn : 0;
+  const synergyHeatDelta = synergyRes ? synergyRes.passiveHeatDelta + synergyRes.chainHeatDelta : 0;
+  const finalEvil: EvilState =
+    synergyStashDelta !== 0 || synergyHeatDelta !== 0
+      ? {
+          ...nextEvil,
+          offshoreStashBn: convicted ? 0 : nextEvil.offshoreStashBn + synergyStashDelta,
+          heat: Math.max(MIN_HEAT, Math.min(MAX_HEAT, nextEvil.heat + synergyHeatDelta)),
+        }
+      : nextEvil;
+
   const fiscalImpulse = ((after.deficitBn - before.deficitBn) / BUDGET_WINDOW_YEARS / (e.gdp * BN_PER_TN)) * PERCENT; // % GDP per year
   const tariffChange = tariffOf(policy) - tariffOf(state.policy);
   const debtPctNow = (e.debt / e.gdp) * PERCENT;
@@ -714,6 +766,9 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   g.add('fed:drag', -C.rateDrag * (e.fedRate - e.inflation - C.neutralReal));
   g.add('luck', C.shockGap * zGap);
   for (const m of mods('gap')) g.add(m.source, m.amount);
+  if (synergyRes && synergyRes.passiveGapDelta + synergyRes.chainGapDelta !== 0) {
+    g.add('synergy:doctrine', synergyRes.passiveGapDelta + synergyRes.chainGapDelta);
+  }
   if (forRes && forRes.quarterlyGapDelta !== 0) g.add('forpol:sanctions', forRes.quarterlyGapDelta);
   if (tradeRes && tradeRes.retaliatoryExportDrag !== 0) g.add('trade:retaliation', -tradeRes.retaliatoryExportDrag);
   if (tradeRes && tradeRes.tradeAgreementExportBoost !== 0) g.add('trade:pacts', tradeRes.tradeAgreementExportBoost);
@@ -807,6 +862,9 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (energyReliefDelta !== 0) inf.add('social:energy', -energyReliefDelta);
   inf.add('luck', C.shockInfl * zInfl);
   for (const m of mods('inflation')) inf.add(m.source, m.amount);
+  if (synergyRes && synergyRes.passiveInfDelta + synergyRes.chainInfDelta !== 0) {
+    inf.add('synergy:doctrine', synergyRes.passiveInfDelta + synergyRes.chainInfDelta);
+  }
   if (forRes && forRes.quarterlyInflationDelta !== 0) inf.add('forpol:sanctions', forRes.quarterlyInflationDelta);
   if (tradeRes && tradeRes.quarterlyInflationDelta !== 0) inf.add('trade:sectors', tradeRes.quarterlyInflationDelta);
   if (!legacyRun) {
@@ -896,6 +954,9 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   ap.add('approval:growth', C.approvalPull * C.approvalGrowth * (growth - s.potential));
   ap.add('luck', C.shockApproval * zAppr);
   for (const m of mods('approval')) ap.add(m.source, m.amount);
+  if (synergyRes && synergyRes.passiveApprovalDelta + synergyRes.chainApprovalDelta !== 0) {
+    ap.add('synergy:doctrine', synergyRes.passiveApprovalDelta + synergyRes.chainApprovalDelta);
+  }
   if (filibusterApprovalPenalty > 0) ap.add('approval:reform', -filibusterApprovalPenalty);
   if (reformResult && reformResult.approvalDelta !== 0) ap.add('approval:reform', reformResult.approvalDelta);
   if (geoEscalationApprovalPenalty > 0) ap.add('event:geopolitical_escalation', -geoEscalationApprovalPenalty);
@@ -909,6 +970,9 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   tr.add('trust:reversion', C.trustAdjust * (s.trust - e.trust));
   tr.add('trust:approval', C.trustAdjust * C.trustApproval * (approval - C.approvalNeutral));
   for (const m of mods('trust')) tr.add(m.source, m.amount);
+  if (synergyRes && synergyRes.passiveTrustDelta + synergyRes.chainTrustDelta !== 0) {
+    tr.add('synergy:doctrine', synergyRes.passiveTrustDelta + synergyRes.chainTrustDelta);
+  }
   if (filibusterTrustPenalty > 0) tr.add('trust:reform', -filibusterTrustPenalty);
   if (reformResult && reformResult.trustDelta !== 0) tr.add('trust:reform', reformResult.trustDelta);
   if (amendmentTrustGain > 0) tr.add('trust:reform', amendmentTrustGain);
@@ -949,6 +1013,9 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (perkRes?.valid) {
     if (perkRes.cloutSpent > 0) cl.add('clout:perks', -perkRes.cloutSpent);
     if (perkRes.cloutGained > 0) cl.add('clout:perks', perkRes.cloutGained);
+  }
+  if (synergyRes && synergyRes.passiveCloutDelta + synergyRes.chainCloutDelta !== 0) {
+    cl.add('clout:synergy', synergyRes.passiveCloutDelta + synergyRes.chainCloutDelta);
   }
   if (specialCounsel) {
     const drain = C.specialCounselCloutDrain + C.subpoenaCloutDrain;
@@ -1007,7 +1074,7 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     resolvedGeopoliticalCrises: resolvedGeoCrises,
     foreignPolicy: nextForeignPolicy,
     trade: nextTrade,
-    evil: nextEvil,
+    evil: finalEvil,
     ...(state.senateSeatDelta !== undefined || state.filibusterRule !== undefined || nextFilibusterRule !== undefined ? { senateSeatDelta: nextSenateSeatDelta ?? 0 } : {}),
     ...(nextFilibusterRule !== undefined && nextFilibusterRule !== 'sixty_vote' ? { filibusterRule: nextFilibusterRule } : {}),
     ...(nextActiveReforms && nextActiveReforms.length > 0 ? { activeReforms: nextActiveReforms } : {}),

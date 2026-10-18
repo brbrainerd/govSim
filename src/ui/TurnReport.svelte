@@ -7,6 +7,7 @@
   import type { Look, Mood } from './art/Character.svelte';
   import CharacterPortrait from './art/CharacterPortrait.svelte';
   import Rosette from './art/Rosette.svelte';
+  import SynergyBar from './SynergyBar.svelte';
 
   let { session, onClose }: { session: Session; onClose: () => void } = $props();
 
@@ -112,6 +113,8 @@
         </div>
         <div class="rosette-label">Quarter Completed</div>
       </div>
+
+      <SynergyBar {session} />
 
       {#if newlyEarnedBadges.length > 0}
         <div class="info-card milestone-box" data-testid="new-milestone-ribbon">

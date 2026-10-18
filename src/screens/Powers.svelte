@@ -17,6 +17,8 @@
     REFORM_TRADEOFFS,
     SANCTION_TRADEOFFS,
   } from '../content/tradeoffs';
+  import { DOCTRINE_FAMILIES } from '../content/perks';
+  import { getActionDoctrineTags } from '../engine/synergies';
 
   let {
     session,
@@ -131,6 +133,15 @@
                 <span class="risk-pill risk-{order.courtRisk.toLowerCase()}">
                   Court risk: {order.courtRisk}
                 </span>
+
+                {#if !session.isClassicSim}
+                  {#each getActionDoctrineTags(order.id) as tagId (tagId)}
+                    {@const fam = DOCTRINE_FAMILIES[tagId]}
+                    <span class="risk-pill" data-testid={`eo-doctrine-${order.id}-${tagId}`} title={fam.summary}>
+                      {fam.emoji} {fam.label}
+                    </span>
+                  {/each}
+                {/if}
 
                 {#if challenged}
                   <span class="status-badge challenged">

@@ -49,6 +49,7 @@ import {
 import { type VocabMode } from '../content/glossary';
 import { getPerk, type PerkDefinition } from '../content/perks';
 import { perkRerollCost, rollPerkSlate, totalPerkRerollsCost } from '../engine/perks';
+import { computeActiveSynergies, type ActiveFamilySynergy } from '../engine/synergies';
 import { PERK_MAX_REROLLS_PER_TURN } from '../engine/units';
 
 export type { VocabMode };
@@ -524,6 +525,14 @@ export class Session {
   isEvilMode = $derived(Boolean(this.options.evilMode));
   isClassicSim = $derived(Boolean(this.options.classicSim));
   activePerks = $derived<readonly string[]>(this.current.activePerks ?? []);
+  activeSynergies = $derived<readonly ActiveFamilySynergy[]>(
+    this.isClassicSim ? [] : computeActiveSynergies(this.current, this.isEvilMode),
+  );
+  lastSynergyLogs = $derived(
+    this.isClassicSim
+      ? []
+      : this.current.report.log.filter((entry) => entry.kind === 'perk' && entry.id.startsWith('synergy_')),
+  );
   effectiveLockedPerkId = $derived<string | null>(
     this.draft.perkLockedId !== undefined ? this.draft.perkLockedId : (this.current.lockedPerkId ?? null),
   );
