@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Character, { type Look, type Mood } from './Character.svelte';
+  import Character, { resolvePresidentLook, type Look, type Mood } from './Character.svelte';
 
   let {
     talking = true,
@@ -10,6 +10,7 @@
     evilMode = false,
     heat = 0,
     stagedCount = 0,
+    presidentLook = 0,
   }: {
     talking?: boolean;
     approval?: number;
@@ -19,6 +20,7 @@
     evilMode?: boolean;
     heat?: number;
     stagedCount?: number;
+    presidentLook?: 0 | 1 | 2 | 3;
   } = $props();
 
   const weather = $derived.by<'sunny' | 'rain' | 'storm'>(() => {
@@ -38,25 +40,20 @@
 
   const advisorMood = $derived.by<Mood>(() => {
     if (hasCrisis || (evilMode && heat >= 60)) return 'panicked';
+    if (evilMode) return 'scheming';
     if (approval < 48 || stagedCount >= 3) return 'stressed';
     return 'confident';
   });
 
-  const president: Look = $derived({
-    skin: 'skin-1',
-    hair: 'hair-2',
-    hairStyle: 'parted',
-    suit: evilMode ? 'art-wood-dark' : 'ink',
-    tie: evilMode ? 'gold' : 'sky',
-    mood: presidentMood,
-  });
+  const president: Look = $derived(resolvePresidentLook(presidentLook, evilMode, presidentMood));
 
   const chief: Look = $derived({
     skin: 'skin-3',
     hair: 'hair-3',
     hairStyle: 'swept',
-    suit: 'art-shirt',
-    shirtOnly: true,
+    suit: evilMode ? 'ink' : 'art-shirt',
+    shirtOnly: !evilMode,
+    tie: evilMode ? 'alert' : undefined,
     pants: 'art-wood-dark',
     glasses: true,
     mood: advisorMood,
@@ -184,8 +181,24 @@
     <path d="M467 246 h34" stroke="var(--gold)" stroke-width="5" stroke-dasharray="3 3" />
   </g>
 
+  <!-- High-back leather executive chair behind Resolute Desk (SCENE-02) -->
+  <g data-testid="oval-exec-chair">
+    <rect x="352" y="96" width="96" height="142" rx="18" fill="var(--art-wood-dark)" stroke="var(--ink)" stroke-width="2.5" />
+    <rect x="360" y="104" width="80" height="126" rx="12" fill="var(--ink)" opacity=".28" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="3 5" />
+    <circle cx="378" cy="126" r="2.5" fill="var(--gold)" opacity=".65" />
+    <circle cx="422" cy="126" r="2.5" fill="var(--gold)" opacity=".65" />
+  </g>
+
   <!-- President behind Resolute Desk -->
-  <Character look={president} x={352} y={92} scale={0.82} delay={0.4} />
+  <Character
+    look={president}
+    pose={evilMode ? 'cash' : 'stand'}
+    prop={evilMode ? 'cash_fan' : null}
+    x={352}
+    y={92}
+    scale={0.82}
+    delay={0.4}
+  />
 
   <!-- Resolute Desk: Carved wood with ornamental panelling -->
   <rect x="246" y="236" width="308" height="16" rx="4" fill="var(--art-wood-light)" stroke="var(--ink)" stroke-width="2.5" />
@@ -231,8 +244,28 @@
     </g>
   {/if}
 
-  <!-- Satirical Evil Mode Props -->
+  <!-- Satirical Evil Mode Props (SCENE-02) -->
   {#if evilMode}
+    <!-- Brass banker's lamp & warm light cone on left of Resolute Desk -->
+    <g data-testid="oval-evil-lamp-cone">
+      <polygon points="300,192 262,238 358,238" fill="var(--gold)" opacity=".26" />
+      <ellipse cx="310" cy="236" rx="22" ry="5" fill="var(--gold-dark)" stroke="var(--ink)" stroke-width="1.8" />
+      <path d="M306 234 V200 Q306 188 318 188" fill="none" stroke="var(--gold-dark)" stroke-width="4" stroke-linecap="round" />
+      <path d="M286 196 Q310 176 334 196 Z" fill="var(--gold)" stroke="var(--ink)" stroke-width="2" />
+    </g>
+
+    <!-- Stacked green cash bundles on Resolute Desk -->
+    <g transform="translate(332 214)" data-testid="oval-evil-cash-stacks">
+      {#each [0, 1, 2] as row (row)}
+        <rect x="0" y={14 - row * 6} width="26" height="7" rx="1.5" fill="var(--sage)" stroke="var(--ink)" stroke-width="1.4" />
+        <rect x="9" y={14 - row * 6} width="8" height="7" fill="var(--gold)" stroke="var(--ink)" stroke-width="1" />
+      {/each}
+      {#each [0, 1] as row (row)}
+        <rect x="28" y={16 - row * 6} width="24" height="7" rx="1.5" fill="var(--sage-dark)" stroke="var(--ink)" stroke-width="1.4" />
+        <rect x="37" y={16 - row * 6} width="7" height="7" fill="var(--gold)" stroke="var(--ink)" stroke-width="1" />
+      {/each}
+    </g>
+
     <!-- Document Shredder beside the desk -->
     <g transform="translate(180 260)" data-testid="oval-evil-shredder">
       <rect x="0" y="0" width="46" height="65" rx="4" fill="var(--ink)" stroke="var(--ink)" stroke-width="2" />
@@ -248,21 +281,21 @@
     </g>
 
     <!-- Offshore Trust ledger folder on desk -->
-    <g transform="translate(370 230) rotate(8 385 233)">
+    <g transform="translate(388 230) rotate(8 403 233)">
       <rect x="0" y="0" width="32" height="8" rx="2" fill="var(--gold)" stroke="var(--ink)" stroke-width="1.5" />
       <line x1="4" y1="4" x2="28" y2="4" stroke="var(--alert)" stroke-width="1.5" />
     </g>
   {/if}
 
-  <!-- Chief of Staff giving briefing -->
+  <!-- Chief of Staff / Fixer giving briefing -->
   <Character
     look={chief}
     pose="point"
     prop="clipboard"
     {talking}
-    x={596}
-    y={128}
-    scale={1}
+    x={614}
+    y={140}
+    scale={0.94}
     delay={1.6}
   />
 </svg>

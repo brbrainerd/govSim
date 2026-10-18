@@ -17,5 +17,11 @@ describe('NewGame screen component (EVIL-01)', () => {
     expect(html).toContain('Loot the treasury');
     expect(html).toContain('Load save file (.json)');
     expect(html).toContain('Start the term');
+    expect(html).toContain('data-testid="newgame-portico-banner"');
+    expect(html).toContain('data-testid="president-look-selector"');
+    expect(html).toContain('data-testid="president-look-option-0"');
+    expect(html).toContain('data-testid="president-look-option-1"');
+    expect(html).toContain('data-testid="president-look-option-2"');
+    expect(html).toContain('data-testid="president-look-option-3"');
   });
 });

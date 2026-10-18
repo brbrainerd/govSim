@@ -13,8 +13,8 @@
 
 ### Oval Office Scenes, Avatar Picker & Advisors (`SCENE` — Phase 40)
 
-- [ ] **SCENE-01**: Add a 4-option Presidential Look / Avatar selector on `NewGame.svelte` (persisted in `GameOptions`, `Session`, and `SaveFile`) plus an animated White House portico inauguration banner (`.design-targets/g-newgame.png`) that shifts to dark oxblood/scheming when Evil Mode is toggled
-- [ ] **SCENE-02**: Upgrade `OvalOfficeScene.svelte` with a high-back leather executive chair, Evil Mode brass banker's lamp + warm light cone + cash stacks on the Resolute Desk + animated cash-fanning hands (`.design-targets/g-evil.png`), and reactive Advisor NPC portrait badges on `OvalOffice.svelte`
+- [x] **SCENE-01**: Add a 4-option Presidential Look / Avatar selector on `NewGame.svelte` (persisted in `GameOptions`, `Session`, and `SaveFile`) plus an animated White House portico inauguration banner (`.design-targets/g-newgame.png`) that shifts to dark oxblood/scheming when Evil Mode is toggled
+- [x] **SCENE-02**: Upgrade `OvalOfficeScene.svelte` with a high-back leather executive chair, Evil Mode brass banker's lamp + warm light cone + cash stacks on the Resolute Desk + animated cash-fanning hands (`.design-targets/g-evil.png`), and reactive Advisor NPC portrait badges on `OvalOffice.svelte`
 
 ### Reactive Congressional & Citizen NPCs (`NPC` — Phase 41)
 
@@ -74,8 +74,8 @@
 | GFX-01 | Phase 39 | Complete |
 | GFX-02 | Phase 39 | Complete |
 | GFX-03 | Phase 39 | Complete |
-| SCENE-01 | Phase 40 | Pending |
-| SCENE-02 | Phase 40 | Pending |
+| SCENE-01 | Phase 40 | Complete |
+| SCENE-02 | Phase 40 | Complete |
 | NPC-01 | Phase 41 | Pending |
 | NPC-02 | Phase 41 | Pending |
 | VIGNETTE-01 | Phase 42 | Pending |
@@ -99,6 +99,7 @@
 | AUDIT-02 | Phase 47 | Pending |
 
 **Coverage:**
+
 - v1.0 requirements: 26 total
 - Mapped to phases: 26
 - Unmapped: 0 ✓

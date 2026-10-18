@@ -18,12 +18,15 @@ describe('OvalOffice screen component (UI-01, UI-02)', () => {
     expect(html).toContain('What needs you this turn?');
     expect(html).toContain('How America is doing');
     expect(html).toContain('data-testid="oval-news-chyron"');
+    expect(html).toContain('data-testid="oval-exec-chair"');
+    expect(html).toContain('data-testid="oval-advisor-portrait"');
     expect(html).not.toContain('data-testid="evil-situation-card"');
     expect(html).not.toContain('data-testid="oval-offshore-stash"');
+    expect(html).not.toContain('data-testid="oval-evil-lamp-cone"');
   });
 
-  it('renders Evil Mode Oval Office screen with loot score and situation card', () => {
-    const session = new Session(1, START, { party: 'D', evilMode: true });
+  it('renders Evil Mode Oval Office screen with loot score, banker lamp, cash stacks, and Fixer portraits', () => {
+    const session = new Session(1, START, { party: 'D', evilMode: true, presidentLook: 2 });
     const { html } = render(OvalOffice, {
       props: {
         session,
@@ -42,5 +45,11 @@ describe('OvalOffice screen component (UI-01, UI-02)', () => {
     expect(html).toContain('Investigation Heat Gauge');
     expect(html).toContain('data-testid="goto-corrupt-levers-btn"');
     expect(html).toContain('Enact Corrupt Levers');
+    expect(html).toContain('data-testid="oval-exec-chair"');
+    expect(html).toContain('data-testid="oval-evil-lamp-cone"');
+    expect(html).toContain('data-testid="oval-evil-cash-stacks"');
+    expect(html).toContain('data-pose="cash"');
+    expect(html).toContain('data-testid="oval-advisor-portrait"');
+    expect(html).toContain('FIXER');
   });
 });

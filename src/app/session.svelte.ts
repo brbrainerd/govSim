@@ -65,6 +65,7 @@ export interface GameOptions {
   unlockAll?: boolean;
   livingWorld?: boolean;
   vocabMode?: VocabMode;
+  presidentLook?: 0 | 1 | 2 | 3;
 }
 
 interface Draft {
@@ -488,6 +489,11 @@ export class Session {
   canFastForward = $derived(!this.over && !this.hasUnresolvedCrisis);
   /** Evil Mode helpers (Phase 17, EVIL-01, EVIL-02) */
   isEvilMode = $derived(Boolean(this.options.evilMode));
+  presidentLook = $derived<0 | 1 | 2 | 3>(
+    this.options.presidentLook === 1 || this.options.presidentLook === 2 || this.options.presidentLook === 3
+      ? this.options.presidentLook
+      : 0,
+  );
   activeScenario = $derived<ScenarioDef>(getScenario(this.options.scenario));
   offshoreStashBn = $derived(this.current.evil?.offshoreStashBn ?? 0);
   heat = $derived(this.current.evil?.heat ?? 0);
@@ -506,10 +512,10 @@ export class Session {
     return this.draft.stagedEvilLevers.includes(id);
   }
 
-  constructor(seed: number, start: Start, options: GameOptions) {
+  constructor(seed: number, start: Start, options: GameOptions, initOpts?: { skipAutosave?: boolean }) {
     if (options.vocabMode === 'plain' || options.vocabMode === 'wonk') {
       this.vocabMode = options.vocabMode;
-      if (typeof localStorage !== 'undefined' && typeof localStorage?.setItem === 'function') {
+      if (!initOpts?.skipAutosave && typeof localStorage !== 'undefined' && typeof localStorage?.setItem === 'function') {
         localStorage.setItem('govsim_vocab_mode', this.vocabMode);
       }
     }
@@ -526,14 +532,16 @@ export class Session {
       document.documentElement.dataset.calm = this.calmMode ? 'true' : 'false';
       document.documentElement.dataset.vocab = this.vocabMode;
     }
-    storeAutosave(this);
+    if (!initOpts?.skipAutosave) {
+      storeAutosave(this);
+    }
     if (loadAiConfig().provider !== 'off') {
       this.refreshAiDirector();
     }
   }
 
   static fromSave(save: SaveFile): Session {
-    const s = new Session(save.seed, save.start, save.options);
+    const s = new Session(save.seed, save.start, save.options, { skipAutosave: true });
     for (const input of save.inputs) {
       if (s.current.turn === 16) {
         s.turn16Snapshot = s.current;
@@ -589,13 +597,18 @@ export class Session {
     },
     start: Start,
   ): Session {
-    const s = new Session(run.seed, start, {
-      party: run.party,
-      scenario: run.scenario,
-      ...(run.evilMode ? { evilMode: true } : {}),
-      ...(run.unlockAll ? { unlockAll: true } : {}),
-      ...(run.livingWorld ? { livingWorld: true } : {}),
-    });
+    const s = new Session(
+      run.seed,
+      start,
+      {
+        party: run.party,
+        scenario: run.scenario,
+        ...(run.evilMode ? { evilMode: true } : {}),
+        ...(run.unlockAll ? { unlockAll: true } : {}),
+        ...(run.livingWorld ? { livingWorld: true } : {}),
+      },
+      { skipAutosave: true },
+    );
     for (const input of run.inputs) {
       if (s.current.turn === 16) {
         s.turn16Snapshot = s.current;

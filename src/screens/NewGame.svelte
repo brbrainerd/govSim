@@ -4,24 +4,33 @@
   import { SCENARIOS, getScenario, type ScenarioId } from '../content/scenarios';
   import { termLabel } from '../engine/calendar';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
-  import type { SaveFile } from '../app/save';
+  import Character, { PRESIDENT_LOOKS, resolvePresidentLook } from '../ui/art/Character.svelte';
+  import CharacterPortrait from '../ui/art/CharacterPortrait.svelte';
+  import type { BrowserProfile, SaveFile } from '../app/save';
 
   let {
     onStart,
     onResume,
     onImport,
+    onSelectProfile,
+    profiles = [],
+    activeProfileId = 'default',
     autosave = null,
     errorMessage = null,
   }: {
     onStart: (o: GameOptions) => void;
     onResume?: (s: SaveFile) => void;
     onImport?: (f: File) => void;
+    onSelectProfile?: (profileId: string) => void;
+    profiles?: readonly BrowserProfile[];
+    activeProfileId?: string;
     autosave?: SaveFile | null;
     errorMessage?: string | null;
   } = $props();
 
   let party = $state<PartyId | null>(null);
   let evilMode = $state(false);
+  let presidentLook = $state<0 | 1 | 2 | 3>(0);
   let scenario = $state<ScenarioId>('standard_2026');
   let unlockAll = $state(false);
   let livingWorld = $state(false);
@@ -36,6 +45,9 @@
   let fileInput = $state<HTMLInputElement>();
 
   const selectedScenario = $derived(getScenario(scenario));
+  const activeLook = $derived(
+    resolvePresidentLook(presidentLook, evilMode, evilMode ? 'scheming' : 'confident'),
+  );
   const showResume = $derived(autosave !== null && !dismissResume && onResume !== undefined);
   const saveParty = $derived(
     autosave ? (PARTIES.find((p) => p.id === autosave.options.party)?.name ?? autosave.options.party) : '',
@@ -178,6 +190,25 @@
         <button type="button" class="import-btn" onclick={() => fileInput?.click()}>
           Load save file (.json)
         </button>
+        {#if profiles.length > 0 && onSelectProfile}
+          <div class="slot-group" role="group" aria-label="Browser save slot">
+            <span class="slot-label">Browser Slot:</span>
+            {#each profiles as prof (prof.id)}
+              <button
+                type="button"
+                class="slot-btn"
+                class:active-slot={activeProfileId === prof.id}
+                data-testid={`profile-slot-${prof.id}`}
+                onclick={() => {
+                  dismissResume = false;
+                  onSelectProfile(prof.id);
+                }}
+              >
+                {prof.name}
+              </button>
+            {/each}
+          </div>
+        {/if}
         <input
           bind:this={fileInput}
           type="file"
@@ -192,6 +223,91 @@
       </div>
     {/snippet}
     {#snippet next()}
+      <div
+        class="card portico-banner"
+        class:evil-portico={evilMode}
+        data-testid="newgame-portico-banner"
+        role="img"
+        aria-label={evilMode ? 'White House portico under dark kleptocratic sky' : 'White House inauguration portico'}
+      >
+        <svg viewBox="0 0 320 185" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+          <rect width="320" height="185" fill={evilMode ? 'var(--ink)' : 'var(--paper-warm)'} />
+          <!-- Swallowtail govSim ribbon banner -->
+          <polygon points="26,20 56,18 48,30 56,42 26,40 34,30" fill={evilMode ? 'var(--alert-dark)' : 'var(--ink-soft)'} stroke="var(--ink)" stroke-width="1.5" />
+          <polygon points="294,20 264,18 272,30 264,42 294,40 286,30" fill={evilMode ? 'var(--alert-dark)' : 'var(--ink-soft)'} stroke="var(--ink)" stroke-width="1.5" />
+          <path d="M46 12 Q160 2 274 12 L268 38 Q160 28 52 38 Z" fill={evilMode ? 'var(--alert)' : 'var(--ink)'} stroke="var(--ink)" stroke-width="2" />
+          <circle cx="70" cy="24" r="4" fill="var(--gold)" />
+          <circle cx="250" cy="24" r="4" fill="var(--gold)" />
+          <text x="160" y="28" text-anchor="middle" font-family="var(--font-display)" font-size="18" font-weight="800" fill="var(--card)">
+            {evilMode ? 'govSim · EVIL' : 'govSim'}
+          </text>
+
+          <!-- White House roof flag -->
+          <line x1="160" y1="36" x2="160" y2="54" stroke="var(--ink)" stroke-width="1.8" />
+          <rect x="161" y="37" width="18" height="10" rx="1" fill="var(--alert)" stroke="var(--ink)" stroke-width="1" />
+          <rect x="161" y="37" width="7" height="5" fill="var(--ink)" />
+
+          <!-- Neoclassical White House facade & triangular pediment -->
+          <rect x="34" y="72" width="252" height="76" fill="var(--card)" stroke="var(--ink)" stroke-width="2" />
+          <polygon points="88,72 160,48 232,72" fill="var(--card)" stroke="var(--ink)" stroke-width="2" />
+          <polygon points="98,70 160,52 222,70" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2" />
+
+          <!-- Side wings windows -->
+          {#each [48, 70, 236, 258] as wx (wx)}
+            <rect x={wx} y="84" width="14" height="22" rx="1" fill="var(--ink)" />
+            <rect x={wx} y="114" width="14" height="24" rx="1" fill="var(--ink)" />
+          {/each}
+
+          <!-- Portico columns -->
+          {#each [100, 136, 174, 210] as cx (cx)}
+            <rect x={cx} y="72" width="10" height="74" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.6" />
+            <rect x={cx - 2} y="72" width="14" height="4" fill="var(--card)" stroke="var(--ink)" stroke-width="1.2" />
+            <rect x={cx - 2} y="142" width="14" height="6" fill="var(--card)" stroke="var(--ink)" stroke-width="1.2" />
+          {/each}
+
+          <!-- Lawn / steps foreground -->
+          <rect x="0" y="148" width="320" height="37" fill={evilMode ? 'var(--alert-dark)' : 'var(--paper)'} />
+          <line x1="0" y1="148" x2="320" y2="148" stroke="var(--ink)" stroke-width="2" />
+
+          <!-- Chosen Presidential Character waving (or fanning cash in Evil Mode) -->
+          <Character
+            look={activeLook}
+            pose={evilMode ? 'cash' : 'wave'}
+            prop={evilMode ? 'cash_fan' : null}
+            mood={evilMode ? 'scheming' : 'confident'}
+            x={124}
+            y={58}
+            scale={0.58}
+          />
+        </svg>
+      </div>
+
+      <div class="card look-card" role="radiogroup" aria-label="Presidential Look" data-testid="president-look-selector">
+        <span class="label">Presidential Look</span>
+        <div class="look-row">
+          {#each PRESIDENT_LOOKS as opt (opt.index)}
+            {@const portLook = resolvePresidentLook(opt.index, evilMode, evilMode ? 'scheming' : 'confident')}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={presidentLook === opt.index}
+              aria-label={opt.label}
+              title={opt.label}
+              class="look-btn"
+              class:active-look={presidentLook === opt.index}
+              data-testid={`president-look-option-${opt.index}`}
+              onclick={() => (presidentLook = opt.index)}
+            >
+              <CharacterPortrait
+                look={portLook}
+                mood={evilMode ? 'scheming' : 'confident'}
+                size={46}
+              />
+            </button>
+          {/each}
+        </div>
+      </div>
+
       {#if evilMode}
         <div class="card info evil-warning" role="note" aria-label="Evil mode disclaimer">
           <span class="label">Satirical Mode Warning</span>
@@ -210,7 +326,7 @@
         class="stamp"
         class:evil-stamp={evilMode}
         disabled={party === null}
-        onclick={() => party && onStart({ party, evilMode, scenario, unlockAll, livingWorld, vocabMode })}
+        onclick={() => party && onStart({ party, evilMode, scenario, unlockAll, livingWorld, vocabMode, presidentLook })}
       >
         {evilMode ? 'Seize power' : 'Start the term'}
       </button>
@@ -287,6 +403,11 @@
 
   .import-strip {
     margin-top: clamp(6px, 1vh, 12px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    max-width: 48rem;
   }
   .import-btn {
     background: none;
@@ -301,6 +422,33 @@
   }
   .import-btn:hover {
     color: var(--ink);
+  }
+  .slot-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .slot-label {
+    font: 600 11px var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+  }
+  .slot-btn {
+    padding: 2px 8px;
+    font: 700 11px var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--card);
+    color: var(--ink-soft);
+    border: 1.5px solid var(--ink);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .slot-btn.active-slot {
+    background: var(--gold);
+    color: var(--ink);
+    box-shadow: 1px 1px 0 var(--ink);
   }
 
   .info { display: flex; flex-direction: column; gap: 4px; padding: clamp(12px, 1.5vh, 16px); }
@@ -340,4 +488,46 @@
   .evil-warning { border-color: var(--alert); background: var(--card); }
   .evil-warning .label { color: var(--alert); }
   .stamp.evil-stamp { background: var(--alert-dark); border-color: var(--ink); }
+
+  .portico-banner {
+    height: clamp(135px, 21vh, 185px);
+    padding: 0;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .portico-banner.evil-portico {
+    border-color: var(--alert);
+  }
+  .look-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: clamp(8px, 1.1vh, 12px);
+    flex-shrink: 0;
+  }
+  .look-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+  .look-btn {
+    padding: 2px;
+    border-radius: 50%;
+    border: 2.5px solid transparent;
+    background: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .look-btn.active-look {
+    border-color: var(--gold);
+    background: var(--gold);
+    box-shadow: 0 0 0 2px var(--ink);
+  }
+  .look-btn:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 2px;
+  }
 </style>

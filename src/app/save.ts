@@ -26,6 +26,15 @@ import type { GameOptions } from './session.svelte';
 
 export const MAX_SAVE_SIZE_CHARS = 1_000_000;
 export const AUTOSAVE_STORAGE_KEY = 'govsim_autosave';
+export const ACTIVE_PROFILE_STORAGE_KEY = 'govsim_active_profile';
+export const PROFILES_STORAGE_KEY = 'govsim_profiles';
+
+export interface BrowserProfile {
+  id: string;
+  name: string;
+  updatedAt: number;
+}
+
 
 export interface SaveFile {
   format: 'govsim';
@@ -505,6 +514,12 @@ export function parseSave(json: string): SaveFile {
     ...(parsed.options.vocabMode === 'plain' || parsed.options.vocabMode === 'wonk'
       ? { vocabMode: parsed.options.vocabMode }
       : {}),
+    ...(parsed.options.presidentLook === 0 ||
+    parsed.options.presidentLook === 1 ||
+    parsed.options.presidentLook === 2 ||
+    parsed.options.presidentLook === 3
+      ? { presidentLook: parsed.options.presidentLook }
+      : {}),
   };
 
   if (!Array.isArray(parsed.inputs)) {
@@ -582,13 +597,93 @@ export function serializeSave(session: SessionLike): string {
   return JSON.stringify(save, null, 2);
 }
 
+const DEFAULT_PROFILES: readonly BrowserProfile[] = [
+  { id: 'default', name: 'Slot 1', updatedAt: 0 },
+  { id: 'slot_2', name: 'Slot 2', updatedAt: 0 },
+  { id: 'slot_3', name: 'Slot 3', updatedAt: 0 },
+];
+
+export function getProfileAutosaveKey(profileId: string): string {
+  return profileId === 'default' ? AUTOSAVE_STORAGE_KEY : `${AUTOSAVE_STORAGE_KEY}:${profileId}`;
+}
+
+export function getActiveProfileId(storage?: SimpleStorage): string {
+  try {
+    const s = resolveStorage(storage);
+    const id = s?.getItem(ACTIVE_PROFILE_STORAGE_KEY);
+    if (id && /^[a-zA-Z0-9_-]{1,32}$/.test(id)) {
+      return id;
+    }
+  } catch {}
+  return 'default';
+}
+
+export function listBrowserProfiles(storage?: SimpleStorage): BrowserProfile[] {
+  try {
+    const s = resolveStorage(storage);
+    if (!s) return [...DEFAULT_PROFILES];
+    const raw = s.getItem(PROFILES_STORAGE_KEY);
+    if (!raw) return [...DEFAULT_PROFILES];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [...DEFAULT_PROFILES];
+    const valid = parsed.filter(
+      (p): p is BrowserProfile =>
+        isRecord(p) &&
+        typeof p.id === 'string' &&
+        /^[a-zA-Z0-9_-]{1,32}$/.test(p.id) &&
+        typeof p.name === 'string' &&
+        p.name.trim().length > 0 &&
+        typeof p.updatedAt === 'number',
+    );
+    if (!valid.some((p) => p.id === 'default')) {
+      valid.unshift({ id: 'default', name: 'Slot 1', updatedAt: 0 });
+    }
+    return valid.length > 0 ? valid : [...DEFAULT_PROFILES];
+  } catch {
+    return [...DEFAULT_PROFILES];
+  }
+}
+
+export function switchBrowserProfile(profileId: string, storage?: SimpleStorage): SaveFile | null {
+  try {
+    const s = resolveStorage(storage);
+    if (!s || !/^[a-zA-Z0-9_-]{1,32}$/.test(profileId)) return null;
+    const prevId = getActiveProfileId(s);
+    if (prevId === 'default') {
+      const currentDefault = s.getItem(AUTOSAVE_STORAGE_KEY);
+      if (currentDefault) {
+        s.setItem(`${AUTOSAVE_STORAGE_KEY}:default`, currentDefault);
+      }
+    }
+    s.setItem(ACTIVE_PROFILE_STORAGE_KEY, profileId);
+    const profileRaw =
+      profileId === 'default'
+        ? (s.getItem(`${AUTOSAVE_STORAGE_KEY}:default`) ?? s.getItem(AUTOSAVE_STORAGE_KEY))
+        : s.getItem(getProfileAutosaveKey(profileId));
+    if (profileRaw) {
+      s.setItem(AUTOSAVE_STORAGE_KEY, profileRaw);
+      return parseSave(profileRaw);
+    } else {
+      s.removeItem(AUTOSAVE_STORAGE_KEY);
+      return null;
+    }
+  } catch {
+    return null;
+  }
+}
+
 /** Saves the session to browser localStorage and requests persistence if supported. */
 export function storeAutosave(session: SessionLike, storage?: SimpleStorage): void {
   try {
     const s = resolveStorage(storage);
     if (!s) return;
     const json = serializeSave(session);
+    const activeId = getActiveProfileId(s);
     s.setItem(AUTOSAVE_STORAGE_KEY, json);
+    s.setItem(getProfileAutosaveKey(activeId), json);
+    if (activeId === 'default') {
+      s.setItem(`${AUTOSAVE_STORAGE_KEY}:default`, json);
+    }
     if (typeof navigator !== 'undefined' && navigator.storage?.persist) {
       navigator.storage.persist().catch(() => {});
     }
@@ -602,7 +697,11 @@ export function loadAutosave(storage?: SimpleStorage): SaveFile | null {
   try {
     const s = resolveStorage(storage);
     if (!s) return null;
-    const raw = s.getItem(AUTOSAVE_STORAGE_KEY);
+    const activeId = getActiveProfileId(s);
+    const raw =
+      activeId === 'default'
+        ? (s.getItem(AUTOSAVE_STORAGE_KEY) ?? s.getItem(`${AUTOSAVE_STORAGE_KEY}:default`))
+        : (s.getItem(getProfileAutosaveKey(activeId)) ?? s.getItem(AUTOSAVE_STORAGE_KEY));
     if (!raw) return null;
     return parseSave(raw);
   } catch {
@@ -610,12 +709,17 @@ export function loadAutosave(storage?: SimpleStorage): SaveFile | null {
   }
 }
 
-/** Clears the autosave key from localStorage. */
+/** Clears the autosave key from localStorage for the active profile. */
 export function clearAutosave(storage?: SimpleStorage): void {
   try {
     const s = resolveStorage(storage);
     if (s) {
+      const activeId = getActiveProfileId(s);
       s.removeItem(AUTOSAVE_STORAGE_KEY);
+      s.removeItem(getProfileAutosaveKey(activeId));
+      if (activeId === 'default') {
+        s.removeItem(`${AUTOSAVE_STORAGE_KEY}:default`);
+      }
     }
   } catch {}
 }
@@ -634,3 +738,4 @@ export function downloadSave(session: SessionLike): void {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+

@@ -6,6 +6,8 @@
   import { generateBriefing } from '../content/briefing';
   import type { ActiveCrisis } from '../engine/director';
   import OvalOfficeScene from '../ui/art/OvalOfficeScene.svelte';
+  import CharacterPortrait from '../ui/art/CharacterPortrait.svelte';
+  import type { Look, Mood } from '../ui/art/Character.svelte';
   import Rosette from '../ui/art/Rosette.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import HouseholdCard from '../ui/HouseholdCard.svelte';
@@ -51,6 +53,38 @@
   );
   const turnsRemaining = $derived(activeGeopoliticalCrisis?.turnsRemaining ?? 1);
 
+  const advisorMood = $derived.by<Mood>(() => {
+    if (session.hasUnresolvedCrisis || (session.isEvilMode && session.heat >= 60)) return 'panicked';
+    if (session.isEvilMode) return 'scheming';
+    if (session.current.approval < 48) return 'stressed';
+    return 'confident';
+  });
+
+  function advisorForSuggestion(idx: number): { role: string; look: Look } {
+    if (session.isEvilMode) {
+      return {
+        role: 'FIXER',
+        look: { skin: 'skin-2', hair: 'hair-1', hairStyle: 'swept', suit: 'ink', tie: 'alert', glasses: true, mood: advisorMood },
+      };
+    }
+    if (idx === 0) {
+      return {
+        role: 'COS',
+        look: { skin: 'skin-3', hair: 'hair-3', hairStyle: 'swept', suit: 'art-shirt', shirtOnly: true, glasses: true, mood: advisorMood },
+      };
+    }
+    if (idx === 1) {
+      return {
+        role: 'OMB',
+        look: { skin: 'skin-2', hair: 'hair-1', hairStyle: 'bun', suit: 'ink', tie: 'gold', glasses: true, mood: advisorMood },
+      };
+    }
+    return {
+      role: 'COUNSEL',
+      look: { skin: 'skin-4', hair: 'hair-1', hairStyle: 'cropped', suit: 'ink-soft', tie: 'sky', mood: advisorMood },
+    };
+  }
+
   const spark = (t: number[]) => {
     const lo = Math.min(...t), hi = Math.max(...t), span = hi - lo || 1;
     const pts = t.map((v, i) => `${t.length > 1 ? (i * 100) / (t.length - 1) : 50},${22 - ((v - lo) / span) * 18}`);
@@ -71,6 +105,7 @@
           evilMode={session.isEvilMode}
           heat={session.current.evil?.heat ?? 0}
           stagedCount={session.stagedActionsSummary.length}
+          presidentLook={session.presidentLook}
         />
       </div>
       <div class="chyron-strip" data-testid="oval-news-chyron">
@@ -285,23 +320,35 @@
       </div>
     {/if}
 
-    {#each briefingInfo.suggestions as s (s.title)}
+    {#each briefingInfo.suggestions as s, idx (s.title)}
       {@const packMeta = s.play?.pack ? BUDGET_PACKAGE_TRADEOFFS[s.play.pack] : null}
+      {@const adv = advisorForSuggestion(idx)}
       <div
         class="card option"
         title={packMeta ? `${packMeta.whyClick} (👍 ${packMeta.upside} · ⚠️ ${packMeta.catchText})` : s.play?.autoWhip ? '👍 Locks in the cheapest deals to pass your bill · ⚠️ Costs Clout from your bank' : undefined}
       >
-        <div class="option-text">
-          <b>{s.title}</b>
-          {#if s.play?.pack && packMeta}
-            <span class="play-badge" data-testid="advisor-play-badge">
-              {packMeta.emoji} Play: {s.play.pack} · 👍 {packMeta.upside}
-            </span>
-          {:else if s.play?.autoWhip}
-            <span class="play-badge" data-testid="advisor-play-badge">
-              🤝 Play: Auto-whip · 👍 Enough votes to pass
-            </span>
-          {/if}
+        <div class="option-row">
+          <div class="advisor-medallion" data-testid="oval-advisor-portrait">
+            <CharacterPortrait
+              look={adv.look}
+              mood={advisorMood}
+              size={38}
+              badgeText={adv.role}
+              ringColor={session.isEvilMode ? 'alert' : 'gold'}
+            />
+          </div>
+          <div class="option-text">
+            <b>{s.title}</b>
+            {#if s.play?.pack && packMeta}
+              <span class="play-badge" data-testid="advisor-play-badge">
+                {packMeta.emoji} Play: {s.play.pack} · 👍 {packMeta.upside}
+              </span>
+            {:else if s.play?.autoWhip}
+              <span class="play-badge" data-testid="advisor-play-badge">
+                🤝 Play: Auto-whip · 👍 Enough votes to pass
+              </span>
+            {/if}
+          </div>
         </div>
         <button
           type="button"
@@ -376,11 +423,20 @@
     text-overflow: ellipsis;
   }
   .bubble {
-    position: absolute; right: clamp(14px, 2vw, 34px); top: clamp(12px, 2vh, 30px); max-width: 24ch; padding: clamp(8px, 1.2vh, 12px) clamp(10px, 1.2vw, 16px); background: var(--card);
-    border: 2.5px solid var(--ink); border-radius: 14px; font: 700 clamp(14px, 1.2vw, 18px)/1.3 var(--font-body); color: var(--ink); text-align: center;
+    position: absolute;
+    right: clamp(136px, 17vw, 200px);
+    top: clamp(10px, 1.4vh, 18px);
+    max-width: 24ch;
+    padding: clamp(6px, 0.9vh, 10px) clamp(8px, 1vw, 14px);
+    background: var(--card);
+    border: 2.5px solid var(--ink);
+    border-radius: 12px;
+    font: 700 clamp(12px, 1.05vw, 16px)/1.25 var(--font-body);
+    color: var(--ink);
+    text-align: center;
     box-shadow: 3px 3px 0 var(--ink);
   }
-  .bubble::after { content: ''; position: absolute; bottom: -14px; left: 40px; border: 14px solid transparent; border-top-color: var(--ink); border-bottom: 0; }
+  .bubble::after { content: ''; position: absolute; bottom: -12px; right: 18px; border: 12px solid transparent; border-top-color: var(--ink); border-bottom: 0; }
   .doing { min-height: 0; }
   .doing-head { display: flex; justify-content: space-between; align-items: baseline; }
   h3 { margin: 0; font: 700 clamp(18px, 1.5vw, 22px) var(--font-display); }
@@ -398,35 +454,38 @@
   .spark { width: 70%; height: clamp(16px, 2vh, 22px); }
   .dir { font: 600 clamp(12px, 0.9vw, 15px) var(--font-ui); color: var(--alert); }
   .dir.good { color: var(--sage-dark); }
-  .info { display: flex; flex-direction: column; gap: 4px; padding: clamp(8px, 1.2vh, 14px); text-align: center; }
+  .info { display: flex; flex-direction: column; gap: 3px; padding: clamp(6px, 0.9vh, 10px); text-align: center; }
   .turn-head { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; }
   .scen-pill { font: 700 10px/1 var(--font-ui); text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px; background: var(--paper); border: 1px solid var(--ink); color: var(--ink); }
   .year1-guide {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding: 6px 10px;
+    gap: 1px;
+    padding: 4px 8px;
     background: var(--paper-dark);
     border-left: 3px solid var(--gold);
     border-radius: var(--r-sm);
     text-align: left;
-    font-size: clamp(11px, 0.9vw, 13px);
-    line-height: 1.25;
+    font-size: clamp(10.5px, 0.85vw, 12px);
+    line-height: 1.2;
     color: var(--ink);
   }
   .year1-guide b {
     font-family: var(--font-ui);
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--ink-soft);
   }
-  .info b { font: 700 clamp(17px, 1.4vw, 21px)/1.2 var(--font-display); }
-  .info span:last-child { font-size: clamp(12px, 1vw, 15px); color: var(--ink-soft); max-width: 35ch; }
-  .option { display: flex; flex-direction: column; align-items: center; gap: clamp(4px, 0.6vh, 8px); padding: clamp(6px, 1vh, 12px) clamp(8px, 1vw, 12px); text-align: center; }
-  .option-text { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .option b { font: 700 clamp(15px, 1.25vw, 19px)/1.15 var(--font-display); max-width: 25ch; }
-  .play-badge { font: 700 10px/1.1 var(--font-ui); color: var(--sage-dark); text-transform: uppercase; letter-spacing: 0.04em; }
+  .info b { font: 700 clamp(15px, 1.25vw, 18px)/1.15 var(--font-display); }
+  .info span:last-child { font-size: clamp(11.5px, 0.9vw, 13.5px); line-height: 1.2; color: var(--ink-soft); max-width: 35ch; }
+  .option { display: flex; flex-direction: column; align-items: stretch; gap: clamp(3px, 0.5vh, 6px); padding: clamp(5px, 0.8vh, 9px) clamp(7px, 0.9vw, 10px); text-align: left; }
+  .option-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .advisor-medallion { flex-shrink: 0; display: inline-flex; }
+  .option-text { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; flex: 1; min-width: 0; }
+  .option b { font: 700 clamp(13px, 1.1vw, 16px)/1.15 var(--font-display); }
+  .option .btn { align-self: center; width: 100%; padding: 4px 10px; font-size: clamp(12px, 0.95vw, 14px); }
+  .play-badge { font: 700 9.5px/1.1 var(--font-ui); color: var(--sage-dark); text-transform: uppercase; letter-spacing: 0.03em; }
 
   .geopolitical-alert {
     background: var(--paper-dark);

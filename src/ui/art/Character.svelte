@@ -49,6 +49,50 @@
     mood?: Mood;
     nameplate?: string;
   }
+
+  export interface PresidentLookOption {
+    readonly index: 0 | 1 | 2 | 3;
+    readonly label: string;
+    readonly look: Look;
+  }
+
+  export const PRESIDENT_LOOKS: readonly PresidentLookOption[] = [
+    {
+      index: 0,
+      label: 'Classic Navy',
+      look: { skin: 'skin-1', hair: 'hair-2', hairStyle: 'parted', suit: 'ink', tie: 'sky' },
+    },
+    {
+      index: 1,
+      label: 'Crimson Tie',
+      look: { skin: 'skin-3', hair: 'hair-1', hairStyle: 'cropped', suit: 'ink', tie: 'alert' },
+    },
+    {
+      index: 2,
+      label: 'Gold Standard',
+      look: { skin: 'skin-4', hair: 'hair-1', hairStyle: 'afro', suit: 'ink', tie: 'gold' },
+    },
+    {
+      index: 3,
+      label: 'Slate Statesperson',
+      look: { skin: 'skin-2', hair: 'hair-3', hairStyle: 'bob', suit: 'sky', tie: 'gold', pearls: true },
+    },
+  ];
+
+  export function resolvePresidentLook(
+    lookIndex: number | undefined,
+    evilMode = false,
+    mood: Mood = 'confident',
+  ): Look {
+    const idx = lookIndex === 1 || lookIndex === 2 || lookIndex === 3 ? lookIndex : 0;
+    const base = PRESIDENT_LOOKS[idx]!.look;
+    return {
+      ...base,
+      suit: evilMode ? 'art-wood-dark' : base.suit,
+      tie: evilMode ? 'gold' : base.tie,
+      mood,
+    };
+  }
 </script>
 
 <script lang="ts">
