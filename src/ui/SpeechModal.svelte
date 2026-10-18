@@ -50,8 +50,8 @@
         <Mic size={24} />
       </div>
       <div>
-        <span class="tag">PRESIDENTIAL COMMUNICATIONS</span>
-        <h3 class="title">{session.vocabMode === 'wonk' ? 'Bully Pulpit Address' : 'National TV Speech'}</h3>
+        <span class="tag">{session.vocabMode === 'wonk' ? 'PRESIDENTIAL COMMUNICATIONS' : 'PRESIDENTIAL COMMUNICATIONS · NATIONAL TV SPEECH'}</span>
+        <h3 class="title">Bully Pulpit Address</h3>
       </div>
     </header>
 

@@ -265,7 +265,7 @@
   .info { display: flex; flex-direction: column; gap: 2px; padding: clamp(6px, 0.9vh, 10px) clamp(8px, 1vw, 12px); }
   .info b { font: 700 clamp(16px, 1.35vw, 21px)/1.15 var(--font-display); }
   .line { font: 500 clamp(12px, 0.95vw, 14.5px)/1.2 var(--font-body); color: var(--ink-soft); max-width: 45ch; }
-  .good { color: var(--sage); }
+  .good { color: var(--color-good-fg); }
   .bad { color: var(--alert); }
   .deal { display: flex; align-items: center; gap: clamp(6px, 0.7vw, 8px); padding: clamp(4px, 0.7vh, 8px) clamp(7px, 0.9vw, 10px); }
   .deal div { display: flex; flex-direction: column; flex: 1; max-width: 30ch; gap: 1px; }

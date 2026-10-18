@@ -63,7 +63,7 @@
       <div class="rows" role="table" aria-label="Quarterly Indicator Results">
         {#each [...attributions.indicators, attributions.approval, attributions.clout] as item}
           <div class="row" role="row">
-            <span class="name" role="cell"><span aria-hidden="true">{IND_EMOJI[item.id] ?? '📊'}</span> {item.name}</span>
+            <span class="name-cell" role="cell"><span class="ind-icon" aria-hidden="true">{IND_EMOJI[item.id] ?? '📊'}</span><span class="name">{item.name}</span></span>
             <span class="val num" role="cell">{item.formattedValue}</span>
             <span
               class="badge {item.direction}"
@@ -256,6 +256,12 @@
     border-bottom: none;
   }
 
+  .name-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
   .name {
     font-weight: 600;
     color: var(--ink);

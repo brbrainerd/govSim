@@ -363,9 +363,7 @@
                         <span class="fallout-chip gdp">
                           {sanction.gapImpact.toFixed(2)}% {session.vocabMode === 'wonk' ? 'GDP Trade Drag' : 'Growth Drag'}
                         </span>
-                        {#if session.vocabMode === 'wonk'}
-                          <span class="statutory-basis">{sanction.legalBasis}</span>
-                        {/if}
+                        <span class="statutory-basis">{sanction.legalBasis}</span>
                       </div>
                     </div>
                     <button

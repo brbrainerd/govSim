@@ -634,47 +634,47 @@
     width: 100%;
     height: 100%;
     overflow-y: auto;
-    padding: 16px;
+    padding: 8px 12px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 6px;
     box-sizing: border-box;
   }
 
   .coalitions-header {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
   }
 
   .coalitions-title {
     margin: 0;
     font-family: var(--font-display);
-    font-size: 18px;
+    font-size: 16px;
     color: var(--ink);
   }
 
   .coalitions-subtitle {
     margin: 0;
-    font-size: 12px;
+    font-size: 11.5px;
     font-family: var(--font-body);
     color: var(--ink-soft);
   }
 
   .cohorts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .cohort-card {
     background: var(--paper);
     border: 1px solid var(--ink);
     border-radius: var(--r-sm);
-    padding: 12px;
+    padding: 8px 10px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 5px;
     transition: transform 0.1s ease, box-shadow 0.1s ease;
   }
 
