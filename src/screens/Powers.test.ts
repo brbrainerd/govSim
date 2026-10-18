@@ -44,7 +44,8 @@ describe('Powers screen component (REF-02, REF-03)', () => {
     expect(html).toContain('Targeted Financial Asset Freezes');
     expect(html).toContain('Advanced Technology &amp; Defense Export Restrictions');
     expect(html).toContain('Maritime Energy Shipping &amp; Secondary Sanctions');
-    expect(html).toContain('Myth? Does foreign aid cause the deficit');
+    expect(html).toContain('Myth? Can you lower gas prices');
+    expect(html).not.toContain('Myth? Does foreign aid cause the deficit');
     expect(html).not.toContain('data-testid="evil-levers-section"');
   });
 

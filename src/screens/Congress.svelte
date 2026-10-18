@@ -70,14 +70,14 @@
             Edit in Budget →
           </button>
         {/if}
-        {#if onOpenMyth}
+        {#if onOpenMyth && session.showMyths && !session.hasResolvedMyth('veto_line_item')}
           <button
             type="button"
             class="mirage-lever-btn"
             data-testid="mirage-lever-congress"
             onclick={() => onOpenMyth?.('veto_line_item')}
           >
-            ⚡ Line-Item Veto Waste Lines
+            Myth? Line-Item Veto Waste Lines
           </button>
         {/if}
       </div>
@@ -115,22 +115,23 @@
     >
       {session.vocabMode === 'wonk' ? '' : '📜 Change Constitution · '}Article V Amendments {#if session.current.activeAmendment}· <b>Ratifying ({session.current.activeAmendment.ratifiedStates.length}/38)</b>{/if}
     </button>
-    {#if onOpenMyth}
-      <button
-        type="button"
-        class="ticket"
-        onclick={() => onOpenMyth?.('debt_ceiling_default')}
-      >
-        Myth? Debt ceiling stops spending
-      </button>
-      {#if congressMyth.id !== 'debt_ceiling_default'}
+    {#if onOpenMyth && session.showMyths}
+      {#if !session.hasResolvedMyth('debt_ceiling_default')}
+        <button
+          type="button"
+          class="ticket"
+          onclick={() => onOpenMyth?.('debt_ceiling_default')}
+        >
+          Myth? Debt ceiling stops spending
+        </button>
+      {:else if !session.hasResolvedMyth(congressMyth.id)}
         <button
           type="button"
           class="ticket"
           data-testid="contextual-myth-congress"
           onclick={() => onOpenMyth?.(congressMyth.id)}
         >
-          🎲 Myth? {congressMyth.title}?
+          Myth? {congressMyth.title}?
         </button>
       {/if}
     {/if}
@@ -287,24 +288,22 @@
   }
   .auto-whip-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .mirage-lever-btn {
-    padding: 3px 8px;
-    font: 700 11px/1.1 var(--font-ui);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    background: var(--paper);
-    color: var(--alert-dark);
-    border: 1.5px solid var(--alert);
-    border-radius: var(--r-sm);
-    box-shadow: 1px 1px 0 var(--ink);
+    padding: 3px 9px;
+    font: 600 11px/1.1 var(--font-ui);
+    letter-spacing: 0.03em;
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1.5px dashed var(--ink-soft);
+    border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
     margin-left: auto;
-    transition: transform var(--dur-fast), background var(--dur-fast);
+    transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
   }
   .mirage-lever-btn:hover {
-    background: var(--gold);
+    background: var(--card);
     color: var(--ink);
-    transform: translateY(-1px);
+    border-color: var(--ink);
   }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
   .spacer { flex-grow: 1; min-height: 4px; }

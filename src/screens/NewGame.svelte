@@ -39,6 +39,13 @@
   let unlockAll = $state(false);
   let livingWorld = $state(false);
   let classicSim = $state(false);
+  let showMyths = $state<boolean>(
+    typeof localStorage !== 'undefined' &&
+      typeof localStorage?.getItem === 'function' &&
+      localStorage.getItem('govsim_show_myths') === 'false'
+      ? false
+      : true,
+  );
   let vocabMode = $state<'plain' | 'wonk'>(
     typeof localStorage !== 'undefined' &&
       typeof localStorage?.getItem === 'function' &&
@@ -266,6 +273,23 @@
               <span class="mode-sub">Disable Task Force drafts &amp; Doctrine combos for strict classroom runs.</span>
             </div>
           </label>
+
+          <label class="card unlock-all-card" class:active-mode={showMyths}>
+            <input
+              type="checkbox"
+              checked={showMyths}
+              onchange={(e) => (showMyths = e.currentTarget.checked)}
+              data-testid="newgame-myths-toggle"
+            />
+            <div class="mode-info">
+              <b>Civics Myth Prompts</b>
+              <span class="mode-sub">
+                {showMyths
+                  ? 'Contextual myth cards & mirage levers when relevant.'
+                  : 'Hide myth prompts across all surfaces.'}
+              </span>
+            </div>
+          </label>
         </div>
       </div>
 
@@ -457,6 +481,7 @@
             unlockAll,
             livingWorld,
             vocabMode,
+            showMyths,
             presidentLook,
             ...(classicSim ? { classicSim: true } : {}),
           })}
@@ -672,7 +697,7 @@
     color: var(--ink);
   }
 
-  .pacing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(6px, 0.8vw, 10px); }
+  .pacing-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: clamp(5px, 0.7vw, 8px); }
   .unlock-all-card { display: flex; align-items: flex-start; gap: 6px; padding: clamp(5px, 0.8vh, 8px) clamp(7px, 0.9vw, 10px); cursor: pointer; }
   .unlock-all-card input { width: 16px; height: 16px; accent-color: var(--ink); margin-top: 2px; flex-shrink: 0; }
   .unlock-all-card.active-mode { background: var(--gold); }

@@ -14,8 +14,8 @@ const BANNED_POLITICIANS = [
 const VALID_SCREEN_IDS = new Set(screens.map((s) => s.id));
 
 describe('civics myth cards catalog (PWR-06, OBS-05, GR-20, GR-21, DECK-01, DECK-02, PIVOT-01)', () => {
-  it('contains 18 curated myth cards across all major policy screens (DECK-01)', () => {
-    expect(MYTHS_CATALOG).toHaveLength(18);
+  it('contains 24 curated myth cards across all major policy screens and 5 institutional categories (DECK-01)', () => {
+    expect(MYTHS_CATALOG).toHaveLength(24);
     expect(getMyth('gas_prices')).toBeDefined();
     expect(getMyth('interest_rates')).toBeDefined();
     expect(getMyth('presidential_jobs')).toBeDefined();
@@ -34,6 +34,12 @@ describe('civics myth cards catalog (PWR-06, OBS-05, GR-20, GR-21, DECK-01, DECK
     expect(getMyth('ban_stock_buybacks')).toBeDefined();
     expect(getMyth('fire_fed_chair')).toBeDefined();
     expect(getMyth('congress_pay_stop')).toBeDefined();
+    expect(getMyth('strategic_oil_reserve')).toBeDefined();
+    expect(getMyth('reconciliation_filibuster')).toBeDefined();
+    expect(getMyth('state_police_power')).toBeDefined();
+    expect(getMyth('price_controls_shortages')).toBeDefined();
+    expect(getMyth('pardon_power_limits')).toBeDefined();
+    expect(getMyth('treaty_executive_agreement')).toBeDefined();
   });
 
   it('provides getMyth lookup by id', () => {
@@ -51,24 +57,30 @@ describe('civics myth cards catalog (PWR-06, OBS-05, GR-20, GR-21, DECK-01, DECK
       if (card.challenges === 'right') rightCount++;
       if (card.challenges === 'both') bothCount++;
     }
-    expect(leftCount).toBe(6);
-    expect(rightCount).toBe(6);
-    expect(bothCount).toBe(6);
+    expect(leftCount).toBe(8);
+    expect(rightCount).toBe(8);
+    expect(bothCount).toBe(8);
     expect(Math.abs(leftCount - rightCount)).toBeLessThanOrEqual(1);
   });
 
-  it('every myth card has valid citations, satirical soundbite, and institutional focus', () => {
+  it('every myth card has valid citations, satirical soundbite, historical hook, stats, and institutional focus', () => {
+    const categories = new Set<string>();
     for (const card of MYTHS_CATALOG) {
+      categories.add(card.category);
       expect(card.title.length).toBeGreaterThan(3);
       expect(card.mythStatement.length).toBeGreaterThan(5);
       expect(card.tvSoundbite.length).toBeGreaterThan(10);
       expect(card.realitySummary.length).toBeGreaterThan(10);
+      expect(card.byTheNumbers.length).toBeGreaterThan(10);
+      expect(card.historicalHook.length).toBeGreaterThan(10);
+      expect(card.whyItMatters.length).toBeGreaterThan(10);
       expect(card.flowSteps.length).toBeGreaterThanOrEqual(3);
       expect(card.realLevers.length).toBeGreaterThanOrEqual(2);
       expect(['institution', 'mechanism']).toContain(card.target);
       expect(card.citation.title.length).toBeGreaterThan(5);
       expect(card.citation.url).toMatch(/^https:\/\//);
     }
+    expect(categories.size).toBe(5);
   });
 
   it('every myth card has a structured prediction prompt (DECK-02)', () => {
@@ -114,6 +126,9 @@ describe('civics myth cards catalog (PWR-06, OBS-05, GR-20, GR-21, DECK-01, DECK
         card.mythStatement,
         card.tvSoundbite,
         card.realitySummary,
+        card.byTheNumbers,
+        card.historicalHook,
+        card.whyItMatters,
         card.mirageLabel,
         card.predictionPrompt.question,
         card.predictionPrompt.options[0],

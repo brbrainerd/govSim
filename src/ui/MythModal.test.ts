@@ -39,9 +39,34 @@ describe('MythModal (MYTH-03, MYTH-04, PIVOT-02)', () => {
     expect(html).toContain('MYTH BUSTED');
     expect(html).toContain('REALITY');
     expect(html).toContain(gasMyth.realitySummary);
+    expect(html).toContain('data-testid="myth-category-strip"');
+    expect(html).toContain('data-testid="myth-by-the-numbers"');
+    expect(html).toContain(gasMyth.byTheNumbers);
+    expect(html).toContain('data-testid="myth-historical-hook"');
+    expect(html).toContain(gasMyth.historicalHook);
+    expect(html).toContain('data-testid="myth-why-it-matters"');
+    expect(html).toContain(gasMyth.whyItMatters);
     expect(html).toContain('data-testid="lever-pivot-btn"');
     expect(html).toContain('Energy permits');
     expect(html).toContain('Release oil reserve');
+  });
+
+  it('renders contextual trigger reason and hide-all button when props are provided', () => {
+    const { html } = render(MythModal, {
+      props: {
+        myth: gasMyth,
+        isFirstView: false,
+        contextReason: 'Surfaced because consumer inflation is running at 4.5%.',
+        onClose: () => {},
+        onGotIt: () => {},
+        onHideMyths: () => {},
+      },
+    });
+
+    expect(html).toContain('data-testid="myth-context-reason"');
+    expect(html).toContain('Surfaced because consumer inflation is running at 4.5%.');
+    expect(html).toContain('data-testid="myth-hide-all-btn"');
+    expect(html).toContain('Hide myth prompts');
   });
 
   it('suppresses stamp slam class when calmMode is active', () => {

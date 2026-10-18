@@ -16,6 +16,7 @@
     evilMode = false,
     calmMode = false,
     vocabMode = 'plain',
+    showMyths = true,
     stagedActions = [],
     canFastForward = false,
     onNextTurn,
@@ -24,6 +25,7 @@
     onClearStaged,
     onToggleCalm,
     onToggleVocab,
+    onToggleMyths,
   }: {
     state: GameState;
     clout: number;
@@ -33,6 +35,7 @@
     evilMode?: boolean;
     calmMode?: boolean;
     vocabMode?: VocabMode;
+    showMyths?: boolean;
     stagedActions?: readonly StagedActionItem[];
     canFastForward?: boolean;
     onNextTurn: () => void;
@@ -41,6 +44,7 @@
     onClearStaged?: () => void;
     onToggleCalm?: () => void;
     onToggleVocab?: () => void;
+    onToggleMyths?: () => void;
   } = $props();
 
   let trayOpen = $state(false);
@@ -112,13 +116,15 @@
     {:else}
       <div class="score"><span class="star">★</span> <b class:worse={shown < 0}>{shown < 0 ? '−' : '+'}{Math.abs(shown).toFixed(1)}</b> {shown < 0 ? 'worse' : 'better'} than doing nothing <span class="star">★</span></div>
     {/if}
-    {#if nowScore !== null && laterScore !== null}
-      <div class="score-sub">
+    <div class="score-sub">
+      <span class="label party-label">{party}</span>
+      {#if nowScore !== null && laterScore !== null}
+        <span class="sep">·</span>
         <span>Now: <b>{nowScore >= 0 ? '+' : '−'}{Math.abs(nowScore).toFixed(1)}</b></span>
         <span class="sep">·</span>
         <span>In 10 years: <b>{laterScore >= 0 ? '+' : '−'}{Math.abs(laterScore).toFixed(1)}</b></span>
-      </div>
-    {/if}
+      {/if}
+    </div>
   </div>
   <div class="time">
     <div class="when-wrap">
@@ -209,7 +215,21 @@
           >
             {calmMode ? 'Calm: ON' : 'Calm'}
           </button>
-          <div class="label">{party}</div>
+          {#if onToggleMyths}
+            <button
+              type="button"
+              class="calm-pill myths-pill"
+              class:active={!showMyths}
+              data-testid="myths-toggle"
+              aria-pressed={!showMyths}
+              onclick={onToggleMyths}
+              title={showMyths
+                ? 'Civics myth prompts are visible when relevant. Click to hide myth prompts from all surfaces.'
+                : 'Civics myth prompts are hidden across all surfaces. Click to re-enable contextual myth prompts.'}
+            >
+              {showMyths ? 'Myths: On' : 'Myths: Off'}
+            </button>
+          {/if}
         </div>
       </div>
       <button type="button" class="when tip" aria-describedby="tip-when">{gameState.turn >= TOTAL_TURNS ? 'Term over' : `Turn ${gameState.turn} of ${TOTAL_TURNS} · ${termLabel(gameState.turn)}`}
@@ -391,16 +411,20 @@
   .party-calm-wrap {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     flex-wrap: nowrap;
     white-space: nowrap;
+  }
+  .party-label {
+    font-size: 11px;
   }
   .calm-pill {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 3px 9px;
-    font: 700 11.5px/1.1 var(--font-ui);
+    gap: 3px;
+    padding: 2.5px 8px;
+    font: 700 10.5px/1.1 var(--font-ui);
     text-transform: uppercase;
     letter-spacing: .04em;
     background: var(--paper);

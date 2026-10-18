@@ -1,33 +1,39 @@
 <script lang="ts">
-  import { ArrowRight, CheckCircle2, ExternalLink, HelpCircle, XCircle } from '@lucide/svelte';
-  import type { MythCard, MythRealLeverAction } from '../content/myths';
+  import { ArrowRight, CheckCircle2, EyeOff, ExternalLink, HelpCircle, XCircle } from '@lucide/svelte';
+  import { MYTH_CATEGORIES, type MythCard, type MythRealLeverAction } from '../content/myths';
   import Character, { type Look } from './art/Character.svelte';
+  import CivicEmblem from './art/CivicEmblem.svelte';
   import Overlay from './Overlay.svelte';
 
   let {
     myth,
     isFirstView = false,
     calmMode = false,
+    contextReason,
     onClose,
     onGotIt,
     onPivot,
     onSpin,
     onNextMyth,
+    onHideMyths,
   }: {
     myth: MythCard;
     isFirstView?: boolean;
     calmMode?: boolean;
+    contextReason?: string;
     onClose: () => void;
     onGotIt: () => void;
     onPivot?: (action: MythRealLeverAction) => void;
     onSpin?: () => void;
     onNextMyth?: () => void;
+    onHideMyths?: () => void;
   } = $props();
 
   let selectedOption = $state<number | null>(null);
   let manuallyRevealed = $state<boolean>(false);
   let isRevealed = $derived(!isFirstView || manuallyRevealed);
   let stampSlam = $state<boolean>(false);
+  let catMeta = $derived(MYTH_CATEGORIES[myth.category]);
 
   $effect(() => {
     // Reset local prediction state when switching to another myth card
@@ -62,10 +68,23 @@
   }
 </script>
 
-<Overlay title="Civics Myth: {myth.title}" {onClose}>
+<Overlay title="Civics Briefing: {myth.title}" {onClose}>
   <div class="myth-modal-content">
+    <!-- Top Category & Contextual Trigger Strip -->
+    <div class="myth-meta-strip" data-testid="myth-category-strip">
+      <span class="cat-badge" title={catMeta.description}>
+        <CivicEmblem kind={catMeta.emblem} size={14} />
+        <span>{catMeta.label}</span>
+      </span>
+      {#if contextReason}
+        <span class="context-reason-pill" data-testid="myth-context-reason">
+          {contextReason}
+        </span>
+      {/if}
+    </div>
+
     <div class="myth-grid">
-      <!-- Left Column: The Myth / Claim -->
+      <!-- Left Column: The Myth / Claim + Hard Numbers + History -->
       <section class="myth-side" aria-label="The Myth">
         <div class="myth-stamp-container">
           <div
@@ -76,10 +95,10 @@
             aria-hidden="true"
           >
             {#if isRevealed}
-              <XCircle size={24} />
+              <XCircle size={20} />
               <span>MYTH BUSTED</span>
             {:else}
-              <HelpCircle size={24} />
+              <HelpCircle size={20} />
               <span>CIVIC CLAIM</span>
             {/if}
           </div>
@@ -92,15 +111,28 @@
 
         {#if myth.tvSoundbite}
           <div class="myth-soundbite-card" data-testid="myth-soundbite">
-            <span class="soundbite-label">📺 WHAT PUNDITS SAY</span>
+            <span class="soundbite-label">
+              <CivicEmblem kind="megaphone" size={12} />
+              <span>WHAT PUNDITS SAY</span>
+            </span>
             <p class="soundbite-text">{myth.tvSoundbite}</p>
           </div>
         {/if}
 
-        <div class="myth-context-card">
-          <p>
-            The Constitution splits power across Congress, courts, the Fed, and markets so no one person has a magic dial.
-          </p>
+        <div class="myth-stat-box" data-testid="myth-by-the-numbers">
+          <span class="stat-box-label">
+            <CivicEmblem kind="chart" size={12} />
+            <span>BY THE NUMBERS</span>
+          </span>
+          <p class="stat-box-text">{myth.byTheNumbers}</p>
+        </div>
+
+        <div class="myth-history-box" data-testid="myth-historical-hook">
+          <span class="stat-box-label">
+            <CivicEmblem kind="scroll" size={12} />
+            <span>HISTORICAL PRECEDENT</span>
+          </span>
+          <p class="stat-box-text">{myth.historicalHook}</p>
         </div>
       </section>
 
@@ -194,10 +226,19 @@
 
             <!-- Character Explainer -->
             <div class="character-wrapper" aria-hidden="true">
-              <svg viewBox="0 0 120 240" width="80" height="140" preserveAspectRatio="xMidYMid meet">
+              <svg viewBox="0 0 120 240" width="72" height="126" preserveAspectRatio="xMidYMid meet">
                 <Character look={analystLook} pose="point" prop="clipboard" />
               </svg>
             </div>
+          </div>
+
+          <!-- Why It Matters Strategic Takeaway -->
+          <div class="why-it-matters-box" data-testid="myth-why-it-matters">
+            <span class="why-label">
+              <CivicEmblem kind="compass" size={12} />
+              <span>WHY IT MATTERS IN YOUR TERM</span>
+            </span>
+            <p class="why-text">{myth.whyItMatters}</p>
           </div>
 
           <!-- Real Levers Row with 1-Click Tactical Pivots (PIVOT-02) -->
@@ -213,7 +254,8 @@
                     title={action.hint}
                     onclick={() => (onPivot ? onPivot(action) : onGotIt())}
                   >
-                    <span>⚡ {action.label}</span>
+                    <CivicEmblem kind="compass" size={13} />
+                    <span>{action.label}</span>
                     <ArrowRight size={14} />
                   </button>
                 {/each}
@@ -246,7 +288,7 @@
       </section>
     </div>
 
-    <!-- Modal Footer with Debunk, Spin, and Next Myth Buttons -->
+    <!-- Modal Footer with Debunk, Spin, Next Myth, and Hide Myths Toggle -->
     <footer class="modal-footer">
       <div class="footer-left">
         <button class="close-link" onclick={onClose}>
@@ -258,9 +300,22 @@
             class="next-myth-btn"
             data-testid="myth-next-btn"
             onclick={onNextMyth}
-            title="Draw another unviewed civics myth card"
+            title="Draw another unviewed civics card"
           >
-            🎲 NEXT MYTH
+            <CivicEmblem kind="compass" size={12} />
+            <span>NEXT CARD</span>
+          </button>
+        {/if}
+        {#if onHideMyths}
+          <button
+            type="button"
+            class="hide-myths-btn"
+            data-testid="myth-hide-all-btn"
+            onclick={onHideMyths}
+            title="Hide myth prompts across all game screens (you can turn them back on in the top bar)"
+          >
+            <EyeOff size={13} />
+            <span>Hide myth prompts</span>
           </button>
         {/if}
       </div>
@@ -274,7 +329,8 @@
             onclick={onSpin}
             title="Spin this populist myth on national television: gain short-term approval rally (+2%), but erode public trust (-1.5) and raise Evil Heat"
           >
-            📺 SPIN THIS MYTH (+2% Approval, −Trust)
+            <CivicEmblem kind="megaphone" size={14} />
+            <span>SPIN THIS MYTH (+2% Approval, −Trust)</span>
           </button>
         {/if}
 
@@ -290,15 +346,50 @@
   .myth-modal-content {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    max-height: 80vh;
+    gap: 12px;
+    max-height: 78vh;
     overflow-y: auto;
+  }
+
+  .myth-meta-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    background: var(--ink);
+    color: var(--card);
+    border-radius: 3px;
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .context-reason-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    background: var(--gold-tint);
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink);
   }
 
   .myth-grid {
     display: grid;
-    grid-template-columns: 1fr 1.6fr;
-    gap: 20px;
+    grid-template-columns: 1fr 1.55fr;
+    gap: 16px;
     align-items: stretch;
   }
 
@@ -313,10 +404,10 @@
     background: var(--paper);
     border: 2px solid var(--alert);
     border-radius: var(--r-sm);
-    padding: 16px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     box-shadow: 2px 2px 0 var(--alert);
   }
 
@@ -329,16 +420,16 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 14px;
+    padding: 4px 12px;
     background: var(--paper);
     border: 3px double var(--ink);
     border-radius: 4px;
     color: var(--ink);
     font-family: var(--font-ui);
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 900;
     letter-spacing: 0.12em;
-    transform: rotate(-3deg);
+    transform: rotate(-2.5deg);
     transition: all var(--dur-fast);
   }
 
@@ -354,14 +445,14 @@
       opacity: 0;
     }
     50% {
-      transform: scale(0.95) rotate(-3deg);
+      transform: scale(0.95) rotate(-2.5deg);
       opacity: 1;
     }
     75% {
-      transform: scale(1.05) rotate(-3deg);
+      transform: scale(1.05) rotate(-2.5deg);
     }
     100% {
-      transform: scale(1) rotate(-3deg);
+      transform: scale(1) rotate(-2.5deg);
     }
   }
 
@@ -371,15 +462,15 @@
 
   .myth-tag {
     font-family: var(--font-ui);
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 10px;
+    font-weight: 800;
     letter-spacing: 0.1em;
     color: var(--alert);
   }
 
   .myth-quote {
     font-family: var(--font-display);
-    font-size: 20px;
+    font-size: 18px;
     line-height: 1.25;
     color: var(--ink);
     margin: 0;
@@ -390,13 +481,18 @@
     background: var(--gold-tint);
     border: 1.5px dashed var(--ink);
     border-radius: 4px;
-    padding: 10px 12px;
+    padding: 8px 10px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
   }
 
-  .soundbite-label {
+  .soundbite-label,
+  .stat-box-label,
+  .why-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     font-family: var(--font-ui);
     font-size: 10px;
     font-weight: 800;
@@ -407,46 +503,64 @@
   .soundbite-text {
     margin: 0;
     font-family: var(--font-body);
-    font-size: 13px;
+    font-size: 12.5px;
     font-style: italic;
     line-height: 1.35;
     color: var(--ink);
   }
 
-  .myth-context-card {
-    margin-top: auto;
+  .myth-stat-box {
     background: var(--card);
-    border: 1px solid var(--ink);
+    border: 1.5px solid var(--ink);
+    border-left: 4px solid var(--ink);
     border-radius: 4px;
-    padding: 10px;
-    font-family: var(--font-body);
-    font-size: 13px;
-    line-height: 1.4;
-    color: var(--ink-soft);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
   }
 
-  .myth-context-card p {
+  .myth-history-box {
+    margin-top: auto;
+    background: var(--card);
+    border: 1px solid var(--ink-soft);
+    border-radius: 4px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .stat-box-text {
     margin: 0;
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: var(--ink);
   }
 
   .footer-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    flex-wrap: wrap;
   }
 
   .next-myth-btn {
-    padding: 8px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
     background: var(--paper);
     color: var(--ink);
-    border: 2px solid var(--ink);
+    border: 1.5px solid var(--ink);
     border-radius: 4px;
     font-family: var(--font-ui);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.05em;
     cursor: pointer;
-    box-shadow: 2px 2px 0 var(--ink);
+    box-shadow: 1.5px 1.5px 0 var(--ink);
     transition: transform var(--dur-fast);
   }
 
@@ -455,15 +569,36 @@
     transform: translate(-1px, -1px);
   }
 
+  .hide-myths-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px dashed var(--ink-soft);
+    border-radius: 4px;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: color var(--dur-fast), border-color var(--dur-fast);
+  }
+
+  .hide-myths-btn:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
   /* Right: Reality Column */
   .reality-side {
     background: var(--card);
     border: 2px solid var(--ink);
     border-radius: var(--r-sm);
-    padding: 16px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 11px;
     box-shadow: 3px 3px 0 var(--ink);
   }
 
@@ -471,8 +606,8 @@
   .challenge-container {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 8px 0;
+    gap: 14px;
+    padding: 6px 0;
   }
 
   .challenge-tag {
@@ -485,7 +620,7 @@
 
   .challenge-question {
     font-family: var(--font-display);
-    font-size: 22px;
+    font-size: 21px;
     line-height: 1.25;
     color: var(--ink);
     margin: 4px 0 6px 0;
@@ -508,7 +643,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 16px;
+    padding: 12px 14px;
     background: var(--paper);
     border: 2px solid var(--ink);
     border-radius: var(--r-sm);
@@ -572,10 +707,10 @@
     border: 1.5px solid var(--ink);
     border-left: 6px solid var(--alert);
     border-radius: 4px;
-    padding: 10px 12px;
+    padding: 8px 10px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
   }
 
   .refutation-banner.correct {
@@ -595,7 +730,7 @@
 
   .refutation-text {
     font-family: var(--font-body);
-    font-size: 13px;
+    font-size: 12.5px;
     line-height: 1.35;
     color: var(--ink);
     margin: 0;
@@ -603,24 +738,24 @@
 
   .reality-tag {
     font-family: var(--font-ui);
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 10px;
+    font-weight: 800;
     letter-spacing: 0.1em;
     color: var(--sage-dark);
   }
 
   .reality-title {
     font-family: var(--font-display);
-    font-size: 24px;
+    font-size: 20px;
     color: var(--ink);
-    margin: 2px 0 6px 0;
+    margin: 1px 0 4px 0;
     line-height: 1.1;
   }
 
   .reality-summary {
     font-family: var(--font-body);
-    font-size: 14px;
-    line-height: 1.4;
+    font-size: 13.5px;
+    line-height: 1.38;
     color: var(--ink);
     margin: 0;
   }
@@ -629,11 +764,11 @@
   .scene-container {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     background: var(--paper);
     border: 1.5px solid var(--ink);
     border-radius: var(--r-sm);
-    padding: 12px;
+    padding: 10px;
   }
 
   .flowchart-box {
@@ -658,7 +793,7 @@
     background: var(--card);
     border: 1.5px solid var(--ink);
     border-radius: 4px;
-    padding: 6px 8px;
+    padding: 5px 8px;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -667,14 +802,14 @@
 
   .step-num {
     font-family: var(--font-ui);
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     color: var(--ink-soft);
   }
 
   .step-name {
     font-family: var(--font-ui);
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 700;
     color: var(--ink);
     white-space: nowrap;
@@ -691,17 +826,39 @@
     align-items: flex-end;
   }
 
+  .why-it-matters-box {
+    background: var(--sage-tint);
+    border: 1.5px solid var(--sage);
+    border-radius: 4px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .why-label {
+    color: var(--sage-dark);
+  }
+
+  .why-text {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+
   /* Real Levers & Tactical Pivot Buttons (PIVOT-02) */
   .levers-section {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
   }
 
   .levers-tag {
     font-family: var(--font-ui);
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 10px;
+    font-weight: 800;
     letter-spacing: 0.05em;
     color: var(--ink-soft);
   }
@@ -723,7 +880,7 @@
     color: var(--sage-dark);
     border: 1.5px solid var(--sage);
     border-radius: 4px;
-    padding: 6px 10px;
+    padding: 5px 10px;
     cursor: pointer;
     box-shadow: 1px 1px 0 var(--sage);
     transition: transform var(--dur-fast), filter var(--dur-fast);
@@ -774,7 +931,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: 10px;
+    padding-top: 8px;
     border-top: 2px solid var(--ink);
   }
 
@@ -782,7 +939,7 @@
     background: none;
     border: none;
     font-family: var(--font-ui);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--ink-soft);
     cursor: pointer;
@@ -795,14 +952,17 @@
 
   .footer-actions {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     align-items: center;
   }
 
   .spin-btn {
-    padding: 10px 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
     font-family: var(--font-ui);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 800;
     letter-spacing: 0.04em;
     background: var(--alert-dark);
@@ -829,9 +989,9 @@
   }
 
   .got-it-btn {
-    padding: 10px 24px;
+    padding: 8px 20px;
     font-family: var(--font-ui);
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 900;
     letter-spacing: 0.06em;
     text-transform: uppercase;

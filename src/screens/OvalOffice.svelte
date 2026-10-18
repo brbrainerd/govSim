@@ -168,7 +168,9 @@
   {/snippet}
   {#snippet learn()}
     <button type="button" class="link" data-testid="how-it-works-btn" onclick={() => onOpenExplainer?.('oval_office')}>How it works</button>
-    <button type="button" class="ticket" onclick={() => onOpenMyth?.('gas_prices')}>Myth? Can you lower gas prices</button>
+    {#if session.showMyths && !session.hasResolvedMyth('gas_prices')}
+      <button type="button" class="ticket" onclick={() => onOpenMyth?.('gas_prices')}>Myth? Can you lower gas prices</button>
+    {/if}
   {/snippet}
   {#snippet next()}
     {#if activeGeopoliticalCrisis}

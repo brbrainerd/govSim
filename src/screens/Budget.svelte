@@ -179,22 +179,25 @@
   {/snippet}
   {#snippet learn()}
     <button type="button" class="link" data-testid="how-it-works-btn" onclick={() => onOpenExplainer?.('budget')}>How a budget becomes law</button>
-    <button
-      type="button"
-      class="ticket"
-      onclick={() => onOpenMyth?.('foreign_aid_deficit')}
-    >
-      Myth? Cut foreign aid to balance it
-    </button>
-    {#if budgetMyth.id !== 'foreign_aid_deficit'}
-      <button
-        type="button"
-        class="ticket"
-        data-testid="contextual-myth-budget"
-        onclick={() => onOpenMyth?.(budgetMyth.id)}
-      >
-        🎲 Myth? {budgetMyth.title}?
-      </button>
+    {#if session.showMyths}
+      {#if !session.hasResolvedMyth('foreign_aid_deficit')}
+        <button
+          type="button"
+          class="ticket"
+          onclick={() => onOpenMyth?.('foreign_aid_deficit')}
+        >
+          Myth? Cut foreign aid to balance it
+        </button>
+      {:else if !session.hasResolvedMyth(budgetMyth.id)}
+        <button
+          type="button"
+          class="ticket"
+          data-testid="contextual-myth-budget"
+          onclick={() => onOpenMyth?.(budgetMyth.id)}
+        >
+          Myth? {budgetMyth.title}?
+        </button>
+      {/if}
     {/if}
   {/snippet}
   {#snippet next()}
@@ -253,14 +256,14 @@
           : `⚠️ ${session.whip.short} House votes short — make deals in Congress`}
       </span>
     </div>
-    {#if onOpenMyth}
+    {#if onOpenMyth && session.showMyths && !session.hasResolvedMyth('foreign_aid_deficit')}
       <button
         type="button"
         class="mirage-lever-btn"
         data-testid="mirage-lever-budget"
         onclick={() => onOpenMyth?.('foreign_aid_deficit')}
       >
-        ⚡ Zero Out Foreign Aid
+        Myth? Zero Out Foreign Aid
       </button>
     {/if}
     <div class="spacer"></div>
@@ -328,24 +331,22 @@
   .bad { color: var(--alert); }
   .spacer { flex-grow: 1; min-height: 2px; }
   .mirage-lever-btn {
-    padding: 3px 8px;
-    font: 700 11px/1.1 var(--font-ui);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    background: var(--paper);
-    color: var(--alert-dark);
-    border: 1.5px solid var(--alert);
-    border-radius: var(--r-sm);
-    box-shadow: 1px 1px 0 var(--ink);
+    padding: 3px 9px;
+    font: 600 11px/1.1 var(--font-ui);
+    letter-spacing: 0.03em;
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1.5px dashed var(--ink-soft);
+    border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
     align-self: center;
-    transition: transform var(--dur-fast), background var(--dur-fast);
+    transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
   }
   .mirage-lever-btn:hover {
-    background: var(--gold);
+    background: var(--card);
     color: var(--ink);
-    transform: translateY(-1px);
+    border-color: var(--ink);
   }
   .stamp, .sent { align-self: center; flex-shrink: 0; }
   .sent { background: var(--sage); font-size: clamp(15px, 1.2vw, 19px); padding: clamp(8px, 1.2vh, 12px) clamp(12px, 1.5vw, 16px); }

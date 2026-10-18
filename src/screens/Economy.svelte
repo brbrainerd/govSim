@@ -190,14 +190,14 @@
         </button>
       </div>
 
-      {#if onOpenMyth}
+      {#if onOpenMyth && session.showMyths && !session.hasResolvedMyth('interest_rates')}
         <button
           type="button"
           class="mirage-lever-btn"
           data-testid="mirage-lever-economy"
           onclick={() => onOpenMyth?.('interest_rates')}
         >
-          ⚡ Order 2% Fed Rate Cut
+          Myth? Order 2% Fed Rate Cut
         </button>
       {/if}
     </div>
@@ -258,16 +258,19 @@
   {#snippet learn()}
     <button type="button" class="link" data-testid="how-it-works-btn" onclick={() => onOpenExplainer?.('economy')}>How it works</button>
     <button type="button" class="link" data-testid="open-model-inspector-btn" onclick={() => onOpenModelInspector?.()}>Show your work ({totalParams} params)</button>
-    <button type="button" class="ticket" onclick={() => onOpenMyth?.('supply_side_taxes')}>Myth? Lower taxes boost growth?</button>
-    {#if economyMyth.id !== 'supply_side_taxes'}
-      <button
-        type="button"
-        class="ticket"
-        data-testid="contextual-myth-economy"
-        onclick={() => onOpenMyth?.(economyMyth.id)}
-      >
-        🎲 Myth? {economyMyth.title}?
-      </button>
+    {#if session.showMyths}
+      {#if !session.hasResolvedMyth('supply_side_taxes')}
+        <button type="button" class="ticket" onclick={() => onOpenMyth?.('supply_side_taxes')}>Myth? Lower taxes boost growth?</button>
+      {:else if !session.hasResolvedMyth(economyMyth.id)}
+        <button
+          type="button"
+          class="ticket"
+          data-testid="contextual-myth-economy"
+          onclick={() => onOpenMyth?.(economyMyth.id)}
+        >
+          Myth? {economyMyth.title}?
+        </button>
+      {/if}
     {/if}
   {/snippet}
 
@@ -363,23 +366,21 @@
   }
 
   .mirage-lever-btn {
-    padding: 3px 8px;
-    font: 700 11px/1.1 var(--font-ui);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    background: var(--paper);
-    color: var(--alert-dark);
-    border: 1.5px solid var(--alert);
-    border-radius: var(--r-sm);
-    box-shadow: 1px 1px 0 var(--ink);
+    padding: 3px 9px;
+    font: 600 11px/1.1 var(--font-ui);
+    letter-spacing: 0.03em;
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1.5px dashed var(--ink-soft);
+    border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
-    transition: transform var(--dur-fast), background var(--dur-fast);
+    transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
   }
   .mirage-lever-btn:hover {
-    background: var(--gold);
+    background: var(--card);
     color: var(--ink);
-    transform: translateY(-1px);
+    border-color: var(--ink);
   }
 
   .switcher-group {

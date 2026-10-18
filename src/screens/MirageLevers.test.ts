@@ -100,4 +100,30 @@ describe('Mirage Levers across policy screens (MYTH-01)', () => {
     expect(html).toContain('data-testid="mirage-lever-voters"');
     expect(html).toContain('Claim National Mandate Decree');
   });
+
+  it('hides all mirage levers and myth chips when showMyths is false or when the myth is resolved', () => {
+    const hiddenSession = new Session(1, START, { party: 'D', showMyths: false });
+    const econHidden = render(Economy, {
+      props: {
+        session: hiddenSession,
+        question: 'How is the economy doing?',
+        go: () => {},
+        onOpenMyth: () => {},
+      },
+    }).html;
+    expect(econHidden).not.toContain('data-testid="mirage-lever-economy"');
+    expect(econHidden).not.toContain('Myth? Lower taxes boost growth?');
+
+    const resolvedSession = setupSession();
+    resolvedSession.viewMythCard('interest_rates');
+    const econResolved = render(Economy, {
+      props: {
+        session: resolvedSession,
+        question: 'How is the economy doing?',
+        go: () => {},
+        onOpenMyth: () => {},
+      },
+    }).html;
+    expect(econResolved).not.toContain('data-testid="mirage-lever-economy"');
+  });
 });

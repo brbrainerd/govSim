@@ -85,14 +85,14 @@
             </span>
             <h3 class="section-title">Executive Orders</h3>
           </div>
-          {#if onOpenMyth}
+          {#if onOpenMyth && session.showMyths && !session.hasResolvedMyth('rule_by_decree')}
             <button
               type="button"
               class="mirage-lever-btn"
               data-testid="mirage-lever-powers"
               onclick={() => onOpenMyth?.('rule_by_decree')}
             >
-              ⚡ Rewrite Law by Decree
+              Myth? Rewrite Law by Decree
             </button>
           {/if}
           <span class="active-count">
@@ -395,21 +395,21 @@
     <button class="link" onclick={() => onOpenMyth?.('rule_by_decree')}>
       How it works: Executive orders & court review
     </button>
-    <button class="ticket" onclick={() => onOpenMyth?.('gas_prices')}>
-      Myth? Can you lower gas prices
-    </button>
-    <button class="ticket" onclick={() => onOpenMyth?.('foreign_aid_deficit')}>
-      Myth? Does foreign aid cause the deficit
-    </button>
-    {#if !['rule_by_decree', 'gas_prices', 'foreign_aid_deficit'].includes(powersMyth.id)}
-      <button
-        type="button"
-        class="ticket"
-        data-testid="contextual-myth-powers"
-        onclick={() => onOpenMyth?.(powersMyth.id)}
-      >
-        🎲 Myth? {powersMyth.title}?
-      </button>
+    {#if session.showMyths}
+      {#if !session.hasResolvedMyth('gas_prices')}
+        <button class="ticket" onclick={() => onOpenMyth?.('gas_prices')}>
+          Myth? Can you lower gas prices
+        </button>
+      {:else if !session.hasResolvedMyth(powersMyth.id)}
+        <button
+          type="button"
+          class="ticket"
+          data-testid="contextual-myth-powers"
+          onclick={() => onOpenMyth?.(powersMyth.id)}
+        >
+          Myth? {powersMyth.title}?
+        </button>
+      {/if}
     {/if}
   {/snippet}
 
@@ -587,23 +587,21 @@
   }
 
   .mirage-lever-btn {
-    padding: 3px 8px;
-    font: 700 11px/1.1 var(--font-ui);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    background: var(--paper);
-    color: var(--alert-dark);
-    border: 1.5px solid var(--alert);
-    border-radius: var(--r-sm);
-    box-shadow: 1px 1px 0 var(--ink);
+    padding: 3px 9px;
+    font: 600 11px/1.1 var(--font-ui);
+    letter-spacing: 0.03em;
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1.5px dashed var(--ink-soft);
+    border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
-    transition: transform var(--dur-fast), background var(--dur-fast);
+    transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
   }
   .mirage-lever-btn:hover {
-    background: var(--gold);
+    background: var(--card);
     color: var(--ink);
-    transform: translateY(-1px);
+    border-color: var(--ink);
   }
 
   .orders-grid {

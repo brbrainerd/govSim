@@ -48,13 +48,28 @@ test.describe('Phase 21: Complete Learn Loop & Interactive Explainers (LEARN-01.
       await expect(findOutBtn).toBeVisible();
       await findOutBtn.click();
       await expect(page.locator('.myth-modal-content')).toBeVisible();
+      await expect(page.locator('[data-testid="myth-category-strip"]')).toBeVisible();
+      await expect(page.locator('[data-testid="myth-context-reason"]')).toBeVisible();
       await expect(page.locator('[data-testid="myth-soundbite"]')).toBeVisible();
+      await expect(page.locator('[data-testid="myth-by-the-numbers"]')).toBeVisible();
+      await expect(page.locator('[data-testid="myth-historical-hook"]')).toBeVisible();
+      await expect(page.locator('[data-testid="myth-hide-all-btn"]')).toBeVisible();
       await expect(page.locator('[data-testid="myth-next-btn"]')).toBeVisible();
       const firstQuote = await page.locator('.myth-quote').textContent();
       await page.locator('[data-testid="myth-next-btn"]').click();
       await expect(page.locator('.myth-quote')).not.toHaveText(firstQuote ?? '');
       await page.locator('.myth-modal-content .close-link').click();
       await expect(page.locator('.myth-modal-content')).toHaveCount(0);
+
+      // Verify configurable Myths toggle in StatusBar hides myth prompts across surfaces and restores them
+      const mythsToggle = page.locator('[data-testid="myths-toggle"]');
+      await expect(mythsToggle).toContainText('Myths: On');
+      await mythsToggle.click();
+      await expect(mythsToggle).toContainText('Myths: Off');
+      await expect(page.locator('.card.option button.btn:has-text("Find out")')).toHaveCount(0);
+      await expect(page.locator('button.ticket')).toHaveCount(0);
+      await mythsToggle.click();
+      await expect(mythsToggle).toContainText('Myths: On');
 
       // 3. Economy screen: How it works + supply_side_taxes myth + Pressure the Fed
       await page.locator('nav button:has-text("Economy")').click();

@@ -27,7 +27,12 @@
   import ModelInspectorModal from '../ui/ModelInspectorModal.svelte';
   import AiSettingsModal from '../ui/AiSettingsModal.svelte';
   import EndScreen from './EndScreen.svelte';
-  import { getMyth, pickNextUnviewedMyth, type MythRealLeverAction } from '../content/myths';
+  import {
+    getContextualTriggerReason,
+    getMyth,
+    pickNextUnviewedMyth,
+    type MythRealLeverAction,
+  } from '../content/myths';
   import type { PackageName } from '../engine/budget';
   import { getExplainer, type ExplainerId } from '../content/explainers';
   import { onMount } from 'svelte';
@@ -84,6 +89,9 @@
     activeMyth ? pickNextUnviewedMyth(session.current, activeMyth.id, session.screen) : null,
   );
   const activeExplainer = $derived(activeExplainerId ? getExplainer(activeExplainerId) : null);
+  const handleOpenMyth = $derived(
+    session.showMyths ? (id: string) => (activeMythId = id) : undefined,
+  );
 
   function executeMythPivot(action: MythRealLeverAction) {
     if (activeMyth) {
@@ -130,6 +138,7 @@
       evilMode={session.isEvilMode}
       calmMode={session.calmMode}
       vocabMode={session.vocabMode}
+      showMyths={session.showMyths}
       stagedActions={session.stagedActionsSummary}
       canFastForward={session.canFastForward}
       onNextTurn={() => session.nextTurn()}
@@ -138,6 +147,7 @@
       onClearStaged={() => session.resetDraft()}
       onToggleCalm={() => session.toggleCalmMode()}
       onToggleVocab={() => session.toggleVocabMode()}
+      onToggleMyths={() => session.toggleShowMyths()}
     />
     <div class="zones">
       <Rail
@@ -157,7 +167,7 @@
           {session}
           question={screen.question}
           {go}
-          onOpenMyth={(id) => (activeMythId = id)}
+          onOpenMyth={handleOpenMyth}
           onOpenExplainer={(id) => (activeExplainerId = id)}
           onOpenCrisis={(crisis) => { activeReviewCrisis = crisis; }}
         />
@@ -166,7 +176,7 @@
           {session}
           question={screen.question}
           {go}
-          onOpenMyth={(id) => (activeMythId = id)}
+          onOpenMyth={handleOpenMyth}
           onOpenExplainer={(id) => (activeExplainerId = id)}
           onOpenFed={() => (fedModalOpen = true)}
           onOpenModelInspector={() => (modelInspectorOpen = true)}
@@ -176,7 +186,7 @@
           {session}
           question={screen.question}
           {go}
-          onOpenMyth={(id) => (activeMythId = id)}
+          onOpenMyth={handleOpenMyth}
           onOpenExplainer={(id) => (activeExplainerId = id)}
         />
       {:else if screen.id === 'congress'}
@@ -184,7 +194,7 @@
           {session}
           question={screen.question}
           {go}
-          onOpenMyth={(id) => (activeMythId = id)}
+          onOpenMyth={handleOpenMyth}
           onOpenExplainer={(id) => (activeExplainerId = id)}
         />
       {:else if screen.id === 'powers'}
@@ -192,7 +202,7 @@
           {session}
           question={screen.question}
           {go}
-          onOpenMyth={(id) => (activeMythId = id)}
+          onOpenMyth={handleOpenMyth}
           onOpenSpeech={() => (speechModalOpen = true)}
           onOpenFed={() => (fedModalOpen = true)}
         />
@@ -201,7 +211,7 @@
           {session}
           question={screen.question}
           {go}
-          onOpenMyth={(id) => (activeMythId = id)}
+          onOpenMyth={handleOpenMyth}
           onOpenExplainer={(id) => (activeExplainerId = id)}
         />
       {:else}
@@ -209,7 +219,7 @@
           {session}
           question={screen.question}
           {go}
-          onOpenMyth={(id) => (activeMythId = id)}
+          onOpenMyth={handleOpenMyth}
           onOpenSpeech={() => (speechModalOpen = true)}
         />
       {/if}
@@ -239,6 +249,7 @@
         myth={activeMyth}
         isFirstView={!session.current.viewedMyths.includes(activeMyth.id)}
         calmMode={session.calmMode}
+        contextReason={getContextualTriggerReason(activeMyth, session.current, session.screen)}
         onClose={() => (activeMythId = null)}
         onGotIt={() => {
           session.viewMythCard(activeMyth!.id);
@@ -255,6 +266,10 @@
               activeMythId = nextMythCandidate.id;
             }
           : undefined}
+        onHideMyths={() => {
+          session.setShowMyths(false);
+          activeMythId = null;
+        }}
       />
     {/if}
 

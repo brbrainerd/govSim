@@ -78,6 +78,7 @@ export interface GameOptions {
   vocabMode?: VocabMode;
   presidentLook?: 0 | 1 | 2 | 3;
   classicSim?: boolean;
+  showMyths?: boolean;
 }
 
 interface Draft {
@@ -184,6 +185,13 @@ export class Session {
       localStorage.getItem('govsim_vocab_mode') === 'wonk'
       ? 'wonk'
       : 'plain',
+  );
+  showMyths = $state<boolean>(
+    typeof localStorage !== 'undefined' &&
+      typeof localStorage?.getItem === 'function' &&
+      localStorage.getItem('govsim_show_myths') === 'false'
+      ? false
+      : true,
   );
   aiTurnPayload = $state<AiTurnPayload | null>(null);
   aiLoading = $state<boolean>(false);
@@ -634,7 +642,13 @@ export class Session {
         localStorage.setItem('govsim_vocab_mode', this.vocabMode);
       }
     }
-    this.options = { ...options, vocabMode: this.vocabMode };
+    if (typeof options.showMyths === 'boolean') {
+      this.showMyths = options.showMyths;
+      if (!initOpts?.skipAutosave && typeof localStorage !== 'undefined' && typeof localStorage?.setItem === 'function') {
+        localStorage.setItem('govsim_show_myths', this.showMyths ? 'true' : 'false');
+      }
+    }
+    this.options = { ...options, vocabMode: this.vocabMode, showMyths: this.showMyths };
     this.unlockAll = Boolean(options.unlockAll);
     const effectiveStart = applyScenarioStart(start, options.scenario);
     const initial = applyArchetypeToInitialState(
@@ -910,6 +924,15 @@ export class Session {
     return (this.current.spunMyths ?? []).includes(id) || this.draft.spinMyth === id;
   }
 
+  hasResolvedMyth(id: string): boolean {
+    return (
+      this.current.viewedMyths.includes(id) ||
+      (this.current.spunMyths ?? []).includes(id) ||
+      this.draft.viewMyth === id ||
+      this.draft.spinMyth === id
+    );
+  }
+
   viewExplainer(id: string) {
     this.viewMythCard(`explainer:${id}`);
   }
@@ -941,6 +964,19 @@ export class Session {
     }
     if (typeof document !== 'undefined') {
       document.documentElement.dataset.vocab = mode;
+    }
+    storeAutosave(this);
+  }
+
+  toggleShowMyths(): void {
+    this.setShowMyths(!this.showMyths);
+  }
+
+  setShowMyths(show: boolean): void {
+    this.showMyths = show;
+    this.options = { ...this.options, showMyths: show };
+    if (typeof localStorage !== 'undefined' && typeof localStorage?.setItem === 'function') {
+      localStorage.setItem('govsim_show_myths', show ? 'true' : 'false');
     }
     storeAutosave(this);
   }

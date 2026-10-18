@@ -40,14 +40,26 @@ p, .line, .prose { max-width: 65ch; }
 .btn { font: 600 clamp(14px, 1.1vw, 17px)/1 var(--font-ui); letter-spacing: .03em; color: var(--card); background: var(--ink); border: 0; border-radius: 8px; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.1vw, 16px); min-height: clamp(32px, 4vh, 40px); cursor: pointer; box-shadow: 2px 2px 0 var(--gold-dark); }
 .btn:hover { filter: brightness(1.15); }
 
-/* Learn: dashed ticket with notches */
+/* Learn: subtle contextual civics note chip (de-emphasized) */
 .ticket {
-  position: relative; font: 600 17px/1 var(--font-ui); color: var(--ink); background: var(--card);
-  border: 2px dashed var(--ink); border-radius: 6px; padding: 10px 22px; min-height: 44px; cursor: pointer;
-  -webkit-mask: radial-gradient(circle 8px at 0 50%, transparent 7px, black 8px) left / 51% 100% no-repeat,
-                radial-gradient(circle 8px at 100% 50%, transparent 7px, black 8px) right / 51% 100% no-repeat;
-          mask: radial-gradient(circle 8px at 0 50%, transparent 7px, black 8px) left / 51% 100% no-repeat,
-                radial-gradient(circle 8px at 100% 50%, transparent 7px, black 8px) right / 51% 100% no-repeat;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 600 clamp(12px, 0.95vw, 13.5px)/1.1 var(--font-ui);
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1.5px dashed var(--ink-soft);
+  border-radius: 999px;
+  padding: 4px 12px;
+  min-height: 26px;
+  cursor: pointer;
+  transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+}
+.ticket:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+  background: var(--card);
 }
 
 :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }

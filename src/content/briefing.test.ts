@@ -141,6 +141,34 @@ describe('dynamic briefing generator (EVT-07, OBS-05)', () => {
     expect(debtBriefing.suggestions.some((s) => s.mythId === 'debt_ceiling_default' && s.title === 'Address debt limit claims')).toBe(true);
   });
 
+  it('suppresses all myth suggestions when showMyths is false or when branch myths are already resolved', () => {
+    const base = newGame(1, START);
+    const scenarios = [
+      { ...base, turn: 2 },
+      { ...base, econ: { ...base.econ, debt: base.econ.gdp * 1.25 } },
+      { ...base, econ: { ...base.econ, inflation: 4.5 } },
+      { ...base, econ: { ...base.econ, unemployment: 5.5 } },
+      base,
+    ];
+
+    for (const st of scenarios) {
+      const hidden = generateBriefing({ current: st, showMyths: false });
+      expect(hidden.suggestions.every((s) => !s.mythId)).toBe(true);
+      expect(hidden.suggestions.every((s) => s.target !== null || s.openCrisis)).toBe(true);
+    }
+
+    // Also when showMyths is true, if the branch's contextual myths are already viewed/spun, it falls back to a real policy action
+    const viewedInf = generateBriefing({
+      current: {
+        ...base,
+        econ: { ...base.econ, inflation: 4.5, fedRate: 3.0 },
+        viewedMyths: ['gas_prices', 'price_controls_shortages'],
+      },
+      showMyths: true,
+    });
+    expect(viewedInf.suggestions.every((s) => !s.mythId)).toBe(true);
+  });
+
   it('passes reading grade <= 9.0 and sentence length <= 20 words for all branches', () => {
     const base = newGame(1, START);
     const mockCrisis: ActiveCrisis = {

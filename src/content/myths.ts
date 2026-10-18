@@ -6,6 +6,53 @@ import type { ScreenId } from '../app/screens';
 import type { GameState } from '../engine/game';
 import { draw } from '../engine/rng';
 
+export type MythCategory =
+  | 'power_limit'
+  | 'budget_math'
+  | 'checks_and_balances'
+  | 'market_ripple'
+  | 'electoral_mechanics';
+
+export interface MythCategoryMeta {
+  readonly id: MythCategory;
+  readonly label: string;
+  readonly emblem: string;
+  readonly description: string;
+}
+
+export const MYTH_CATEGORIES: Record<MythCategory, MythCategoryMeta> = {
+  power_limit: {
+    id: 'power_limit',
+    label: 'Executive Mirage',
+    emblem: 'gavel',
+    description: 'Things voters think the President controls with a desk dial.',
+  },
+  budget_math: {
+    id: 'budget_math',
+    label: 'Budget Scale',
+    emblem: 'treasury',
+    description: 'Budget math facts where public guesses are off by ten times.',
+  },
+  checks_and_balances: {
+    id: 'checks_and_balances',
+    label: 'Constitutional Check',
+    emblem: 'scales',
+    description: 'How Congress, courts, and basic law block shortcuts.',
+  },
+  market_ripple: {
+    id: 'market_ripple',
+    label: 'Market Ripple',
+    emblem: 'chart_up',
+    description: 'How price caps, tariffs, and supply shocks ripple through markets.',
+  },
+  electoral_mechanics: {
+    id: 'electoral_mechanics',
+    label: 'Federalism & Votes',
+    emblem: 'capitol',
+    description: 'How state powers, districts, and coalitions shape what passes.',
+  },
+};
+
 export interface MythPredictionPrompt {
   readonly question: string;
   readonly options: readonly [string, string];
@@ -31,10 +78,14 @@ export interface MythRealLeverAction {
 
 export interface MythCard {
   readonly id: string;
+  readonly category: MythCategory;
   readonly title: string;
   readonly mythStatement: string;
   readonly tvSoundbite: string;
   readonly realitySummary: string;
+  readonly byTheNumbers: string;
+  readonly historicalHook: string;
+  readonly whyItMatters: string;
   readonly mirageLabel: string;
   readonly predictionPrompt: MythPredictionPrompt;
   readonly flowSteps: readonly string[];
@@ -52,10 +103,14 @@ export interface MythCard {
 export const MYTHS_CATALOG: readonly MythCard[] = [
   {
     id: 'gas_prices',
+    category: 'power_limit',
     title: 'Can you lower gas prices',
     mythStatement: 'The President sets gas prices.',
     tvSoundbite: 'Late-night TV host: "Turn the big desk dial marked CHEAP GAS to the left!"',
     realitySummary: 'Pump prices depend on world crude oil, plant work, and state fuel taxes.',
+    byTheNumbers: '60% of pump price comes from world crude oil costs.',
+    historicalHook: 'Past oil shocks in the 1970s hit pump prices hard despite White House pleas.',
+    whyItMatters: 'Use energy permits, reserve releases, and trade levers to ease fuel shocks over time.',
     mirageLabel: 'Cap Pump Gas at $2.50',
     predictionPrompt: {
       question: 'What sets local gas station prices?',
@@ -97,10 +152,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'interest_rates',
+    category: 'power_limit',
     title: 'Can you set interest rates',
     mythStatement: 'The President sets interest rates.',
     tvSoundbite: 'Angry caller: "Why did the White House raise my home loan rate this morning?"',
     realitySummary: 'The Federal Reserve sets borrowing costs to balance prices and jobs.',
+    byTheNumbers: '12 voting Fed members set rates across 8 meetings a year.',
+    historicalHook: 'A 1951 accord freed the central bank from White House bond rate caps.',
+    whyItMatters: 'Lower deficits to cool bond yields, or pick a new Fed Chair when terms end.',
     mirageLabel: 'Order 2% Fed Rate Cut',
     predictionPrompt: {
       question: 'Who sets federal borrowing rates in the nation?',
@@ -143,10 +202,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'presidential_jobs',
+    category: 'power_limit',
     title: 'Do presidents create jobs',
     mythStatement: 'The President creates private sector jobs.',
     tvSoundbite: 'Pundit: "The President built three hundred thousand jobs with his own hands in May!"',
     realitySummary: 'Companies hire based on customer sales, new tech, and economic growth.',
+    byTheNumbers: '85% of US workers hold private sector jobs outside federal control.',
+    historicalHook: 'Job booms and slumps often start in global tech or credit cycles before votes.',
+    whyItMatters: 'Boost hiring over time with road bills, science grants, and tax changes.',
     mirageLabel: 'Mandate 500k Private Jobs',
     predictionPrompt: {
       question: 'What leads private firms to hire new staff?',
@@ -189,10 +252,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'rule_by_decree',
+    category: 'checks_and_balances',
     title: 'Can you ban anything by order',
     mythStatement: 'Presidents can change any law with an executive order.',
     tvSoundbite: 'Talk radio: "Just grab a fancy pen and sign a new law before lunch!"',
     realitySummary: 'Orders cannot spend money or change laws passed by Congress.',
+    byTheNumbers: '0 dollars can be spent from the Treasury without a law from Congress.',
+    historicalHook: 'In 1952, the Supreme Court blocked a presidential order seizing steel mills.',
+    whyItMatters: 'Executive orders are fast and free of Congress, but courts can strike them down.',
     mirageLabel: 'Rewrite Law by Decree',
     predictionPrompt: {
       question: 'Can an executive order fund brand new programs without Congress?',
@@ -233,10 +300,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'foreign_aid_deficit',
+    category: 'budget_math',
     title: 'Does foreign aid cause the deficit',
     mythStatement: 'Cutting foreign aid would balance the federal budget.',
     tvSoundbite: 'Town hall guest: "We send half the budget overseas! Cut aid and we are rich!"',
     realitySummary: 'Foreign aid makes up less than one percent of total federal spending.',
+    byTheNumbers: 'Polls guess 25% of spending is foreign aid; the real share is under 1%.',
+    historicalHook: 'Even since the Marshall Plan era, foreign aid has stayed a tiny slice of outlays.',
+    whyItMatters: 'To trim the deficit for real, you must adjust tax rates, health care, or defense.',
     mirageLabel: 'Zero Out Foreign Aid',
     predictionPrompt: {
       question: 'What share of federal spending goes to foreign aid?',
@@ -278,10 +349,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'supply_side_taxes',
+    category: 'budget_math',
     title: 'Do tax cuts pay for themselves',
     mythStatement: 'Cutting tax rates always grows the economy enough to raise tax cash.',
     tvSoundbite: 'Cable guest: "Cut taxes to zero and the government will swim in bonus cash!"',
     realitySummary: 'Lower rates boost growth a bit, but they still bring in less tax cash.',
+    byTheNumbers: 'Growth offsets roughly 10% to 25% of a typical rate cut, not 100%.',
+    historicalHook: 'Major tax cuts in 1981, 2001, and 2017 each lowered yearly tax collections.',
+    whyItMatters: 'Pair tax cuts with spending restraint if you want to keep debt and bond rates down.',
     mirageLabel: 'Self-Funding Tax Cuts',
     predictionPrompt: {
       question: 'Do deep tax cuts raise total cash collections?',
@@ -324,10 +399,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'debt_ceiling_default',
+    category: 'checks_and_balances',
     title: 'Does the debt limit add spending',
     mythStatement: 'Raising the debt limit approves new government spending.',
     tvSoundbite: 'Floor speech: "Refusing to pay last month’s diners bill counts as a diet!"',
     realitySummary: 'The debt limit only lets the nation pay bills that Congress already passed.',
+    byTheNumbers: 'Congress has raised or paused the debt limit over 100 times since 1940.',
+    historicalHook: 'A 2011 debt limit standoff triggered the first downgrade of US credit.',
+    whyItMatters: 'Use the Budget screen to cut future deficits, not a debt limit default threat.',
     mirageLabel: 'Freeze Debt Limit for Savings',
     predictionPrompt: {
       question: 'Does raising the debt limit start new spending?',
@@ -368,10 +447,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'trade_deficits',
+    category: 'market_ripple',
     title: 'Do foreign nations pay tariffs',
     mythStatement: 'Foreign states pay the tariffs placed on their goods.',
     tvSoundbite: 'Rally cheer: "Foreign treasuries will mail us giant gold checks at customs!"',
     realitySummary: 'Home buyers and importers pay the border tax through higher store prices.',
+    byTheNumbers: 'US importers pay 100% of customs duties at the port of entry.',
+    historicalHook: 'High tariffs in 1930 sparked foreign counter-tariffs that cut farm exports.',
+    whyItMatters: 'Pair targeted sector tariffs with trade pacts to shield farm and factory exports.',
     mirageLabel: 'Bill Foreign Nations for Tariffs',
     predictionPrompt: {
       question: 'Who directly pays the tax when foreign goods arrive at border ports?',
@@ -414,10 +497,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'veto_line_item',
+    category: 'checks_and_balances',
     title: 'Can you veto single budget lines',
     mythStatement: 'Presidents can cross out wasteful budget items before signing a law.',
     tvSoundbite: 'Op-ed column: "Take a black marker and cross out the pork lines before signing!"',
     realitySummary: 'The Constitution requires the President to sign or veto an entire bill.',
+    byTheNumbers: '43 state governors have a line-item veto, but 0 US Presidents do.',
+    historicalHook: 'In 1998, the Supreme Court struck down a brief federal line-item veto law.',
+    whyItMatters: 'Shape spending lines in Budget and Congress before the bill reaches your desk.',
     mirageLabel: 'Line-Item Veto Waste Lines',
     predictionPrompt: {
       question: 'Can the President cancel specific spending lines in a signed bill?',
@@ -459,10 +546,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'popular_vote_mandate',
+    category: 'electoral_mechanics',
     title: 'Does popular vote grant a total mandate',
     mythStatement: 'Winning the total vote lets a President pass any bill.',
     tvSoundbite: 'Press host: "Half the vote plus one means Congress must rubber-stamp every bill!"',
     realitySummary: 'Presidents win through state electors. Congress still writes the laws.',
+    byTheNumbers: '435 House districts and 50 states elect lawmakers on separate timelines.',
+    historicalHook: 'Midterm voters have flipped House or Senate control in most modern terms.',
+    whyItMatters: 'Watch swing state polling and whip House coalitions to turn campaign goals into law.',
     mirageLabel: 'Claim National Mandate Decree',
     predictionPrompt: {
       question: 'Does a total vote win guarantee House bills pass?',
@@ -503,10 +594,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'immigration_crime_budget',
+    category: 'budget_math',
     title: 'Does border closure balance the budget',
     mythStatement: 'Sealing the border wipes out the budget gap.',
     tvSoundbite: 'Rally flyer: "Shut every border gate and our whole debt is gone by Friday!"',
     realitySummary: 'The deficit stems from care laws, debt interest, and aging workers.',
+    byTheNumbers: 'Pensions, health care, and debt interest make up over 73% of spending.',
+    historicalHook: 'Border guards and ports make up less than one percent of yearly spending.',
+    whyItMatters: 'Balancing the budget over time depends on old age checks, health costs, and taxes.',
     mirageLabel: 'Seal Border to Balance Budget',
     predictionPrompt: {
       question: 'What drives the largest share of federal deficits?',
@@ -548,10 +643,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'scotus_instant_reversal',
+    category: 'checks_and_balances',
     title: 'Can one court pick reverse past rulings',
     mythStatement: 'A new court pick can reverse past rulings right away.',
     tvSoundbite: 'Panelist: "Swear in the new judge at noon and overturn five old laws by one!"',
     realitySummary: 'The Supreme Court only rules on live lawsuits that work up on appeal.',
+    byTheNumbers: 'The Supreme Court hears roughly 70 cases out of 7,000 petitions each year.',
+    historicalHook: 'Since 1793, the high court has refused to give advice without a real lawsuit.',
+    whyItMatters: 'Pass clear bills in Congress so your rules hold up when tested in court.',
     mirageLabel: 'Overturn Past Court Precedents',
     predictionPrompt: {
       question: 'Can the Supreme Court overturn rulings without a case?',
@@ -593,10 +692,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'print_money_debt',
+    category: 'market_ripple',
     title: 'Can we print cash to pay off debt',
     mythStatement: 'The Treasury can print cash to pay off the whole national debt.',
     tvSoundbite: 'Web meme: "Mint one giant gold coin, hand it to the Fed, and we are debt free!"',
     realitySummary: 'Printing cash to pay debt floods banks with money and sparks big price spikes.',
+    byTheNumbers: 'Over $30 trillion in US bonds are held by savers, pensions, and banks.',
+    historicalHook: 'Early paper notes in 1779 lost huge value when printed without tax backing.',
+    whyItMatters: 'Keep inflation calm and deficits in check so bond buyers trust US credit.',
     mirageLabel: 'Mint $35T Platinum Coin',
     predictionPrompt: {
       question: 'What happens if a nation prints new cash to pay off its debt?',
@@ -638,10 +741,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'ceo_wage_cap',
+    category: 'power_limit',
     title: 'Can an order cap private CEO pay',
     mythStatement: 'The President can cap private firm paychecks with an order.',
     tvSoundbite: 'Viral post: "Sign a one-page order tonight so no boss makes more than fifty grand!"',
     realitySummary: 'Private pay is set by company boards unless Congress changes tax laws.',
+    byTheNumbers: 'White House wage rules only cover federal work contracts, not all private shops.',
+    historicalHook: 'In 1993, Congress capped tax breaks for top pay, shifting pay into stock grants.',
+    whyItMatters: 'Use income tax brackets, corporate tax rates, and contractor pay rules to narrow gaps.',
     mirageLabel: 'Cap Private CEO Pay by Order',
     predictionPrompt: {
       question: 'How can the federal government shape private top pay?',
@@ -683,10 +790,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'abolish_irs_free',
+    category: 'budget_math',
     title: 'Does firing tax clerks end taxes',
     mythStatement: 'Shutting the tax office means people do not owe taxes.',
     tvSoundbite: 'Bumper sticker: "Fire the tax clerks and every paycheck is tax free forever!"',
     realitySummary: 'Congress writes tax laws, and firing auditors mostly helps rich tax cheats.',
+    byTheNumbers: 'Each $1 spent on complex tax audits brings back $5 to $9 in owed taxes.',
+    historicalHook: 'Paycheck tax rules started in 1943, so workers pay taxes from each check.',
+    whyItMatters: 'To lower family taxes fairly, change the tax brackets in a bill through Congress.',
     mirageLabel: 'Abolish Tax Clerks for Free Cash',
     predictionPrompt: {
       question: 'What happens when tax audit staff is cut deeply?',
@@ -727,10 +838,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'ban_stock_buybacks',
+    category: 'market_ripple',
     title: 'Can you ban stock buybacks by order',
     mythStatement: 'A White House order can ban stock buybacks right away.',
     tvSoundbite: 'TV panel: "Outlaw Wall Street stock buybacks by Friday and force firms to build plants!"',
     realitySummary: 'Only Congress can ban or tax stock buybacks across private markets.',
+    byTheNumbers: 'Congress placed a 1% excise tax on corporate stock buybacks in 2022.',
+    historicalHook: 'When buybacks are taxed, firms often shift payouts into cash dividends instead.',
+    whyItMatters: 'Use research grants and corporate tax credits to reward firms that build new plants.',
     mirageLabel: 'Ban Wall Street Buybacks',
     predictionPrompt: {
       question: 'Who has legal power to tax or ban corporate stock buybacks?',
@@ -773,10 +888,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'fire_fed_chair',
+    category: 'checks_and_balances',
     title: 'Can you fire the Fed Chair over rates',
     mythStatement: 'The President can fire the central bank chief whenever loan rates rise.',
     tvSoundbite: 'Talk show: "If the Fed Chair will not cut rates by two points, pack their boxes!"',
     realitySummary: 'Law shields Fed chiefs from being fired over rate choices.',
+    byTheNumbers: 'Fed governors serve 14-year staggered terms to block election pressure.',
+    historicalHook: 'In 1935, the Supreme Court upheld legal shields for independent board members.',
+    whyItMatters: 'Publicly pressuring the Fed costs Clout and can rattle bond markets if overused.',
     mirageLabel: 'Fire Fed Chair Over Rates',
     predictionPrompt: {
       question: 'Why did Congress shield the Fed Chair from being fired over rate votes?',
@@ -818,10 +937,14 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
   },
   {
     id: 'congress_pay_stop',
+    category: 'checks_and_balances',
     title: 'Can you dock lawmaker pay in a shutdown',
     mythStatement: 'The President can freeze lawmakers’ paychecks until they pass a budget.',
     tvSoundbite: 'Diner table: "Lock the Capitol doors and stop their paychecks until they agree!"',
     realitySummary: 'Basic law bars changing House and Senate pay until the next vote.',
+    byTheNumbers: 'The 27th Amendment took 202 years to ratify after it was first proposed in 1789.',
+    historicalHook: 'Framers barred mid-term pay changes so a wealthy president could not starve Congress.',
+    whyItMatters: 'Use auto-whip deals and public speeches to pass budgets before the clock runs out.',
     mirageLabel: 'Dock Lawmaker Paychecks',
     predictionPrompt: {
       question: 'Who still gets paid by law during a federal government shutdown?',
@@ -861,10 +984,298 @@ export const MYTHS_CATALOG: readonly MythCard[] = [
       confirmed: false,
     },
   },
+  {
+    id: 'strategic_oil_reserve',
+    category: 'market_ripple',
+    title: 'Can the oil reserve fix fuel prices',
+    mythStatement: 'Tapping the national oil reserve can keep gas cheap for years.',
+    tvSoundbite: 'Morning show: "Open the giant salt caverns in Texas and gas will stay two bucks!"',
+    realitySummary: 'The reserve holds emergency crude for short supply shocks, not years of use.',
+    byTheNumbers: 'The US uses 20M barrels a day; the reserve maxes out near 700M barrels.',
+    historicalHook: 'Congress built the reserve after the 1973 oil shock to cushion sudden shipping stops.',
+    whyItMatters: 'Tap reserves to calm sudden crisis spikes while building clean power for the long run.',
+    mirageLabel: 'Drain Oil Reserve for $2 Gas',
+    predictionPrompt: {
+      question: 'How long could the Strategic Petroleum Reserve supply all US fuel needs alone?',
+      options: ['Roughly one month of total US demand', 'Four full years of cheap pump gas'],
+      correctIndex: 0,
+      refutation: 'The reserve holds weeks of supply to blunt sudden shocks, not years of daily use.',
+    },
+    flowSteps: ['Global oil shock', 'Reserve drawdown', 'Brief price relief', 'Caverns must refill'],
+    realLevers: ['Clean grid permitting', 'Infrastructure investment', 'Strategic reserve timing'],
+    realLeverActions: [
+      {
+        label: 'Fast-track grid permits',
+        screen: 'powers',
+        hint: 'Speed up clean energy lines to cut long-term fuel demand.',
+        payload: 'clean_grid_permitting',
+        actionKind: 'sign_order',
+      },
+      {
+        label: 'Fund energy infrastructure',
+        screen: 'budget',
+        hint: 'Back domestic power and transit lines in the budget.',
+        payload: 'Infrastructure push',
+        actionKind: 'budget_package',
+      },
+    ],
+    challenges: 'both',
+    target: 'mechanism',
+    citation: {
+      title: 'Department of Energy: Strategic Petroleum Reserve Overview',
+      url: 'https://www.energy.gov/ceser/strategic-petroleum-reserve',
+      confirmed: false,
+    },
+  },
+  {
+    id: 'reconciliation_filibuster',
+    category: 'checks_and_balances',
+    title: 'Can 51 senators pass any bill',
+    mythStatement: 'A simple fifty-one vote majority can pass any law in the Senate.',
+    tvSoundbite: 'TV host: "You have fifty-one votes in the Senate, so pass the whole wish list tonight!"',
+    realitySummary: 'Most Senate bills need sixty votes unless they only change taxes or spending.',
+    byTheNumbers: '60 Senate votes end a filibuster, while 51 votes pass a budget bill.',
+    historicalHook: 'Since the 1980s, the Byrd Rule has stripped non-budget items from 51-vote bills.',
+    whyItMatters: 'You can pass tax and spending bills with slim margins, or spend Clout to change Senate rules.',
+    mirageLabel: 'Force All Bills With 51 Votes',
+    predictionPrompt: {
+      question: 'Which Senate bills can pass with fifty-one votes under standard rules?',
+      options: ['Budget bills focused on taxes and spending', 'Any bill that the White House backs'],
+      correctIndex: 0,
+      refutation: 'Only budget bills that change outlays or taxes qualify for a fifty-one vote pass.',
+    },
+    flowSteps: ['Bill drafted', 'Senate Byrd Rule check', '60 votes for policy', '51 votes for budget'],
+    realLevers: ['Budget reconciliation bills', 'Whip moderate senators', 'Reform filibuster rules'],
+    realLeverActions: [
+      {
+        label: 'Review Senate rules',
+        screen: 'congress',
+        hint: 'Weigh the Clout cost of changing the Senate filibuster rule.',
+        actionKind: 'navigate_only',
+      },
+      {
+        label: 'Send budget package',
+        screen: 'budget',
+        hint: 'Put tax and spending shifts into your annual budget bill.',
+        payload: 'Keep as is',
+        actionKind: 'budget_package',
+      },
+    ],
+    challenges: 'both',
+    target: 'institution',
+    citation: {
+      title: 'CRS: The Budget Reconciliation Process and the Byrd Rule (RL30862)',
+      url: 'https://crsreports.congress.gov/product/pdf/RL/RL30862',
+      confirmed: false,
+    },
+  },
+  {
+    id: 'state_police_power',
+    category: 'electoral_mechanics',
+    title: 'Does the President run local schools',
+    mythStatement: 'The White House controls local school lessons and city police forces.',
+    tvSoundbite: 'Campaign ad: "Elect me and I will rewrite every town’s math book on day one!"',
+    realitySummary: 'States and towns fund and run local schools and police under the Tenth Amendment.',
+    byTheNumbers: 'Over 90% of K-12 school funding comes from state and local tax sources.',
+    historicalHook: 'Federal law bars Washington from forcing one reading list on local schools.',
+    whyItMatters: 'Use federal budget grants to nudge states, since you cannot command local boards directly.',
+    mirageLabel: 'Order National School Curriculum',
+    predictionPrompt: {
+      question: 'Who runs local public schools and city police forces by law?',
+      options: ['State and local governments', 'White House cabinet departments'],
+      correctIndex: 0,
+      refutation: 'States and towns run local schools and police. Washington only sends aid grants.',
+    },
+    flowSteps: ['10th Amendment', 'State laws & taxes', 'Local school boards', 'Optional federal grants'],
+    realLevers: ['Education grant funding', 'Child tax credits', 'Bully pulpit speeches'],
+    realLeverActions: [
+      {
+        label: 'Fund education grants',
+        screen: 'budget',
+        hint: 'Increase federal grant support for public schools in Budget.',
+        payload: 'edu',
+        actionKind: 'budget_lever',
+      },
+      {
+        label: 'Check family impact',
+        screen: 'voters',
+        hint: 'See how school and family grants affect voter groups.',
+        actionKind: 'navigate_only',
+      },
+    ],
+    challenges: 'right',
+    target: 'institution',
+    citation: {
+      title: 'Department of Education: Federal Role in Education Overview',
+      url: 'https://www.ed.gov/about/ed-overview/federal-role-in-education',
+      confirmed: false,
+    },
+  },
+  {
+    id: 'price_controls_shortages',
+    category: 'market_ripple',
+    title: 'Do price freezes stop inflation',
+    mythStatement: 'Freezing store prices by law cures inflation without side effects.',
+    tvSoundbite: 'Call-in show: "Just pass a law making it illegal to raise grocery prices!"',
+    realitySummary: 'Broad price freezes cause empty shelves when makers cannot cover supply costs.',
+    byTheNumbers: 'A 90-day price freeze in 1971 was followed by years of high inflation.',
+    historicalHook: 'When beef and fuel prices were capped in the 1970s, ranchers and refiners held back supply.',
+    whyItMatters: 'Cool inflation by easing supply lines, cutting deficits, and letting the Fed act.',
+    mirageLabel: 'Freeze All Store Prices by Law',
+    predictionPrompt: {
+      question: 'What happens when a law caps store prices below the cost to make goods?',
+      options: ['Producers cut supply and shelves empty out', 'Stores sell more goods at lower cost'],
+      correctIndex: 0,
+      refutation: 'When prices are capped below cost, firms make less and buyers face shortages.',
+    },
+    flowSteps: ['Price cap ordered', 'Supply costs stay high', 'Firms cut output', 'Shortages & lines'],
+    realLevers: ['Cool fiscal deficits', 'Ease supply chains', 'Antitrust enforcement'],
+    realLeverActions: [
+      {
+        label: 'Cool deficits in Budget',
+        screen: 'budget',
+        hint: 'Reduce deficit spending to ease demand pressure on prices.',
+        payload: 'Balance the budget',
+        actionKind: 'budget_package',
+      },
+      {
+        label: 'Enforce antitrust rules',
+        screen: 'powers',
+        hint: 'Challenge big firm mergers without freezing store supply.',
+        payload: 'antitrust_enforcement',
+        actionKind: 'sign_order',
+      },
+    ],
+    challenges: 'left',
+    target: 'mechanism',
+    citation: {
+      title: 'Federal Reserve History: The Great Inflation and Wage-Price Controls',
+      url: 'https://www.federalreservehistory.org/essays/great-inflation',
+      confirmed: false,
+    },
+  },
+  {
+    id: 'pardon_power_limits',
+    category: 'power_limit',
+    title: 'Can a President pardon state crimes',
+    mythStatement: 'A pardon from the White House wipes out any crime in the nation.',
+    tvSoundbite: 'Legal pundit: "One stroke of the pardon pen clears federal, state, and civil court dockets!"',
+    realitySummary: 'The President can pardon federal crimes, but never state crimes or civil suits.',
+    byTheNumbers: '1 federal pardon power vs. 50 separate state court systems.',
+    historicalHook: 'Basic law limits White House pardons to crimes against federal law.',
+    whyItMatters: 'Our system splits court power between Washington and the fifty state governors.',
+    mirageLabel: 'Blanket Pardon State Convictions',
+    predictionPrompt: {
+      question: 'Which court cases can a President pardon by law?',
+      options: ['Only federal crimes under US law', 'Both federal and state criminal cases'],
+      correctIndex: 0,
+      refutation: 'White House pardons only cover federal crimes. State governors hold state pardon power.',
+    },
+    flowSteps: ['Article II clause', 'Federal crimes covered', 'State courts separate', 'Civil suits untouched'],
+    realLevers: ['Federal justice directives', 'Appoint federal judges', 'Civil rights enforcement'],
+    realLeverActions: [
+      {
+        label: 'Review executive powers',
+        screen: 'powers',
+        hint: 'See which legal tools belong to the White House.',
+        actionKind: 'navigate_only',
+      },
+      {
+        label: 'Check voter trust',
+        screen: 'voters',
+        hint: 'Track how your choices shift voter support.',
+        actionKind: 'navigate_only',
+      },
+    ],
+    challenges: 'right',
+    target: 'institution',
+    citation: {
+      title: 'CRS: Overview of the Presidential Pardon Power (LSB10194)',
+      url: 'https://crsreports.congress.gov/product/pdf/LSB/LSB10194',
+      confirmed: false,
+    },
+  },
+  {
+    id: 'treaty_executive_agreement',
+    category: 'checks_and_balances',
+    title: 'Do solo foreign pacts last forever',
+    mythStatement: 'A foreign pact signed at the White House binds all future terms.',
+    tvSoundbite: 'Summit anchor: "The ink is dry on this accord, so no future president can undo it!"',
+    realitySummary: 'Foreign deals signed without the Senate can be dropped by the next president.',
+    byTheNumbers: '67 Senate votes lock in a treaty, while 0 votes are needed to leave a solo pact.',
+    historicalHook: 'Presidents often sign solo pacts because two-thirds Senate treaty votes are rare.',
+    whyItMatters: 'Trade pacts and orders work fast, but lasting laws require votes in Congress.',
+    mirageLabel: 'Lock In Permanent Solo Treaty',
+    predictionPrompt: {
+      question: 'What does it take to make a foreign treaty binding law?',
+      options: ['A two-thirds vote of the Senate', 'A solo signature at a foreign summit'],
+      correctIndex: 0,
+      refutation: 'The Senate must back a treaty by a two-thirds vote to make it binding law.',
+    },
+    flowSteps: ['Summit negotiation', 'Executive agreement', 'No 67-vote Senate vote', 'Next president can exit'],
+    realLevers: ['Bilateral trade agreements', 'Build Senate majorities', 'Targeted sanctions'],
+    realLeverActions: [
+      {
+        label: 'Negotiate trade accords',
+        screen: 'trade',
+        hint: 'Sign bilateral trade pacts to open foreign export markets.',
+        payload: 'americas',
+        actionKind: 'trade_agreement',
+      },
+      {
+        label: 'Build Senate support',
+        screen: 'congress',
+        hint: 'Grow your Senate coalition to pass lasting laws.',
+        actionKind: 'navigate_only',
+      },
+    ],
+    challenges: 'left',
+    target: 'institution',
+    citation: {
+      title: 'CRS: International Law and Agreements: Their Effect Upon U.S. Law (RL32528)',
+      url: 'https://crsreports.congress.gov/product/pdf/RL/RL32528',
+      confirmed: false,
+    },
+  },
 ] as const;
 
 export function getMyth(id: string): MythCard | undefined {
   return MYTHS_CATALOG.find((m) => m.id === id);
+}
+
+/**
+ * Returns a short, human-readable explanation of why this myth card surfaced in the current context.
+ */
+export function getContextualTriggerReason(card: MythCard, state: GameState, screen?: ScreenId): string {
+  const econ = state.econ;
+  const inflation = econ ? (econ.inflation > 1 ? econ.inflation : econ.inflation * 100) : 2.2;
+  const fedRate = econ ? (econ.fedRate > 1 ? econ.fedRate : econ.fedRate * 100) : 4.0;
+  const unemployment = econ ? (econ.unemployment > 1 ? econ.unemployment : econ.unemployment * 100) : 4.1;
+  const debtPct = econ && econ.gdp > 0 ? (econ.debt / econ.gdp) * 100 : 120;
+  const tariff = state.policy?.tar ?? 11;
+
+  if (inflation >= 3.2 && ['gas_prices', 'price_controls_shortages', 'strategic_oil_reserve'].includes(card.id)) {
+    return `Surfaced because inflation is elevated (${inflation.toFixed(1)}%)`;
+  }
+  if (fedRate >= 4.4 && ['interest_rates', 'fire_fed_chair'].includes(card.id)) {
+    return `Surfaced because Fed rates are high (${fedRate.toFixed(1)}%)`;
+  }
+  if (unemployment >= 4.6 && card.id === 'presidential_jobs') {
+    return `Surfaced because unemployment is elevated (${unemployment.toFixed(1)}%)`;
+  }
+  if (debtPct >= 121 && ['debt_ceiling_default', 'print_money_debt', 'foreign_aid_deficit'].includes(card.id)) {
+    return `Surfaced because federal debt is ${Math.round(debtPct)}% of GDP`;
+  }
+  if (tariff > 12 && ['trade_deficits', 'treaty_executive_agreement'].includes(card.id)) {
+    return `Surfaced because tariffs are at ${tariff}%`;
+  }
+  if (screen === 'budget') return 'Context: Federal Budget & Tax Scale';
+  if (screen === 'economy') return 'Context: Markets & Central Bank';
+  if (screen === 'congress') return 'Context: House & Senate Procedure';
+  if (screen === 'powers') return 'Context: Article II Executive Limits';
+  if (screen === 'trade') return 'Context: Customs, Tariffs & Pacts';
+  if (screen === 'voters') return 'Context: Federalism & Electoral Map';
+  return 'Context: Presidential Institutional Check';
 }
 
 /**
@@ -885,6 +1296,8 @@ function scoreMythRelevance(card: MythCard, state: GameState, screen?: ScreenId)
 
   switch (card.id) {
     case 'gas_prices':
+    case 'strategic_oil_reserve':
+    case 'price_controls_shortages':
       if (inflation >= 3.2) score += 6;
       break;
     case 'interest_rates':
@@ -905,17 +1318,21 @@ function scoreMythRelevance(card: MythCard, state: GameState, screen?: ScreenId)
       if (debtPct >= 120 || screen === 'budget') score += 4;
       break;
     case 'trade_deficits':
+    case 'treaty_executive_agreement':
       if (tariff > 12 || (state.trade?.sectorTariffs.length ?? 0) > 0 || screen === 'trade') score += 6;
       break;
     case 'rule_by_decree':
     case 'scotus_instant_reversal':
+    case 'pardon_power_limits':
       if ((state.activeOrders?.length ?? 0) > 0 || screen === 'powers') score += 5;
       break;
     case 'veto_line_item':
     case 'congress_pay_stop':
+    case 'reconciliation_filibuster':
       if (screen === 'congress' || state.turn % 4 === 2) score += 5;
       break;
     case 'popular_vote_mandate':
+    case 'state_police_power':
       if (screen === 'voters' || state.approval < 46 || state.approval > 56) score += 5;
       break;
     case 'ceo_wage_cap':

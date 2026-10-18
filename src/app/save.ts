@@ -575,6 +575,7 @@ export function parseSave(json: string): SaveFile {
       ? { presidentLook: parsed.options.presidentLook }
       : {}),
     ...(typeof parsed.options.classicSim === 'boolean' ? { classicSim: parsed.options.classicSim } : {}),
+    ...(typeof parsed.options.showMyths === 'boolean' ? { showMyths: parsed.options.showMyths } : {}),
   };
 
   if (!Array.isArray(parsed.inputs)) {
