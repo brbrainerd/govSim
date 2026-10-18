@@ -59,7 +59,7 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 
 ## 3. Current state (update this section at the end of every session)
 
-**As of 2026-10-16, branch `master`** (`git log -5` for the latest commits).
+**As of 2026-10-18, branch `master`** (`git log -5` for the latest commits).
 
 - **Milestone v0.2 (Playable First Term): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.2`.**
   - All 8 phases (1 to 8) executed, verified, and audited with 53/53 requirements satisfied.
@@ -82,6 +82,8 @@ Do not read every file in `src/` up front. Read what the current task's `<read_f
 - **Milestone v0.9 (Progressive Disclosure, Plain-Talk Civics, Trade-Off Clarity & Gameplay Balance): COMPLETE, AUDITED, ARCHIVED AND TAGGED `v0.9`.**
   - All 5 phases (34 to 38, 5 plans) executed, verified, and audited (`v0.9-MILESTONE-AUDIT.md`) with 13/13 requirements satisfied (`VOCAB-01..03`, `COPY-01..03`, `UI-CLARITY-01..03`, `SEE-01..02`, `BAL-01..02`).
   - Archived to `.planning/milestones/v0.9-ROADMAP.md`, `v0.9-REQUIREMENTS.md`, `v0.9-MILESTONE-AUDIT.md`, and `v0.9-phases/`.
+- **Milestone v1.0 (High-Craft Character Art, Living Animations & Incremental Mandate Synergies): INITIALIZED (Phases 39–46, 22 requirements).**
+  - Combines high-craft SVG character anatomy, poses, outfits, and NPC vignettes (`GFX-01..03`, `SCENE-01..02`, `NPC-01..02`, `VIGNETTE-01..03`) with *Brotato*-style quarterly Mandate/Task Force RNG drafts (`PERK-01..03`), *How Many Dudes?*-style Policy Doctrine `2/4/6` set bonuses & chain-reaction triggers (`SYN-01..03`), Evil Mode Heist Relics & Fixer combos (`HEIST-01..02`), Presidential Playstyle Archetypes & Mastery Stars (`ARCH-01..02`), and full balance + multi-viewport computer-vision verification (`AUDIT-01..02`).
 - **Gates:** `pnpm test` 503 passing (82 files) · `pnpm test:e2e` 71 passing · `pnpm check` 0 errors 0 warnings · `pnpm build` ok ·
   `pnpm determinism` 8/8 OK · notices ok · `pnpm guard` ok · `fast-check` property tests pass.
 
