@@ -25,6 +25,8 @@ describe('ImpeachmentModal component (IMPEACH-02, IMPEACH-03)', () => {
     });
 
     expect(html).toContain('data-testid="impeachment-modal"');
+    expect(html).toContain('data-testid="impeachment-trial-vignette"');
+    expect(html).toContain('data-verdict="convicted"');
     expect(html).toContain('CONSTITUTIONAL REMOVAL');
     expect(html).toContain('Convicted by the Senate');
     expect(html).toContain('236');
@@ -58,6 +60,8 @@ describe('ImpeachmentModal component (IMPEACH-02, IMPEACH-03)', () => {
     });
 
     expect(html).toContain('data-testid="impeachment-modal"');
+    expect(html).toContain('data-testid="impeachment-trial-vignette"');
+    expect(html).toContain('data-verdict="acquitted"');
     expect(html).toContain('SENATE TRIAL ACQUITTAL');
     expect(html).toContain('Acquitted by the Senate');
     expect(html).toContain('221');

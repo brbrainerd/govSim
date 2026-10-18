@@ -1,24 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import { render } from 'svelte/server';
+import { Session } from '../app/session.svelte';
 import { fromData, us } from '../data/us';
 import {
   extractElectionReasons,
   resolveContingentElection,
   resolveReelection,
 } from '../engine/election';
+import { START } from '../engine/fixture';
 import { newGame } from '../engine/game';
 import { calculateElectoralCollege, type ElectoralSummary } from '../engine/voters';
 import ContingentElectionModal from './ContingentElectionModal.svelte';
 import ElectionNightModal from './ElectionNightModal.svelte';
 import ElectionResultCard from './ElectionResultCard.svelte';
+import SpeechModal from './SpeechModal.svelte';
+import TurnReport from './TurnReport.svelte';
 
-describe('ElectionNightModal component (ELC-01..ELC-03)', () => {
+describe('ElectionNightModal component (ELC-01..ELC-03, VIGNETTE-01..03)', () => {
   const game = newGame(42, fromData(us));
   const outcome = resolveReelection(game, 'D');
   const autopilotOutcome = resolveReelection(game, 'D');
   const reasons = extractElectionReasons(game, outcome, 'D');
 
-  it('renders election night modal with live 270 tracker and broadcast ribbon', () => {
+  it('renders election night modal with live 270 tracker, broadcast anchor, and candidate portraits (VIGNETTE-02)', () => {
     const { html } = render(ElectionNightModal, {
       props: {
         outcome,
@@ -31,10 +35,34 @@ describe('ElectionNightModal component (ELC-01..ELC-03)', () => {
 
     expect(html).toContain('data-testid="election-night-modal"');
     expect(html).toContain('PRESIDENTIAL ELECTION DECISION NIGHT');
+    expect(html).toContain('data-testid="election-anchor-vignette"');
+    expect(html).toContain('data-testid="election-player-portrait"');
+    expect(html).toContain('data-testid="election-opponent-portrait"');
     expect(html).toContain('data-testid="live-player-ev"');
     expect(html).toContain('data-testid="live-opponent-ev"');
     expect(html).toContain('270 TO WIN');
     expect(html).toContain('Skip to Final Result [Space]');
+  });
+
+  it('renders Bully Pulpit Podium vignette in SpeechModal and Historian portrait in TurnReport (VIGNETTE-01, VIGNETTE-03)', () => {
+    const session = new Session(42, START, { party: 'D' });
+    session.nextTurn();
+    const speechRender = render(SpeechModal, {
+      props: {
+        session,
+        onClose: () => {},
+      },
+    });
+    expect(speechRender.html).toContain('data-testid="speech-podium-vignette"');
+    expect(speechRender.html).toContain('data-audience="general"');
+
+    const reportRender = render(TurnReport, {
+      props: {
+        session,
+        onClose: () => {},
+      },
+    });
+    expect(reportRender.html).toContain('data-testid="turn-report-portrait"');
   });
 
   it('renders ElectionResultCard with certified result and attribution reasons', () => {

@@ -34,6 +34,7 @@ describe('Voters screen component (VOT-01..VOT-03)', () => {
 
     // Inspector card shows support metric, local family impact, and reasons list
     expect(html).toContain('inspector-card');
+    expect(html).toContain('data-testid="voters-state-portrait"');
     expect(html).toContain('support-pct');
     expect(html).toContain('data-testid="local-family-impact"');
     expect(html).toContain('LOCAL FAMILY IMPACT');

@@ -6,6 +6,7 @@
     SENATE_CONVICTION_THRESHOLD,
     SENATE_TOTAL_SEATS,
   } from '../engine/units';
+  import Character, { resolvePresidentLook, type Look } from './art/Character.svelte';
   import Overlay from './Overlay.svelte';
 
   let {
@@ -16,12 +17,25 @@
     onClose: () => void;
   } = $props();
 
+  const CHIEF_JUSTICE_LOOK: Look = {
+    skin: 'skin-3',
+    hair: 'hair-4',
+    hairStyle: 'short',
+    outfit: 'suit',
+    suit: 'ink',
+    tie: 'paper',
+    glasses: true,
+  };
+
   const houseVotes = $derived(evilState?.houseImpeachmentVotes ?? HOUSE_IMPEACHMENT_THRESHOLD);
   const houseNays = $derived(Math.max(0, HOUSE_TOTAL_SEATS - houseVotes));
   const senateVotes = $derived(evilState?.senateConvictionVotes ?? 0);
   const senateNays = $derived(Math.max(0, SENATE_TOTAL_SEATS - senateVotes));
   const isConvicted = $derived(Boolean(evilState?.convicted));
   const isImpeached = $derived(Boolean(evilState?.articlesOfImpeachmentVoted));
+  const defendantLook = $derived(
+    resolvePresidentLook(0, true, isConvicted ? 'panicked' : 'scheming'),
+  );
 </script>
 
 <Overlay title={isConvicted ? 'Impeachment Trial: Convicted' : 'Impeachment Trial: Acquitted'} {onClose}>
@@ -40,6 +54,49 @@
           The United States Senate has completed roll call on Articles of Impeachment. While the House adopted formal articles, the prosecution failed to achieve the mandatory two-thirds supermajority for removal from office.
         {/if}
       </p>
+    </div>
+
+    <!-- Senate Trial & Chief Justice Verdict Vignette (VIGNETTE-03) -->
+    <div
+      class="trial-vignette"
+      data-testid="impeachment-trial-vignette"
+      data-verdict={isConvicted ? 'convicted' : 'acquitted'}
+    >
+      <svg viewBox="0 0 440 100" class="trial-svg" aria-hidden="true">
+        <rect x="0" y="0" width="440" height="100" fill="var(--card)" />
+        <line x1="0" y1="88" x2="440" y2="88" stroke="var(--ink)" stroke-width="2" />
+        <!-- Senate Chamber Columns -->
+        <rect x="18" y="0" width="12" height="88" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5" />
+        <rect x="196" y="0" width="12" height="88" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5" />
+        <rect x="410" y="0" width="12" height="88" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5" />
+
+        <!-- Chief Justice Presiding -->
+        <text x="42" y="16" class="trial-svg-lbl">CHIEF JUSTICE PRESIDING</text>
+        <Character
+          x={110}
+          y={4}
+          scale={0.75}
+          look={CHIEF_JUSTICE_LOOK}
+          mood={isConvicted ? 'stressed' : 'confident'}
+          pose={isConvicted ? 'point' : 'stand'}
+          prop="gavel"
+        />
+        <rect x="64" y="64" width="92" height="24" fill="var(--wood)" stroke="var(--ink)" stroke-width="2" />
+
+        <!-- Defense Counsel Table & Defendant President -->
+        <text x="236" y="16" class="trial-svg-lbl">
+          {isConvicted ? 'REMOVED UNDER ART. II §4' : 'EXECUTIVE AUTHORITY RETAINED'}
+        </text>
+        <Character
+          x={318}
+          y={4}
+          scale={0.75}
+          look={defendantLook}
+          mood={isConvicted ? 'panicked' : 'scheming'}
+          pose={isConvicted ? 'facepalm' : 'cash'}
+        />
+        <rect x="272" y="68" width="92" height="20" fill="var(--wood-light)" stroke="var(--ink)" stroke-width="2" />
+      </svg>
     </div>
 
     <div class="tallies-grid">
@@ -182,6 +239,26 @@
     font: 400 clamp(13px, 1vw, 15px) var(--font-body);
     color: var(--ink-soft);
     line-height: 1.45;
+  }
+  .trial-vignette {
+    width: 100%;
+    height: 92px;
+    border: 2px solid var(--ink);
+    border-radius: var(--r-md);
+    box-shadow: 2px 2px 0 var(--ink);
+    overflow: hidden;
+    background: var(--card);
+    flex-shrink: 0;
+  }
+  .trial-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .trial-svg-lbl {
+    font: 700 9.5px var(--font-ui);
+    fill: var(--ink);
+    letter-spacing: 0.05em;
   }
   .tallies-grid {
     display: grid;

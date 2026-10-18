@@ -4,9 +4,12 @@
   import { getStateExposure, getStateLegislature } from '../data/electoral';
   import { calculateDemographicCoalitions } from '../engine/cohorts';
   import { calculateElectoralCollege, calculateStateFamilyRelief, type StateVoterState } from '../engine/voters';
+  import type { Look, Mood } from '../ui/art/Character.svelte';
+  import CharacterPortrait from '../ui/art/CharacterPortrait.svelte';
   import USMap from '../ui/art/USMap.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import { termTooltipForMode } from '../content/glossary';
+  import { pickContextualMyth } from '../content/myths';
 
   interface Props {
     session: Session;
@@ -20,6 +23,7 @@
 
   const summary = $derived(calculateElectoralCollege(session.current, session.options.party));
   const cohorts = $derived(calculateDemographicCoalitions(session.current, session.options.party));
+  const votersMyth = $derived(pickContextualMyth(session.current, 'voters'));
 
   let viewMode = $state<'map' | 'table' | 'coalitions'>('map');
   let selectedId = $state<string | null>(null);
@@ -29,6 +33,25 @@
   const selectedUnit = $derived<StateVoterState | undefined>(summary.units[currentSelectedId]);
   const stateExposure = $derived(getStateExposure(currentSelectedId));
   const familyRelief = $derived(calculateStateFamilyRelief(currentSelectedId, session.current.socialPolicy));
+
+  const stateVoterPortrait = $derived.by(() => {
+    const margin = selectedUnit?.currentMargin ?? 0;
+    const mood: Mood = margin > 2 ? 'triumphant' : margin < -2 ? 'stressed' : 'confident';
+    const ringColor: 'sage' | 'alert' | 'gold' = margin > 2 ? 'sage' : margin < -2 ? 'alert' : 'gold';
+    const isSenior = (stateExposure?.seniorShare ?? 0) >= 0.20;
+    const isFarm = (stateExposure?.farm ?? 0) >= 0.04;
+    const skinIdx = (currentSelectedId.charCodeAt(0) % 4) + 1;
+    const look: Look = {
+      skin: `skin-${skinIdx}`,
+      hair: isSenior ? 'hair-4' : 'hair-1',
+      hairStyle: isSenior ? 'bun' : isFarm ? 'short' : 'parted',
+      outfit: isSenior ? 'cardigan' : isFarm ? 'shirt' : 'blazer',
+      suit: isSenior ? 'sage' : isFarm ? 'gold' : 'sky',
+      tie: 'alert',
+      glasses: isSenior,
+    };
+    return { look, mood, ringColor };
+  });
 
   const stateCode = $derived(currentSelectedId.split('-')[0]!);
   const stateLeg = $derived(getStateLegislature(stateCode));
@@ -244,7 +267,9 @@
             <div class="coalitions-header">
               <h3 class="coalitions-title">National Demographic Coalitions</h3>
               <p class="coalitions-subtitle">
-                How macroeconomic trajectory and domestic social policies resonate across voter blocs (SOC-05).
+                {session.vocabMode === 'wonk'
+                  ? 'How macroeconomic trajectory and domestic social policies resonate across voter blocs.'
+                  : 'How the economy and your policies affect each major voter group across the country.'}
               </p>
             </div>
 
@@ -356,6 +381,16 @@
     >
       Myth? How presidential actions shift the electoral landscape →
     </button>
+    {#if votersMyth.id !== 'rule_by_decree'}
+      <button
+        type="button"
+        class="ticket"
+        data-testid="contextual-myth-voters"
+        onclick={() => onOpenMyth?.(votersMyth.id)}
+      >
+        🎲 Myth? {votersMyth.title}?
+      </button>
+    {/if}
   {/snippet}
 
   {#snippet next()}
@@ -364,7 +399,17 @@
         <div class="card inspector-card">
           <div class="inspector-header">
             <div class="state-title-row">
-              <h3 class="state-title">{selectedUnit.name}</h3>
+              <div class="state-title-main">
+                <CharacterPortrait
+                  look={stateVoterPortrait.look}
+                  mood={stateVoterPortrait.mood}
+                  pose="stand"
+                  size={34}
+                  ringColor={stateVoterPortrait.ringColor}
+                  testId="voters-state-portrait"
+                />
+                <h3 class="state-title">{selectedUnit.name}</h3>
+              </div>
               <span class="state-ev-pill">{selectedUnit.electoralVotes} EV</span>
             </div>
             <div class="inspector-badges">
@@ -460,7 +505,7 @@
 
         <!-- Strategic Actions Card -->
         <div class="card action-card">
-          <span class="card-caption">STRATEGIC INTERVENTIONS</span>
+          <span class="card-caption">{session.vocabMode === 'wonk' ? 'STRATEGIC INTERVENTIONS' : 'CAMPAIGN & POLICY MOVES'}</span>
           <div class="action-btn-row">
             <button
               type="button"
@@ -1002,7 +1047,14 @@
   .state-title-row {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .state-title-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .state-title {

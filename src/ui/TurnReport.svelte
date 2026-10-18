@@ -4,9 +4,21 @@
   import { formatLuckText, whyTextForMode } from '../content/text/why';
   import { termLabel } from '../engine/calendar';
   import { getBadge } from '../content/badges';
+  import type { Look, Mood } from './art/Character.svelte';
+  import CharacterPortrait from './art/CharacterPortrait.svelte';
   import Rosette from './art/Rosette.svelte';
 
   let { session, onClose }: { session: Session; onClose: () => void } = $props();
+
+  const HISTORIAN_LOOK: Look = {
+    skin: 'skin-3',
+    hair: 'hair-4',
+    hairStyle: 'bun',
+    outfit: 'cardigan',
+    suit: 'sky',
+    tie: 'gold',
+    glasses: true,
+  };
 
   const IND_EMOJI: Record<string, string> = {
     income: '💵',
@@ -34,6 +46,7 @@
       .map((id) => getBadge(id))
       .filter((b): b is NonNullable<typeof b> => Boolean(b)),
   );
+  const advisorMood = $derived<Mood>(scoreDiff >= 0 ? 'confident' : 'stressed');
 </script>
 
 <div class="report-card">
@@ -85,7 +98,18 @@
     <!-- Right Column: Rosette & Context -->
     <div class="side-col">
       <div class="rosette-box">
-        <Rosette size={76} />
+        <div class="rosette-pair">
+          <Rosette size={68} />
+          <CharacterPortrait
+            look={HISTORIAN_LOOK}
+            mood={advisorMood}
+            pose="stand"
+            prop="clipboard"
+            size={48}
+            ringColor={scoreDiff >= 0 ? 'sage' : 'alert'}
+            testId="turn-report-portrait"
+          />
+        </div>
         <div class="rosette-label">Quarter Completed</div>
       </div>
 
@@ -314,6 +338,12 @@
     flex-direction: column;
     align-items: center;
     gap: 4px;
+  }
+  .rosette-pair {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
   }
   .rosette-label {
     font: 700 14px var(--font-ui);

@@ -12,6 +12,8 @@
   import type { EvilLeverId } from '../engine/units';
   import { BADGES } from '../content/badges';
   import { MYTHS_CATALOG } from '../content/myths';
+  import { resolvePresidentLook, type Look, type Mood } from '../ui/art/Character.svelte';
+  import CharacterPortrait from '../ui/art/CharacterPortrait.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
   let {
@@ -646,15 +648,37 @@
       {#snippet next()}
         <!-- Zone 4: Historian Verdict Card -->
         {#if session.isEvilMode && evilVerdict}
+          {@const isConvicted = Boolean(session.current.evil?.convicted)}
+          {@const evilPresLook = resolvePresidentLook(
+            session.options.presidentLook ?? 0,
+            true,
+            isConvicted ? 'panicked' : 'scheming',
+          )}
           <div class="verdict-card card evil-verdict-card" data-testid="historian-verdict-card">
-            <div class="verdict-badge-wrap">
-              <span class="verdict-tag">KLEPTOCRACY ASSESSMENT</span>
-              <span
-                class="verdict-tier tier-{evilVerdict.tier.toLowerCase().replace(/\s+/g, '-')}"
-                data-testid="verdict-tier"
+            <div class="verdict-header-row">
+              <div class="verdict-badge-wrap">
+                <span class="verdict-tag">KLEPTOCRACY ASSESSMENT</span>
+                <span
+                  class="verdict-tier tier-{evilVerdict.tier.toLowerCase().replace(/\s+/g, '-')}"
+                  data-testid="verdict-tier"
+                >
+                  {evilVerdict.tier}
+                </span>
+              </div>
+              <div
+                class="legacy-vignette-pair"
+                data-testid="endscreen-legacy-vignette"
+                data-mode="evil"
               >
-                {evilVerdict.tier}
-              </span>
+                <CharacterPortrait
+                  look={evilPresLook}
+                  mood={isConvicted ? 'panicked' : 'scheming'}
+                  pose={isConvicted ? 'facepalm' : 'cash'}
+                  prop={isConvicted ? null : 'cash_fan'}
+                  size={44}
+                  ringColor={isConvicted ? 'alert' : 'gold'}
+                />
+              </div>
             </div>
             <h3 class="verdict-title">{evilVerdict.title}</h3>
             <p class="verdict-summary">{evilVerdict.summary}</p>
@@ -664,15 +688,59 @@
             </div>
           </div>
         {:else}
+          {@const isPositiveLegacy = legacyData.scoreVsAutopilot.total >= 0}
+          {@const stdPresMood: Mood =
+            legacyData.scoreVsAutopilot.total >= 5
+              ? 'triumphant'
+              : isPositiveLegacy
+                ? 'confident'
+                : 'stressed'}
+          {@const stdPresLook = resolvePresidentLook(
+            session.options.presidentLook ?? 0,
+            false,
+            stdPresMood,
+          )}
+          {@const historianLook: Look = {
+            skin: 'skin-3',
+            hair: 'hair-4',
+            hairStyle: 'bun',
+            outfit: 'cardigan',
+            suit: 'sky',
+            tie: 'gold',
+            glasses: true,
+          }}
           <div class="verdict-card card" data-testid="historian-verdict-card">
-            <div class="verdict-badge-wrap">
-              <span class="verdict-tag">HISTORIAN ASSESSMENT</span>
-              <span
-                class="verdict-tier tier-{verdict.tier.toLowerCase().replace(/\s+/g, '-')}"
-                data-testid="verdict-tier"
+            <div class="verdict-header-row">
+              <div class="verdict-badge-wrap">
+                <span class="verdict-tag">HISTORIAN ASSESSMENT</span>
+                <span
+                  class="verdict-tier tier-{verdict.tier.toLowerCase().replace(/\s+/g, '-')}"
+                  data-testid="verdict-tier"
+                >
+                  {verdict.tier}
+                </span>
+              </div>
+              <div
+                class="legacy-vignette-pair"
+                data-testid="endscreen-legacy-vignette"
+                data-mode="standard"
               >
-                {verdict.tier}
-              </span>
+                <CharacterPortrait
+                  look={stdPresLook}
+                  mood={stdPresMood}
+                  pose={isPositiveLegacy ? 'celebrate' : 'stand'}
+                  size={42}
+                  ringColor={isPositiveLegacy ? 'sage' : 'alert'}
+                />
+                <CharacterPortrait
+                  look={historianLook}
+                  mood={isPositiveLegacy ? 'confident' : 'stressed'}
+                  pose="stand"
+                  prop="clipboard"
+                  size={38}
+                  ringColor="gold"
+                />
+              </div>
             </div>
             <h3 class="verdict-title">{verdict.title}</h3>
             <p class="verdict-summary">{verdict.summary}</p>
@@ -1070,6 +1138,20 @@
     background: var(--card);
     border: 2px solid var(--ink);
     box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .verdict-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .legacy-vignette-pair {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .verdict-badge-wrap {

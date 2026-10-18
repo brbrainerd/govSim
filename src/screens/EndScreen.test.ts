@@ -24,6 +24,7 @@ describe('EndScreen component (ELC-04, ELC-05, GR-04)', () => {
     expect(html).toContain('Net Prosperity Impact');
     expect(html).toContain('better than doing nothing across 10 years');
     expect(html).toContain('data-testid="historian-verdict-card"');
+    expect(html).toContain('data-testid="endscreen-legacy-vignette"');
     expect(html).toContain('data-testid="verdict-tier"');
     expect(html).toContain('HISTORIAN ASSESSMENT');
     expect(html).toContain('data-testid="start-new-presidency-btn"');

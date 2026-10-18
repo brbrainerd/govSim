@@ -23,9 +23,9 @@
 
 ### Animated Modal & End-of-Term Vignettes (`VIGNETTE` — Phase 42)
 
-- [ ] **VIGNETTE-01**: Add an animated Presidential Bully Pulpit Podium scene in `SpeechModal.svelte` with dual microphones, camera flashes, and target audience silhouettes (`General Public`, `Congress`, `Business Leaders`)
-- [ ] **VIGNETTE-02**: Add a Live Broadcast News Anchor + You-vs-Opponent EV portrait medallions in `ElectionNightModal.svelte` (`.design-targets/g-election.png`) and state voter mood portraits in `Voters.svelte`
-- [ ] **VIGNETTE-03**: Add a dramatic Senate Trial / Chief Justice verdict scene in `ImpeachmentModal.svelte`, Historian/Advisor header badge in `TurnReport.svelte`, and Presidential Legacy / Kleptocrat Heist vignette in `EndScreen.svelte`
+- [x] **VIGNETTE-01**: Add an animated Presidential Bully Pulpit Podium scene in `SpeechModal.svelte` with dual microphones, camera flashes, and target audience silhouettes (`General Public`, `Congress`, `Business Leaders`)
+- [x] **VIGNETTE-02**: Add a Live Broadcast News Anchor + You-vs-Opponent EV portrait medallions in `ElectionNightModal.svelte` (`.design-targets/g-election.png`) and state voter mood portraits in `Voters.svelte`
+- [x] **VIGNETTE-03**: Add a dramatic Senate Trial / Chief Justice verdict scene in `ImpeachmentModal.svelte`, Historian/Advisor header badge in `TurnReport.svelte`, and Presidential Legacy / Kleptocrat Heist vignette in `EndScreen.svelte`
 
 ### Full-Screen UI/UX, Layout & Alignment Remediation (`LAYOUT` — Phase 43)
 
@@ -78,9 +78,9 @@
 | SCENE-02 | Phase 40 | Complete |
 | NPC-01 | Phase 41 | Complete |
 | NPC-02 | Phase 41 | Complete |
-| VIGNETTE-01 | Phase 42 | Pending |
-| VIGNETTE-02 | Phase 42 | Pending |
-| VIGNETTE-03 | Phase 42 | Pending |
+| VIGNETTE-01 | Phase 42 | Complete |
+| VIGNETTE-02 | Phase 42 | Complete |
+| VIGNETTE-03 | Phase 42 | Complete |
 | LAYOUT-01 | Phase 43 | Pending |
 | LAYOUT-02 | Phase 43 | Pending |
 | LAYOUT-03 | Phase 43 | Pending |

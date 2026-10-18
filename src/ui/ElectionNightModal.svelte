@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { ElectionOutcome, StateRollCallItem } from '../engine/election';
+  import { PRESIDENT_LOOKS, type Look, type Mood } from './art/Character.svelte';
+  import CharacterPortrait from './art/CharacterPortrait.svelte';
   import ContingentElectionModal from './ContingentElectionModal.svelte';
   import ElectionResultCard from './ElectionResultCard.svelte';
   import Overlay from './Overlay.svelte';
@@ -18,6 +20,16 @@
     oncontinue: () => void;
     onretry: () => void;
   } = $props();
+
+  const ANCHOR_LOOK: Look = {
+    skin: 'skin-2',
+    hair: 'hair-1',
+    hairStyle: 'parted',
+    outfit: 'blazer',
+    suit: 'ink',
+    tie: 'alert',
+    glasses: true,
+  };
 
   let showContingentModal = $state(false);
   let animationComplete = $state(false);
@@ -39,6 +51,21 @@
     animationComplete
       ? outcome.opponentEV
       : calledItems.reduce((acc, item) => (item.winner === 'opponent' ? acc + item.electoralVotes : acc), 0),
+  );
+
+  const playerMood = $derived<Mood>(
+    currentRunningPlayerEV >= 270
+      ? 'triumphant'
+      : currentRunningPlayerEV >= currentRunningOpponentEV
+        ? 'confident'
+        : 'stressed',
+  );
+  const opponentMood = $derived<Mood>(
+    currentRunningOpponentEV >= 270
+      ? 'triumphant'
+      : currentRunningOpponentEV > currentRunningPlayerEV
+        ? 'confident'
+        : 'stressed',
   );
 
   let timer: ReturnType<typeof setTimeout> | null = null;
@@ -99,8 +126,18 @@
 
 <Overlay title="Decision Night: Electoral College Reelection" onClose={skipAnimation}>
   <div class="election-night-shell" data-testid="election-night-modal">
-    <!-- Breaking Broadcast Ribbon -->
+    <!-- Breaking Broadcast Ribbon with Live News Anchor (VIGNETTE-02) -->
     <div class="broadcast-ribbon" aria-hidden="true">
+      <div class="anchor-badge" data-testid="election-anchor-vignette">
+        <CharacterPortrait
+          look={ANCHOR_LOOK}
+          mood="confident"
+          pose="desk"
+          prop="earpiece"
+          size={36}
+          ringColor="gold"
+        />
+      </div>
       <span class="pulse-indicator">● LIVE</span>
       <span class="ribbon-text election-title">PRESIDENTIAL ELECTION DECISION NIGHT</span>
       {#if !animationComplete}
@@ -113,16 +150,38 @@
     <!-- Live 270 Bar Tracker -->
     <div class="tracker-card">
       <div class="ev-stat-row">
-        <div class="ev-team player">
-          <span class="team-label">You (Projected)</span>
-          <span class="team-score" data-testid="live-player-ev">{currentRunningPlayerEV} EV</span>
+        <div class="ev-team-wrap player">
+          <div data-testid="election-player-portrait">
+            <CharacterPortrait
+              look={PRESIDENT_LOOKS[0]!.look}
+              mood={playerMood}
+              pose={currentRunningPlayerEV >= 270 ? 'celebrate' : 'stand'}
+              size={44}
+              ringColor="sage"
+            />
+          </div>
+          <div class="ev-team player">
+            <span class="team-label">You (Projected)</span>
+            <span class="team-score" data-testid="live-player-ev">{currentRunningPlayerEV} EV</span>
+          </div>
         </div>
         <div class="milestone-badge">
           <span class="threshold">270 TO WIN</span>
         </div>
-        <div class="ev-team opponent">
-          <span class="team-label">Opponent</span>
-          <span class="team-score" data-testid="live-opponent-ev">{currentRunningOpponentEV} EV</span>
+        <div class="ev-team-wrap opponent">
+          <div class="ev-team opponent">
+            <span class="team-label">Opponent</span>
+            <span class="team-score" data-testid="live-opponent-ev">{currentRunningOpponentEV} EV</span>
+          </div>
+          <div data-testid="election-opponent-portrait">
+            <CharacterPortrait
+              look={PRESIDENT_LOOKS[3]!.look}
+              mood={opponentMood}
+              pose={currentRunningOpponentEV >= 270 ? 'celebrate' : 'crossed'}
+              size={44}
+              ringColor="alert"
+            />
+          </div>
         </div>
       </div>
 
@@ -261,6 +320,18 @@
     align-items: center;
   }
 
+  .anchor-badge {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .ev-team-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
   .ev-team {
     display: flex;
     flex-direction: column;
@@ -313,11 +384,15 @@
   }
 
   .bar-fill.player {
+    height: 100%;
+    display: block;
     background: var(--sage);
     transition: width 0.3s ease;
   }
 
   .bar-fill.opponent {
+    height: 100%;
+    display: block;
     background: var(--alert);
     transition: width 0.3s ease;
   }
