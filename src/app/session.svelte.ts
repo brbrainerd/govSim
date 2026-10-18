@@ -47,6 +47,9 @@ import {
   type ScenarioId,
 } from '../content/scenarios';
 import { type VocabMode } from '../content/glossary';
+import { getPerk, type PerkDefinition } from '../content/perks';
+import { perkRerollCost, rollPerkSlate, totalPerkRerollsCost } from '../engine/perks';
+import { PERK_MAX_REROLLS_PER_TURN } from '../engine/units';
 
 export type { VocabMode };
 
@@ -66,6 +69,7 @@ export interface GameOptions {
   livingWorld?: boolean;
   vocabMode?: VocabMode;
   presidentLook?: 0 | 1 | 2 | 3;
+  classicSim?: boolean;
 }
 
 interface Draft {
@@ -94,6 +98,10 @@ interface Draft {
   stagedEvilLevers: EvilLeverId[];
   turnEntropy?: number | null;
   dynamicCrisisDelta?: DynamicCrisisDelta | null;
+  perkPickId: string | null;
+  perkSkipForClout: boolean;
+  perkRerolls: number;
+  perkLockedId?: string | null;
 }
 
 /** A new turn's draft starts from the policy already in force. */
@@ -123,6 +131,10 @@ const freshDraft = (policy: BudgetDraft, socialPolicy?: SocialDraft): Draft => (
   stagedEvilLevers: [],
   turnEntropy: null,
   dynamicCrisisDelta: null,
+  perkPickId: null,
+  perkSkipForClout: false,
+  perkRerolls: 0,
+  perkLockedId: undefined,
 });
 
 /**
@@ -299,8 +311,14 @@ export class Session {
       : 0,
   );
   dynamicCrisisCost = $derived(this.draft.dynamicCrisisDelta?.cloutCost ?? 0);
+  perkCost = $derived.by(() => {
+    const rerollCost = totalPerkRerollsCost(this.draft.perkRerolls);
+    const pickCost = this.draft.perkPickId ? (getPerk(this.draft.perkPickId)?.cloutCost ?? 0) : 0;
+    return rerollCost + pickCost;
+  });
+  perkBonusClout = $derived(this.draft.perkSkipForClout ? C.perkSkipCloutBonus : 0);
   clout = $derived(
-    this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost - this.reformCost - this.foreignCost - this.tradeCost - this.evilLeversCost - this.dynamicCrisisCost + this.mythReward,
+    this.current.clout + (this.preview?.cloutDelta ?? 0) - this.crisisCost - this.powerCost - this.reformCost - this.foreignCost - this.tradeCost - this.evilLeversCost - this.dynamicCrisisCost - this.perkCost + this.perkBonusClout + this.mythReward,
   );
   powers = $derived<PowerDecisions | null>(
     this.draft.signedOrders.length > 0 ||
@@ -479,6 +497,21 @@ export class Session {
       });
     }
 
+    if (this.draft.perkPickId) {
+      const def = getPerk(this.draft.perkPickId);
+      items.push({
+        id: 'perk',
+        label: def ? `Task Force: ${def.name}` : 'Task Force drafted',
+        screen: 'oval',
+      });
+    } else if (this.draft.perkSkipForClout) {
+      items.push({
+        id: 'perk-skip',
+        label: `Skip Task Force (+${C.perkSkipCloutBonus} Clout)`,
+        screen: 'oval',
+      });
+    }
+
     return items;
   });
   hasUnresolvedCrisis = $derived(
@@ -489,6 +522,31 @@ export class Session {
   canFastForward = $derived(!this.over && !this.hasUnresolvedCrisis);
   /** Evil Mode helpers (Phase 17, EVIL-01, EVIL-02) */
   isEvilMode = $derived(Boolean(this.options.evilMode));
+  isClassicSim = $derived(Boolean(this.options.classicSim));
+  activePerks = $derived<readonly string[]>(this.current.activePerks ?? []);
+  effectiveLockedPerkId = $derived<string | null>(
+    this.draft.perkLockedId !== undefined ? this.draft.perkLockedId : (this.current.lockedPerkId ?? null),
+  );
+  perkSlate = $derived<readonly PerkDefinition[]>(
+    this.isClassicSim
+      ? []
+      : rollPerkSlate(
+          this.current.seed,
+          this.current.turn,
+          this.current.approval,
+          this.draft.perkRerolls,
+          this.activePerks,
+          this.current.lockedPerkId,
+          this.isEvilMode,
+        ),
+  );
+  nextPerkRerollCost = $derived<number>(perkRerollCost(this.draft.perkRerolls));
+  canRerollPerkSlate = $derived<boolean>(
+    !this.over &&
+      !this.isClassicSim &&
+      this.draft.perkRerolls < PERK_MAX_REROLLS_PER_TURN &&
+      this.clout >= this.nextPerkRerollCost,
+  );
   presidentLook = $derived<0 | 1 | 2 | 3>(
     this.options.presidentLook === 1 || this.options.presidentLook === 2 || this.options.presidentLook === 3
       ? this.options.presidentLook
@@ -498,6 +556,46 @@ export class Session {
   offshoreStashBn = $derived(this.current.evil?.offshoreStashBn ?? 0);
   heat = $derived(this.current.evil?.heat ?? 0);
   evilState = $derived(this.current.evil);
+
+  pickPerk(id: string | null): void {
+    if (this.over || this.isClassicSim) return;
+    if (id === null) {
+      this.draft.perkPickId = null;
+      return;
+    }
+    const def = getPerk(id);
+    if (!def || this.activePerks.includes(id)) return;
+    const prevCost = this.draft.perkPickId ? (getPerk(this.draft.perkPickId)?.cloutCost ?? 0) : 0;
+    const prevBonus = this.draft.perkSkipForClout ? C.perkSkipCloutBonus : 0;
+    const available = this.clout + prevCost - prevBonus;
+    if (def.cloutCost > available) return;
+    this.draft.perkPickId = id;
+    this.draft.perkSkipForClout = false;
+  }
+
+  skipPerkDraft(): void {
+    if (this.over || this.isClassicSim) return;
+    this.draft.perkPickId = null;
+    this.draft.perkSkipForClout = !this.draft.perkSkipForClout;
+  }
+
+  rerollPerkSlate(): void {
+    if (!this.canRerollPerkSlate) return;
+    this.draft.perkRerolls += 1;
+    // Clear previous pick if it is no longer on the new slate
+    if (this.draft.perkPickId && !this.perkSlate.some((c) => c.id === this.draft.perkPickId)) {
+      this.draft.perkPickId = null;
+    }
+  }
+
+  toggleLockPerk(id: string): void {
+    if (this.over || this.isClassicSim) return;
+    if (this.effectiveLockedPerkId === id) {
+      this.draft.perkLockedId = null;
+    } else {
+      this.draft.perkLockedId = id;
+    }
+  }
 
   toggleEvilLever(id: EvilLeverId): void {
     const current = this.draft.stagedEvilLevers;
@@ -991,6 +1089,20 @@ export class Session {
     if (this.draft.stagedEvilLevers.length > 0) {
       decisions.evil = {
         enactedLevers: $state.snapshot(this.draft.stagedEvilLevers),
+      };
+    }
+    if (
+      !this.isClassicSim &&
+      (this.draft.perkPickId !== null ||
+        this.draft.perkSkipForClout ||
+        this.draft.perkRerolls > 0 ||
+        this.draft.perkLockedId !== undefined)
+    ) {
+      decisions.perk = {
+        ...(this.draft.perkPickId ? { pickId: this.draft.perkPickId } : {}),
+        ...(this.draft.perkSkipForClout ? { skipForClout: true } : {}),
+        ...(this.draft.perkRerolls > 0 ? { rerolls: this.draft.perkRerolls } : {}),
+        ...(this.draft.perkLockedId !== undefined ? { lockedId: this.draft.perkLockedId } : {}),
       };
     }
     if (this.draft.dynamicCrisisDelta) {

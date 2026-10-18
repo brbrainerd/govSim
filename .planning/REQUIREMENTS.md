@@ -36,9 +36,9 @@
 
 ### Quarterly Mandate & Task Force RNG Draft — Brotato Shop Loop (`PERK` — Phase 44)
 
-- [ ] **PERK-01**: Build a pure deterministic Mandate & Task Force RNG draft engine (`src/engine/perks.ts`, dedicated `rng.ts` stream 21) that rolls 3 tiered cards (`Tier I Routine` → `Tier IV Historic Mandate`) per eligible quarter with registered `coefficients.ts` parameters, reroll/lock state in `GameState`, and causal `Ledger` traces
-- [ ] **PERK-02**: Build an interactive *Brotato*-style **White House Task Force / Mandate Draft** modal (`src/ui/PerkDraftModal.svelte`) with `👍 Upside` / `⚠️ The Catch` trade-off pills, **Spend Clout to Reroll**, **Lock Card for Next Quarter**, **Skip for +Clout**, and a `"Classic Sim (No Perks)"` toggle on `src/screens/NewGame.svelte` (`GameOptions.classicSim`)
-- [ ] **PERK-03**: Author a curated 24-card nonpartisan Presidential Task Force & Institutional Doctrine catalog (`src/content/perks.ts`) spanning fiscal, industrial, regulatory, judicial, diplomatic, and populist playstyles with Plain-Talk + Policy-Wonk dual copy and verified civic notes
+- [x] **PERK-01**: Build a pure deterministic Mandate & Task Force RNG draft engine (`src/engine/perks.ts`, dedicated `rng.ts` stream 21) that rolls 3 tiered cards (`Tier I Routine` → `Tier IV Historic Mandate`) per eligible quarter with registered `coefficients.ts` parameters, reroll/lock state in `GameState`, and causal `Ledger` traces
+- [x] **PERK-02**: Build an interactive *Brotato*-style **White House Task Force / Mandate Draft** modal (`src/ui/PerkDraftModal.svelte`) with `👍 Upside` / `⚠️ The Catch` trade-off pills, **Spend Clout to Reroll**, **Lock Card for Next Quarter**, **Skip for +Clout**, and a `"Classic Sim (No Perks)"` toggle on `src/screens/NewGame.svelte` (`GameOptions.classicSim`)
+- [x] **PERK-03**: Author a curated 24-card nonpartisan Presidential Task Force & Institutional Doctrine catalog (`src/content/perks.ts`) spanning fiscal, industrial, regulatory, judicial, diplomatic, and populist playstyles with Plain-Talk + Policy-Wonk dual copy and verified civic notes
 
 ### Policy Doctrine Synergy Tags & How Many Dudes? Chain-Reaction Engine (`SYN` — Phase 45)
 
@@ -85,9 +85,9 @@
 | LAYOUT-02 | Phase 43 | Complete |
 | LAYOUT-03 | Phase 43 | Complete |
 | LAYOUT-04 | Phase 43 | Complete |
-| PERK-01 | Phase 44 | Pending |
-| PERK-02 | Phase 44 | Pending |
-| PERK-03 | Phase 44 | Pending |
+| PERK-01 | Phase 44 | Complete |
+| PERK-02 | Phase 44 | Complete |
+| PERK-03 | Phase 44 | Complete |
 | SYN-01 | Phase 45 | Pending |
 | SYN-02 | Phase 45 | Pending |
 | SYN-03 | Phase 45 | Pending |

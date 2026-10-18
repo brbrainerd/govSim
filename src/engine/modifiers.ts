@@ -16,7 +16,7 @@ export interface Modifier {
   amount: number; // added to the channel in every step whose starting turn t has from <= t <= until
   from: number;
   until: number; // FOREVER, never Infinity: it must survive JSON
-  tag: 'event' | 'eo' | 'law';
+  tag: 'event' | 'eo' | 'law' | 'perk' | 'synergy';
 }
 
 export interface Scheduled { id: string; kind: string; due: number; data: Record<string, string | number> }
@@ -33,6 +33,7 @@ export const RESOLVERS: Record<string, Resolver> = {
   court_ruling: resolveCourtRuling,
 };
 
-/** The modifiers acting in the step that starts at `turn`; executive orders do not carry into the legacy projection (D5). */
+/** The modifiers acting in the step that starts at `turn`; executive orders and temporary task forces do not carry into the legacy projection (D5). */
 export const activeAt = (mods: readonly Modifier[], turn: number, legacy: boolean): Modifier[] =>
-  mods.filter((m) => m.from <= turn && turn <= m.until && !(legacy && m.tag === 'eo'));
+  mods.filter((m) => m.from <= turn && turn <= m.until && !(legacy && (m.tag === 'eo' || m.tag === 'perk' || m.tag === 'synergy')));
+

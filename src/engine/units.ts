@@ -200,3 +200,17 @@ export const TIER_SOVEREIGN_PLUNDERER_MAX = 50;
 // Living World Entropy & Dynamic Crisis Limits (Phase 29, AI-01, AI-04)
 export const MAX_TURN_ENTROPY = 0x7fffffff;
 export const MAX_DYNAMIC_CRISIS_CLOUT_COST = 50;
+
+// Mandate & Task Force RNG Draft + Doctrine Synergies (Phases 44-46, PERK-01, SYN-01, HEIST-01)
+export const PERK_SLATE_SIZE = 3;
+export const PERK_MAX_REROLLS_PER_TURN = 5;
+export const PERK_TIER_1 = 1;
+export const PERK_TIER_2 = 2;
+export const PERK_TIER_3 = 3;
+export const PERK_TIER_4 = 4;
+export const PERK_TIER_3_MIN_TURN = 4;
+export const PERK_TIER_4_MIN_TURN = 8;
+export const SYNERGY_THRESHOLD_1 = 2;
+export const SYNERGY_THRESHOLD_2 = 4;
+export const SYNERGY_THRESHOLD_3 = 6;
+

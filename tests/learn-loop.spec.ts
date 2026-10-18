@@ -48,6 +48,11 @@ test.describe('Phase 21: Complete Learn Loop & Interactive Explainers (LEARN-01.
       await expect(findOutBtn).toBeVisible();
       await findOutBtn.click();
       await expect(page.locator('.myth-modal-content')).toBeVisible();
+      await expect(page.locator('[data-testid="myth-soundbite"]')).toBeVisible();
+      await expect(page.locator('[data-testid="myth-next-btn"]')).toBeVisible();
+      const firstQuote = await page.locator('.myth-quote').textContent();
+      await page.locator('[data-testid="myth-next-btn"]').click();
+      await expect(page.locator('.myth-quote')).not.toHaveText(firstQuote ?? '');
       await page.locator('.myth-modal-content .close-link').click();
       await expect(page.locator('.myth-modal-content')).toHaveCount(0);
 
@@ -64,8 +69,9 @@ test.describe('Phase 21: Complete Learn Loop & Interactive Explainers (LEARN-01.
       await expect(page.locator('.myth-modal-content')).toContainText('Cutting tax rates always grows the economy');
       await page.locator('.myth-modal-content .close-link').click();
 
-      // 4. Budget screen: How a budget becomes law explainer
+      // 4. Budget screen: How a budget becomes law explainer + live Congress whip preview
       await page.locator('nav button:has-text("Budget")').click();
+      await expect(page.locator('[data-testid="budget-whip-preview"]')).toBeVisible();
       await expect(page.locator('[data-testid="how-it-works-btn"]')).toBeEnabled();
       await page.locator('[data-testid="how-it-works-btn"]').click();
       await expect(explainerModal).toContainText('How a budget becomes law');

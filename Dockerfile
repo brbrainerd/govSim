@@ -1,24 +1,18 @@
-# Multi-stage production Dockerfile for govSim (REL-05)
-# Stage 1: Build static assets
-FROM node:22-alpine AS builder
-
+FROM node:24-alpine AS build
 WORKDIR /app
-
-RUN corepack enable && corepack prepare pnpm@12.11.2 --activate
-
+RUN npm install --global pnpm@latest
+ENV PNPM_MANAGE_PACKAGE_MANAGER_VERSIONS=false
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
-
-COPY . .
+COPY tsconfig.json vite.config.ts index.html ./
+COPY data ./data
+COPY src ./src
 RUN pnpm build
 
-# Stage 2: Serve with Caddy
 FROM caddy:2-alpine
-
-COPY --from=builder /app/dist /srv
+COPY --from=build /app/dist /srv
 COPY Caddyfile /etc/caddy/Caddyfile
-
+ARG GOVSIM_CODE_VERSION=unknown
+ENV GOVSIM_CODE_VERSION=$GOVSIM_CODE_VERSION
 EXPOSE 80
-
-HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -qO- http://localhost:80/api/health | grep -q '"ok":true' || exit 1
+HEALTHCHECK --interval=5s --timeout=3s --start-period=2s --retries=3 CMD wget -qO- http://127.0.0.1:80/api/health >/dev/null || exit 1

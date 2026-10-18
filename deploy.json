@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/brbrainerd/vox/main/docs/src/ci/deploy-contract.md",
+  "deploy": {
+    "target": "coolify",
+    "coolify": {
+      "base_url_env": "COOLIFY_BASE_URL",
+      "base_url_env_fallback": "COOLIFY_URL",
+      "app_uuid_env": "COOLIFY_APP_UUID",
+      "token_env": "COOLIFY_TOKEN",
+      "token_env_fallback": "COOLIFY_API_TOKEN",
+      "poll_interval_secs": 5,
+      "poll_timeout_secs": 300,
+      "health_endpoints": ["https://gsim.ngi.video/api/health"],
+      "runtime_ssot_ghcr": "docker-compose.ghcr.yml",
+      "promotion_model": "ci_gated_pin_then_coolify_deploy",
+      "image_pin_env": "GHCR_IMAGE_WEB",
+      "image_ref": "ghcr.io/brbrainerd/govsim:<40-hex-sha>",
+      "env": {}
+    }
+  }
+}

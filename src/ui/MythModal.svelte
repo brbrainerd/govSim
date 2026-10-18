@@ -12,6 +12,7 @@
     onGotIt,
     onPivot,
     onSpin,
+    onNextMyth,
   }: {
     myth: MythCard;
     isFirstView?: boolean;
@@ -20,12 +21,20 @@
     onGotIt: () => void;
     onPivot?: (action: MythRealLeverAction) => void;
     onSpin?: () => void;
+    onNextMyth?: () => void;
   } = $props();
 
   let selectedOption = $state<number | null>(null);
   let manuallyRevealed = $state<boolean>(false);
   let isRevealed = $derived(!isFirstView || manuallyRevealed);
   let stampSlam = $state<boolean>(false);
+
+  $effect(() => {
+    // Reset local prediction state when switching to another myth card
+    void myth.id;
+    selectedOption = null;
+    manuallyRevealed = false;
+  });
 
   const analystLook: Look = {
     skin: 'skin-2',
@@ -76,15 +85,21 @@
           </div>
         </div>
 
-        <span class="myth-tag">CIVICS MISCONCEPTION</span>
+        <span class="myth-tag">POPULAR BELIEF</span>
         <blockquote class="myth-quote">
           &ldquo;{myth.mythStatement}&rdquo;
         </blockquote>
 
+        {#if myth.tvSoundbite}
+          <div class="myth-soundbite-card" data-testid="myth-soundbite">
+            <span class="soundbite-label">📺 WHAT PUNDITS SAY</span>
+            <p class="soundbite-text">{myth.tvSoundbite}</p>
+          </div>
+        {/if}
+
         <div class="myth-context-card">
           <p>
-            Constitutional checks, federal statutes, and market forces limit direct executive control
-            over complex decentralized systems.
+            The Constitution splits power across Congress, courts, the Fed, and markets so no one person has a magic dial.
           </p>
         </div>
       </section>
@@ -95,10 +110,10 @@
           <!-- Prediction Step (MYTH-03) -->
           <div class="challenge-container" data-testid="myth-challenge">
             <div class="challenge-header">
-              <span class="challenge-tag">POPULIST CLAIM REALITY CHECK</span>
+              <span class="challenge-tag">QUICK REALITY CHECK</span>
               <h3 class="challenge-question">{myth.predictionPrompt.question}</h3>
               <p class="challenge-lead">
-                Call the bluff or spot the bottleneck before checking the constitutional facts:
+                Spot how the system really works before revealing the answer:
               </p>
             </div>
 
@@ -231,11 +246,24 @@
       </section>
     </div>
 
-    <!-- Modal Footer with Debunk and Spin Buttons -->
+    <!-- Modal Footer with Debunk, Spin, and Next Myth Buttons -->
     <footer class="modal-footer">
-      <button class="close-link" onclick={onClose}>
-        Close
-      </button>
+      <div class="footer-left">
+        <button class="close-link" onclick={onClose}>
+          Close
+        </button>
+        {#if onNextMyth}
+          <button
+            type="button"
+            class="next-myth-btn"
+            data-testid="myth-next-btn"
+            onclick={onNextMyth}
+            title="Draw another unviewed civics myth card"
+          >
+            🎲 NEXT MYTH
+          </button>
+        {/if}
+      </div>
 
       <div class="footer-actions">
         {#if isFirstView && onSpin}
@@ -351,11 +379,38 @@
 
   .myth-quote {
     font-family: var(--font-display);
-    font-size: 22px;
+    font-size: 20px;
     line-height: 1.25;
     color: var(--ink);
     margin: 0;
     font-weight: 700;
+  }
+
+  .myth-soundbite-card {
+    background: var(--gold-tint);
+    border: 1.5px dashed var(--ink);
+    border-radius: 4px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .soundbite-label {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+  }
+
+  .soundbite-text {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-style: italic;
+    line-height: 1.35;
+    color: var(--ink);
   }
 
   .myth-context-card {
@@ -372,6 +427,32 @@
 
   .myth-context-card p {
     margin: 0;
+  }
+
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .next-myth-btn {
+    padding: 8px 14px;
+    background: var(--paper);
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 var(--ink);
+    transition: transform var(--dur-fast);
+  }
+
+  .next-myth-btn:hover {
+    background: var(--gold-tint);
+    transform: translate(-1px, -1px);
   }
 
   /* Right: Reality Column */

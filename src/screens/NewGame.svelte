@@ -34,6 +34,7 @@
   let scenario = $state<ScenarioId>('standard_2026');
   let unlockAll = $state(false);
   let livingWorld = $state(false);
+  let classicSim = $state(false);
   let vocabMode = $state<'plain' | 'wonk'>(
     typeof localStorage !== 'undefined' &&
       typeof localStorage?.getItem === 'function' &&
@@ -183,6 +184,19 @@
               </span>
             </div>
           </label>
+
+          <label class="card unlock-all-card" class:active-mode={classicSim}>
+            <input
+              type="checkbox"
+              checked={classicSim}
+              onchange={(e) => (classicSim = e.currentTarget.checked)}
+              data-testid="classic-sim-toggle"
+            />
+            <div class="mode-info">
+              <b>Classic Sim (No Perks)</b>
+              <span class="mode-sub">Disable Task Force drafts &amp; Doctrine combos for strict classroom runs.</span>
+            </div>
+          </label>
         </div>
       </div>
 
@@ -326,7 +340,18 @@
         class="stamp"
         class:evil-stamp={evilMode}
         disabled={party === null}
-        onclick={() => party && onStart({ party, evilMode, scenario, unlockAll, livingWorld, vocabMode, presidentLook })}
+        onclick={() =>
+          party &&
+          onStart({
+            party,
+            evilMode,
+            scenario,
+            unlockAll,
+            livingWorld,
+            vocabMode,
+            presidentLook,
+            ...(classicSim ? { classicSim: true } : {}),
+          })}
       >
         {evilMode ? 'Seize power' : 'Start the term'}
       </button>
@@ -459,7 +484,7 @@
 
   .mode-section { margin-top: clamp(8px, 1.2vh, 14px); max-width: 48rem; display: flex; flex-direction: column; gap: 6px; }
   .pacing-section { margin-top: clamp(8px, 1.2vh, 14px); max-width: 48rem; display: flex; flex-direction: column; gap: 6px; }
-  .pacing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(8px, 1vw, 12px); }
+  .pacing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(6px, 0.8vw, 10px); }
   .unlock-all-card { display: flex; align-items: flex-start; gap: 8px; padding: clamp(7px, 1vh, 10px) clamp(8px, 1vw, 12px); cursor: pointer; }
   .unlock-all-card input { width: 18px; height: 18px; accent-color: var(--ink); margin-top: 2px; flex-shrink: 0; }
   .unlock-all-card.active-mode { background: var(--gold); }

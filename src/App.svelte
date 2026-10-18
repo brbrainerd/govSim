@@ -1,6 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { clearAutosave, loadAutosave, parseSave, type SaveFile } from './app/save';
+  import {
+    clearAutosave,
+    getActiveProfileId,
+    listBrowserProfiles,
+    loadAutosave,
+    parseSave,
+    switchBrowserProfile,
+    type SaveFile,
+  } from './app/save';
   import { decodeRunCode } from './app/share';
   import { Session, type GameOptions } from './app/session.svelte';
   import { applyTheme } from './design/tokens';
@@ -10,6 +18,8 @@
 
   let session = $state.raw<Session | null>(null);
   let autosave = $state.raw<SaveFile | null>(null);
+  let activeProfileId = $state<string>(getActiveProfileId());
+  const profiles = listBrowserProfiles();
   let errorMessage = $state<string | null>(null);
   let sharedReplay = $state<{ seed: number; party: string } | null>(null);
   let sharedRunError = $state<string | null>(null);
@@ -18,22 +28,40 @@
     applyTheme(session?.isEvilMode ? 'evil' : 'day');
   });
 
-  onMount(async () => {
+  onMount(() => {
+    activeProfileId = getActiveProfileId();
     autosave = loadAutosave();
+
     if (typeof window !== 'undefined' && window.location.hash.startsWith('#run=')) {
       const code = window.location.hash.slice(5);
-      const run = await decodeRunCode(code);
-      if (run) {
-        session = Session.fromRun(run, fromData(us));
-        sharedReplay = { seed: run.seed, party: run.party };
-      } else {
-        sharedRunError = 'Invalid or corrupted shared run link';
-        setTimeout(() => {
-          sharedRunError = null;
-        }, 5000);
-      }
+      void decodeRunCode(code).then((run) => {
+        if (run) {
+          session = Session.fromRun(run, fromData(us));
+          sharedReplay = { seed: run.seed, party: run.party };
+        } else {
+          sharedRunError = 'Invalid or corrupted shared run link';
+          setTimeout(() => {
+            sharedRunError = null;
+          }, 5000);
+        }
+      });
+    }
+
+    const onStorage = () => {
+      activeProfileId = getActiveProfileId();
+      autosave = loadAutosave();
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', onStorage);
+      return () => window.removeEventListener('storage', onStorage);
     }
   });
+
+  function handleSelectProfile(profileId: string) {
+    activeProfileId = profileId;
+    autosave = switchBrowserProfile(profileId);
+    errorMessage = null;
+  }
 
   function startNew(options: GameOptions) {
     clearAutosave();
@@ -70,6 +98,7 @@
   function exitSharedReplay() {
     sharedReplay = null;
     session = null;
+    autosave = loadAutosave();
     if (typeof window !== 'undefined' && window.location.hash) {
       window.history.replaceState(null, '', window.location.pathname);
     }
@@ -111,6 +140,9 @@
   <NewGame
     {autosave}
     {errorMessage}
+    {profiles}
+    {activeProfileId}
+    onSelectProfile={handleSelectProfile}
     onStart={startNew}
     onResume={resume}
     onImport={handleImport}

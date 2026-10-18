@@ -6,6 +6,7 @@ import type { ScreenId } from '../app/screens';
 import type { PackageName } from '../engine/budget';
 import { getImminentDeadlines } from '../engine/deadlines';
 import type { GameState } from '../engine/game';
+import { pickContextualMyth } from './myths';
 
 export interface AdvisorPlay {
   readonly pack?: PackageName;
@@ -38,7 +39,7 @@ export interface SessionContext {
 }
 
 /**
- * Resolves context-triggered myth cards based on macroeconomic pain points (MYTH-02).
+ * Resolves context-triggered myth cards based on macroeconomic and policy conditions (MYTH-02).
  */
 export function getContextualMythSuggestion(current: GameState): Suggestion | null {
   const viewed = current.viewedMyths ?? [];
@@ -61,6 +62,21 @@ export function getContextualMythSuggestion(current: GameState): Suggestion | nu
   }
   if (debtRatio > 1.2 && !viewed.includes('debt_ceiling_default')) {
     return { title: 'Address debt limit claims', cta: 'Bust myth', target: null, mythId: 'debt_ceiling_default' };
+  }
+  if ((current.policy?.tar ?? 11) > 20 && !viewed.includes('trade_deficits')) {
+    return { title: 'Address tariff claims', cta: 'Bust myth', target: null, mythId: 'trade_deficits' };
+  }
+  if ((current.activeOrders?.length ?? 0) > 0 && !viewed.includes('rule_by_decree')) {
+    return { title: 'Address decree claims', cta: 'Bust myth', target: null, mythId: 'rule_by_decree' };
+  }
+  if (debtRatio > 1.22 && !viewed.includes('print_money_debt')) {
+    return { title: 'Address coin minting claims', cta: 'Bust myth', target: null, mythId: 'print_money_debt' };
+  }
+  if (fedRate > 0.045 && !viewed.includes('fire_fed_chair')) {
+    return { title: 'Address firing Fed Chair', cta: 'Bust myth', target: null, mythId: 'fire_fed_chair' };
+  }
+  if ((econ.gini ?? 0.49) > 0.50 && !viewed.includes('ceo_wage_cap')) {
+    return { title: 'Address CEO pay claims', cta: 'Bust myth', target: null, mythId: 'ceo_wage_cap' };
   }
   return null;
 }
@@ -235,7 +251,8 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
     };
   }
 
-  // 6. Default steady conditions
+  // 6. Default steady conditions — rotate myth suggestion via seeded RNG + context
+  const rotatedMyth = pickContextualMyth(current, 'oval');
   return {
     bubble: 'The economy is steady. Congress awaits your budget plan.',
     thisTurn: {
@@ -245,7 +262,7 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
     suggestions: [
       { title: 'Pass a budget', cta: 'Open Budget', target: 'budget', play: { pack: 'Infrastructure push' } },
       { title: 'Win over Moderates', cta: 'Open Congress', target: 'congress', play: { autoWhip: true } },
-      mythSuggestion ?? { title: 'Myth? Lower gas prices', cta: 'Find out', target: null, mythId: 'gas_prices' },
+      mythSuggestion ?? { title: `Myth? ${rotatedMyth.title}`, cta: 'Find out', target: null, mythId: rotatedMyth.id },
     ],
   };
 }

@@ -1,0 +1,39 @@
+# Coolify compose (production SSOT for govSim: gsim.ngi.video).
+#
+# Traefik -> Caddy :80. Host rule must stay in YAML double-quotes so Coolify keeps Traefik backtick syntax.
+services:
+  app:
+    image: ${GHCR_IMAGE_WEB:-govsim:latest}
+    expose:
+      - "80"
+    environment:
+      - GOVSIM_PUBLIC_ORIGIN=https://gsim.ngi.video
+      - GOVSIM_CODE_VERSION=${GOVSIM_CODE_VERSION:-unknown}
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=coolify
+      - traefik.http.middlewares.gzip.compress=true
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - "traefik.http.routers.govsim-http.rule=Host(`gsim.ngi.video`)"
+      - traefik.http.routers.govsim-http.entrypoints=http
+      - traefik.http.routers.govsim-http.middlewares=redirect-to-https
+      - traefik.http.routers.govsim-http.service=govsim-app
+      - "traefik.http.routers.govsim-https.rule=Host(`gsim.ngi.video`)"
+      - traefik.http.routers.govsim-https.entrypoints=https
+      - traefik.http.routers.govsim-https.middlewares=gzip
+      - traefik.http.routers.govsim-https.tls=true
+      - traefik.http.routers.govsim-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.govsim-https.service=govsim-app
+      - traefik.http.services.govsim-app.loadbalancer.server.port=80
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/api/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true

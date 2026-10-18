@@ -18,10 +18,12 @@ import { isEvilLeverId } from '../data/evil';
 import type { EvilLeverId } from '../engine/units';
 import { getMyth } from '../content/myths';
 import { getExplainer } from '../content/explainers';
+import { getPerk } from '../content/perks';
 import { endTurn, newGame, type GameState, type Start } from '../engine/game';
 import { stableHash } from '../engine/hash';
 import { getSocialLever, type SocialDraft } from '../engine/social';
 import { isValidScenarioId } from '../content/scenarios';
+import { PERK_MAX_REROLLS_PER_TURN } from '../engine/units';
 import type { GameOptions } from './session.svelte';
 
 export const MAX_SAVE_SIZE_CHARS = 1_000_000;
@@ -89,6 +91,7 @@ const VALID_DECISION_KEYS = new Set([
   'evil',
   'turnEntropy',
   'dynamicCrisisDelta',
+  'perk',
 ]);
 
 function isValidMythOrExplainerId(id: string): boolean {
@@ -439,6 +442,48 @@ export function validateDecisions(d: unknown): Decisions {
     };
   }
 
+  if (d.perk !== undefined) {
+    const pk = d.perk;
+    if (!isRecord(pk)) throw new Error('perk decision must be a plain object');
+    for (const k of Object.keys(pk)) {
+      if (k !== 'pickId' && k !== 'skipForClout' && k !== 'rerolls' && k !== 'lockedId') {
+        throw new Error(`Unknown perk decision property: "${k}"`);
+      }
+    }
+    if (pk.pickId !== undefined) {
+      if (typeof pk.pickId !== 'string' || !getPerk(pk.pickId)) {
+        throw new Error(`Unknown perk ID: "${String(pk.pickId)}"`);
+      }
+    }
+    if (pk.skipForClout !== undefined && typeof pk.skipForClout !== 'boolean') {
+      throw new Error('perk.skipForClout must be a boolean');
+    }
+    if (pk.pickId !== undefined && pk.skipForClout === true) {
+      throw new Error('perk cannot specify both pickId and skipForClout');
+    }
+    if (pk.rerolls !== undefined) {
+      if (
+        typeof pk.rerolls !== 'number' ||
+        !Number.isInteger(pk.rerolls) ||
+        pk.rerolls < 0 ||
+        pk.rerolls > PERK_MAX_REROLLS_PER_TURN
+      ) {
+        throw new Error(`perk.rerolls must be an integer in [0, ${PERK_MAX_REROLLS_PER_TURN}]`);
+      }
+    }
+    if (pk.lockedId !== undefined && pk.lockedId !== null) {
+      if (typeof pk.lockedId !== 'string' || !getPerk(pk.lockedId)) {
+        throw new Error(`Unknown locked perk ID: "${String(pk.lockedId)}"`);
+      }
+    }
+    result.perk = {
+      ...(typeof pk.pickId === 'string' ? { pickId: pk.pickId } : {}),
+      ...(pk.skipForClout === true ? { skipForClout: true } : {}),
+      ...(typeof pk.rerolls === 'number' ? { rerolls: pk.rerolls } : {}),
+      ...(pk.lockedId === null || typeof pk.lockedId === 'string' ? { lockedId: pk.lockedId } : {}),
+    };
+  }
+
   return result;
 }
 
@@ -520,6 +565,7 @@ export function parseSave(json: string): SaveFile {
     parsed.options.presidentLook === 3
       ? { presidentLook: parsed.options.presidentLook }
       : {}),
+    ...(typeof parsed.options.classicSim === 'boolean' ? { classicSim: parsed.options.classicSim } : {}),
   };
 
   if (!Array.isArray(parsed.inputs)) {

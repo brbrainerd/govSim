@@ -85,6 +85,9 @@ export const WHY_COPY: Record<string, string> = {
   'event:living_world_variance': 'Dynamic market variance',
   'event:ai_dynamic_crisis': 'Unfolding dynamic event',
   'event:myth_spin': 'TV spin on common myths',
+  'clout:perks': 'Task force draft choices',
+  'clout:synergy': 'Policy doctrine combo bonus',
+  'clout:archetype': 'Presidential style bonus',
 };
 
 /** Plain-language description of an engine trace source key (GR-06). */
@@ -113,6 +116,15 @@ export function whyText(sourceId: string): string {
   if (sourceId.startsWith('evil:')) {
     return 'Scandal and corrupt conduct fallout';
   }
+  if (sourceId.startsWith('perk:')) {
+    return 'Active White House task force';
+  }
+  if (sourceId.startsWith('synergy:')) {
+    return 'Policy doctrine combo bonus';
+  }
+  if (sourceId.startsWith('archetype:')) {
+    return 'Presidential leadership style';
+  }
   return 'Several small factors';
 }
 
@@ -137,6 +149,9 @@ export const WHY_WONK_COPY: Readonly<Record<string, string>> = {
   'forpol:sanctions': 'IEEPA / ECRA Sanctions Trade Friction',
   'trade:sectors': 'Section 301/232 Sector Tariff Pass-Through',
   'trade:retaliation': 'Foreign Counter-Tariff Export Drag',
+  'clout:perks': 'Executive Task Force Mandate Allocation',
+  'clout:synergy': 'Institutional Doctrine Flywheel Dividend',
+  'clout:archetype': 'Executive Leadership Archetype Modifier',
 };
 
 /** Returns either the Plain-Talk or Policy Wonk trace explanation (COPY-03). */

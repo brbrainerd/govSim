@@ -695,6 +695,24 @@ export const COEFF = {
   dynamicCrisisInfCap: { value: 0.8, unit: 'max abs inflation delta from a dynamic crisis option', basis: 'judgement', range: [0.2, 1.5], note: 'safety clamp for AI dynamic crisis inflation impact' },
   dynamicCrisisApprovalCap: { value: 6, unit: 'max abs approval pts from a dynamic crisis option', basis: 'judgement', range: [2, 12], note: 'safety clamp for AI dynamic crisis approval impact' },
   dynamicCrisisTrustCap: { value: 5, unit: 'max abs trust pts from a dynamic crisis option', basis: 'judgement', range: [2, 10], note: 'safety clamp for AI dynamic crisis trust impact' },
+  // ---- Quarterly Mandate & Task Force RNG Draft + Doctrine Synergies (Phases 44-46, PERK-01, SYN-02, HEIST-01) ----
+  perkRerollBaseCost: { value: 6, unit: 'clout', basis: 'judgement', range: [2, 15], note: 'Base political capital cost to reroll the quarterly Task Force draft slate (PERK-01).' },
+  perkRerollStepCost: { value: 4, unit: 'clout per prior reroll', basis: 'judgement', range: [1, 10], note: 'Additional clout cost per extra reroll within the same quarterly draft (PERK-01).' },
+  perkSkipCloutBonus: { value: 10, unit: 'clout', basis: 'judgement', range: [4, 25], note: 'Clout conserved when the player skips drafting a Task Force for the quarter (PERK-02).' },
+  perkTier2BaseWeight: { value: 0.28, unit: 'probability share', basis: 'judgement', range: [0.1, 0.5], note: 'Baseline probability weight for Tier II Priority Mandate cards (PERK-01).' },
+  perkTier3TurnSlope: { value: 0.015, unit: 'probability per turn', basis: 'judgement', range: [0.005, 0.04], note: 'Per-quarter increase in Tier III Strategic Mandate probability as the term progresses (PERK-01).' },
+  perkTier4ApprovalFloor: { value: 55, unit: '% approval', basis: 'judgement', range: [48, 68], note: 'Approval threshold above which Tier IV Historic Mandates can roll in the draft (PERK-01).' },
+  perkTier4Weight: { value: 0.14, unit: 'probability share', basis: 'judgement', range: [0.04, 0.3], note: 'Probability share of rolling a Tier IV Historic Mandate when eligible (PERK-01).' },
+  synergyTier2BonusScale: { value: 1, unit: 'scale factor', basis: 'judgement', range: [0.5, 2.0], note: 'Baseline scaling factor for 2-piece Policy Doctrine set bonuses (SYN-02).' },
+  synergyTier4BonusScale: { value: 2, unit: 'scale factor', basis: 'judgement', range: [1.0, 3.5], note: 'Scaling factor for 4-piece Policy Doctrine set bonuses (SYN-02).' },
+  synergyTier6BonusScale: { value: 3.5, unit: 'scale factor', basis: 'judgement', range: [2.0, 5.0], note: 'Scaling factor for 6-piece Policy Doctrine set bonuses (SYN-02).' },
+  synergyChainCloutBonus: { value: 6, unit: 'clout', basis: 'judgement', range: [2, 15], note: 'Immediate political capital dividend when an active Policy Doctrine chain trigger fires (SYN-02).' },
+  synergyChainGapBonus: { value: 0.08, unit: '% output gap', basis: 'judgement', range: [0.02, 0.25], note: 'Quarterly output gap impulse when an Industrial or Main Street chain trigger fires (SYN-02).' },
+  synergyChainInfRelief: { value: 0.08, unit: '% inflation relief', basis: 'judgement', range: [0.02, 0.25], note: 'Quarterly CPI inflation relief when a Green or Globalist chain trigger fires (SYN-02).' },
+  synergyChainTrustBonus: { value: 1.2, unit: 'trust pts', basis: 'judgement', range: [0.4, 3.0], note: 'Public trust boost when an Institutionalist chain trigger fires (SYN-02).' },
+  synergyChainApprovalBonus: { value: 1.0, unit: 'approval pts', basis: 'judgement', range: [0.3, 3.0], note: 'Approval boost when a National Security or Main Street chain trigger fires (SYN-02).' },
+  heistChainStashBonusBn: { value: 4.5, unit: '$bn offshore stash', basis: 'judgement', range: [1.5, 12.0], note: 'Bonus offshore stash skim when an Evil Mode Fixer Syndicate chain trigger fires (HEIST-01).' },
+  heistChainHeatLaunder: { value: 5.0, unit: 'heat pts laundered', basis: 'judgement', range: [2.0, 12.0], note: 'Investigative heat laundered when a Captured Regulators or Shell Network chain trigger fires (HEIST-01).' },
 } as const satisfies Record<string, Coeff>;
 
 // ---- clamp bounds ---------------------------------------------------------------------------

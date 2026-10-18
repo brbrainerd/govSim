@@ -27,7 +27,8 @@
   import ModelInspectorModal from '../ui/ModelInspectorModal.svelte';
   import AiSettingsModal from '../ui/AiSettingsModal.svelte';
   import EndScreen from './EndScreen.svelte';
-  import { getMyth } from '../content/myths';
+  import { getMyth, pickNextUnviewedMyth, type MythRealLeverAction } from '../content/myths';
+  import type { PackageName } from '../engine/budget';
   import { getExplainer, type ExplainerId } from '../content/explainers';
   import { onMount } from 'svelte';
   import { completeOpenRouterPkceAuth, loadAiConfig, saveAiConfig } from '../app/ai-providers';
@@ -79,7 +80,24 @@
   });
 
   const activeMyth = $derived(activeMythId ? getMyth(activeMythId) : null);
+  const nextMythCandidate = $derived(
+    activeMyth ? pickNextUnviewedMyth(session.current, activeMyth.id, session.screen) : null,
+  );
   const activeExplainer = $derived(activeExplainerId ? getExplainer(activeExplainerId) : null);
+
+  function executeMythPivot(action: MythRealLeverAction) {
+    if (activeMyth) {
+      session.viewMythCard(activeMyth.id);
+    }
+    activeMythId = null;
+    go(action.screen);
+    if (action.actionKind === 'budget_package' && action.payload) {
+      session.pickPackage(action.payload as PackageName);
+    } else if (action.actionKind === 'open_modal') {
+      if (action.payload === 'fed') fedModalOpen = true;
+      else if (action.payload === 'speech') speechModalOpen = true;
+    }
+  }
 
   const displayedCrisis = $derived.by(() => {
     if (activeReviewCrisis) return activeReviewCrisis;
@@ -165,6 +183,7 @@
         <Congress
           {session}
           question={screen.question}
+          {go}
           onOpenMyth={(id) => (activeMythId = id)}
           onOpenExplainer={(id) => (activeExplainerId = id)}
         />
@@ -225,15 +244,17 @@
           session.viewMythCard(activeMyth!.id);
           activeMythId = null;
         }}
-        onPivot={(action) => {
-          session.viewMythCard(activeMyth!.id);
-          activeMythId = null;
-          go(action.screen);
-        }}
+        onPivot={executeMythPivot}
         onSpin={() => {
           session.spinMythCard(activeMyth!.id);
           activeMythId = null;
         }}
+        onNextMyth={nextMythCandidate
+          ? () => {
+              session.viewMythCard(activeMyth!.id);
+              activeMythId = nextMythCandidate.id;
+            }
+          : undefined}
       />
     {/if}
 

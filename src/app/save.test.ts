@@ -5,12 +5,15 @@ import { endTurn, newGame, type Decisions } from '../engine/game';
 import { stableHash } from '../engine/hash';
 import {
   clearAutosave,
+  getActiveProfileId,
+  listBrowserProfiles,
   loadAutosave,
   MAX_SAVE_SIZE_CHARS,
   parseSave,
   replaySave,
   serializeSave,
   storeAutosave,
+  switchBrowserProfile,
   validateDecisions,
   type SaveFile,
 } from './save';
@@ -238,5 +241,42 @@ describe('save system and trust boundary (OBS-01, OBS-02, GR-31, GR-34)', () => 
     expect(parsed.engine).toBe('0.2');
     const replayed = replaySave(parsed);
     expect(stableHash(replayed)).toBe(parsed.check);
+  });
+
+  it('isolates multiple user save slots in browser localStorage', () => {
+    const storage = {
+      getItem: (k: string) => mockStorage.get(k) ?? null,
+      setItem: (k: string, v: string) => mockStorage.set(k, String(v)),
+      removeItem: (k: string) => mockStorage.delete(k),
+    };
+
+    const profiles = listBrowserProfiles(storage);
+    expect(profiles.length).toBeGreaterThanOrEqual(3);
+    expect(getActiveProfileId(storage)).toBe('default');
+
+    // User 1 saves in default slot
+    const state1 = newGame(101, start);
+    storeAutosave({ current: state1, options: { party: 'D' }, inputs: [] }, storage);
+    expect(loadAutosave(storage)?.seed).toBe(101);
+
+    // Switch to Slot 2 (empty initially)
+    expect(switchBrowserProfile('slot_2', storage)).toBeNull();
+    expect(getActiveProfileId(storage)).toBe('slot_2');
+    expect(loadAutosave(storage)).toBeNull();
+
+    // User 2 saves in Slot 2
+    const state2 = endTurn(newGame(202, start), { bill: { budget: { bus: 25 }, deals: [] } });
+    storeAutosave(
+      { current: state2, options: { party: 'R' }, inputs: [{ bill: { budget: { bus: 25 }, deals: [] } }] },
+      storage,
+    );
+    expect(loadAutosave(storage)?.seed).toBe(202);
+    expect(loadAutosave(storage)?.options.party).toBe('R');
+
+    // Switch back to Slot 1 and confirm User 1's save is intact
+    const restored1 = switchBrowserProfile('default', storage);
+    expect(restored1?.seed).toBe(101);
+    expect(restored1?.options.party).toBe('D');
+    expect(loadAutosave(storage)?.seed).toBe(101);
   });
 });

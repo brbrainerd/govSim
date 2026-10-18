@@ -2,7 +2,9 @@ import { fleschKincaid } from 'flesch-kincaid';
 import { syllable } from 'syllable';
 import { describe, expect, it } from 'vitest';
 import { screens } from '../app/screens';
-import { MYTHS_CATALOG, getMyth } from './myths';
+import { START } from '../engine/fixture';
+import { newGame } from '../engine/game';
+import { MYTHS_CATALOG, getMyth, pickContextualMyth, pickNextUnviewedMyth } from './myths';
 
 const BANNED_POLITICIANS = [
   'biden', 'trump', 'harris', 'obama', 'bush', 'clinton',
@@ -12,8 +14,8 @@ const BANNED_POLITICIANS = [
 const VALID_SCREEN_IDS = new Set(screens.map((s) => s.id));
 
 describe('civics myth cards catalog (PWR-06, OBS-05, GR-20, GR-21, DECK-01, DECK-02, PIVOT-01)', () => {
-  it('contains 12 curated myth cards across all major policy screens (DECK-01)', () => {
-    expect(MYTHS_CATALOG).toHaveLength(12);
+  it('contains 18 curated myth cards across all major policy screens (DECK-01)', () => {
+    expect(MYTHS_CATALOG).toHaveLength(18);
     expect(getMyth('gas_prices')).toBeDefined();
     expect(getMyth('interest_rates')).toBeDefined();
     expect(getMyth('presidential_jobs')).toBeDefined();
@@ -26,6 +28,12 @@ describe('civics myth cards catalog (PWR-06, OBS-05, GR-20, GR-21, DECK-01, DECK
     expect(getMyth('popular_vote_mandate')).toBeDefined();
     expect(getMyth('immigration_crime_budget')).toBeDefined();
     expect(getMyth('scotus_instant_reversal')).toBeDefined();
+    expect(getMyth('print_money_debt')).toBeDefined();
+    expect(getMyth('ceo_wage_cap')).toBeDefined();
+    expect(getMyth('abolish_irs_free')).toBeDefined();
+    expect(getMyth('ban_stock_buybacks')).toBeDefined();
+    expect(getMyth('fire_fed_chair')).toBeDefined();
+    expect(getMyth('congress_pay_stop')).toBeDefined();
   });
 
   it('provides getMyth lookup by id', () => {
@@ -43,16 +51,17 @@ describe('civics myth cards catalog (PWR-06, OBS-05, GR-20, GR-21, DECK-01, DECK
       if (card.challenges === 'right') rightCount++;
       if (card.challenges === 'both') bothCount++;
     }
-    expect(leftCount).toBe(4);
-    expect(rightCount).toBe(4);
-    expect(bothCount).toBe(4);
+    expect(leftCount).toBe(6);
+    expect(rightCount).toBe(6);
+    expect(bothCount).toBe(6);
     expect(Math.abs(leftCount - rightCount)).toBeLessThanOrEqual(1);
   });
 
-  it('every myth card has valid citations and institutional focus', () => {
+  it('every myth card has valid citations, satirical soundbite, and institutional focus', () => {
     for (const card of MYTHS_CATALOG) {
       expect(card.title.length).toBeGreaterThan(3);
       expect(card.mythStatement.length).toBeGreaterThan(5);
+      expect(card.tvSoundbite.length).toBeGreaterThan(10);
       expect(card.realitySummary.length).toBeGreaterThan(10);
       expect(card.flowSteps.length).toBeGreaterThanOrEqual(3);
       expect(card.realLevers.length).toBeGreaterThanOrEqual(2);
@@ -84,11 +93,26 @@ describe('civics myth cards catalog (PWR-06, OBS-05, GR-20, GR-21, DECK-01, DECK
     }
   });
 
+  it('pickContextualMyth weights by game state and varies deterministically across seeds/turns', () => {
+    const s1 = newGame(101, START);
+    const s2 = newGame(99999, START);
+    const m1 = pickContextualMyth(s1, 'budget');
+    const m2 = pickContextualMyth(s2, 'trade');
+    expect(m1.id).toBeTruthy();
+    expect(m2.id).toBeTruthy();
+    // Deterministic for same state + screen
+    expect(pickContextualMyth(s1, 'budget').id).toBe(m1.id);
+    // Next unviewed myth never returns currentMythId
+    const next = pickNextUnviewedMyth(s1, m1.id, 'budget');
+    expect(next?.id).not.toBe(m1.id);
+  });
+
   it('all copy passes reading grade <= 9.0 and sentences <= 20 words', () => {
     for (const card of MYTHS_CATALOG) {
       const texts = [
         card.title,
         card.mythStatement,
+        card.tvSoundbite,
         card.realitySummary,
         card.mirageLabel,
         card.predictionPrompt.question,

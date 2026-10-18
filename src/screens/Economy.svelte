@@ -9,6 +9,7 @@
   import HouseholdBreakdown from '../ui/HouseholdBreakdown.svelte';
 
   import type { ExplainerId } from '../content/explainers';
+  import { pickContextualMyth } from '../content/myths';
   import { getInspectorSummary } from '../content/model-inspector';
 
   let {
@@ -30,6 +31,7 @@
   } = $props();
 
   const totalParams = getInspectorSummary().totalParameters;
+  const economyMyth = $derived(pickContextualMyth(session.current, 'economy'));
 
   const IND_EMOJI: Record<string, string> = {
     income: '💵',
@@ -257,6 +259,16 @@
     <button type="button" class="link" data-testid="how-it-works-btn" onclick={() => onOpenExplainer?.('economy')}>How it works</button>
     <button type="button" class="link" data-testid="open-model-inspector-btn" onclick={() => onOpenModelInspector?.()}>Show your work ({totalParams} params)</button>
     <button type="button" class="ticket" onclick={() => onOpenMyth?.('supply_side_taxes')}>Myth? Lower taxes boost growth?</button>
+    {#if economyMyth.id !== 'supply_side_taxes'}
+      <button
+        type="button"
+        class="ticket"
+        data-testid="contextual-myth-economy"
+        onclick={() => onOpenMyth?.(economyMyth.id)}
+      >
+        🎲 Myth? {economyMyth.title}?
+      </button>
+    {/if}
   {/snippet}
 
   {#snippet next()}

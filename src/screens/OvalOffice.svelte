@@ -13,6 +13,8 @@
   import HouseholdCard from '../ui/HouseholdCard.svelte';
   import HouseholdModal from '../ui/HouseholdModal.svelte';
   import DynamicCrisisModal from '../ui/DynamicCrisisModal.svelte';
+  import PerkDraftModal from '../ui/PerkDraftModal.svelte';
+  import { getPerk } from '../content/perks';
   import { pickChyron } from '../content/chyrons';
   import { loadAiConfig } from '../app/ai-providers';
 
@@ -37,6 +39,7 @@
 
   let showHouseholdModal = $state(false);
   let showDynamicCrisisModal = $state(false);
+  let showPerkDraftModal = $state(false);
 
   const isAiEnabled = $derived(session.aiConfig.provider !== 'off');
   const tiles = $derived(headline(session.history));
@@ -274,6 +277,24 @@
       <div class="turn-head">
         <span class="label">This turn</span>
         <span class="scen-pill" data-testid="oval-scenario-badge">{session.activeScenario.name}</span>
+        {#if !session.isClassicSim}
+          <button
+            type="button"
+            class="perk-draft-pill"
+            class:drafted={Boolean(session.draft.perkPickId)}
+            class:skipped={Boolean(session.draft.perkSkipForClout)}
+            data-testid="open-perk-draft-btn"
+            onclick={() => (showPerkDraftModal = true)}
+          >
+            {#if session.draft.perkPickId}
+              ✓ {getPerk(session.draft.perkPickId)?.name ?? 'Drafted'}
+            {:else if session.draft.perkSkipForClout}
+              ⏭️ Draft Skipped (+10 Clout)
+            {:else}
+              🏛️ {session.isEvilMode ? 'Heist Relic Draft' : 'Task Force Draft'} ({session.activePerks.length} Active)
+            {/if}
+          </button>
+        {/if}
       </div>
       {#if guide}
         <div class="year1-guide" data-testid="year1-onboarding-guide">
@@ -383,6 +404,10 @@
   />
 {/if}
 
+{#if showPerkDraftModal}
+  <PerkDraftModal {session} onClose={() => (showPerkDraftModal = false)} />
+{/if}
+
 <style>
   .stage { position: relative; height: clamp(170px, 30vh, 310px); padding: clamp(6px, 1vh, 10px); min-height: 0; flex-shrink: 1; }
   .scene { height: 100%; border-radius: 8px; overflow: hidden; border: 2px solid var(--ink); }
@@ -457,6 +482,28 @@
   .info { display: flex; flex-direction: column; gap: 3px; padding: clamp(6px, 0.9vh, 10px); text-align: center; }
   .turn-head { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; }
   .scen-pill { font: 700 10px/1 var(--font-ui); text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px; background: var(--paper); border: 1px solid var(--ink); color: var(--ink); }
+  .perk-draft-pill {
+    font: 700 10px/1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 7px;
+    border-radius: 4px;
+    background: var(--gold);
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+    cursor: pointer;
+    box-shadow: 1px 1px 0 var(--ink);
+  }
+  .perk-draft-pill:hover {
+    background: var(--paper-warm);
+  }
+  .perk-draft-pill.drafted {
+    background: var(--sage-tint);
+    border-color: var(--sage-dark);
+  }
+  .perk-draft-pill.skipped {
+    background: var(--paper-dark);
+  }
   .year1-guide {
     display: flex;
     flex-direction: column;

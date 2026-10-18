@@ -43,6 +43,7 @@ import {
   type EvilState,
 } from './evil';
 import type { EvilDecision } from './decisions';
+import { resolvePerkDecision } from './perks';
 import {
   HEAT_CONVICTION_THRESHOLD,
   HEAT_IMPEACHMENT_THRESHOLD,
@@ -128,6 +129,8 @@ export interface GameState {
   readonly foreignPolicy?: ForeignPolicyState; // defense posture, foreign assistance, targeted sanctions (Phase 14, FORPOL-01, FORPOL-02)
   readonly trade?: TradeState; // strategic sector tariffs and bilateral trade agreements (Phase 16, TRADE-01, TRADE-02)
   readonly evil?: EvilState; // evil mode state (offshore stash, heat, investigations)
+  readonly activePerks?: readonly string[]; // enacted White House Task Force / Mandate perk IDs (Phase 44, PERK-01)
+  readonly lockedPerkId?: string | null; // locked Task Force card ID carried to next quarter's draft (Phase 44, PERK-02)
 }
 
 /** One thing that happened last turn (a bill passed, failed or was rejected). */
@@ -520,6 +523,25 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     }
   }
 
+  // Quarterly Mandate & Task Force RNG Draft resolution (Phase 44, PERK-01)
+  const rawPerk: unknown = decisions !== null && typeof decisions === 'object' ? (decisions as { perk?: unknown }).perk : undefined;
+  const availableCloutForPerk = Math.max(0, availableCloutForForeign - (forRes ? forRes.cloutSpent : 0));
+  const perkRes = !legacyRun && rawPerk !== undefined
+    ? resolvePerkDecision(state, rawPerk, availableCloutForPerk, true)
+    : null;
+  let nextActivePerks: readonly string[] | undefined = state.activePerks;
+  let nextLockedPerkId: string | null | undefined = state.lockedPerkId;
+  if (perkRes) {
+    if (perkRes.valid) {
+      modifiers = [...modifiers, ...perkRes.modifiers];
+      nextActivePerks = perkRes.activePerks;
+      nextLockedPerkId = perkRes.lockedPerkId;
+      log.push(...perkRes.log);
+    } else {
+      log.push({ kind: 'perk', id: 'rejected', detail: perkRes.reason });
+    }
+  }
+
   const active = activeAt(modifiers, state.turn, legacyRun);
   for (const m of active) {
     if (!m.source.startsWith(`${m.tag}:`) || !isKnownSource(m.source)) throw new Error(`modifier ${m.id} has source "${m.source}", which must start with "${m.tag}:"`);
@@ -543,11 +565,13 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   }
 
   const powersHeat = pRes?.valid && typeof pRes.heatDelta === 'number' ? pRes.heatDelta : 0;
+  const perkHeat = perkRes?.valid ? perkRes.evilHeatDelta : 0;
+  const perkStash = perkRes?.valid ? perkRes.evilStashDeltaBn : 0;
   const decayedHeat = calculateHeatDecay(currentEvil.heat);
-  const nextHeat = Math.max(MIN_HEAT, Math.min(MAX_HEAT, decayedHeat + heatAdd + leverResult.heatDelta + powersHeat));
+  const nextHeat = Math.max(MIN_HEAT, Math.min(MAX_HEAT, decayedHeat + heatAdd + leverResult.heatDelta + powersHeat + perkHeat));
   const evilPenalties = calculateHeatPenalties(nextHeat);
 
-  let nextStash = currentEvil.offshoreStashBn + siphon + leverResult.stashDeltaBn;
+  let nextStash = currentEvil.offshoreStashBn + siphon + leverResult.stashDeltaBn + perkStash;
   const specialCounsel = currentEvil.specialCounselAppointed || nextHeat >= HEAT_SPECIAL_COUNSEL_THRESHOLD;
   const investigationsActive = currentEvil.investigationsActive || nextHeat > 0;
 
@@ -922,6 +946,10 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
   if (reformResult && reformResult.cloutCost > 0) cl.add('clout:reform', -reformResult.cloutCost);
   if (amendmentCloutCost > 0) cl.add('clout:reform', -amendmentCloutCost);
   if (leverResult.cloutCost > 0) cl.add('clout:evil_levers', -leverResult.cloutCost);
+  if (perkRes?.valid) {
+    if (perkRes.cloutSpent > 0) cl.add('clout:perks', -perkRes.cloutSpent);
+    if (perkRes.cloutGained > 0) cl.add('clout:perks', perkRes.cloutGained);
+  }
   if (specialCounsel) {
     const drain = C.specialCounselCloutDrain + C.subpoenaCloutDrain;
     cl.add('clout:special_counsel', -drain);
@@ -986,6 +1014,8 @@ export function step(state: GameState, decisions: Decisions, opts: StepOptions =
     ...(nextCourtComposition ? { courtComposition: nextCourtComposition } : {}),
     ...(nextActiveAmendment ? { activeAmendment: nextActiveAmendment } : {}),
     ...(nextRatifiedAmendments && nextRatifiedAmendments.length > 0 ? { ratifiedAmendments: nextRatifiedAmendments } : {}),
+    ...(nextActivePerks && nextActivePerks.length > 0 ? { activePerks: nextActivePerks } : {}),
+    ...(nextLockedPerkId ? { lockedPerkId: nextLockedPerkId } : { lockedPerkId: undefined }),
     econ: nextEcon,
     activeCrisis: state.activeCrisis,
     report: {

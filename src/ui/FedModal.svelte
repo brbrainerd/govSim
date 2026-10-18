@@ -80,11 +80,11 @@
           <div class="tradeoff-item cost">
             <div class="tradeoff-head">
               <AlertTriangle size={16} />
-              <b>Credibility Cost (Trace)</b>
+              <b>{session.vocabMode === 'wonk' ? 'Credibility Cost' : 'The Catch: Higher Store Prices'}</b>
             </div>
             <p>
-              Political interference damages central bank credibility. Markets expect higher future inflation (+0.20%)
-              for 4 turns, making inflation stickier.
+              Political interference spooks bond markets. Expect higher inflation (+0.20%)
+              for the next 4 turns as savers brace for rising prices.
             </p>
           </div>
         </div>

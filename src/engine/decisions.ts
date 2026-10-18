@@ -39,6 +39,7 @@ import { calculateHeatPenalties, type EvilDraft } from './evil';
 import type { ForeignPolicyDraft } from './foreign';
 import type { ReformId } from './reforms';
 import type { TradeDraft } from './trade';
+import type { PerkDecision } from './perks';
 
 export type { AmendmentId } from './amendments';
 export type { EvilDraft } from './evil';
@@ -47,6 +48,7 @@ export type { PowerDecisions } from './powers';
 export type { ReformId };
 export type { SocialDraft } from './social';
 export type { TradeDraft } from './trade';
+export type { PerkDecision } from './perks';
 
 export interface EvilDecision {
   siphonBn?: number;
@@ -62,7 +64,7 @@ export interface DynamicCrisisDelta {
   cloutCost?: number;
 }
 
-/** Phases 4/5/9/11/14/16/17/29 add keys here (crisis, powers, social, filibusterRule, reform, amendment, foreignPolicy, trade, evil, turnEntropy, dynamicCrisisDelta). There is deliberately no clout field. */
+/** Phases 4/5/9/11/14/16/17/29/44 add keys here (crisis, powers, social, filibusterRule, reform, amendment, foreignPolicy, trade, evil, turnEntropy, dynamicCrisisDelta, perk). There is deliberately no clout field. */
 export interface Decisions {
   bill?: Bill;
   crisis?: CrisisDecision;
@@ -79,6 +81,7 @@ export interface Decisions {
   evil?: EvilDecision;
   turnEntropy?: number;
   dynamicCrisisDelta?: DynamicCrisisDelta;
+  perk?: PerkDecision;
 }
 
 export interface CrisisChoiceResult {
