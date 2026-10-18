@@ -5,6 +5,7 @@
   import ScreenLayout from '../ui/ScreenLayout.svelte';
 
   import type { ExplainerId } from '../content/explainers';
+  import { pickContextualMyth } from '../content/myths';
   import {
     BUDGET_LEVER_TRADEOFFS,
     BUDGET_PACKAGE_TRADEOFFS,
@@ -12,6 +13,8 @@
   } from '../content/tradeoffs';
   import HouseholdModal from '../ui/HouseholdModal.svelte';
   import TradeoffPill from '../ui/TradeoffPill.svelte';
+  import { resolveHouseholdPortrait } from '../ui/art/Character.svelte';
+  import CharacterPortrait from '../ui/art/CharacterPortrait.svelte';
 
   let {
     session,
@@ -34,6 +37,8 @@
   const words = $derived(describe(estimate(session.draft.budget)));
   const persona = $derived(session.selectedHouseholdPersona);
   const netHousehold = $derived(session.householdImpact.netMonthlyDelta);
+  const citizenPortrait = $derived(resolveHouseholdPortrait(persona, netHousehold));
+  const budgetMyth = $derived(pickContextualMyth(session.current, 'budget'));
   const packNames = Object.keys(packages) as PackageName[];
   const allLevers = [...taxLevers, ...spendLevers];
 
@@ -181,6 +186,16 @@
     >
       Myth? Cut foreign aid to balance it
     </button>
+    {#if budgetMyth.id !== 'foreign_aid_deficit'}
+      <button
+        type="button"
+        class="ticket"
+        data-testid="contextual-myth-budget"
+        onclick={() => onOpenMyth?.(budgetMyth.id)}
+      >
+        🎲 Myth? {budgetMyth.title}?
+      </button>
+    {/if}
   {/snippet}
   {#snippet next()}
     <div class="card info" aria-live="polite">
@@ -201,10 +216,24 @@
           Switch
         </button>
       </div>
-      <span class="line" data-testid="budget-household-persona">{persona.name} · {persona.locationState}</span>
-      <b class="num" class:good={netHousehold >= 0} class:bad={netHousehold < 0} data-testid="budget-household-delta">
-        {netHousehold >= 0 ? `+$${netHousehold} a month` : `-$${Math.abs(netHousehold)} a month`}
-      </b>
+      <div class="family-row">
+        <span class="budget-medallion" data-testid="budget-citizen-portrait">
+          <CharacterPortrait
+            look={citizenPortrait.look}
+            mood={citizenPortrait.mood}
+            prop={citizenPortrait.prop}
+            size={38}
+            badgeText={citizenPortrait.badge}
+            ringColor={netHousehold > 0 ? 'sage' : netHousehold < 0 ? 'alert' : 'gold'}
+          />
+        </span>
+        <div class="family-copy">
+          <span class="line" data-testid="budget-household-persona">{persona.name} · {persona.locationState}</span>
+          <b class="num" class:good={netHousehold >= 0} class:bad={netHousehold < 0} data-testid="budget-household-delta">
+            {netHousehold >= 0 ? `+$${netHousehold} a month` : `-$${Math.abs(netHousehold)} a month`}
+          </b>
+        </div>
+      </div>
     </div>
     <div class="tradeoff-panel" data-testid="budget-tradeoff-card">
       <TradeoffPill
@@ -218,7 +247,11 @@
         legalBasis={activeTradeoff.legalBasis}
         vocabMode={session.vocabMode}
       />
-      <span class="route-note">Budget bill: 218 House votes, 51 in the Senate.</span>
+      <span class="route-note" data-testid="budget-whip-preview">
+        {session.whip.short === 0
+          ? '✅ 218+ House votes ready — send to Congress to pass'
+          : `⚠️ ${session.whip.short} House votes short — make deals in Congress`}
+      </span>
     </div>
     {#if onOpenMyth}
       <button
@@ -246,6 +279,7 @@
 <style>
   .packs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(6px, 1vw, 14px); }
   .pack {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     font: 600 clamp(15px, 1.2vw, 20px) var(--font-ui); color: var(--ink); background: var(--card); border: var(--rule) solid var(--ink);
     border-radius: var(--r-sm); padding: clamp(6px, 1vh, 10px) clamp(6px, 0.8vw, 10px); min-height: clamp(38px, 4.5vh, 48px); cursor: pointer; box-shadow: var(--shadow);
     transition: transform var(--dur-fast);
@@ -258,7 +292,7 @@
   h3 span { font: 400 clamp(13px, 1vw, 16px) var(--font-body); color: var(--ink-soft); }
   .row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 clamp(6px, 0.8vw, 10px); padding: 1px 4px; border-radius: 8px; }
   .row.changed { background: color-mix(in srgb, var(--gold) 30%, transparent); }
-  label { font: 600 clamp(14px, 1.1vw, 18px) var(--font-ui); }
+  label { display: inline-flex; align-items: center; gap: 5px; font: 600 clamp(14px, 1.1vw, 18px) var(--font-ui); }
   .val { font: 600 clamp(13px, 1vw, 16px) var(--font-ui); color: var(--ink-soft); }
   .track { grid-column: span 2; position: relative; height: clamp(20px, 2.6vh, 28px); }
   .track::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 8px; border-radius: 4px; background: var(--ink); }
@@ -266,6 +300,9 @@
   .tick { position: absolute; top: 50%; transform: translateY(-50%); width: 3px; height: 18px; margin-left: -1.5px; background: var(--gold-dark); border-radius: 2px; }
   .base-tick { background: var(--ink-soft); opacity: 0.55; height: 14px; }
   .family-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .family-row { display: flex; align-items: center; gap: 8px; }
+  .budget-medallion { flex-shrink: 0; display: inline-flex; }
+  .family-copy { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .switch-family-btn {
     padding: 2px 8px;
     font: 700 11px/1.1 var(--font-ui);

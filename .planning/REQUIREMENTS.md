@@ -18,8 +18,8 @@
 
 ### Reactive Congressional & Citizen NPCs (`NPC` — Phase 41)
 
-- [ ] **NPC-01**: Upgrade Congressional Bloc Leaders in `Hemicycle.svelte` and `Congress.svelte` with live whip-reactive poses and expressions (`crossed` + scowl when whip share `< 30%`, pensive when undecided, `wave`/`celebrate` + bounce pulse when a deal flips their bloc)
-- [ ] **NPC-02**: Add dedicated Citizen NPC portraits for the 4 Household Personas (`Nurse`, `Auto/Grid Worker`, `Retiree`, `Small Business Owner`) + custom families in `HouseholdCard.svelte`, `HouseholdModal.svelte`, and `Budget.svelte` whose expressions react live to `netMonthlyDelta`
+- [x] **NPC-01**: Upgrade Congressional Bloc Leaders in `Hemicycle.svelte` and `Congress.svelte` with live whip-reactive poses and expressions (`crossed` + scowl when whip share `< 30%`, pensive when undecided, `wave`/`celebrate` + bounce pulse when a deal flips their bloc)
+- [x] **NPC-02**: Add dedicated Citizen NPC portraits for the 4 Household Personas (`Nurse`, `Auto/Grid Worker`, `Retiree`, `Small Business Owner`) + custom families in `HouseholdCard.svelte`, `HouseholdModal.svelte`, and `Budget.svelte` whose expressions react live to `netMonthlyDelta`
 
 ### Animated Modal & End-of-Term Vignettes (`VIGNETTE` — Phase 42)
 
@@ -76,8 +76,8 @@
 | GFX-03 | Phase 39 | Complete |
 | SCENE-01 | Phase 40 | Complete |
 | SCENE-02 | Phase 40 | Complete |
-| NPC-01 | Phase 41 | Pending |
-| NPC-02 | Phase 41 | Pending |
+| NPC-01 | Phase 41 | Complete |
+| NPC-02 | Phase 41 | Complete |
 | VIGNETTE-01 | Phase 42 | Pending |
 | VIGNETTE-02 | Phase 42 | Pending |
 | VIGNETTE-03 | Phase 42 | Pending |

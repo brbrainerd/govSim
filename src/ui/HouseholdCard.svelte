@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { Session } from '../app/session.svelte';
+  import { resolveHouseholdPortrait } from './art/Character.svelte';
+  import CharacterPortrait from './art/CharacterPortrait.svelte';
 
   let {
     session,
@@ -12,6 +14,7 @@
   const persona = $derived(session.selectedHouseholdPersona);
   const impact = $derived(session.householdImpact);
   const net = $derived(impact.netMonthlyDelta);
+  const citizenPortrait = $derived(resolveHouseholdPortrait(persona, net));
 
   // Identify the single largest positive and negative driver
   const topBenefit = $derived.by(() => {
@@ -39,6 +42,16 @@
 
 <div class="card household-card" data-testid="household-card">
   <div class="card-top">
+    <div class="citizen-medallion" data-testid="household-citizen-portrait">
+      <CharacterPortrait
+        look={citizenPortrait.look}
+        mood={citizenPortrait.mood}
+        prop={citizenPortrait.prop}
+        size={40}
+        badgeText={citizenPortrait.badge}
+        ringColor={net > 0 ? 'sage' : net < 0 ? 'alert' : 'gold'}
+      />
+    </div>
     <div class="persona-identity">
       <span class="label">Kitchen Table Impact</span>
       <h4 class="persona-name">{persona.name}</h4>
@@ -82,22 +95,27 @@
 
 <style>
   .household-card {
-    padding: clamp(8px, 1.2vh, 12px);
+    padding: clamp(6px, 0.9vh, 10px);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 5px;
     background: var(--card);
   }
   .card-top {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
+  }
+  .citizen-medallion {
+    flex-shrink: 0;
+    display: inline-flex;
   }
   .persona-identity {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
+    flex: 1;
     min-width: 0;
   }
   .persona-name {

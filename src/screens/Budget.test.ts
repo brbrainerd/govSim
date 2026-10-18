@@ -22,6 +22,8 @@ describe('Budget screen component (FORPOL-01, FORPOL-03)', () => {
     expect(html).toContain('Myth? Cut foreign aid to balance it');
     expect(html).toContain('data-testid="budget-household-persona"');
     expect(html).toContain('Rust Belt Manufacturing Family · OH');
+    expect(html).toContain('data-testid="budget-citizen-portrait"');
+    expect(html).toContain('FACTORY');
     expect(html).not.toContain('Nurse in Ohio');
   });
 });

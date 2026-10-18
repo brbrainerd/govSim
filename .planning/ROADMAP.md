@@ -8,7 +8,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 
 - [x] **Phase 39: High-Craft Character Rig, Facial Expressions, Outfits & Articulated Poses** (`GFX-01`, `GFX-02`, `GFX-03`) (completed 2026-10-18)
 - [x] **Phase 40: Oval Office Evil Mode Scene, Presidential Avatar Selector & Advisor NPCs** (`SCENE-01`, `SCENE-02`) (completed 2026-10-18)
-- [ ] **Phase 41: Reactive Congressional Bloc Leaders & Kitchen-Table Citizen NPCs** (`NPC-01`, `NPC-02`)
+- [x] **Phase 41: Reactive Congressional Bloc Leaders & Kitchen-Table Citizen NPCs** (`NPC-01`, `NPC-02`) (completed 2026-10-18)
 - [ ] **Phase 42: Animated Bully Pulpit, Broadcast Election Night, Senate Trial & Legacy Vignettes** (`VIGNETTE-01`, `VIGNETTE-02`, `VIGNETTE-03`)
 - [ ] **Phase 43: Full-Screen UI/UX, Layout & Viewport Alignment Remediation** (`LAYOUT-01`, `LAYOUT-02`, `LAYOUT-03`, `LAYOUT-04`)
 - [ ] **Phase 44: Quarterly Mandate & Task Force RNG Draft — Brotato Shop Loop** (`PERK-01`, `PERK-02`, `PERK-03`)
@@ -140,7 +140,7 @@ Milestone `v1.0` upgrades every SVG character rig, facial expression, occupation
 |-------|----------------|--------|-----------|
 | 39. High-Craft Character Rig, Facial Expressions, Outfits & Articulated Poses | 1/1 | Complete    | 2026-10-18 |
 | 40. Oval Office Evil Mode Scene, Presidential Avatar Selector & Advisor NPCs | 1/1 | Complete    | 2026-10-18 |
-| 41. Reactive Congressional Bloc Leaders & Kitchen-Table Citizen NPCs | 0/1 | Not started | - |
+| 41. Reactive Congressional Bloc Leaders & Kitchen-Table Citizen NPCs | 1/1 | Complete    | 2026-10-18 |
 | 42. Animated Bully Pulpit, Broadcast Election Night, Senate Trial & Legacy Vignettes | 0/1 | Not started | - |
 | 43. Full-Screen UI/UX, Layout & Viewport Alignment Remediation | 0/1 | Not started | - |
 | 44. Quarterly Mandate & Task Force RNG Draft — Brotato Shop Loop | 0/1 | Not started | - |

@@ -22,5 +22,19 @@ describe('Congress screen component (REF-01, REF-04)', () => {
     expect(html).toContain('218 needed');
     expect(html).toContain('data-testid="auto-whip-btn"');
     expect(html).toContain('Auto-whip (2 deals, 25 clout)');
+    expect(html).toContain('data-testid="bloc-leader-pro"');
+    expect(html).toContain('data-testid="bloc-leader-cen"');
+    expect(html).toContain('data-testid="bloc-leader-fre"');
+    expect(html).toContain('data-pose="wave"');
+    expect(html).toContain('data-pose="crossed"');
+
+    session.makeDeal('mod');
+    const { html: afterDealHtml } = render(Congress, {
+      props: {
+        session,
+        question: 'Can you pass your bill?',
+      },
+    });
+    expect(afterDealHtml).toContain('deal-flipped');
   });
 });

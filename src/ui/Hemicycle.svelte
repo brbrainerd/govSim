@@ -1,7 +1,7 @@
 <script lang="ts">
   import { ThumbsDown, ThumbsUp } from '@lucide/svelte';
   import { arcPoint, HEMI, hemicycle } from './art/hemicycle';
-  import Character, { type Look } from './art/Character.svelte';
+  import Character, { type Look, type Mood, type Pose } from './art/Character.svelte';
   import { groups, HOUSE_SEATS, TO_PASS, tally, type GroupId } from '../engine/congress';
   import type { SocialDraft } from '../engine/social';
 
@@ -35,9 +35,10 @@
       const start = i;
       i += g.seats;
       const mid = seats[Math.floor((start + i) / 2)]!.a;
-      const p = arcPoint(mid, HEMI.r1 + 16);
-      const tx = -50 + Math.cos(mid) * 50;
-      const ty = -50 - Math.sin(mid) * 50;
+      const isTopApex = Math.sin(mid) > 0.85;
+      const p = arcPoint(mid, HEMI.r1 + (isTopApex ? 8 : 14));
+      const tx = -50 + Math.cos(mid) * 46;
+      const ty = isTopApex ? -68 : -50 - Math.sin(mid) * 42;
       return { start, end: i, left: (p.x / HEMI.w) * 100, top: (p.y / HEMI.h) * 100, shift: `translate(${tx}%, ${ty}%)` };
     });
   })();
@@ -75,8 +76,21 @@
   </svg>
   {#each groups as g, i (g.id)}
     {@const share = whip.byGroup[g.id] / g.seats}
-    <div class="leader" style:left="{wedges[i]!.left}%" style:top="{wedges[i]!.top}%" style:transform={wedges[i]!.shift}>
-      <svg width="46" height="72" viewBox="0 0 120 190" aria-hidden="true"><Character look={looks[i]!} delay={i * 0.7} /></svg>
+    {@const dealFlipped = whip.byGroup[g.id] > (baseWhip.byGroup[g.id] ?? 0)}
+    {@const leaderPose: Pose = passed ? 'celebrate' : share > 0.6 ? 'wave' : share < 0.3 ? 'crossed' : 'hips'}
+    {@const leaderMood: Mood = passed ? 'triumphant' : share > 0.6 ? 'confident' : share < 0.3 ? 'stressed' : 'confident'}
+    <div
+      class="leader"
+      class:deal-flipped={dealFlipped}
+      data-testid={`bloc-leader-${g.id}`}
+      data-whip-state={share > 0.6 ? 'yes' : share < 0.3 ? 'no' : 'undecided'}
+      style:left="{wedges[i]!.left}%"
+      style:top="{wedges[i]!.top}%"
+      style:transform={wedges[i]!.shift}
+    >
+      <svg width="44" height="68" viewBox="0 0 120 190" aria-hidden="true">
+        <Character look={{ ...looks[i]!, mood: leaderMood }} pose={leaderPose} mood={leaderMood} delay={i * 0.7} />
+      </svg>
       <span class="chip" style:background="var(--{g.color})" class:dark={g.color === 'ink' || g.color === 'alert'}>{g.name}</span>
       <span class="mood">
         {#if share > 0.6}<ThumbsUp size={18} role="img" aria-label="mostly yes" />{:else if share < 0.3}<ThumbsDown size={18} role="img" aria-label="mostly no" />{:else}<b role="img" aria-label="undecided">?</b>{/if}
@@ -98,12 +112,12 @@
 
 <style>
   .arc {
-    margin: clamp(24px, 4vh, 36px) auto clamp(2px, 0.5vh, 6px);
+    margin: clamp(32px, 5vh, 46px) auto clamp(2px, 0.5vh, 6px);
     position: relative;
     aspect-ratio: 640 / 340;
     align-self: center;
     width: min(100%, 640px);
-    max-height: clamp(150px, 28vh, 280px);
+    max-height: clamp(146px, 27vh, 270px);
   }
   .arc > svg {
     width: 100%;
@@ -137,6 +151,14 @@
     flex-direction: column;
     align-items: center;
     gap: 2px;
+  }
+  .leader.deal-flipped > svg {
+    animation: leaderDealBounce var(--dur) var(--ease-pop);
+  }
+  @keyframes leaderDealBounce {
+    0% { transform: translateY(0) scale(1); }
+    45% { transform: translateY(-6px) scale(1.1); }
+    100% { transform: translateY(0) scale(1); }
   }
   .chip {
     font: 600 clamp(11px, 0.9vw, 14px) var(--font-ui);

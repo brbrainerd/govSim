@@ -93,6 +93,59 @@
       mood,
     };
   }
+
+  export function resolveHouseholdPortrait(
+    persona: { id: string; composition?: string; sector?: string },
+    netMonthlyDelta: number,
+  ): { look: Look; mood: Mood; prop: CharacterProp; badge: string } {
+    const mood: Mood =
+      netMonthlyDelta >= 120
+        ? 'triumphant'
+        : netMonthlyDelta >= 0
+          ? 'confident'
+          : netMonthlyDelta >= -120
+            ? 'stressed'
+            : 'panicked';
+
+    if (persona.id === 'rust_belt_manufacturing' || persona.sector === 'manufacturing') {
+      return {
+        look: { skin: 'skin-2', hair: 'hair-2', hairStyle: 'short', suit: 'ink', outfit: 'hardhat', mood },
+        mood,
+        prop: 'wrench',
+        badge: 'FACTORY',
+      };
+    }
+    if (persona.id === 'sun_belt_retiree' || persona.composition === 'senior' || persona.sector === 'fixed') {
+      return {
+        look: { skin: 'skin-1', hair: 'hair-3', hairStyle: 'bald', suit: 'sage', outfit: 'cardigan', glasses: true, mood },
+        mood,
+        prop: null,
+        badge: 'RETIREE',
+      };
+    }
+    if (persona.id === 'suburban_educator_couple' || persona.sector === 'tech') {
+      return {
+        look: { skin: 'skin-3', hair: 'hair-1', hairStyle: 'bob', suit: 'sky', outfit: 'blazer', glasses: true, mood },
+        mood,
+        prop: 'clipboard',
+        badge: 'EDUCATOR',
+      };
+    }
+    if (persona.id === 'urban_service_worker' || persona.sector === 'service') {
+      return {
+        look: { skin: 'skin-4', hair: 'hair-1', hairStyle: 'bun', suit: 'sky', outfit: 'scrubs', mood },
+        mood,
+        prop: 'stethoscope',
+        badge: 'NURSE',
+      };
+    }
+    return {
+      look: { skin: 'skin-2', hair: 'hair-1', hairStyle: 'parted', suit: 'ink', outfit: 'shirt', shirtOnly: true, mood },
+      mood,
+      prop: 'coffee',
+      badge: 'FAMILY',
+    };
+  }
 </script>
 
 <script lang="ts">

@@ -15,6 +15,8 @@
     INCOME_TIER_UPPER_MIDDLE,
     RPP_BASE_INDEX,
   } from '../engine/units';
+  import { resolveHouseholdPortrait } from './art/Character.svelte';
+  import CharacterPortrait from './art/CharacterPortrait.svelte';
 
   let {
     session,
@@ -25,6 +27,7 @@
   const persona = $derived(session.selectedHouseholdPersona);
   const impact = $derived(session.householdImpact);
   const net = $derived(impact.netMonthlyDelta);
+  const citizenPortrait = $derived(resolveHouseholdPortrait(persona, net));
 
   let isCustomMode = $state(false);
 
@@ -172,7 +175,19 @@
     aria-live="polite"
   >
     <div class="banner-top">
-      <span class="banner-label">Monthly Net Household Cashflow</span>
+      <div class="banner-title-group">
+        <span data-testid="household-modal-portrait">
+          <CharacterPortrait
+            look={citizenPortrait.look}
+            mood={citizenPortrait.mood}
+            prop={citizenPortrait.prop}
+            size={44}
+            badgeText={citizenPortrait.badge}
+            ringColor={net > 0 ? 'sage' : net < 0 ? 'alert' : 'gold'}
+          />
+        </span>
+        <span class="banner-label">Monthly Net Household Cashflow</span>
+      </div>
       <span class="banner-amount">
         {net >= 0 ? `+$${net}` : `-$${Math.abs(net)}`}
         <span class="banner-unit">/ month {net > 0 ? '▲' : net < 0 ? '▼' : '—'}</span>
@@ -353,7 +368,13 @@
   .banner-top {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
+    gap: 8px;
+  }
+  .banner-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   .banner-label {
     font: 600 12px/1 var(--font-ui);

@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Session } from '../app/session.svelte';
+  import type { ScreenId } from '../app/screens';
   import { deals, groups, HOUSE_SEATS, TO_PASS, FILIBUSTER_RULES_CATALOG } from '../engine/congress';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import Hemicycle from '../ui/Hemicycle.svelte';
@@ -7,16 +8,19 @@
   import FilibusterModal from '../ui/FilibusterModal.svelte';
   import AmendmentModal from '../ui/AmendmentModal.svelte';
   import type { ExplainerId } from '../content/explainers';
+  import { pickContextualMyth } from '../content/myths';
   import { BLOC_EXPLAINERS, DEAL_TRADEOFFS } from '../content/tradeoffs';
 
   let {
     session,
     question,
+    go,
     onOpenMyth,
     onOpenExplainer,
   }: {
     session: Session;
     question: string;
+    go?: (id: ScreenId) => void;
     onOpenMyth?: (id: string) => void;
     onOpenExplainer?: (explainerId: ExplainerId) => void;
   } = $props();
@@ -27,6 +31,7 @@
   const filibusterRule = $derived(session.draft.filibusterRule ?? session.current.filibusterRule ?? 'sixty_vote');
   const filibusterInfo = $derived(FILIBUSTER_RULES_CATALOG[filibusterRule]);
   const deadlines = $derived(getImminentDeadlines(session.current.turn, session.current));
+  const congressMyth = $derived(pickContextualMyth(session.current, 'congress'));
 
   const whip = $derived(session.whip);
   const vote = $derived(session.vote);
@@ -55,6 +60,16 @@
       <div class="bill">
         <span class="label">This turn's bill</span>
         <b>{session.draft.pack ?? 'Your budget'}</b>
+        {#if go}
+          <button
+            type="button"
+            class="edit-bill-link"
+            onclick={() => go('budget')}
+            title="Adjust tax and spending sliders in Budget before calling the floor vote"
+          >
+            Edit in Budget →
+          </button>
+        {/if}
         {#if onOpenMyth}
           <button
             type="button"
@@ -90,7 +105,7 @@
       onclick={() => showingFilibuster = true}
       data-testid="open-filibuster-modal"
     >
-      Senate Cloture: {filibusterInfo.threshold} votes ({filibusterInfo.name})
+      {session.vocabMode === 'wonk' ? '' : '🏛️ Filibuster Rule · '}Senate Cloture: {filibusterInfo.threshold} votes ({filibusterInfo.name})
     </button>
     <button
       type="button"
@@ -98,7 +113,7 @@
       onclick={() => showingAmendment = true}
       data-testid="open-amendment-modal"
     >
-      Article V Amendments {#if session.current.activeAmendment}· <b>Ratifying ({session.current.activeAmendment.ratifiedStates.length}/38)</b>{/if}
+      {session.vocabMode === 'wonk' ? '' : '📜 Change Constitution · '}Article V Amendments {#if session.current.activeAmendment}· <b>Ratifying ({session.current.activeAmendment.ratifiedStates.length}/38)</b>{/if}
     </button>
     {#if onOpenMyth}
       <button
@@ -108,6 +123,16 @@
       >
         Myth? Debt ceiling stops spending
       </button>
+      {#if congressMyth.id !== 'debt_ceiling_default'}
+        <button
+          type="button"
+          class="ticket"
+          data-testid="contextual-myth-congress"
+          onclick={() => onOpenMyth?.(congressMyth.id)}
+        >
+          🎲 Myth? {congressMyth.title}?
+        </button>
+      {/if}
     {/if}
   {/snippet}
   {#snippet next()}
@@ -187,8 +212,20 @@
   .deadline-desc { font-family: var(--font-body); font-size: var(--text-xs); color: var(--ink-soft); }
   .deadline-action-card { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border-left: 4px solid var(--alert); background: var(--paper-dark); }
   .deadline-action-card b { font-family: var(--font-display); font-size: var(--text-sm); color: var(--alert); }
-  .bill { display: flex; align-items: baseline; gap: 10px; }
+  .bill { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .bill b { font: 700 clamp(16px, 1.3vw, 20px) var(--font-display); }
+  .edit-bill-link {
+    padding: 2px 8px;
+    font: 700 11px/1.1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--paper);
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--r-sm);
+    cursor: pointer;
+  }
+  .edit-bill-link:hover { background: var(--gold); }
   .stamp-wrap { margin: 2px 0 6px; }
   .stamp-slam {
     display: inline-block;
@@ -224,16 +261,16 @@
   .legend { display: flex; flex-wrap: wrap; gap: clamp(3px, 0.5vh, 6px) clamp(8px, 1vw, 18px); justify-content: center; font: 500 clamp(12px, 0.9vw, 15px) var(--font-ui); color: var(--ink-soft); max-width: 70ch; }
   .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--ink); margin-right: 4px; }
   .legend b { color: var(--ink); }
-  .info { display: flex; flex-direction: column; gap: clamp(2px, 0.4vh, 4px); padding: clamp(8px, 1.2vh, 14px); }
-  .info b { font: 700 clamp(18px, 1.5vw, 24px) var(--font-display); }
-  .line { font: 500 clamp(13px, 1vw, 16px)/1.3 var(--font-body); color: var(--ink-soft); max-width: 45ch; }
+  .info { display: flex; flex-direction: column; gap: 2px; padding: clamp(6px, 0.9vh, 10px) clamp(8px, 1vw, 12px); }
+  .info b { font: 700 clamp(16px, 1.35vw, 21px)/1.15 var(--font-display); }
+  .line { font: 500 clamp(12px, 0.95vw, 14.5px)/1.2 var(--font-body); color: var(--ink-soft); max-width: 45ch; }
   .good { color: var(--sage); }
   .bad { color: var(--alert); }
-  .deal { display: flex; align-items: center; gap: clamp(6px, 0.8vw, 10px); padding: clamp(6px, 1vh, 10px) clamp(8px, 1vw, 12px); }
-  .deal div { display: flex; flex-direction: column; flex: 1; max-width: 30ch; }
-  .deal b { font: 700 clamp(14px, 1.1vw, 17px)/1.15 var(--font-display); }
-  .deal span { font-size: clamp(11px, 0.85vw, 13px); color: var(--ink-soft); }
-  .deal .btn { white-space: nowrap; }
+  .deal { display: flex; align-items: center; gap: clamp(6px, 0.7vw, 8px); padding: clamp(4px, 0.7vh, 8px) clamp(7px, 0.9vw, 10px); }
+  .deal div { display: flex; flex-direction: column; flex: 1; max-width: 30ch; gap: 1px; }
+  .deal b { font: 700 clamp(13px, 1.05vw, 15.5px)/1.15 var(--font-display); }
+  .deal span { font-size: clamp(10.5px, 0.8vw, 12px); line-height: 1.15; color: var(--ink-soft); }
+  .deal .btn { white-space: nowrap; padding: 4px 8px; font-size: clamp(11.5px, 0.9vw, 13px); }
   .whip-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
   .auto-whip-btn {
     padding: 3px 8px;
