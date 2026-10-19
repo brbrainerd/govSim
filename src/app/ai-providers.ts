@@ -5,6 +5,8 @@
  * Guarantees zero network egress when provider === 'off' (default).
  */
 
+import { FREE_TIER_FLOOR, LIVE_FREE_MODELS_SNAPSHOT } from './platformSsot.generated';
+
 export type AiProviderId =
   | 'off'
   | 'openrouter_free'
@@ -37,7 +39,7 @@ export const AI_PROVIDERS: readonly AiProviderDef[] = [
     tagline: 'Dynamic free models with automatic 429 rate-limit cascade failover.',
     freeTierNote: '100% Free. Connect via 1-click OAuth or enter a free API key.',
     requiresApiKey: false,
-    defaultModel: 'openrouter/free',
+    defaultModel: FREE_TIER_FLOOR,
   },
   {
     id: 'browser_ai',
@@ -74,11 +76,8 @@ export const AI_PROVIDERS: readonly AiProviderDef[] = [
 ];
 
 export const DEFAULT_OPENROUTER_FREE_MODELS: readonly string[] = [
-  'openrouter/free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'google/gemma-3-27b-it:free',
-  'qwen/qwen3-32b:free',
-  'deepseek/deepseek-chat-v3-0324:free',
+  FREE_TIER_FLOOR,
+  ...LIVE_FREE_MODELS_SNAPSHOT.slice(0, 4),
 ];
 
 export interface AiConfig {

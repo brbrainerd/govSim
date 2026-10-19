@@ -14,8 +14,7 @@
     handle {
         header {
             X-Content-Type-Options "nosniff"
-            X-Frame-Options "DENY"
-            Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.r2.cloudflarestorage.com;"
+            Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.r2.cloudflarestorage.com; frame-ancestors 'self' https://ngi.video https://*.ngi.video https://*.itch.io https://*.itch.zone http://localhost:3100;"
         }
         try_files {path} /index.html
         file_server
