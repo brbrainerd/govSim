@@ -80,6 +80,8 @@ const SURFACES: SurfaceSpec[] = [
   { id: 'newgame', title: 'New Game (Inauguration Stage)', targetFile: 'g-newgame.png', evilMode: false },
   { id: 'oval-day', title: 'Oval Office (Standard Day)', targetFile: 'g-home.png', evilMode: false },
   { id: 'oval-evil', title: 'Oval Office (Evil Mode)', targetFile: 'g-evil.png', evilMode: true },
+  { id: 'economy', title: 'Economy (You vs. Doing Nothing)', targetFile: 'g-economy.png', evilMode: false, navLabel: 'Economy' },
+  { id: 'voters', title: 'Voters (Electoral College Map)', targetFile: 'g-voters.png', evilMode: false, navLabel: 'Voters' },
   { id: 'powers', title: 'Your Powers (EOs, Fed & SCOTUS)', targetFile: 'g-powers.png', evilMode: false, navLabel: 'Your Powers' },
   { id: 'congress', title: 'Congress (Hemicycle & Bloc Leaders)', targetFile: 'g-congress.png', evilMode: false, navLabel: 'Congress' },
   { id: 'budget', title: 'Budget & Taxes (Household & Levers)', targetFile: 'g-budget.png', evilMode: false, navLabel: 'Budget' },
@@ -217,11 +219,11 @@ async function collectDomMetrics(page: Page, vp: ViewportSpec): Promise<DomMetri
       const porticoEl = document.querySelector('[data-testid="newgame-portico-banner"]');
       const porticoHeroHeightPx = porticoEl ? Math.round(porticoEl.getBoundingClientRect().height) : 0;
 
-      // Count raw Unicode emojis inside EO/institution/setup cards
+      // Count raw Unicode emojis inside EO/institution/setup/economy/voters cards & tabs
       const emojiRe = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu;
       let rawEmojiCountInCards = 0;
       document
-        .querySelectorAll('.order-card, .institution-card, .preview-card, .section-tag')
+        .querySelectorAll('.order-card, .institution-card, .preview-card, .section-tag, .chart-card, .switch-btn, .panel, .inspector-card, .action-card')
         .forEach((el) => {
           const matches = (el.textContent || '').match(emojiRe);
           if (matches) rawEmojiCountInCards += matches.length;
@@ -403,10 +405,10 @@ async function buildComparisonSheet(
       const panelH = Math.round((imgAfter.height / imgAfter.width) * panelW);
       const cols = imgTarget ? 3 : 2;
       const pad = 20;
-      const headerH = 78;
+      const headerH = 104;
       const canvas = document.createElement('canvas');
       canvas.width = cols * panelW + (cols + 1) * pad;
-      canvas.height = panelH + headerH + pad * 2;
+      canvas.height = panelH + headerH + pad;
 
       const ctx = canvas.getContext('2d')!;
       ctx.fillStyle = '#181410';
@@ -414,29 +416,30 @@ async function buildComparisonSheet(
 
       ctx.fillStyle = '#F5EBD6';
       ctx.font = 'bold 22px sans-serif';
-      ctx.fillText(titleText, pad, 32);
+      ctx.fillText(titleText, pad, 30);
 
       ctx.fillStyle = '#D5A93C';
       ctx.font = '15px monospace';
-      ctx.fillText(summary, pad, 56);
+      ctx.fillText(summary, pad, 54);
 
       const drawPanel = (img: HTMLImageElement, colIdx: number, label: string, badgeColor: string): void => {
         const x = pad + colIdx * (panelW + pad);
         const y = headerH;
+        // Draw badge bar ABOVE the image so top-left HUD (Approval / Clout) is 100% visible
+        ctx.fillStyle = badgeColor;
+        ctx.fillRect(x - 2, y - 30, panelW + 4, 28);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText(label, x + 10, y - 11);
+
         ctx.strokeStyle = badgeColor;
         ctx.lineWidth = 3;
         ctx.strokeRect(x - 2, y - 2, panelW + 4, panelH + 4);
         ctx.drawImage(img, x, y, panelW, panelH);
-
-        ctx.fillStyle = badgeColor;
-        ctx.fillRect(x, y, 250, 28);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 14px sans-serif';
-        ctx.fillText(label, x + 10, y + 19);
       };
 
-      drawPanel(imgBefore, 0, 'BEFORE (v1.1 Baseline)', '#B63A2B');
-      drawPanel(imgAfter, 1, 'AFTER (v1.2 Layered & Clear)', '#2E6B4E');
+      drawPanel(imgBefore, 0, 'BEFORE (v1.2 Baseline)', '#B63A2B');
+      drawPanel(imgAfter, 1, 'AFTER (v1.3 Remediated)', '#2E6B4E');
       if (imgTarget) {
         drawPanel(imgTarget, 2, 'DESIGN TARGET (.design-targets)', '#8A6718');
       }

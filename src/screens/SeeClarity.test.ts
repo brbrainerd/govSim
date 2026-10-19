@@ -18,7 +18,7 @@ describe('Phase 37: Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens (S
   });
 
   describe('Economy.svelte (SEE-01)', () => {
-    it('renders Plain Talk indicator emojis, Big Picture Economy tab, and kitchen-table summary by default', () => {
+    it('renders Plain Talk indicator emblems, Big Picture Economy tab, and kitchen-table summary by default', () => {
       expect(session.vocabMode).toBe('plain');
       const { html } = render(Economy, {
         props: {
@@ -27,15 +27,19 @@ describe('Phase 37: Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens (S
           go: () => {},
         },
       });
-      expect(html).toContain('📊 Big Picture Economy');
-      expect(html).toContain('🏠 Your Household');
+      expect(html).toContain('Big Picture Economy');
+      expect(html).toContain('Your Household');
       expect(html).toContain('data-testid="economy-kitchen-table-summary"');
-      expect(html).toContain('🏠 For regular people:');
-      expect(html).toContain('📈 Growth');
-      expect(html).toContain('👷 Jobs');
-      expect(html).toContain('🛒 Prices');
-      expect(html).toContain('💳 Debt');
-      expect(html).toContain('🏦 Federal Reserve');
+      expect(html).toContain('For regular people:');
+      expect(html).toContain('Growth');
+      expect(html).toContain('Jobs');
+      expect(html).toContain('Prices');
+      expect(html).toContain('Debt');
+      expect(html).toContain('Federal Reserve');
+      expect(html).toContain('data-emblem="chip"');
+      expect(html).toContain('data-emblem="industrial"');
+      expect(html).toContain('data-emblem="megaphone"');
+      expect(html).toContain('data-emblem="vault"');
     });
 
     it('renders formal Macro Indicators (GDP / CPI) tab in Policy Wonk mode', () => {
@@ -48,13 +52,13 @@ describe('Phase 37: Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens (S
         },
       });
       expect(html).toContain('Macro Indicators (GDP / CPI)');
-      expect(html).toContain('📈 Growth (Real GDP)');
-      expect(html).toContain('🛒 Prices (CPI Inflation)');
+      expect(html).toContain('Growth (Real GDP)');
+      expect(html).toContain('Prices (CPI Inflation)');
     });
   });
 
   describe('TurnReport.svelte (SEE-01)', () => {
-    it('renders Kitchen-Table takeaway and emoji indicator rows in Plain Talk mode', () => {
+    it('renders Kitchen-Table takeaway and emblem indicator rows in Plain Talk mode', () => {
       session.nextTurn();
       const { html } = render(TurnReport, {
         props: {
@@ -64,9 +68,9 @@ describe('Phase 37: Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens (S
       });
       expect(html).toContain('data-testid="report-kitchen-table-summary"');
       expect(html).toContain('Regular families are');
-      expect(html).toContain('💵');
-      expect(html).toContain('🛒');
-      expect(html).toContain('🗳️');
+      expect(html).toContain('data-emblem="vault"');
+      expect(html).toContain('data-emblem="megaphone"');
+      expect(html).toContain('data-emblem="capitol"');
     });
   });
 
@@ -85,16 +89,19 @@ describe('Phase 37: Kitchen-Table Clarity on Hub, Diagnostic & Crisis Screens (S
   });
 
   describe('Voters.svelte (SEE-01)', () => {
-    it('renders emoji view tabs, 270th deciding vote hint, and LOCAL FAMILY IMPACT in Plain Talk mode', () => {
+    it('renders emblem view tabs, 270th deciding vote hint, and LOCAL FAMILY IMPACT in Plain Talk mode', () => {
       const { html } = render(Voters, {
         props: {
           session,
           question: 'Where do voters stand?',
         },
       });
-      expect(html).toContain('🗺️ Map View');
-      expect(html).toContain('📋 Table View');
-      expect(html).toContain('👥 Coalitions');
+      expect(html).toContain('Map View');
+      expect(html).toContain('Table View');
+      expect(html).toContain('Coalitions');
+      expect(html).toContain('data-emblem="globe"');
+      expect(html).toContain('data-emblem="scales"');
+      expect(html).toContain('data-emblem="handshake"');
       expect(html).toContain('(270th deciding vote)');
       expect(html).toContain('LOCAL FAMILY IMPACT');
       expect(html).toContain('(100 = average cost of living)');

@@ -1,6 +1,9 @@
 <script lang="ts">
+  import CivicEmblem from './CivicEmblem.svelte';
+
   interface Props {
     title: string;
+    icon?: string;
     currentValue: string;
     valueColor?: string;
     lineColor?: string;
@@ -12,6 +15,7 @@
 
   let {
     title,
+    icon,
     currentValue,
     valueColor = 'var(--ink)',
     lineColor = 'var(--ink)',
@@ -103,7 +107,12 @@
 
 <div class="chart-card">
   <div class="chart-header">
-    <h3 class="chart-title">{title}</h3>
+    <h3 class="chart-title">
+      {#if icon}
+        <CivicEmblem kind={icon} size={17} />
+      {/if}
+      <span>{title}</span>
+    </h3>
     <span class="chart-value" style="color: {valueColor};">{currentValue}</span>
   </div>
 
@@ -192,9 +201,11 @@
   .chart-card {
     background: var(--card);
     border: var(--rule) solid var(--ink);
-    border-radius: var(--r-md);
+    outline: 1px solid var(--ink);
+    outline-offset: -5px;
+    border-radius: 4px;
     box-shadow: var(--shadow);
-    padding: clamp(6px, 1vh, 10px) clamp(8px, 1vw, 14px);
+    padding: clamp(8px, 1.1vh, 12px) clamp(10px, 1.2vw, 16px);
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -208,6 +219,9 @@
   }
   .chart-title {
     margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font: 700 clamp(16px, 1.4vw, 22px) var(--font-display);
     color: var(--ink);
   }

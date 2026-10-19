@@ -2,7 +2,13 @@
   import { realQuarterLabel, termLabel } from '../engine/calendar';
   import { TOTAL_TURNS, type GameState, type ScoreBreakdown } from '../engine/game';
   import type { ScreenId } from '../app/screens';
-  import type { StagedActionItem, VocabMode } from '../app/session.svelte';
+  import type {
+    BaselineComponentGap,
+    BaselineFixAction,
+    DraftScorePreview,
+    StagedActionItem,
+    VocabMode,
+  } from '../app/session.svelte';
   import CoinStack from './art/CoinStack.svelte';
   import Ribbon from './art/Ribbon.svelte';
   import CivicEmblem from './art/CivicEmblem.svelte';
@@ -18,10 +24,13 @@
     vocabMode = 'plain',
     showMyths = true,
     stagedActions = [],
+    draftScorePreview = undefined,
+    baselineGaps = [],
     canFastForward = false,
     onNextTurn,
     onFastForward,
     onSelectScreen,
+    onStageFix,
     onClearStaged,
     onToggleCalm,
     onToggleVocab,
@@ -37,10 +46,13 @@
     vocabMode?: VocabMode;
     showMyths?: boolean;
     stagedActions?: readonly StagedActionItem[];
+    draftScorePreview?: DraftScorePreview;
+    baselineGaps?: readonly BaselineComponentGap[];
     canFastForward?: boolean;
     onNextTurn: () => void;
     onFastForward?: () => void;
     onSelectScreen?: (id: ScreenId) => void;
+    onStageFix?: (fix: BaselineFixAction) => void;
     onClearStaged?: () => void;
     onToggleCalm?: () => void;
     onToggleVocab?: () => void;
@@ -48,6 +60,7 @@
   } = $props();
 
   let trayOpen = $state(false);
+  let coachOpen = $state(false);
 
   const circ = 2 * Math.PI * 19;
   const totalScore = $derived(typeof score === 'number' ? score : score.total);
@@ -60,8 +73,9 @@
 
 <svelte:window
   onkeydown={(e) => {
-    if (e.key === 'Escape' && trayOpen) {
+    if (e.key === 'Escape' && (trayOpen || coachOpen)) {
       trayOpen = false;
+      coachOpen = false;
     }
   }}
 />
@@ -69,12 +83,18 @@
 <header class="bar">
   <div class="resources">
     <button type="button" class="stat tip" aria-describedby="tip-approval">
-      <svg width="58" height="58" viewBox="0 0 58 58" aria-hidden="true">
-        <circle cx="29" cy="29" r="26" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5" />
-        <circle cx="29" cy="29" r="19" fill="none" stroke="var(--ink)" stroke-width="8" opacity=".15" />
-        <circle cx="29" cy="29" r="19" fill="none" stroke="var(--ink)" stroke-width="8"
-          stroke-dasharray="{(circ * gameState.approval) / 100} {circ}" transform="rotate(-90 29 29)" />
-        <path d="M29 19 l3 6.2 6.8 .9 -5 4.7 1.2 6.7 -6 -3.3 -6 3.3 1.2 -6.7 -5 -4.7 6.8 -.9 Z" fill="var(--gold)" stroke="var(--ink)" stroke-width="1.2" />
+      <svg width="58" height="66" viewBox="0 0 58 66" aria-hidden="true" data-testid="approval-medal-svg">
+        <!-- Hanging Navy Ribbon Tails matching .design-targets/g-voters.png & g-crisis.png -->
+        <g data-testid="approval-medal-ribbons">
+          <polygon points="16,46 9,64 17,60 23,65 25,49" fill="var(--navy)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
+          <polygon points="42,46 49,64 41,60 35,65 33,49" fill="var(--navy)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
+        </g>
+        <circle cx="29" cy="28" r="25" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5" />
+        <circle cx="29" cy="28" r="19" fill="none" stroke="var(--ink)" stroke-width="7.5" opacity=".15" />
+        <circle cx="29" cy="28" r="19" fill="none" stroke="var(--gold)" stroke-width="7.5"
+          stroke-dasharray="{(circ * gameState.approval) / 100} {circ}" transform="rotate(-90 29 28)" />
+        <circle cx="29" cy="28" r="15" fill="none" stroke="var(--ink)" stroke-width="1.5" />
+        <path d="M29 18 l3 6.2 6.8 .9 -5 4.7 1.2 6.7 -6 -3.3 -6 3.3 1.2 -6.7 -5 -4.7 6.8 -.9 Z" fill="var(--gold)" stroke="var(--ink)" stroke-width="1.2" />
       </svg>
       <span><span class="label">Approval</span><span class="num">{gameState.approval}%</span></span>
       <span role="tooltip" id="tip-approval">Real term: approval rating</span>
@@ -114,7 +134,73 @@
         </button>
       {/if}
     {:else}
-      <div class="score"><span class="star">★</span> <b class:worse={shown < 0}>{shown < 0 ? '−' : '+'}{Math.abs(shown).toFixed(1)}</b> {shown < 0 ? 'worse' : 'better'} than doing nothing <span class="star">★</span></div>
+      <div class="score-coach-row">
+        <div class="score"><span class="star">★</span> <b class:worse={shown < 0}>{shown < 0 ? '−' : '+'}{Math.abs(shown).toFixed(1)}</b> {shown < 0 ? 'worse' : 'better'} than doing nothing <span class="star">★</span></div>
+        {#if draftScorePreview?.hasStagedChanges}
+          <span
+            class="draft-delta-pill"
+            class:positive={draftScorePreview.deltaVsIdle.total > 0}
+            class:negative={draftScorePreview.deltaVsIdle.total < 0}
+            data-testid="draft-score-delta-pill"
+          >
+            {draftScorePreview.badgeText}
+          </span>
+        {/if}
+        {#if baselineGaps.length > 0}
+          <button
+            type="button"
+            class="coach-trigger-btn"
+            class:active={coachOpen}
+            data-testid="beat-baseline-coach-btn"
+            aria-expanded={coachOpen}
+            onclick={() => (coachOpen = !coachOpen)}
+          >
+            How to beat doing nothing ▾
+          </button>
+        {/if}
+        {#if coachOpen}
+          <div class="coach-popover" data-testid="beat-baseline-coach" role="region" aria-label="How to Beat Doing Nothing Strategy Coach">
+            <div class="coach-popover-head">
+              <div>
+                <b>How to Beat Doing Nothing (Autopilot)</b>
+                <span class="coach-sub">Your score is 50% Term-End + 50% 10-Year Legacy across 8 weighted metrics:</span>
+              </div>
+              <button type="button" class="coach-close-btn" onclick={() => (coachOpen = false)} aria-label="Close strategy coach">✕</button>
+            </div>
+            <div class="coach-gap-list">
+              {#each baselineGaps as gap (gap.id)}
+                <div class="coach-gap-row" data-testid={`coach-gap-${gap.id}`}>
+                  <div class="coach-gap-main">
+                    <span class="coach-gap-title">
+                      <CivicEmblem kind={gap.icon} size={14} />
+                      <b>{gap.label}</b>
+                      <span class="coach-weight">({gap.weightPct}%)</span>
+                    </span>
+                    <span class="coach-gap-delta" class:pos={gap.weightedDelta > 0} class:neg={gap.weightedDelta < 0}>
+                      {gap.weightedDelta >= 0 ? '+' : '−'}{Math.abs(gap.weightedDelta).toFixed(1)} pts vs. Autopilot
+                    </span>
+                  </div>
+                  <div class="coach-gap-action">
+                    <span class="coach-tip">{gap.coachTip}</span>
+                    <button
+                      type="button"
+                      class="coach-fix-btn"
+                      data-testid={`coach-fix-${gap.id}`}
+                      onclick={() => {
+                        onStageFix?.(gap.fix);
+                        onSelectScreen?.(gap.fix.screen);
+                        coachOpen = false;
+                      }}
+                    >
+                      {gap.fix.label}
+                    </button>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/if}
+      </div>
     {/if}
     <div class="score-sub">
       <span class="label party-label">{party}</span>
@@ -273,11 +359,153 @@
   .time { justify-content: flex-end; gap: clamp(6px, 1vw, 14px); }
   .stat { display: flex; align-items: center; gap: clamp(5px, 0.6vw, 8px); flex-shrink: 0; }
   .num { font-size: clamp(20px, 2.1vw, 32px); }
-  .center { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .center { display: flex; flex-direction: column; align-items: center; gap: 3px; position: relative; }
+  .score-coach-row { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
   .score { font: 400 clamp(13px, 1vw, 16px) var(--font-body); color: var(--ink); }
   .score b { color: var(--sage); font-family: var(--font-ui); font-size: clamp(15px, 1.2vw, 18px); }
   .score b.worse { color: var(--alert); }
   .star { color: var(--ink); font-size: 12px; }
+  .draft-delta-pill {
+    font: 800 10.5px/1 var(--font-ui);
+    letter-spacing: 0.03em;
+    padding: 3px 7px;
+    border-radius: 999px;
+    border: 1.5px solid var(--ink);
+    background: var(--gold);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .draft-delta-pill.positive {
+    background: var(--sage-tint);
+    color: var(--ink);
+  }
+  .draft-delta-pill.negative {
+    background: var(--alert-tint);
+    color: var(--alert);
+  }
+  .coach-trigger-btn {
+    font: 700 10.5px/1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 2.5px 8px;
+    border-radius: 999px;
+    border: 1.5px solid var(--ink);
+    background: var(--card);
+    color: var(--ink);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .coach-trigger-btn:hover, .coach-trigger-btn.active {
+    background: var(--ink);
+    color: var(--card);
+  }
+  .coach-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 45;
+    width: min(560px, 92vw);
+    max-height: 74vh;
+    overflow-y: auto;
+    padding: 10px 12px;
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: var(--r-md);
+    box-shadow: 4px 4px 0 var(--ink);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+  }
+  .coach-popover-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    border-bottom: 1.5px solid var(--ink);
+    padding-bottom: 6px;
+    font: 700 13px/1.2 var(--font-ui);
+    color: var(--ink);
+  }
+  .coach-sub {
+    display: block;
+    font: 500 11.5px/1.25 var(--font-body);
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  .coach-close-btn {
+    background: none;
+    border: none;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink);
+    cursor: pointer;
+    padding: 2px 5px;
+  }
+  .coach-gap-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .coach-gap-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 8px;
+    background: var(--paper-warm);
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+  }
+  .coach-gap-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .coach-gap-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font: 700 12px/1.2 var(--font-ui);
+    color: var(--ink);
+  }
+  .coach-weight {
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+  .coach-gap-delta {
+    font: 800 11px/1 var(--font-ui);
+    color: var(--ink);
+  }
+  .coach-gap-delta.pos { color: var(--sage-dark); }
+  .coach-gap-delta.neg { color: var(--alert); }
+  .coach-gap-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .coach-tip {
+    font: 500 11.5px/1.25 var(--font-body);
+    color: var(--ink);
+  }
+  .coach-fix-btn {
+    flex-shrink: 0;
+    font: 800 10.5px/1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1.5px solid var(--ink);
+    background: var(--gold);
+    color: var(--ink);
+    cursor: pointer;
+    box-shadow: 1.5px 1.5px 0 var(--ink);
+  }
+  .coach-fix-btn:hover {
+    background: var(--card);
+  }
   .score-sub { font: 400 clamp(11px, 0.85vw, 13px) var(--font-body); color: var(--ink-soft); display: flex; align-items: center; gap: 6px; }
   .score-sub b { font-family: var(--font-ui); color: var(--ink); font-weight: 600; }
   .sep { opacity: 0.5; }

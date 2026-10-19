@@ -41,17 +41,27 @@
     </defs>
 
     <g clip-path="url(#screen-clip)">
-      <!-- Cream backdrop matching g-crisis.png -->
+      <!-- Layer 0: Generated Vintage Americana Crisis Broadcast Plate (g-crisis.png) -->
       <rect width="400" height="240" fill="var(--paper)" />
+      <image
+        href="/assets/environments/crisis-newsroom-bg.jpg"
+        x="0"
+        y="0"
+        width="400"
+        height="212"
+        preserveAspectRatio="xMidYMid slice"
+        data-testid="crisis-env-plate"
+      />
 
       {#if category === 'hurricane' || category === 'wildfire' || category === 'flood'}
         <!-- Gulf Coast Hurricane Map Infographic matching .design-targets/g-crisis.png -->
         <!-- Deep Navy Gulf Water -->
-        <rect x="0" y="0" width="400" height="210" fill="var(--ink)" />
+        <rect x="0" y="0" width="400" height="210" fill="var(--ink)" opacity="0.55" />
         <!-- Coastal States Landmass (Texas, Louisiana, Mississippi, Alabama, Florida panhandle) -->
         <path
           d="M 0 0 L 355 0 L 348 45 L 366 84 L 352 128 L 310 105 L 258 92 L 222 108 L 195 94 L 146 96 L 94 128 L 62 168 L 0 185 Z"
           fill="var(--paper)"
+          fill-opacity="0.88"
           stroke="var(--ink)"
           stroke-width="2"
         />
@@ -100,8 +110,8 @@
           <circle cx="195" cy="148" r="6.5" fill="var(--ink)" />
         </g>
       {:else if category === 'oil_shock' || category === 'debt_crisis' || category === 'market_panic'}
-        <!-- Economic / Market Chart Screen -->
-        <rect x="16" y="14" width="368" height="184" fill="var(--card)" rx="6" stroke="var(--ink)" stroke-width="2" />
+        <!-- Economic / Market Chart Screen over Newsroom Backdrop -->
+        <rect x="16" y="14" width="368" height="184" fill="var(--card)" fill-opacity="0.86" rx="6" stroke="var(--ink)" stroke-width="2" />
         <line x1="42" y1="168" x2="340" y2="168" stroke="var(--ink)" stroke-width="2" />
         <line x1="42" y1="36" x2="42" y2="168" stroke="var(--ink)" stroke-width="2" />
         <path
@@ -118,13 +128,9 @@
         />
         <circle cx="334" cy="66" r="5" fill="var(--alert)" />
       {:else}
-        <!-- Capitol Standoff Screen -->
-        <rect x="16" y="14" width="368" height="184" fill="var(--art-sky)" rx="6" stroke="var(--ink)" stroke-width="2" />
-        <rect x="16" y="156" width="368" height="42" fill="var(--art-grass)" />
-        <path d="M120 160 h140 v-34 h-140 Z" fill="var(--card)" stroke="var(--ink)" stroke-width="2" />
-        <path d="M160 126 h60 v-22 a30 24 0 0 1 -60 0 Z" fill="var(--card)" stroke="var(--ink)" stroke-width="2" />
-        <path d="M160 104 a30 26 0 0 1 60 0 Z" fill="var(--card)" stroke="var(--ink)" stroke-width="2" />
-        <line x1="190" y1="78" x2="190" y2="64" stroke="var(--ink)" stroke-width="2.5" />
+        <!-- Situation Room Radar Pulse Overlay on crisis-newsroom-bg.jpg -->
+        <circle cx="200" cy="118" r="28" fill="none" stroke="var(--alert)" stroke-width="2" opacity="0.65" />
+        <circle cx="200" cy="118" r="46" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.7" />
       {/if}
 
       <!-- LIVE Broadcast Status Badge -->

@@ -140,10 +140,13 @@
       vocabMode={session.vocabMode}
       showMyths={session.showMyths}
       stagedActions={session.stagedActionsSummary}
+      draftScorePreview={session.draftScorePreview}
+      baselineGaps={session.baselineGaps}
       canFastForward={session.canFastForward}
       onNextTurn={() => session.nextTurn()}
       onFastForward={() => session.fastForwardToNextEvent()}
       onSelectScreen={go}
+      onStageFix={(fix) => session.stageStrategicPlaybook(fix)}
       onClearStaged={() => session.resetDraft()}
       onToggleCalm={() => session.toggleCalmMode()}
       onToggleVocab={() => session.toggleVocabMode()}

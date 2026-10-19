@@ -4,6 +4,7 @@
   import { describeCrisisOptionTradeoff } from '../content/tradeoffs';
   import Overlay from './Overlay.svelte';
   import ReporterScene from './art/ReporterScene.svelte';
+  import CivicEmblem from './art/CivicEmblem.svelte';
   import TradeoffPill from './TradeoffPill.svelte';
 
   let {
@@ -118,7 +119,7 @@
                 onclick={() => handleSelect(opt.id, opt.cloutCost)}
               >
                 <div class="card-header">
-                  <span class="card-title"><span aria-hidden="true">{tradeoff.emoji}</span> {opt.label}</span>
+                  <span class="card-title"><CivicEmblem kind={tradeoff.emoji} size={15} /> {opt.label}</span>
                   <span class="clout-pill" class:free={opt.cloutCost === 0}>
                     {opt.cloutCost > 0 ? `${opt.cloutCost} clout` : 'free'}
                   </span>

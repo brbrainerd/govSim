@@ -88,12 +88,17 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 - ✓ Borderless flat-vector pill-pawn character rig (`Character.svelte`, `CharacterPortrait.svelte`, `FedPortrait.svelte`) with smooth unadorned dome heads and non-overlapping chyron bar (`CHAR-01..03`, `OVAL-01..02`) — v1.1
 - ✓ Compact 5×2 Executive Orders grid with above-the-fold `FedPortrait` + `CourtBench` on `Powers.svelte`, enlarged `NewGame.svelte` portico banner, and zero raw Unicode emojis (`GUI-01..03`) — v1.1
 
-### Active (Milestone v1.2 — Layered Environment Art, Civ-Style Turn Triggers & Progressive Decision Clarity)
+- ✓ Layered generated vintage Americana environment plates (`oval-day-bg.jpg`, `oval-evil-bg.jpg`, `newgame-portico-bg.jpg`) + animated weather/lighting midground + dimensional foreground character/desk rigs (`ENV-01..03`) — v1.2
+- ✓ Civ-style per-turn trigger cadence (`activeTurnTrigger` — max 1 spotlight trigger per turn) and smart turn-blocker stamp button in `StatusBar.svelte` (`RESOLVE CRISIS !`, `SEND BILL TO CONGRESS →`, `CALL FLOOR VOTE →`, `END QUARTER`) (`TRIG-01..03`) — v1.2
+- ✓ `★ PENDING & CLEARING THIS TURN ★` stacked index card (`TurnAgendaCard.svelte` matching `uikit.png` / `hub2.png`) with per-item clearing status (`CLEARS THIS TURN ✓`, `SHORT VOTES ⚠`, `DRAFT UNSENT !`), 1-click staging, and decluttered 3-card `OvalOffice.svelte` right column (`CLEAR-01..03`) — v1.2
+- ✓ Progressive disclosure on `Budget.svelte` and `Congress.svelte` (core kitchen-table levers + expandable advanced/institutional drawers matching `g-budget.png` / `g-congress.png`) and Before/After CV Flywheel verification (`PROG-01..03`) — v1.2
 
-- [ ] Layered generated vintage Americana environment plates (`oval-day-bg.jpg`, `oval-evil-bg.jpg`, `newgame-portico-bg.jpg`) + animated weather/lighting midground + dimensional foreground character/desk rigs (`ENV-01..03`)
-- [ ] Civ-style per-turn trigger cadence (`activeTurnTrigger` — max 1 spotlight trigger per turn) and smart turn-blocker stamp button in `StatusBar.svelte` (`RESOLVE CRISIS !`, `SEND BILL TO CONGRESS →`, `CALL FLOOR VOTE →`, `END QUARTER`) (`TRIG-01..03`)
-- [ ] `★ PENDING & CLEARING THIS TURN ★` stacked index card (`TurnAgendaCard.svelte` matching `uikit.png` / `hub2.png`) with per-item clearing status (`CLEARS THIS TURN ✓`, `SHORT VOTES ⚠`, `DRAFT UNSENT !`), 1-click staging, and decluttered 3-card `OvalOffice.svelte` right column (`CLEAR-01..03`)
-- [ ] Progressive disclosure on `Budget.svelte` and `Congress.svelte` (core kitchen-table levers + expandable advanced/institutional drawers matching `g-budget.png` / `g-congress.png`) and Before/After CV Flywheel verification (`PROG-01..03`)
+### Active (Milestone v1.3 — Beat-the-Baseline Strategy Coach, Playbook Variety, Concept-Art Folder/Rosette GUI & Full-Surface CV Flywheel)
+
+- [ ] 8-surface CV Flywheel (`newgame`, `oval-day`, `oval-evil`, `economy`, `voters`, `powers`, `congress`, `budget`), layered Crisis & Quarterly Report environment plates (`crisis-newsroom-bg.jpg`, `report-oval-bg.jpg`), authentic Manila Folder left-rail tabs with halftone dot texture, and Approval Medal ribbon tails (`CV-FULL-01..03`, `GUI-ART-01..03`)
+- [ ] Live "Beat the Baseline" Score-Delta Preview Engine (`previewDraftVsBaseline`, `diagnoseBaselineGaps`) + live `Est. +X.X vs. Autopilot` pill on `StatusBar`, `TurnAgendaCard`, `Budget`, `Congress`, and `Powers`, plus an interactive 8-Component **"How to Beat Doing Nothing" Strategy Coach** (`BEAT-01..03`)
+- [ ] Multi-Path Strategic Playbook Variety (`getStrategicPlaybooks` in `beat-baseline.ts` & `briefing.ts`) with rotating 3-path Chief of Staff playbooks (Growth & Innovation, Kitchen-Table Compact, Fiscal & Trade Discipline, Quick EO Wins) showing projected score deltas, plus tuned early-turn responsiveness (`FUN-01..03`)
+- [ ] Concept-Art `Economy.svelte` (`g-economy.png`) & `Voters.svelte` (`g-voters.png`) visual and gameplay upgrade (double-line vintage frames, live draft trajectory preview on charts, zero raw Unicode emojis, Americana blue/coral/gold swing-state map, 270 bullseye marker, 1-click campaign/fix actions) (`ECON-VOT-01..03`)
 
 ### Out of Scope
 

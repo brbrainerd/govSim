@@ -62,6 +62,11 @@
       <div class="bill">
         <span class="label">This turn's bill</span>
         <b>{session.draft.pack ?? 'Your budget'}</b>
+        {#if session.draftScorePreview.hasStagedChanges}
+          <span class="bill-delta-pill" data-testid="congress-score-delta-pill">
+            {session.draftScorePreview.badgeText}
+          </span>
+        {/if}
         {#if go}
           <button
             type="button"
@@ -245,6 +250,14 @@
   .deadline-action-card b { font-family: var(--font-display); font-size: var(--text-sm); color: var(--alert); }
   .bill { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .bill b { font: 700 clamp(16px, 1.3vw, 20px) var(--font-display); }
+  .bill-delta-pill {
+    font: 800 10.5px/1 var(--font-ui);
+    padding: 2.5px 7px;
+    border-radius: 999px;
+    background: var(--sage-tint);
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+  }
   .edit-bill-link {
     padding: 2px 8px;
     font: 700 11px/1.1 var(--font-ui);

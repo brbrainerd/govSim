@@ -109,21 +109,53 @@
 </nav>
 
 <style>
-  nav { display: flex; flex-direction: column; justify-content: space-between; gap: clamp(4px, 0.8vh, 10px); padding-right: clamp(10px, 1.2vw, 18px); border-right: 2px solid var(--paper-ink-soft); min-height: 0; overflow-y: auto; }
+  nav {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: clamp(4px, 0.8vh, 10px);
+    padding: 6px clamp(10px, 1.2vw, 16px) 6px 6px;
+    border-right: 2px solid var(--paper-ink-soft);
+    background-image: radial-gradient(var(--dot) 1.35px, transparent 1.35px);
+    background-size: 6px 6px;
+    min-height: 0;
+    overflow-y: auto;
+  }
   .screens-list { display: flex; flex-direction: column; gap: clamp(4px, 0.7vh, 8px); }
-  .group { font: 700 clamp(11px, 0.8vw, 13px) var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--paper-ink); margin: clamp(4px, 0.5vh, 6px) 0 6px 4px; }
+  .group {
+    align-self: flex-start;
+    position: relative;
+    z-index: 2;
+    font: 800 clamp(10px, 0.78vw, 12px)/1.15 var(--font-ui);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--card);
+    border: 1.5px solid var(--ink);
+    border-bottom: 0;
+    border-radius: 5px 8px 0 0;
+    padding: 2px 10px 3px;
+    margin: clamp(4px, 0.5vh, 6px) 0 -6px 0;
+  }
   .tab {
-    position: relative; display: flex; align-items: center; gap: clamp(6px, 0.8vw, 10px); min-height: clamp(36px, 4.5vh, 46px); padding: clamp(5px, 0.7vh, 8px) clamp(8px, 0.9vw, 12px); margin-top: 6px; text-align: left;
-    background: var(--card); color: var(--ink); border: var(--rule) solid var(--ink); border-radius: 4px 12px 12px 12px;
-    box-shadow: 3px 3px 0 var(--ink); cursor: pointer; font: 600 clamp(15px, 1.25vw, 19px)/1 var(--font-ui); letter-spacing: .03em; text-transform: uppercase;
+    position: relative; display: flex; align-items: center; gap: clamp(6px, 0.8vw, 10px); min-height: clamp(36px, 4.5vh, 46px); padding: clamp(5px, 0.7vh, 8px) clamp(8px, 0.9vw, 12px); margin-top: 4px; text-align: left;
+    background: var(--card); color: var(--ink); border: var(--rule) solid var(--ink); border-radius: 2px 8px 8px 8px;
+    box-shadow: 2.5px 2.5px 0 var(--ink); cursor: pointer; font: 700 clamp(15px, 1.2vw, 18px)/1 var(--font-ui); letter-spacing: .03em; text-transform: uppercase;
     transition: transform var(--dur-fast);
   }
-  /* folder notch */
+  /* Manila folder ear notch */
   .tab::before {
-    content: ''; position: absolute; left: -2.5px; top: -8px; width: 52px; height: 8px; background: inherit;
-    border: var(--rule) solid var(--ink); border-bottom: 0; border-radius: 7px 9px 0 0;
+    content: ''; position: absolute; left: -2px; top: -7px; width: 54px; height: 7px; background: inherit;
+    border: var(--rule) solid var(--ink); border-bottom: 0; border-radius: 5px 8px 0 0;
   }
-  .tab:hover:not(:disabled) { transform: translateX(4px); }
+  .group + .tab {
+    margin-top: 0;
+    border-top-left-radius: 0;
+  }
+  .group + .tab::before {
+    display: none;
+  }
+  .tab:hover:not(:disabled) { transform: translateX(3px); }
   .tab[aria-current='page'] { background: var(--alert); color: var(--card); border-color: var(--ink); }
   .tab[aria-current='page']::before { border-color: var(--ink); }
   .tab:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }

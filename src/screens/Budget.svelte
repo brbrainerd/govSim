@@ -281,13 +281,13 @@
       >
         <span data-testid="budget-clearing-banner">
           {#if session.draft.sentToCongress && session.whip.short === 0}
-            <CivicEmblem kind="up" size={11} /> CLEARS THIS TURN · {session.whip.total}/218 House votes ready
+            <CivicEmblem kind="up" size={11} /> CLEARS THIS TURN · {session.whip.total}/218 votes · {session.draftScorePreview.badgeText}
           {:else if session.draft.sentToCongress && session.whip.short > 0}
-            <CivicEmblem kind="warn" size={11} /> SHORT {session.whip.short} VOTES · Make deals in Congress to pass
+            <CivicEmblem kind="warn" size={11} /> SHORT {session.whip.short} VOTES · {session.draftScorePreview.badgeText}
           {:else if hasUnsentBudgetChanges}
-            <CivicEmblem kind="warn" size={11} /> DRAFT UNSENT · Click Send to Congress below ({session.whip.total}/218 votes)
+            <CivicEmblem kind="warn" size={11} /> DRAFT UNSENT · {session.draftScorePreview.badgeText} ({session.whip.total}/218 votes)
           {:else if session.whip.short === 0}
-            <CivicEmblem kind="up" size={11} /> 218+ House votes ready — send to Congress to pass
+            <CivicEmblem kind="up" size={11} /> 218+ House votes ready — pick a package or move a slider to beat Autopilot
           {:else}
             <CivicEmblem kind="warn" size={11} /> {session.whip.short} House votes short — make deals in Congress
           {/if}

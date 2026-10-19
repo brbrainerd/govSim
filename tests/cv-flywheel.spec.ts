@@ -109,6 +109,34 @@ test.describe('Milestone v1.1 Visual Fidelity, Evil Mode Palette & CV Flywheel I
       await page.locator('nav button.tab', { hasText: /Congress/i }).click();
       await expect(page.locator('[data-testid="congress-progressive-toggle"]')).toBeVisible();
       await expect(page.locator('[data-testid="congress-clearing-banner"]')).toBeVisible();
+
+      // 5. Milestone v1.3: Approval rosette ribbons, Economy baseline coach & Voters 270 bullseye
+      await expect(page.locator('[data-testid="approval-medal-ribbons"]')).toBeAttached();
+
+      await page.locator('nav button.tab', { hasText: /Economy/i }).click();
+      await expect(page.locator('[data-testid="economy-baseline-coach"]')).toBeVisible();
+
+      await page.locator('nav button.tab', { hasText: /Voters/i }).click();
+      await expect(page.locator('[data-testid="us-map"]')).toBeVisible();
+      await expect(page.locator('.target-bullseye')).toBeVisible();
+
+      // 6. Standard Day Mode: Beat the Baseline Strategy Coach, Playbook Variety Strip & Live Score Delta Pill
+      await page.evaluate(() => {
+        localStorage.clear();
+        document.documentElement.setAttribute('data-calm', 'true');
+      });
+      await page.reload();
+      await page.locator('input[name="party"]').first().check();
+      await page.locator('button.stamp').click();
+
+      await expect(page.locator('[data-testid="playbook-variety-strip"]')).toBeVisible();
+      await page.locator('[data-testid="beat-baseline-coach-btn"]').click();
+      await expect(page.locator('[data-testid="beat-baseline-coach"]')).toBeVisible();
+      await page.locator('.coach-close-btn').click();
+
+      // Stage Playbook 0 in 1 click and verify live score delta pill appears
+      await page.locator('[data-testid="quick-playbook-btn-0"]').click();
+      await expect(page.locator('[data-testid="draft-score-delta-pill"]').first()).toBeVisible();
     });
   }
 });

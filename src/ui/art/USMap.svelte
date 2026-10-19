@@ -16,22 +16,26 @@
   function getLeaningColor(leaning?: string): string {
     switch (leaning) {
       case 'safe-you':
-        return 'var(--sage-dark)';
+        return 'var(--map-you-safe)';
       case 'likely-you':
-        return 'var(--sage)';
+        return 'var(--map-you-likely)';
       case 'lean-you':
-        return 'var(--sky)';
+        return 'var(--map-you-lean)';
       case 'tossup':
         return 'var(--gold)';
       case 'lean-them':
-        return 'var(--alert)';
+        return 'var(--map-them-lean)';
       case 'likely-them':
-        return 'var(--alert)';
+        return 'var(--map-them-likely)';
       case 'safe-them':
-        return 'var(--alert-dark)';
+        return 'var(--map-them-safe)';
       default:
         return 'var(--ink-soft)';
     }
+  }
+
+  function isLightLeaning(leaning?: string): boolean {
+    return leaning === 'lean-you' || leaning === 'lean-them' || leaning === 'tossup';
   }
 
   function formatAria(item: StateVoterState | undefined, name: string): string {
@@ -68,14 +72,14 @@
     aria-label="United States Electoral Map"
   >
     <defs>
-      <!-- Opponent pattern: 45-degree diagonal hatching (GR-23) -->
+      <!-- Opponent pattern: subtle 45-degree diagonal hatching for color-vision accessibility (GR-23) -->
       <pattern id="pattern-hatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-        <line x1="0" y1="0" x2="0" y2="8" stroke="var(--ink)" stroke-opacity="0.35" stroke-width="2.5" />
+        <line x1="0" y1="0" x2="0" y2="8" stroke="var(--ink)" stroke-opacity="0.16" stroke-width="1.8" />
       </pattern>
 
       <!-- Tossup pattern: Stippled dots (GR-23) -->
       <pattern id="pattern-dots" width="8" height="8" patternUnits="userSpaceOnUse">
-        <circle cx="4" cy="4" r="1.5" fill="var(--ink)" fill-opacity="0.4" />
+        <circle cx="4" cy="4" r="1.3" fill="var(--ink)" fill-opacity="0.28" />
       </pattern>
     </defs>
 
@@ -85,6 +89,7 @@
         {@const path = STATE_PATHS[code]}
         {@const voterState = states[code]}
         {@const isSelected = selectedCode === code}
+        {@const isSwing = Boolean(voterState?.isSwing)}
         {@const isOpponent = voterState?.leaning.includes('them')}
         {@const isTossup = voterState?.leaning === 'tossup'}
         {@const fillColor = getLeaningColor(voterState?.leaning)}
@@ -96,7 +101,7 @@
             d={path.d}
             fill={fillColor}
             stroke="var(--ink)"
-            stroke-width={isSelected ? '2.5' : '0.6'}
+            stroke-width={isSelected ? '2.5' : '1.1'}
             stroke-linejoin="round"
             class="state-path"
             class:selected={isSelected}
@@ -127,13 +132,13 @@
             />
           {/if}
 
-          <!-- Gold outline for selection -->
-          {#if isSelected}
+          <!-- Mustard gold outline for swing states and active selection (g-voters.png) -->
+          {#if isSelected || isSwing}
             <path
               d={path.d}
               fill="none"
               stroke="var(--gold)"
-              stroke-width="3"
+              stroke-width={isSelected ? '3.4' : '2.2'}
               stroke-linejoin="round"
               class="selected-glow"
               pointer-events="none"
@@ -218,7 +223,7 @@
             font-size="10"
             font-family="var(--font-condensed)"
             font-weight="bold"
-            fill="var(--card)"
+            fill={isLightLeaning(voterDist?.leaning) ? 'var(--ink)' : 'var(--card)'}
             pointer-events="none"
           >
             {chip.id} ({chip.electoralVotes} EV)

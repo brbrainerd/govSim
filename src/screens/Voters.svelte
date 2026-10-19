@@ -6,6 +6,7 @@
   import { calculateElectoralCollege, calculateStateFamilyRelief, type StateVoterState } from '../engine/voters';
   import type { Look, Mood } from '../ui/art/Character.svelte';
   import CharacterPortrait from '../ui/art/CharacterPortrait.svelte';
+  import CivicEmblem from '../ui/art/CivicEmblem.svelte';
   import USMap from '../ui/art/USMap.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import { termTooltipForMode } from '../content/glossary';
@@ -149,7 +150,8 @@
             aria-checked={viewMode === 'map'}
             onclick={() => (viewMode = 'map')}
           >
-            🗺️ Map View
+            <CivicEmblem kind="globe" size={14} tone={viewMode === 'map' ? 'card' : 'ink'} />
+            <span>Map View</span>
           </button>
           <button
             type="button"
@@ -159,7 +161,8 @@
             aria-checked={viewMode === 'table'}
             onclick={() => (viewMode = 'table')}
           >
-            📋 Table View
+            <CivicEmblem kind="scroll" size={14} tone={viewMode === 'table' ? 'card' : 'ink'} />
+            <span>Table View</span>
           </button>
           <button
             type="button"
@@ -169,7 +172,8 @@
             aria-checked={viewMode === 'coalitions'}
             onclick={() => (viewMode = 'coalitions')}
           >
-            👥 Coalitions
+            <CivicEmblem kind="handshake" size={14} tone={viewMode === 'coalitions' ? 'card' : 'ink'} />
+            <span>Coalitions</span>
           </button>
         </div>
 
@@ -178,13 +182,13 @@
             class="tipping-point-badge"
             title={termTooltipForMode('tipping_point', session.vocabMode)}
           >
-            ★ Tipping Point: <b>{summary.tippingPointCode}</b>
+            <CivicEmblem kind="star_gold" size={13} /> Tipping Point: <b>{summary.tippingPointCode}</b>
             {#if session.vocabMode === 'plain'}
               <span>(270th deciding vote)</span>
             {/if}
           </span>
           <span class="swing-count" title="States where either party is within 5 points of winning">
-            ⚖️ {summary.swingStates.length} Swing States
+            <CivicEmblem kind="scales" size={13} /> {summary.swingStates.length} Swing States
           </span>
         </div>
       </div>
@@ -341,7 +345,7 @@
           </div>
 
           <div class="ec-target-label">
-            <span class="target-flag">270 TO WIN</span>
+            <span class="target-flag target-bullseye"><span aria-hidden="true">270</span><span class="sr-only">270 TO WIN</span></span>
           </div>
 
           <div class="ec-count them">
@@ -355,7 +359,7 @@
           <div class="meter-segment tossup-seg" style="width: {tossupPct}%;"></div>
           <div class="meter-segment them-seg" style="width: {themPct}%;"></div>
 
-          <!-- 270 Milestone Pin -->
+          <!-- 270 Milestone Pin (g-voters.png) -->
           <div class="target-pin" style="left: {targetPct}%;">
             <div class="pin-tick"></div>
           </div>
@@ -414,7 +418,7 @@
             </div>
             <div class="inspector-badges">
               {#if selectedUnit.isTippingPoint}
-                <span class="badge-tipping">★ TIPPING POINT</span>
+                <span class="badge-tipping"><CivicEmblem kind="star_gold" size={11} /> TIPPING POINT</span>
               {/if}
               {#if selectedUnit.isSwing}
                 <span class="badge-swing">SWING STATE</span>
@@ -512,7 +516,8 @@
               class="side-btn"
               onclick={() => onOpenSpeech?.()}
             >
-              🎤 Give a speech in {selectedUnit.name}
+              <CivicEmblem kind="megaphone" size={14} />
+              <span>Give a speech in {selectedUnit.name}</span>
             </button>
             {#if onOpenMyth && session.showMyths && !session.hasResolvedMyth('popular_vote_mandate')}
               <button
@@ -576,6 +581,9 @@
   }
 
   .switch-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     border: none;
     background: none;
     padding: 4px 12px;
@@ -600,8 +608,15 @@
     align-items: center;
   }
 
+  .tipping-point-badge,
+  .swing-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
   .tipping-point-badge {
-    color: var(--gold);
+    color: var(--ink);
     font-weight: bold;
   }
 
@@ -841,12 +856,12 @@
   }
 
   .lead-pos {
-    color: var(--sage-dark);
+    color: var(--map-you-safe);
     font-weight: bold;
   }
 
   .lead-neg {
-    color: var(--alert-dark);
+    color: var(--map-them-safe);
     font-weight: bold;
   }
 
@@ -862,35 +877,36 @@
 
   .outlook-badge.safe-you,
   .outlook-badge.likely-you {
-    background: var(--sage-dark);
+    background: var(--map-you-safe);
   }
 
   .outlook-badge.lean-you {
-    background: var(--sky);
+    background: var(--map-you-likely);
   }
 
   .outlook-badge.tossup {
     background: var(--gold);
+    color: var(--ink);
   }
 
   .outlook-badge.lean-them {
-    background: var(--alert);
+    background: var(--map-them-likely);
   }
 
   .outlook-badge.likely-them,
   .outlook-badge.safe-them {
-    background: var(--alert-dark);
+    background: var(--map-them-safe);
   }
 
   /* 270 EC Bar */
   .ec-bar-container {
     background: var(--card);
-    border: 1px solid var(--ink);
+    border: 1.5px solid var(--ink);
     border-radius: var(--r-sm);
-    padding: 6px 10px;
+    padding: 6px 10px 8px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
     flex-shrink: 0;
   }
 
@@ -910,7 +926,7 @@
     line-height: 1.1;
     font-family: var(--font-ui);
     font-weight: bold;
-    color: var(--sage-dark);
+    color: var(--map-you-safe);
   }
 
   .ec-count.them {
@@ -922,7 +938,7 @@
     line-height: 1.1;
     font-family: var(--font-ui);
     font-weight: bold;
-    color: var(--alert-dark);
+    color: var(--map-them-safe);
   }
 
   .count-label {
@@ -932,29 +948,32 @@
     color: var(--ink-soft);
   }
 
-  .target-flag {
-    font-size: 11px;
-    font-family: var(--font-ui);
-    font-weight: bold;
-    padding: 2px 8px;
-    background: var(--paper);
-    border: 1px solid var(--ink);
-    border-radius: 4px;
+  .target-flag.target-bullseye {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 2.5px solid var(--ink);
+    font: 800 12px/1 var(--font-ui);
     color: var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
   }
 
   .ec-meter-track {
     position: relative;
-    height: 14px;
+    height: 16px;
     background: var(--paper);
-    border: 1px solid var(--ink);
+    border: 2px solid var(--ink);
     border-radius: 4px;
     display: flex;
     overflow: visible;
   }
 
   .meter-segment.you-seg {
-    background: var(--sage);
+    background: linear-gradient(90deg, var(--map-you-likely) 0%, var(--map-you-lean) 100%);
     transition: width 0.3s ease;
   }
 
@@ -964,15 +983,15 @@
   }
 
   .meter-segment.them-seg {
-    background: var(--alert);
+    background: var(--map-them-likely);
     transition: width 0.3s ease;
   }
 
   .target-pin {
     position: absolute;
-    top: -4px;
+    top: -5px;
     bottom: -4px;
-    width: 2px;
+    width: 2.5px;
     background: var(--ink);
     transform: translateX(-50%);
     z-index: 2;

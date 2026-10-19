@@ -37,6 +37,7 @@
       k === '✂️' ||
       k === '✍️' ||
       k === '📜' ||
+      k === 'scales' ||
       k === 'institutionalist' ||
       k === 'purist' ||
       k === 'gavel' ||
@@ -50,6 +51,9 @@
     if (
       k === '📣' ||
       k === '💊' ||
+      k === '🛒' ||
+      k === '🎤' ||
+      k === 'megaphone' ||
       k === 'populist' ||
       k === 'main_street' ||
       k.includes('junk_fee') ||
@@ -62,6 +66,7 @@
     if (
       k === '📊' ||
       k === '🔬' ||
+      k === '📈' ||
       k === 'technocrat' ||
       k === 'chart_up' ||
       k === 'chart' ||
@@ -75,6 +80,7 @@
       k === '🌐' ||
       k === '🚢' ||
       k === '🗺️' ||
+      k === 'globe' ||
       k === 'globalist' ||
       k === 'compass' ||
       k.includes('port') ||
@@ -89,6 +95,8 @@
       k === '⚡' ||
       k === '🚐' ||
       k === '🕊️' ||
+      k === '🏥' ||
+      k === 'leaf' ||
       k === 'green' ||
       k === 'green_transition' ||
       k.includes('clean') ||
@@ -102,6 +110,7 @@
       k === '💻' ||
       k === '🛂' ||
       k === '⚔️' ||
+      k === 'shield' ||
       k === 'security' ||
       k === 'national_security' ||
       k.includes('cyber') ||
@@ -110,7 +119,8 @@
       k.includes('border')
     )
       return 'shield';
-    if (k === '🤝' || k === 'dealmaker' || k.includes('whip') || k.includes('coalition')) return 'handshake';
+    if (k === '🤝' || k === '👥' || k === 'handshake' || k === 'dealmaker' || k.includes('whip') || k.includes('coalition'))
+      return 'handshake';
     if (
       k === '🏛️' ||
       k === '🗳️' ||
@@ -124,6 +134,7 @@
     if (
       k === '🕶️' ||
       k === '🕵️' ||
+      k === 'syndicate' ||
       k === 'shadow_cartel' ||
       k === 'fixer_ring' ||
       k.includes('shell') ||
@@ -137,6 +148,8 @@
       k === '💎' ||
       k === '🏦' ||
       k === '💵' ||
+      k === '💳' ||
+      k === 'vault' ||
       k === 'kleptocracy' ||
       k === 'treasury' ||
       k.includes('offshore') ||
@@ -150,6 +163,7 @@
       k === '🗑️' ||
       k === '🙊' ||
       k === '📁' ||
+      k === 'shredder' ||
       k === 'cover_up' ||
       k === 'captured_regulators' ||
       k.includes('shred') ||

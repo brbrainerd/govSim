@@ -4,6 +4,7 @@
   import { extractTurnAttributions, type Direction } from '../app/attribution';
   import { whyTextForMode } from '../content/text/why';
   import MiniChart from '../ui/art/MiniChart.svelte';
+  import CivicEmblem from '../ui/art/CivicEmblem.svelte';
   import Overlay from '../ui/Overlay.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import HouseholdBreakdown from '../ui/HouseholdBreakdown.svelte';
@@ -32,33 +33,55 @@
 
   const totalParams = getInspectorSummary().totalParameters;
   const economyMyth = $derived(pickContextualMyth(session.current, 'economy'));
+  const topGap = $derived(session.baselineGaps[0]);
 
-  const IND_EMOJI: Record<string, string> = {
-    income: '💵',
-    empPop: '👷',
-    inflation: '🛒',
-    debtPct: '💳',
-    lifeExp: '🏥',
-    gini: '⚖️',
-    security: '🛡️',
-    trust: '🤝',
+  const IND_EMBLEM: Record<string, string> = {
+    income: 'treasury',
+    empPop: 'industrial',
+    inflation: 'megaphone',
+    debtPct: 'vault',
+    lifeExp: 'leaf',
+    gini: 'scales',
+    security: 'shield',
+    trust: 'handshake',
   };
 
   let showScoresModal = $state(false);
   let viewMode = $state<'macro' | 'household'>('macro');
 
-  // Time series extraction
-  const growthSeries = $derived(session.history.map((s) => s.econ.growth));
-  const autoGrowthSeries = $derived(session.autopilot.map((s) => s.econ.growth));
+  // Time series extraction: on Turn 1 (history.length <= 1), display the 4-quarter projected trajectory vs Doing nothing
+  const proj4Q = $derived(session.draftScorePreview.projected4Q);
+  const growthSeries = $derived(
+    session.history.length > 1 ? session.history.map((s) => s.econ.growth) : proj4Q.map((p) => p.playerGrowth),
+  );
+  const autoGrowthSeries = $derived(
+    session.autopilot.length > 1 ? session.autopilot.map((s) => s.econ.growth) : proj4Q.map((p) => p.autoGrowth),
+  );
 
-  const empPopSeries = $derived(session.history.map((s) => s.econ.empPop));
-  const autoEmpPopSeries = $derived(session.autopilot.map((s) => s.econ.empPop));
+  const empPopSeries = $derived(
+    session.history.length > 1 ? session.history.map((s) => s.econ.empPop) : proj4Q.map((p) => p.playerEmpPop),
+  );
+  const autoEmpPopSeries = $derived(
+    session.autopilot.length > 1 ? session.autopilot.map((s) => s.econ.empPop) : proj4Q.map((p) => p.autoEmpPop),
+  );
 
-  const inflationSeries = $derived(session.history.map((s) => s.econ.inflation));
-  const autoInflationSeries = $derived(session.autopilot.map((s) => s.econ.inflation));
+  const inflationSeries = $derived(
+    session.history.length > 1 ? session.history.map((s) => s.econ.inflation) : proj4Q.map((p) => p.playerInflation),
+  );
+  const autoInflationSeries = $derived(
+    session.autopilot.length > 1 ? session.autopilot.map((s) => s.econ.inflation) : proj4Q.map((p) => p.autoInflation),
+  );
 
-  const debtPctSeries = $derived(session.history.map((s) => (s.econ.debt / s.econ.gdp) * 100));
-  const autoDebtPctSeries = $derived(session.autopilot.map((s) => (s.econ.debt / s.econ.gdp) * 100));
+  const debtPctSeries = $derived(
+    session.history.length > 1
+      ? session.history.map((s) => (s.econ.debt / s.econ.gdp) * 100)
+      : proj4Q.map((p) => p.playerDebtPct),
+  );
+  const autoDebtPctSeries = $derived(
+    session.autopilot.length > 1
+      ? session.autopilot.map((s) => (s.econ.debt / s.econ.gdp) * 100)
+      : proj4Q.map((p) => p.autoDebtPct),
+  );
 
   // Current values and directions
   const currEcon = $derived(session.current.econ);
@@ -82,12 +105,12 @@
 
   const kitchenTableSummary = $derived.by(() => {
     if (currEcon.inflation > 3.2) {
-      return '🏠 For regular people: Store prices are rising faster than paychecks, squeezing monthly grocery budgets.';
+      return 'For regular people: Store prices are rising faster than paychecks, squeezing monthly grocery budgets.';
     }
     if (currEcon.growth < 1.2) {
-      return '🏠 For regular people: Hiring is slowing down, making families cautious about big purchases.';
+      return 'For regular people: Hiring is slowing down, making families cautious about big purchases.';
     }
-    return '🏠 For regular people: Paychecks are keeping up with store prices and jobs are steady.';
+    return 'For regular people: Paychecks are keeping up with store prices and jobs are steady.';
   });
 
   // Fed explainer
@@ -175,7 +198,8 @@
           onclick={() => (viewMode = 'macro')}
           data-testid="tab-macro"
         >
-          {session.vocabMode === 'wonk' ? 'Macro Indicators (GDP / CPI)' : '📊 Big Picture Economy'}
+          <CivicEmblem kind="chart" size={14} tone={viewMode === 'macro' ? 'card' : 'ink'} />
+          <span>{session.vocabMode === 'wonk' ? 'Macro Indicators (GDP / CPI)' : 'Big Picture Economy'}</span>
         </button>
         <button
           type="button"
@@ -186,9 +210,29 @@
           onclick={() => (viewMode = 'household')}
           data-testid="tab-household"
         >
-          🏠 Your Household
+          <CivicEmblem kind="industrial" size={14} tone={viewMode === 'household' ? 'card' : 'ink'} />
+          <span>Your Household</span>
         </button>
       </div>
+
+      {#if topGap}
+        <div class="economy-coach-strip" data-testid="economy-baseline-coach">
+          <span class="coach-strip-label">
+            <b>Top Gap ({topGap.weightPct}% wt):</b> {topGap.label}
+          </span>
+          <button
+            type="button"
+            class="coach-strip-btn"
+            data-testid="economy-coach-fix-btn"
+            onclick={() => {
+              session.stageStrategicPlaybook(topGap.fix);
+              go(topGap.fix.screen);
+            }}
+          >
+            {topGap.fix.label}
+          </button>
+        </div>
+      {/if}
 
       {#if onOpenMyth && session.showMyths && !session.hasResolvedMyth('interest_rates')}
         <button
@@ -205,7 +249,8 @@
     {#if viewMode === 'macro'}
       <div class="chart-grid">
         <MiniChart
-          title={session.vocabMode === 'wonk' ? '📈 Growth (Real GDP)' : '📈 Growth'}
+          icon="chart"
+          title={session.vocabMode === 'wonk' ? 'Growth (Real GDP)' : 'Growth'}
           currentValue={`${currEcon.growth.toFixed(1)}% ${growthDir.word}`}
           valueColor={growthDir.dir === 'up' ? 'var(--sage-dark)' : growthDir.dir === 'down' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
           lineColor="var(--sky)"
@@ -216,7 +261,8 @@
         />
 
         <MiniChart
-          title={session.vocabMode === 'wonk' ? '👷 Jobs (Emp-Pop)' : '👷 Jobs'}
+          icon="industrial"
+          title={session.vocabMode === 'wonk' ? 'Jobs (Emp-Pop)' : 'Jobs'}
           currentValue={`${currEcon.empPop.toFixed(1)}% ${empPopDir.word}`}
           valueColor={empPopDir.dir === 'up' ? 'var(--sage-dark)' : empPopDir.dir === 'down' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
           lineColor="var(--sage)"
@@ -227,7 +273,8 @@
         />
 
         <MiniChart
-          title={session.vocabMode === 'wonk' ? '🛒 Prices (CPI Inflation)' : '🛒 Prices'}
+          icon="megaphone"
+          title={session.vocabMode === 'wonk' ? 'Prices (CPI Inflation)' : 'Prices'}
           currentValue={`${currEcon.inflation.toFixed(1)}% ${inflationDir.word}`}
           valueColor={inflationDir.dir === 'down' ? 'var(--sage-dark)' : inflationDir.dir === 'up' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
           lineColor="var(--alert)"
@@ -238,7 +285,8 @@
         />
 
         <MiniChart
-          title={session.vocabMode === 'wonk' ? '💳 Debt (Debt-to-GDP)' : '💳 Debt'}
+          icon="vault"
+          title={session.vocabMode === 'wonk' ? 'Debt (Debt-to-GDP)' : 'Debt'}
           currentValue={`${((currEcon.debt / currEcon.gdp) * 100).toFixed(0)}% ${debtPctDir.word}`}
           valueColor={debtPctDir.dir === 'down' ? 'var(--sage-dark)' : debtPctDir.dir === 'up' ? 'var(--alert-dark)' : 'var(--ink-soft)'}
           lineColor="var(--gold-dark)"
@@ -277,7 +325,10 @@
   {#snippet next()}
     <div class="card panel why-panel">
       <h3 class="panel-title">Why it's happening</h3>
-      <p class="kitchen-summary" data-testid="economy-kitchen-table-summary">{kitchenTableSummary}</p>
+      <p class="kitchen-summary" data-testid="economy-kitchen-table-summary">
+        <CivicEmblem kind="industrial" size={14} />
+        <span>{kitchenTableSummary}</span>
+      </p>
       <ol class="mover-list">
         {#each topMovers as mover, idx}
           <li>
@@ -290,7 +341,10 @@
 
     <div class="card panel fed-panel">
       <div class="fed-header">
-        <h3 class="panel-title">🏦 Federal Reserve</h3>
+        <h3 class="panel-title">
+          <CivicEmblem kind="vault" size={16} />
+          <span>Federal Reserve</span>
+        </h3>
         <span class="fed-rate">{fedExplainer.rate}%</span>
       </div>
       <p class="fed-detail">{fedExplainer.rationale}</p>
@@ -333,7 +387,7 @@
             <tbody>
               {#each allAttributions.indicators as item (item.id)}
                 <tr>
-                  <td class="ind-name"><b><span aria-hidden="true">{IND_EMOJI[item.id] ?? '📊'}</span> {item.name}</b></td>
+                  <td class="ind-name"><b><CivicEmblem kind={IND_EMBLEM[item.id] ?? 'chart'} size={15} /> {item.name}</b></td>
                   <td class="ind-val">{item.formattedValue}</td>
                   <td class="ind-delta" class:good={item.isPositive} class:bad={!item.isPositive && item.direction !== 'flat'}>
                     {item.formattedDelta} ({item.direction})
@@ -361,8 +415,34 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     margin-bottom: 6px;
     flex-shrink: 0;
+  }
+
+  .economy-coach-strip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    padding: 3px 6px 3px 10px;
+    font: 600 11.5px/1.1 var(--font-ui);
+    color: var(--ink);
+  }
+  .coach-strip-label {
+    white-space: nowrap;
+  }
+  .coach-strip-btn {
+    background: var(--gold);
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font: 700 11px/1.1 var(--font-ui);
+    cursor: pointer;
+    white-space: nowrap;
   }
 
   .mirage-lever-btn {
@@ -392,6 +472,9 @@
   }
 
   .switch-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     border: none;
     background: none;
     padding: 5px 14px;
@@ -432,11 +515,17 @@
   }
   .panel-title {
     margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font: 700 clamp(16px, 1.3vw, 20px) var(--font-display);
     color: var(--ink);
   }
   .kitchen-summary {
     margin: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
     padding: 4px 8px;
     background: var(--paper-dark);
     border-left: 3px solid var(--gold-dark);

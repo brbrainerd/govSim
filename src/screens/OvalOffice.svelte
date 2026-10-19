@@ -166,6 +166,33 @@
         {/each}
       </div>
     </div>
+    {#if !session.isEvilMode && session.strategicPlaybooks.length > 0}
+      <div class="playbook-variety-strip" data-testid="playbook-variety-strip" role="group" aria-label="Strategic playbooks to beat doing nothing">
+        <div class="playbook-strip-head">
+          <span class="playbook-strip-label">★ 3 WAYS TO BEAT DOING NOTHING THIS QUARTER ★</span>
+          <span class="playbook-strip-sub">1-click stages the play &amp; House votes so it clears on Next Turn</span>
+        </div>
+        <div class="playbook-cards">
+          {#each session.strategicPlaybooks as pb, i (pb.id)}
+            <button
+              type="button"
+              class="playbook-card"
+              data-testid={`quick-playbook-btn-${i}`}
+              onclick={() => {
+                session.stageStrategicPlaybook(pb);
+              }}
+            >
+              <div class="pb-top">
+                <span class="pb-badge"><CivicEmblem kind={pb.icon} size={12} /> {pb.badge}</span>
+                <span class="pb-delta">{pb.estDeltaLabel}</span>
+              </div>
+              <b class="pb-title">{pb.title}</b>
+              <span class="pb-upside">{pb.upside}</span>
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/if}
   {/snippet}
   {#snippet learn()}
     <button type="button" class="link" data-testid="how-it-works-btn" onclick={() => onOpenExplainer?.('oval_office')}>How it works</button>
@@ -351,7 +378,11 @@
             <b>{s.title}</b>
             {#if s.play?.pack && packMeta}
               <span class="play-badge" data-testid="advisor-play-badge">
-                <CivicEmblem kind={packMeta.emoji} size={11} /> Play: {s.play.pack} · <CivicEmblem kind="up" size={10} /> {packMeta.upside}
+                <CivicEmblem kind={packMeta.emoji} size={11} /> Play: {s.play.pack}{s.play.estScoreDelta ? ` (${s.play.estScoreDelta})` : ''} · <CivicEmblem kind="up" size={10} /> {packMeta.upside}
+              </span>
+            {:else if s.play?.signOrder}
+              <span class="play-badge" data-testid="advisor-play-badge">
+                <CivicEmblem kind="scroll" size={11} /> Play: Executive Order{s.play.estScoreDelta ? ` (${s.play.estScoreDelta})` : ''}
               </span>
             {:else if s.play?.autoWhip}
               <span class="play-badge" data-testid="advisor-play-badge">
@@ -792,5 +823,112 @@
 
   .ai-trigger-btn:hover:not(:disabled) {
     background: var(--ink-soft);
+  }
+
+  .playbook-variety-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 6px 10px;
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    box-shadow: 2px 2px 0 var(--ink);
+    flex-shrink: 0;
+  }
+
+  .playbook-strip-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    border-bottom: 1px dashed var(--ink);
+    padding-bottom: 3px;
+  }
+
+  .playbook-strip-label {
+    font: 800 10.5px/1.1 var(--font-ui);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .playbook-strip-sub {
+    font: 600 10.5px/1.1 var(--font-body);
+    color: var(--ink-soft);
+  }
+
+  .playbook-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .playbook-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 5px 8px;
+    background: var(--paper-warm);
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    box-shadow: 1.5px 1.5px 0 var(--ink);
+    cursor: pointer;
+    text-align: left;
+    transition: transform var(--dur-fast), background var(--dur-fast);
+  }
+
+  .playbook-card:hover {
+    transform: translateY(-1px);
+    background: var(--gold-tint);
+  }
+
+  .pb-top {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+  }
+
+  .pb-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font: 800 9px/1 var(--font-ui);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .pb-delta {
+    font: 800 9.5px/1 var(--font-ui);
+    padding: 1.5px 5px;
+    border-radius: 4px;
+    background: var(--sage-tint);
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .pb-title {
+    font: 700 clamp(11px, 0.88vw, 12.5px)/1.15 var(--font-display);
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .pb-upside {
+    font: 500 10px/1.15 var(--font-body);
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 </style>

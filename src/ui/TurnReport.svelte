@@ -7,6 +7,7 @@
   import type { Look, Mood } from './art/Character.svelte';
   import CharacterPortrait from './art/CharacterPortrait.svelte';
   import Rosette from './art/Rosette.svelte';
+  import CivicEmblem from './art/CivicEmblem.svelte';
   import SynergyBar from './SynergyBar.svelte';
 
   let { session, onClose }: { session: Session; onClose: () => void } = $props();
@@ -51,6 +52,13 @@
 </script>
 
 <div class="report-card">
+  <img
+    src="/assets/environments/report-oval-bg.jpg"
+    alt=""
+    aria-hidden="true"
+    class="report-env-plate"
+    data-testid="report-env-plate"
+  />
   <div class="banner">
     <div class="banner-tail left" aria-hidden="true"></div>
     <h2 id="turn-report-title">{title}</h2>
@@ -63,7 +71,7 @@
       <div class="rows" role="table" aria-label="Quarterly Indicator Results">
         {#each [...attributions.indicators, attributions.approval, attributions.clout] as item}
           <div class="row" role="row">
-            <span class="name-cell" role="cell"><span class="ind-icon" aria-hidden="true">{IND_EMOJI[item.id] ?? '📊'}</span><span class="name">{item.name}</span></span>
+            <span class="name-cell" role="cell"><span class="ind-icon" aria-hidden="true"><CivicEmblem kind={IND_EMOJI[item.id] ?? '📊'} size={15} /></span><span class="name">{item.name}</span></span>
             <span class="val num" role="cell">{item.formattedValue}</span>
             <span
               class="badge {item.direction}"
@@ -174,7 +182,7 @@
           <span>10 yrs: <b>{laterDiff >= 0 ? '+' : '−'}{Math.abs(laterDiff).toFixed(1)}</b></span>
         </div>
         <p class="kitchen-takeaway" data-testid="report-kitchen-table-summary">
-          🏠 {scoreDiff >= 0 ? 'Regular families are better off than on autopilot.' : 'Regular families are feeling more strain than on autopilot.'}
+          <CivicEmblem kind="🏠" size={14} /> {scoreDiff >= 0 ? 'Regular families are better off than on autopilot.' : 'Regular families are feeling more strain than on autopilot.'}
         </p>
       </div>
 
@@ -190,15 +198,31 @@
 
 <style>
   .report-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: clamp(8px, 1.2vh, 16px);
     width: 100%;
     height: 100%;
+    padding: 8px;
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+
+  .report-env-plate {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.22;
+    pointer-events: none;
+    z-index: 0;
   }
 
   .banner {
     position: relative;
+    z-index: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -221,6 +245,8 @@
   }
 
   .content-split {
+    position: relative;
+    z-index: 1;
     display: grid;
     grid-template-columns: minmax(0, 1.4fr) minmax(240px, 0.9fr);
     gap: clamp(14px, 2vw, 24px);
@@ -231,8 +257,10 @@
   .table-col {
     background: var(--card);
     border: 2px solid var(--ink);
+    outline: 1px solid var(--ink);
+    outline-offset: -5px;
     border-radius: var(--r-sm);
-    padding: clamp(8px, 1.2vh, 14px) clamp(10px, 1.4vw, 18px);
+    padding: clamp(10px, 1.4vh, 16px) clamp(12px, 1.6vw, 20px);
     overflow-y: auto;
     max-height: clamp(340px, 58vh, 520px);
   }

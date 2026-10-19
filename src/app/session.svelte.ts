@@ -57,8 +57,17 @@ import { getPerk, type PerkDefinition } from '../content/perks';
 import { perkRerollCost, rollPerkSlate, totalPerkRerollsCost } from '../engine/perks';
 import { computeActiveSynergies, type ActiveFamilySynergy } from '../engine/synergies';
 import { PERK_MAX_REROLLS_PER_TURN } from '../engine/units';
+import {
+  diagnoseBaselineGaps,
+  getStrategicPlaybooks,
+  previewDraftVsBaseline,
+  type BaselineComponentGap,
+  type BaselineFixAction,
+  type DraftScorePreview,
+  type StrategicPlaybook,
+} from './beat-baseline';
 
-export type { VocabMode };
+export type { VocabMode, BaselineComponentGap, BaselineFixAction, DraftScorePreview, StrategicPlaybook };
 
 export interface StagedActionItem {
   readonly id: string;
@@ -372,6 +381,14 @@ export class Session {
   score = $derived(scoreVsAutopilot(this.current, this.autopilot[this.autopilot.length - 1]!));
   /** Headline: how much better than doing nothing (same seed, same shocks). */
   vsNothing = $derived(this.score.total);
+  /** Live Beat-the-Baseline lookahead preview of the current staged draft (Phase 57, BEAT-01). */
+  draftScorePreview = $derived<DraftScorePreview>(previewDraftVsBaseline(this));
+  /** 8-component You vs. Autopilot gap breakdown sorted by leverage (Phase 57, BEAT-01). */
+  baselineGaps = $derived<readonly BaselineComponentGap[]>(
+    diagnoseBaselineGaps(this.current, this.autopilot[this.autopilot.length - 1] ?? this.current),
+  );
+  /** 3 rotating strategic playbooks with live Est. +X.X vs. Autopilot deltas (Phase 58, FUN-01). */
+  strategicPlaybooks = $derived<readonly StrategicPlaybook[]>(getStrategicPlaybooks(this));
   /** The term has ended: every action is a no-op and the UI shows the term as over. */
   over = $derived(this.current.turn >= TOTAL_TURNS || this.termEnded);
   canAutoWhip = $derived(
@@ -849,11 +866,53 @@ export class Session {
     if (play.pack) {
       this.pickPackage(play.pack);
     }
+    if (play.signOrder && !this.current.activeOrders.includes(play.signOrder)) {
+      if (!this.draft.signedOrders.includes(play.signOrder)) {
+        this.toggleSignOrder(play.signOrder);
+      }
+    }
     if (play.sendToCongress || play.autoWhip) {
       this.sendToCongress();
     }
     if (play.autoWhip) {
       this.autoWhipCoalition();
+    }
+  }
+
+  stageStrategicPlaybook(play: {
+    readonly pack?: PackageName;
+    readonly budgetOverrides?: Partial<Record<string, number>>;
+    readonly socialOverrides?: Partial<SocialDraft>;
+    readonly signOrder?: string;
+    readonly autoWhip?: boolean;
+  }) {
+    if (this.over) return;
+    if (play.pack) {
+      this.pickPackage(play.pack);
+    }
+    if (play.budgetOverrides) {
+      for (const [k, v] of Object.entries(play.budgetOverrides)) {
+        if (typeof v === 'number') {
+          this.draft.budget[k] = v;
+        }
+      }
+    }
+    if (play.socialOverrides) {
+      for (const [k, v] of Object.entries(play.socialOverrides)) {
+        if (typeof v === 'number') {
+          this.draft.social[k as keyof SocialDraft] = v;
+        }
+      }
+    }
+    if (play.signOrder && !this.current.activeOrders.includes(play.signOrder)) {
+      if (!this.draft.signedOrders.includes(play.signOrder)) {
+        this.toggleSignOrder(play.signOrder);
+      }
+    }
+    if (play.autoWhip || play.pack || play.budgetOverrides || play.socialOverrides) {
+      this.sendToCongress();
+      this.autoWhipCoalition();
+      this.callVote();
     }
   }
 

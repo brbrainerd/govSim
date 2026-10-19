@@ -200,16 +200,16 @@
     {#if warningCount > 0}
       <span class="footer-warn" data-testid="turn-clearing-summary">
         <CivicEmblem kind="warn" size={12} />
-        <b>{warningCount} Needs Action</b> · {clearingCount} ready to clear
+        <b>{warningCount} Needs Action</b> · {session.draftScorePreview.badgeText}
       </span>
     {:else if clearingCount > 0}
       <span class="footer-clear" data-testid="turn-clearing-summary">
         <CivicEmblem kind="up" size={12} />
-        <b>{clearingCount} Clearing on Next Turn</b> · Clout {cloutDelta >= 0 ? `+${cloutDelta}` : cloutDelta} ({session.clout} left)
+        <b>{clearingCount} Clearing on Next Turn</b> · {session.draftScorePreview.badgeText} · Clout {cloutDelta >= 0 ? `+${cloutDelta}` : cloutDelta}
       </span>
     {:else}
       <span class="footer-idle" data-testid="turn-clearing-summary">
-        <b>0 Queued:</b> Stage 1-click play above or pick an Advisor Option below
+        <b>0 Queued:</b> Pick a 1-Click Playbook on the left or stage row 1 above
       </span>
     {/if}
   </div>

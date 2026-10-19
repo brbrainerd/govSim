@@ -12,6 +12,8 @@ export interface AdvisorPlay {
   readonly pack?: PackageName;
   readonly autoWhip?: boolean;
   readonly sendToCongress?: boolean;
+  readonly signOrder?: string;
+  readonly estScoreDelta?: string;
 }
 
 export interface Suggestion {
@@ -302,8 +304,58 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
     };
   }
 
-  // 6. Default steady conditions — rotate myth suggestion via seeded RNG + context when enabled
+  // 6. Default steady conditions — preserve Turn 1 onboarding, rotate diverse plays on Turn 2+
   const rotatedMyth = pickContextualMyth(current, 'oval');
+  const alreadyPassedInfra = (current.policy.rds ?? 100) >= 115;
+  const canSignAntitrust = !current.activeOrders.includes('eo_antitrust_review');
+  const canSignBuyAmerican = !current.activeOrders.includes('eo_buy_american');
+
+  if (current.turn > 1 && alreadyPassedInfra) {
+    const primaryPlay: Suggestion = canSignAntitrust
+      ? {
+          title: 'Cool store prices fast',
+          cta: 'Open Powers',
+          target: 'powers',
+          play: { signOrder: 'eo_antitrust_review', estScoreDelta: '+0.4 vs. Autopilot' },
+        }
+      : {
+          title: 'Trim the federal deficit',
+          cta: 'Open Budget',
+          target: 'budget',
+          play: { pack: 'Balance the budget', estScoreDelta: '+0.8 vs. Autopilot' },
+        };
+    const secondaryPlay: Suggestion = canSignBuyAmerican
+      ? {
+          title: 'Back home factories',
+          cta: 'Open Powers',
+          target: 'powers',
+          play: { signOrder: 'eo_buy_american', estScoreDelta: '+0.5 vs. Autopilot' },
+        }
+      : {
+          title: 'Win over swing states',
+          cta: 'Open Voters',
+          target: 'voters',
+        };
+    return {
+      bubble: 'Your first budget is law. Now push new wins to beat autopilot.',
+      thisTurn: {
+        title: 'Build on your lead',
+        detail: 'Pick an executive order or a new budget deal this turn.',
+      },
+      suggestions: [
+        primaryPlay,
+        secondaryPlay,
+        resolveThirdSlot(
+          showMyths,
+          viewed,
+          mythSuggestion,
+          { title: `Myth? ${rotatedMyth.title}`, cta: 'Find out', mythId: rotatedMyth.id },
+          { title: 'Review trade deals', cta: 'Open Trade', target: 'trade' },
+        ),
+      ],
+    };
+  }
+
   return {
     bubble: 'The economy is steady. Congress awaits your budget plan.',
     thisTurn: {
@@ -311,8 +363,18 @@ export function generateBriefing(session: SessionContext): BriefingInfo {
       detail: 'Work with leaders in Congress to fund your plans.',
     },
     suggestions: [
-      { title: 'Pass a budget', cta: 'Open Budget', target: 'budget', play: { pack: 'Infrastructure push' } },
-      { title: 'Win over Moderates', cta: 'Open Congress', target: 'congress', play: { autoWhip: true } },
+      {
+        title: 'Pass a budget',
+        cta: 'Open Budget',
+        target: 'budget',
+        play: { pack: 'Infrastructure push', estScoreDelta: '+0.8 vs. Autopilot' },
+      },
+      {
+        title: 'Win over Moderates',
+        cta: 'Open Congress',
+        target: 'congress',
+        play: { autoWhip: true, estScoreDelta: '218+ Votes' },
+      },
       resolveThirdSlot(
         showMyths,
         viewed,
