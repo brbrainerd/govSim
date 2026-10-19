@@ -30,6 +30,7 @@ const base = {
   scrim: 'rgba(31,47,85,.65)',
   'sage-tint': 'rgba(43,110,71,.12)',
   'alert-tint': 'rgba(142,47,34,.12)',
+  'gold-tint': 'rgba(217,162,59,.18)',
   'ink-tint': 'rgba(74,86,119,.15)',
   // Illustration
   'art-wall': '#F6EDD8',
@@ -69,7 +70,14 @@ const base = {
   // Type
   'font-display': "'Arvo', Georgia, serif",
   'font-ui': "'Barlow Condensed', 'Arial Narrow', sans-serif",
+  'font-condensed': "'Barlow Condensed', 'Arial Narrow', sans-serif",
   'font-body': "'Atkinson Hyperlegible', system-ui, sans-serif",
+  'text-xs': '11px',
+  'text-sm': '12.5px',
+  'text-md': '14px',
+  'text-lg': '16px',
+  'text-xl': '20px',
+  'text-2xl': '24px',
   // Shape & motion
   'r-sm': '10px',
   'r-md': '14px',
@@ -112,6 +120,7 @@ export const themes = {
     scrim: 'rgba(12,9,7,.78)',
     'sage-tint': 'rgba(62,123,82,.16)',
     'alert-tint': 'rgba(122,30,30,.15)',
+    'gold-tint': 'rgba(200,162,82,.2)',
     'ink-tint': 'rgba(30,22,18,.12)',
     'art-wall': '#584222',
     'art-trim': '#3D2D16',

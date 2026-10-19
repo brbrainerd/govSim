@@ -528,16 +528,16 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-family: var(--font-condensed);
-    font-size: var(--text-xs);
+    font-family: var(--font-ui);
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.06em;
     color: var(--alert);
   }
 
   .countdown-tag {
-    font-family: var(--font-condensed);
-    font-size: var(--text-xs);
+    font-family: var(--font-ui);
+    font-size: 11px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -556,7 +556,7 @@
 
   .alert-headline {
     font-family: var(--font-body);
-    font-size: var(--text-xs);
+    font-size: 11px;
     line-height: 1.25;
     color: var(--ink);
   }
@@ -566,8 +566,8 @@
     background: var(--alert);
     color: var(--card);
     border: 1.5px solid var(--ink);
-    font-family: var(--font-condensed);
-    font-size: var(--text-xs);
+    font-family: var(--font-ui);
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.05em;
     text-transform: uppercase;

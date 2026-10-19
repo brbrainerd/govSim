@@ -12,6 +12,7 @@
   const { states, districts = {}, selectedCode = null, onSelect }: Props = $props();
 
   const stateCodes = Object.keys(STATE_PATHS);
+  const allMapCodes = [...stateCodes, ...DISTRICT_CHIPS.map((c) => c.id)];
 
   function getLeaningColor(leaning?: string): string {
     switch (leaning) {
@@ -53,12 +54,12 @@
     } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
       e.preventDefault();
       const nextIndex = (index + 1) % total;
-      const nextTarget = document.querySelector<SVGElement>(`[data-map-code="${stateCodes[nextIndex]}"]`);
+      const nextTarget = document.querySelector<SVGElement>(`[data-map-code="${allMapCodes[nextIndex]}"]`);
       nextTarget?.focus();
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
       e.preventDefault();
       const prevIndex = (index - 1 + total) % total;
-      const prevTarget = document.querySelector<SVGElement>(`[data-map-code="${stateCodes[prevIndex]}"]`);
+      const prevTarget = document.querySelector<SVGElement>(`[data-map-code="${allMapCodes[prevIndex]}"]`);
       prevTarget?.focus();
     }
   }
@@ -110,7 +111,7 @@
             aria-label={formatAria(voterState, path.name)}
             aria-pressed={isSelected}
             onclick={() => onSelect?.(code)}
-            onkeydown={(e) => handleKey(e, code, idx, stateCodes.length)}
+            onkeydown={(e) => handleKey(e, code, idx, allMapCodes.length)}
           />
 
           <!-- Pattern overlays for nonpartisanship & accessibility (GR-23) -->
@@ -173,7 +174,7 @@
         stroke-width="1"
         class="panel-backdrop"
       />
-      <text x="12" y="18" font-size="11" font-weight="bold" font-family="var(--font-condensed)" fill="var(--ink)">
+      <text x="12" y="18" font-size="11" font-weight="bold" font-family="var(--font-ui)" fill="var(--ink)">
         DISTRICT ELECTORAL VOTES & DC
       </text>
 
@@ -191,18 +192,14 @@
         <g
           class="district-chip"
           class:selected={isDistSelected}
+          data-map-code={chip.id}
           transform="translate({x}, {y})"
           tabindex="0"
           role="button"
           aria-label={formatAria(voterDist, chip.name)}
           aria-pressed={isDistSelected}
           onclick={() => onSelect?.(chip.id)}
-          onkeydown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onSelect?.(chip.id);
-            }
-          }}
+          onkeydown={(e) => handleKey(e, chip.id, stateCodes.length + idx, allMapCodes.length)}
         >
           <rect
             width="112"
@@ -221,7 +218,7 @@
             x="6"
             y="14"
             font-size="10"
-            font-family="var(--font-condensed)"
+            font-family="var(--font-ui)"
             font-weight="bold"
             fill={isLightLeaning(voterDist?.leaning) ? 'var(--ink)' : 'var(--card)'}
             pointer-events="none"
@@ -234,10 +231,10 @@
 
     <!-- Inset boundary boxes for AK and HI -->
     <rect x="25" y="470" width="180" height="120" fill="none" stroke="var(--ink)" stroke-width="0.5" stroke-dasharray="2 2" pointer-events="none" opacity="0.4" />
-    <text x="30" y="482" font-size="9" font-family="var(--font-condensed)" fill="var(--ink-soft)" pointer-events="none">AK INSET</text>
+    <text x="30" y="482" font-size="9" font-family="var(--font-ui)" fill="var(--ink-soft)" pointer-events="none">AK INSET</text>
 
     <rect x="230" y="520" width="110" height="70" fill="none" stroke="var(--ink)" stroke-width="0.5" stroke-dasharray="2 2" pointer-events="none" opacity="0.4" />
-    <text x="235" y="532" font-size="9" font-family="var(--font-condensed)" fill="var(--ink-soft)" pointer-events="none">HI INSET</text>
+    <text x="235" y="532" font-size="9" font-family="var(--font-ui)" fill="var(--ink-soft)" pointer-events="none">HI INSET</text>
   </svg>
 </div>
 

@@ -5,14 +5,14 @@
 See: `.planning/PROJECT.md` (updated 2026-10-18)
 
 **Core value:** A player can make real presidential tradeoffs against an honest, explainable model of the current US, see immediately how to beat "doing nothing" (`autopilot`) across multiple fun strategic playbooks, and experience an authentic vintage Americana civics poster UI verified across 8 core surfaces.
-**Current focus:** Milestone v1.3 — Complete & Verified (Phases 56–59)
+**Current focus:** Milestone v1.3 — Complete, Code-Reviewed (`59-REVIEW.md`), Audited (`v1.3-MILESTONE-AUDIT.md`), Archived & Tagged `v1.3`
 
 ## Current Position
 
-Phase: 59 of 59 (Concept-Art `Economy` & `Voters` Overhaul & After/Compare CV Verification)
+Phase: 59 of 59 (Milestone v1.3 Archived)
 Plan: 1 of 1 in current phase
-Status: Complete
-Last activity: 2026-10-18 — Completed Milestone v1.3 (Phases 56–59) and verified all 16 CV comparison sheets (`1376×768` & `1280×720`) + E2E/unit/determinism gates
+Status: Milestone v1.3 Complete & Archived
+Last activity: 2026-10-18 — Completed `/gsd-code-review --fix --all` (`11/11` findings fixed in `59-REVIEW.md`) and `/gsd-complete-milestone` for `v1.3`
 
 Progress: [██████████] 100% (4/4 phases in v1.3)
 
@@ -21,7 +21,7 @@ Progress: [██████████] 100% (4/4 phases in v1.3)
 **Velocity:**
 - Total plans completed (v0.2–v1.3): 88 plans across 59 phases
 - Average duration: ~12 min
-- Total execution time: ~17.0 hours
+- Total execution time: ~17.2 hours
 
 ## Accumulated Context
 
@@ -33,7 +33,7 @@ Progress: [██████████] 100% (4/4 phases in v1.3)
 
 ### Pending Todos
 
-- None — Milestone v1.3 complete and verified.
+- None — Milestone v1.3 complete, code-reviewed, audited, and archived. Ready for `/gsd-new-milestone` when needed.
 
 ### Blockers/Concerns
 
@@ -41,6 +41,6 @@ Progress: [██████████] 100% (4/4 phases in v1.3)
 
 ## Session Continuity
 
-Last session: 2026-10-18T21:00:00-07:00
-Stopped at: Milestone v1.3 complete (Phases 56–59)
+Last session: 2026-10-18T21:18:00-07:00
+Stopped at: Milestone v1.3 complete, code-reviewed (`59-REVIEW.md`), audited (`v1.3-MILESTONE-AUDIT.md`), and archived
 Resume file: `.planning/HANDOFF.md`

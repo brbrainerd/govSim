@@ -69,6 +69,7 @@
   // Round before choosing the sign so -0.04 shows as +0.0, never "−0.0 worse" (IN-04).
   const shown = $derived(Math.round(totalScore * 10) / 10);
   const hasUnsentWarning = $derived(stagedActions.some((a) => a.warning));
+  const hasUnsentBudget = $derived(stagedActions.some((a) => a.id === 'budget-unsent'));
 </script>
 
 <svelte:window
@@ -86,8 +87,8 @@
       <svg width="58" height="66" viewBox="0 0 58 66" aria-hidden="true" data-testid="approval-medal-svg">
         <!-- Hanging Navy Ribbon Tails matching .design-targets/g-voters.png & g-crisis.png -->
         <g data-testid="approval-medal-ribbons">
-          <polygon points="16,46 9,64 17,60 23,65 25,49" fill="var(--navy)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
-          <polygon points="42,46 49,64 41,60 35,65 33,49" fill="var(--navy)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
+          <polygon points="16,46 9,64 17,60 23,65 25,49" fill="var(--ink)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
+          <polygon points="42,46 49,64 41,60 35,65 33,49" fill="var(--ink)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" />
         </g>
         <circle cx="29" cy="28" r="25" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5" />
         <circle cx="29" cy="28" r="19" fill="none" stroke="var(--ink)" stroke-width="7.5" opacity=".15" />
@@ -153,13 +154,17 @@
             class:active={coachOpen}
             data-testid="beat-baseline-coach-btn"
             aria-expanded={coachOpen}
-            onclick={() => (coachOpen = !coachOpen)}
+            aria-controls="beat-baseline-coach-popover"
+            onclick={() => {
+              coachOpen = !coachOpen;
+              if (coachOpen) trayOpen = false;
+            }}
           >
             How to beat doing nothing ▾
           </button>
         {/if}
         {#if coachOpen}
-          <div class="coach-popover" data-testid="beat-baseline-coach" role="region" aria-label="How to Beat Doing Nothing Strategy Coach">
+          <div id="beat-baseline-coach-popover" class="coach-popover" data-testid="beat-baseline-coach" role="region" aria-label="How to Beat Doing Nothing Strategy Coach">
             <div class="coach-popover-head">
               <div>
                 <b>How to Beat Doing Nothing (Autopilot)</b>
@@ -223,16 +228,22 @@
             class:warning={hasUnsentWarning}
             data-testid="staged-decisions-pill"
             aria-expanded={trayOpen}
-            onclick={() => (trayOpen = !trayOpen)}
+            aria-controls="staged-decisions-popover"
+            onclick={() => {
+              trayOpen = !trayOpen;
+              if (trayOpen) coachOpen = false;
+            }}
           >
-            {#if hasUnsentWarning}
+            {#if hasUnsentBudget}
               <CivicEmblem kind="warn" size={11} /> {stagedActions.length} staged (unsent)
+            {:else if hasUnsentWarning}
+              <CivicEmblem kind="warn" size={11} /> {stagedActions.length} staged (needs votes)
             {:else}
               {stagedActions.length} staged
             {/if}
           </button>
           {#if trayOpen}
-            <div class="staged-popover" data-testid="staged-decisions-popover" role="region" aria-label="Staged decisions this turn">
+            <div id="staged-decisions-popover" class="staged-popover" data-testid="staged-decisions-popover" role="region" aria-label="Staged decisions this turn">
               <div class="popover-head">
                 <b>Clearing this turn</b>
                 {#if stagedActions.length > 0 && onClearStaged}
@@ -267,7 +278,11 @@
                       >
                         <span>{item.label}</span>
                         <span class="staged-status-tag" class:warn-tag={item.warning}>
-                          {item.warning ? 'UNSENT !' : 'CLEARS ✓'}
+                          {item.warning
+                            ? 'UNSENT !'
+                            : item.id === 'bill-queued' && !item.label.startsWith('Bill vote called')
+                              ? 'IN CONGRESS'
+                              : 'CLEARS ✓'}
                         </span>
                       </button>
                     </li>
@@ -327,8 +342,11 @@
     <div class="next">
       <button class="stamp" onclick={onNextTurn} disabled={gameState.turn >= TOTAL_TURNS}>Next turn</button>
       <div class="next-sub" data-testid="next-turn-clearing-sub">
-        {#if hasUnsentWarning}
+        {#if hasUnsentBudget}
           <span class="sub-warn">! 1 unsent</span>
+          <span class="sep">·</span>
+        {:else if hasUnsentWarning}
+          <span class="sub-warn">! 1 needs votes</span>
           <span class="sep">·</span>
         {:else if stagedActions.length > 0}
           <span class="sub-clear">✓ {stagedActions.length} clearing</span>

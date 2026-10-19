@@ -210,7 +210,7 @@
   }
 
   .ribbon-text {
-    font-family: var(--font-condensed);
+    font-family: var(--font-ui);
     font-size: var(--text-sm);
     font-weight: 900;
     letter-spacing: 0.15em;
@@ -246,7 +246,7 @@
   }
 
   .section-label {
-    font-family: var(--font-condensed);
+    font-family: var(--font-ui);
     font-size: var(--text-xs);
     font-weight: 700;
     text-transform: uppercase;
@@ -255,7 +255,7 @@
   }
 
   .autopilot-badge {
-    font-family: var(--font-condensed);
+    font-family: var(--font-ui);
     font-size: var(--text-xs);
     font-weight: 700;
     text-transform: uppercase;
@@ -271,7 +271,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-family: var(--font-condensed);
+    font-family: var(--font-ui);
     font-size: var(--text-xs);
     font-weight: 700;
     text-transform: uppercase;
@@ -284,7 +284,7 @@
   }
 
   .countdown-badge {
-    font-family: var(--font-condensed);
+    font-family: var(--font-ui);
     font-size: var(--text-xs);
     font-weight: 800;
     text-transform: uppercase;
@@ -415,7 +415,7 @@
   }
 
   .clout-pill {
-    font-family: var(--font-condensed);
+    font-family: var(--font-ui);
     font-size: var(--text-xs);
     font-weight: 700;
     letter-spacing: 0.05em;
@@ -476,7 +476,7 @@
   }
 
   .precedent-summary {
-    font-family: var(--font-condensed);
+    font-family: var(--font-ui);
     font-size: var(--text-xs);
     font-weight: 700;
     color: var(--ink-soft);
@@ -525,7 +525,7 @@
     background: var(--alert);
     color: var(--card);
     border: 2px solid var(--ink);
-    font-family: var(--font-condensed);
+    font-family: var(--font-ui);
     font-size: var(--text-md);
     font-weight: 900;
     letter-spacing: 0.1em;

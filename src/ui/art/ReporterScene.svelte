@@ -200,4 +200,7 @@
       animation: none;
     }
   }
+  :global([data-calm='true']) .spin-slow {
+    animation: none !important;
+  }
 </style>

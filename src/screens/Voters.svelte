@@ -209,19 +209,84 @@
             <table class="states-table">
               <thead>
                 <tr>
-                  <th scope="col" onclick={() => toggleSort('name')} class="sortable">
+                  <th
+                    scope="col"
+                    role="columnheader"
+                    tabindex="0"
+                    aria-sort={sortKey === 'name' ? (sortAsc ? 'ascending' : 'descending') : 'none'}
+                    onclick={() => toggleSort('name')}
+                    onkeydown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleSort('name');
+                      }
+                    }}
+                    class="sortable"
+                  >
                     State / District {sortKey === 'name' ? (sortAsc ? '▲' : '▼') : ''}
                   </th>
-                  <th scope="col" onclick={() => toggleSort('ev')} class="sortable num-col">
+                  <th
+                    scope="col"
+                    role="columnheader"
+                    tabindex="0"
+                    aria-sort={sortKey === 'ev' ? (sortAsc ? 'ascending' : 'descending') : 'none'}
+                    onclick={() => toggleSort('ev')}
+                    onkeydown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleSort('ev');
+                      }
+                    }}
+                    class="sortable num-col"
+                  >
                     EV {sortKey === 'ev' ? (sortAsc ? '▲' : '▼') : ''}
                   </th>
-                  <th scope="col" onclick={() => toggleSort('support')} class="sortable num-col">
+                  <th
+                    scope="col"
+                    role="columnheader"
+                    tabindex="0"
+                    aria-sort={sortKey === 'support' ? (sortAsc ? 'ascending' : 'descending') : 'none'}
+                    onclick={() => toggleSort('support')}
+                    onkeydown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleSort('support');
+                      }
+                    }}
+                    class="sortable num-col"
+                  >
                     Support {sortKey === 'support' ? (sortAsc ? '▲' : '▼') : ''}
                   </th>
-                  <th scope="col" onclick={() => toggleSort('margin')} class="sortable num-col">
+                  <th
+                    scope="col"
+                    role="columnheader"
+                    tabindex="0"
+                    aria-sort={sortKey === 'margin' ? (sortAsc ? 'ascending' : 'descending') : 'none'}
+                    onclick={() => toggleSort('margin')}
+                    onkeydown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleSort('margin');
+                      }
+                    }}
+                    class="sortable num-col"
+                  >
                     Margin {sortKey === 'margin' ? (sortAsc ? '▲' : '▼') : ''}
                   </th>
-                  <th scope="col" onclick={() => toggleSort('outlook')} class="sortable">
+                  <th
+                    scope="col"
+                    role="columnheader"
+                    tabindex="0"
+                    aria-sort={sortKey === 'outlook' ? (sortAsc ? 'ascending' : 'descending') : 'none'}
+                    onclick={() => toggleSort('outlook')}
+                    onkeydown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleSort('outlook');
+                      }
+                    }}
+                    class="sortable"
+                  >
                     Outlook {sortKey === 'outlook' ? (sortAsc ? '▲' : '▼') : ''}
                   </th>
                 </tr>
@@ -603,7 +668,7 @@
     display: flex;
     gap: 12px;
     font-size: 12px;
-    font-family: var(--font-condensed);
+    font-family: var(--font-ui);
     color: var(--ink-soft);
     align-items: center;
   }
@@ -714,7 +779,7 @@
 
   .cohort-share {
     font-size: 11px;
-    font-family: var(--font-condensed);
+    font-family: var(--font-ui);
     color: var(--ink-soft);
     white-space: nowrap;
   }
@@ -1177,7 +1242,7 @@
 
   .salience-tag {
     font-size: 10px;
-    font-family: var(--font-condensed);
+    font-family: var(--font-ui);
     font-weight: bold;
     padding: 2px 6px;
     border-radius: 3px;
@@ -1364,7 +1429,7 @@
   }
 
   .leg-label {
-    font-family: var(--font-condensed);
+    font-family: var(--font-ui);
     font-size: 11px;
     font-weight: 700;
     color: var(--ink-soft);
@@ -1379,7 +1444,7 @@
   }
 
   .leg-badge.R {
-    background: var(--alert-light);
+    background: var(--alert-tint);
     color: var(--ink);
   }
 

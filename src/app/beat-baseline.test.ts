@@ -36,11 +36,36 @@ describe('Beat-the-Baseline Lookahead & Strategy Coach (BEAT-01..03, FUN-01)', (
     expect(unsentPreview.projected4Q).toHaveLength(5);
 
     session.sendToCongress();
+    const sentUnwhippedPreview = previewDraftVsBaseline(session);
+    expect(sentUnwhippedPreview.needsCongressVote).toBe(true);
+    expect(sentUnwhippedPreview.deltaVsIdle.total).toBeGreaterThan(0);
+    expect(sentUnwhippedPreview.queuedDeltaVsIdle.total).toBe(0);
+
     session.autoWhipCoalition();
     session.callVote();
     const passedPreview = previewDraftVsBaseline(session);
     expect(passedPreview.needsCongressVote).toBe(false);
     expect(passedPreview.queuedDeltaVsIdle.total).toBeGreaterThan(0);
+  });
+
+  it('previewDraftVsBaseline includes stagedEvilLevers and dynamicCrisisDelta (CR-01)', () => {
+    const evilSession = new Session(42, START, { party: 'D', evilMode: true, unlockAll: true }, { skipAutosave: true });
+    expect(previewDraftVsBaseline(evilSession).hasStagedChanges).toBe(false);
+    evilSession.toggleEvilLever('crony_contracts');
+    const evilPreview = previewDraftVsBaseline(evilSession);
+    expect(evilPreview.hasStagedChanges).toBe(true);
+
+    const dynSession = new Session(42, START, { party: 'D', unlockAll: true }, { skipAutosave: true });
+    dynSession.stageDynamicCrisisOption({
+      cloutCost: 10,
+      approvalDelta: 2,
+      gapDelta: 0.4,
+      infDelta: -0.1,
+      trustDelta: 0.02,
+    });
+    const dynPreview = previewDraftVsBaseline(dynSession);
+    expect(dynPreview.hasStagedChanges).toBe(true);
+    expect(dynPreview.deltaVsIdle.total).toBeGreaterThan(0);
   });
 
   it('getStrategicPlaybooks returns 3 distinct playbooks and rotates across turns', () => {

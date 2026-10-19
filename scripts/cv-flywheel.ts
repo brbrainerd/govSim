@@ -475,7 +475,7 @@ async function runCompare(): Promise<void> {
   const page = await browser.newPage();
 
   const mdLines: string[] = [
-    '# Computer-Vision Before/After Flywheel Report (`v1.2`)',
+    '# Computer-Vision Before/After Flywheel Report (`v1.3`)',
     '',
     `Generated: ${new Date().toISOString()}`,
     '',

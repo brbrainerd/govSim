@@ -1,5 +1,41 @@
 # Milestones
 
+## v1.3 Beat-the-Baseline Strategy Coach, Playbook Variety, Concept-Art Folder/Rosette GUI & Full-Surface CV Flywheel (Shipped: 2026-10-18)
+
+**Phases completed:** 4 phases (Phases 56–59), 4 plans, 12/12 requirements (`CV-FULL-01`, `GUI-ART-01..03`, `BEAT-01..03`, `FUN-01..03`, `ECON-VOT-01..03`)
+
+**Key accomplishments:**
+
+- Expanded the Screenshot Computer-Vision Flywheel (`scripts/cv-flywheel.ts`) to capture and compare all 8 core surfaces (`newgame`, `oval-day`, `oval-evil`, `economy`, `voters`, `powers`, `congress`, `budget`) across `1376×768` and `1280×720` (16 comparison sheets per run) with non-occluding header banners (`CV-FULL-01`).
+- Generated and layered vintage Americana environment plates (`public/assets/environments/crisis-newsroom-bg.jpg` matching `.design-targets/g-crisis.png` and `public/assets/environments/report-oval-bg.jpg` matching `.design-targets/g-report.png`) into `ReporterScene.svelte` and `TurnReport.svelte`, upgraded `Rail.svelte` to authentic Manila Folder Tabs with navy folder-ear group badges (`HOME`, `SEE`, `ACT`) and halftone dot texture, and added hanging navy ribbon tails to the Approval rosette in `StatusBar.svelte` (`GUI-ART-01..03`).
+- Built `src/app/beat-baseline.ts` (`previewDraftVsBaseline`, `diagnoseBaselineGaps`, `getStrategicPlaybooks`) + `src/app/beat-baseline.test.ts`, surfaced live `Est. +X.X vs. Autopilot` score-delta pills (`draft-score-delta-pill`) across `StatusBar`, `TurnAgendaCard`, `Budget`, and `Congress`, and added the interactive 8-Component **How to Beat Doing Nothing Strategy Coach** (`beat-baseline-coach`) and **3 Ways to Beat Doing Nothing This Quarter** Playbook Variety Strip (`playbook-variety-strip`) (`BEAT-01..03`, `FUN-01..03`).
+- Overhauled `Economy.svelte` / `MiniChart.svelte` (double-line vintage frames, 4-quarter shock-isolated trajectory preview on Turn 1, inline `economy-baseline-coach`, zero raw emojis) and `Voters.svelte` / `USMap.svelte` (Americana Civic Blue & Brick Coral map palette with Mustard Gold swing-state outlines, circular `(270)` bullseye target badge, keyboard-reachable sortable table headers, zero raw emojis) (`ECON-VOT-01..03`).
+
+---
+
+## v1.2 Layered Environment Art, Civ-Style Turn Triggers & Progressive Decision Clarity (Shipped: 2026-10-18)
+
+**Phases completed:** 4 phases (Phases 52–55), 4 plans, 12/12 requirements (`ENV-01..03`, `TRIG-01..03`, `CLEAR-01..03`, `PROG-01..03`)
+
+**Key accomplishments:**
+
+- Generated and layered 3 vintage Americana poster environment plates (`public/assets/environments/oval-day-bg.jpg`, `oval-evil-bg.jpg`, `newgame-portico-bg.jpg`) as `Layer 0` backdrops behind `Layer 1` animated SVG window weather/sunbeams/searchlights + reactive desk dossiers (`oval-staged-dossiers`) and `Layer 2` foreground character rigs in `OvalOfficeScene.svelte` and `NewGame.svelte` (`ENV-01..03`).
+- Built `src/app/turn-triggers.ts` (`resolveTurnTrigger`, `describeStagedItem`, `isMandateDraftSpotlightTurn`, `buildTurnChecklist`) and `src/ui/TurnAgendaCard.svelte` (`★ PENDING & CLEARING ★` stacked index card matching `.design-targets/uikit.png` & `hub2.png`) with Civ-style priority spotlight triggers and explicit clearing badges (`PASSES (224/218) ✓`, `CLEARS THIS TURN ✓`, `SHORT N VOTES ⚠`, `DRAFT UNSENT !`) (`TRIG-01..03`, `CLEAR-01..03`).
+- Added live clearing status banners and progressive toggles on `Budget.svelte` and `Congress.svelte` and verified all comparison sheets (`PROG-01..03`).
+
+---
+
+## v1.1 Visual Fidelity, Evil Mode Palette & Computer-Vision Flywheel (Shipped: 2026-10-18)
+
+**Phases completed:** 4 phases (Phases 48–51), 4 plans, 14/14 requirements (`CV-01..03`, `EVIL-PAL-01..03`, `CHAR-01..03`, `OVAL-01..02`, `GUI-01..03`)
+
+**Key accomplishments:**
+
+- Built reusable before/after Screenshot Computer-Vision Flywheel (`scripts/cv-flywheel.ts`, `pnpm cv:flywheel`) capturing deterministic `before` and `after` screenshots across `1376×768` and `1280×720`, computing quantitative DOM/pixel telemetry (`metrics.json`, `cv-report.md`), and rendering side-by-side **Before | After | Target** comparison sheets (`CV-01..03`).
+- Fixed Evil Mode's inverted photo-negative palette (`src/design/tokens.ts`, `StatusBar.svelte`, `Ribbon.svelte`, `OvalOfficeScene.svelte`, `OvalOffice.svelte`), removed cartoon `stroke="var(--ink)"` outer borders across `Character.svelte`, `CharacterPortrait.svelte`, and `FedPortrait.svelte`, restored smooth unadorned thumb/finger dome heads for male characters, moved `.chyron-strip` below `.scene`, and compacted `Powers.svelte` to a 5×2 EO grid (`EVIL-PAL-01..03`, `CHAR-01..03`, `OVAL-01..02`, `GUI-01..03`).
+
+---
+
 ## v1.0 High-Craft Character Art, Living Animations, UI/UX Alignment & Incremental Mandate Synergies (Shipped: 2026-10-18)
 
 **Phases completed:** 9 phases (Phases 39–47), 9 plans, 26/26 requirements

@@ -491,7 +491,7 @@
 
   .milestone-box {
     border-color: var(--gold);
-    background: var(--gold-soft);
+    background: var(--gold-tint);
   }
   .milestone-item {
     display: flex;

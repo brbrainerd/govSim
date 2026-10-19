@@ -579,7 +579,7 @@
     color: var(--ink);
     background: var(--paper);
     border: 1px solid var(--ink-soft);
-    cursor: default;
+    cursor: pointer;
     box-shadow: none;
   }
 

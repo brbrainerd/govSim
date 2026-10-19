@@ -92,13 +92,14 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 - ✓ Civ-style per-turn trigger cadence (`activeTurnTrigger` — max 1 spotlight trigger per turn) and smart turn-blocker stamp button in `StatusBar.svelte` (`RESOLVE CRISIS !`, `SEND BILL TO CONGRESS →`, `CALL FLOOR VOTE →`, `END QUARTER`) (`TRIG-01..03`) — v1.2
 - ✓ `★ PENDING & CLEARING THIS TURN ★` stacked index card (`TurnAgendaCard.svelte` matching `uikit.png` / `hub2.png`) with per-item clearing status (`CLEARS THIS TURN ✓`, `SHORT VOTES ⚠`, `DRAFT UNSENT !`), 1-click staging, and decluttered 3-card `OvalOffice.svelte` right column (`CLEAR-01..03`) — v1.2
 - ✓ Progressive disclosure on `Budget.svelte` and `Congress.svelte` (core kitchen-table levers + expandable advanced/institutional drawers matching `g-budget.png` / `g-congress.png`) and Before/After CV Flywheel verification (`PROG-01..03`) — v1.2
+- ✓ 8-surface CV Flywheel (`newgame`, `oval-day`, `oval-evil`, `economy`, `voters`, `powers`, `congress`, `budget`), layered Crisis & Quarterly Report environment plates (`crisis-newsroom-bg.jpg`, `report-oval-bg.jpg`), authentic Manila Folder left-rail tabs with halftone dot texture, and Approval Medal ribbon tails (`CV-FULL-01`, `GUI-ART-01..03`) — v1.3
+- ✓ Live "Beat the Baseline" Score-Delta Preview Engine (`previewDraftVsBaseline`, `diagnoseBaselineGaps`) + live `Est. +X.X vs. Autopilot` pill on `StatusBar`, `TurnAgendaCard`, `Budget`, and `Congress`, plus an interactive 8-Component **"How to Beat Doing Nothing" Strategy Coach** (`BEAT-01..03`) — v1.3
+- ✓ Multi-Path Strategic Playbook Variety (`getStrategicPlaybooks` in `beat-baseline.ts` & `briefing.ts`) with rotating 3-path Chief of Staff playbooks showing projected score deltas (`playbook-variety-strip`), plus tuned early-turn responsiveness (`FUN-01..03`) — v1.3
+- ✓ Concept-Art `Economy.svelte` (`g-economy.png`) & `Voters.svelte` (`g-voters.png`) visual and gameplay overhaul (double-line vintage frames, live 4-quarter draft trajectory preview on charts, zero raw Unicode emojis, Americana blue/coral/gold swing-state map, circular `270` bullseye marker, 1-click fix actions) (`ECON-VOT-01..03`) — v1.3
 
-### Active (Milestone v1.3 — Beat-the-Baseline Strategy Coach, Playbook Variety, Concept-Art Folder/Rosette GUI & Full-Surface CV Flywheel)
+### Active
 
-- [ ] 8-surface CV Flywheel (`newgame`, `oval-day`, `oval-evil`, `economy`, `voters`, `powers`, `congress`, `budget`), layered Crisis & Quarterly Report environment plates (`crisis-newsroom-bg.jpg`, `report-oval-bg.jpg`), authentic Manila Folder left-rail tabs with halftone dot texture, and Approval Medal ribbon tails (`CV-FULL-01..03`, `GUI-ART-01..03`)
-- [ ] Live "Beat the Baseline" Score-Delta Preview Engine (`previewDraftVsBaseline`, `diagnoseBaselineGaps`) + live `Est. +X.X vs. Autopilot` pill on `StatusBar`, `TurnAgendaCard`, `Budget`, `Congress`, and `Powers`, plus an interactive 8-Component **"How to Beat Doing Nothing" Strategy Coach** (`BEAT-01..03`)
-- [ ] Multi-Path Strategic Playbook Variety (`getStrategicPlaybooks` in `beat-baseline.ts` & `briefing.ts`) with rotating 3-path Chief of Staff playbooks (Growth & Innovation, Kitchen-Table Compact, Fiscal & Trade Discipline, Quick EO Wins) showing projected score deltas, plus tuned early-turn responsiveness (`FUN-01..03`)
-- [ ] Concept-Art `Economy.svelte` (`g-economy.png`) & `Voters.svelte` (`g-voters.png`) visual and gameplay upgrade (double-line vintage frames, live draft trajectory preview on charts, zero raw Unicode emojis, Americana blue/coral/gold swing-state map, 270 bullseye marker, 1-click campaign/fix actions) (`ECON-VOT-01..03`)
+- None — Milestone v1.3 complete, code-reviewed, audited, and archived. Run `/gsd-new-milestone` to define the next milestone.
 
 ### Out of Scope
 
@@ -110,7 +111,7 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 
 ## Context
 
-- Shipped Milestone v1.1 ("Visual Fidelity, Evil Mode Palette & Computer-Vision Flywheel") with 534 unit/property/balance/readability tests across 89 files, 79 Playwright E2E tests across 33 spec files, 0 axe violations, 0 default network egress, and 8/8 cross-browser determinism hashes.
+- Shipped Milestone v1.3 ("Beat-the-Baseline Strategy Coach, Playbook Variety, Concept-Art Folder/Rosette GUI & Full-Surface CV Flywheel") with 540 unit/property/balance/readability tests across 91 files, 16 side-by-side CV Flywheel comparison sheets across 8 surfaces (`1376×768` and `1280×720`), 0 axe violations, 0 default network egress, and 8/8 cross-browser determinism hashes.
 - Pure client application (TypeScript + Svelte 5 runes + Vite), zero backend dependencies, zero telemetry.
 - Visual direction C (Americana poster) with dual theme tokens (Day Americana and Dark Espresso/Brass/Cream for Evil Mode).
 - Zero outer viewport scrolling across 1376×768 and 1280×720 viewports in both Plain Talk and Policy Wonk modes.

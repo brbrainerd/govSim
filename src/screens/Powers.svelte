@@ -1342,7 +1342,7 @@
 
   .court-reform-btn {
     padding: 4px 10px;
-    font-size: var(--text-xs);
+    font-size: 11px;
     white-space: nowrap;
   }
 

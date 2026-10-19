@@ -296,11 +296,10 @@ function buildPreviewDecisions(session: Session, forcePassBill: boolean): {
   );
   const hasBillChanges = budgetModified || socialModified || draft.pack !== null;
   const hasBillQueued = draft.voteCalled || draft.sentToCongress || draft.deals.length > 0;
+  const billCurrentlyPasses = hasBillQueued && Boolean(session.preview?.passed);
 
   const decisions: Decisions = {};
-  if (hasBillQueued && session.bill) {
-    decisions.bill = session.bill;
-  } else if (forcePassBill && hasBillChanges) {
+  if (forcePassBill && (hasBillChanges || hasBillQueued) && !billCurrentlyPasses) {
     const heatFriction = calculateHeatPenalties(state.evil?.heat ?? 0).congressFrictionVotes;
     const coalition = findCheapestCoalition(
       draft.deals,
@@ -313,6 +312,8 @@ function buildPreviewDecisions(session: Session, forcePassBill: boolean): {
       deals: [...coalition.totalDeals],
       social: { ...draft.social },
     };
+  } else if (hasBillQueued && session.bill) {
+    decisions.bill = session.bill;
   }
 
   if (draft.crisisChoice) {
@@ -353,12 +354,32 @@ function buildPreviewDecisions(session: Session, forcePassBill: boolean): {
       ...(draft.tradeAgreements !== null ? { agreements: [...draft.tradeAgreements] } : {}),
     };
   }
-  if (!session.isClassicSim && (draft.perkPickId !== null || draft.perkSkipForClout)) {
+  if (draft.stagedEvilLevers.length > 0) {
+    decisions.evil = {
+      enactedLevers: [...draft.stagedEvilLevers],
+    };
+  }
+  if (
+    !session.isClassicSim &&
+    (draft.perkPickId !== null ||
+      draft.perkSkipForClout ||
+      draft.perkRerolls > 0 ||
+      draft.perkLockedId !== undefined)
+  ) {
     decisions.perk = {
       ...(draft.perkPickId ? { pickId: draft.perkPickId } : {}),
       ...(draft.perkSkipForClout ? { skipForClout: true } : {}),
+      ...(draft.perkRerolls > 0 ? { rerolls: draft.perkRerolls } : {}),
+      ...(draft.perkLockedId !== undefined ? { lockedId: draft.perkLockedId } : {}),
     };
   }
+  if (draft.dynamicCrisisDelta) {
+    decisions.dynamicCrisisDelta = { ...draft.dynamicCrisisDelta };
+  }
+  if (draft.turnEntropy != null) {
+    decisions.turnEntropy = draft.turnEntropy;
+  }
+  decisions.presidentialSide = (session.options.party === 'R' ? 'R' : 'D') as 'D' | 'R';
 
   const hasOtherChanges =
     Boolean(decisions.crisis) ||
@@ -370,11 +391,12 @@ function buildPreviewDecisions(session: Session, forcePassBill: boolean): {
     Boolean(decisions.amendmentCampaign) ||
     Boolean(decisions.foreignPolicy) ||
     Boolean(decisions.trade) ||
-    Boolean(decisions.perk);
+    Boolean(decisions.evil) ||
+    Boolean(decisions.perk) ||
+    Boolean(decisions.dynamicCrisisDelta);
 
   const hasStagedChanges = hasBillChanges || hasBillQueued || hasOtherChanges;
-  const needsCongressVote =
-    hasBillChanges && (!hasBillQueued || !(session.preview?.passed ?? false));
+  const needsCongressVote = (hasBillChanges || hasBillQueued) && !billCurrentlyPasses;
 
   return { decisions, hasStagedChanges, needsCongressVote };
 }
@@ -392,8 +414,22 @@ export function previewDraftVsBaseline(session: Session): DraftScorePreview {
   );
   const { decisions: queuedDecisions } = buildPreviewDecisions(session, false);
 
-  const autoNext = endTurn(autoState, autopilotDecisions(autoState));
-  const idlePlayerNext = endTurn(state, autopilotDecisions(state));
+  const autoDecisions: Decisions = {
+    ...autopilotDecisions(autoState),
+    ...(enactedDecisions.turnEntropy !== undefined
+      ? { turnEntropy: enactedDecisions.turnEntropy }
+      : {}),
+  };
+  const idlePlayerDecisions: Decisions = {
+    ...autopilotDecisions(state),
+    presidentialSide: enactedDecisions.presidentialSide,
+    ...(enactedDecisions.turnEntropy !== undefined
+      ? { turnEntropy: enactedDecisions.turnEntropy }
+      : {}),
+  };
+
+  const autoNext = endTurn(autoState, autoDecisions);
+  const idlePlayerNext = endTurn(state, idlePlayerDecisions);
   const enactedPlayerNext = hasStagedChanges ? endTurn(state, enactedDecisions) : idlePlayerNext;
   const queuedPlayerNext = hasStagedChanges ? endTurn(state, queuedDecisions) : idlePlayerNext;
 

@@ -242,12 +242,12 @@
   .deadline-banner { display: flex; flex-direction: column; gap: 4px; padding: 6px 12px; background: var(--alert-tint); border: 2px solid var(--alert); border-radius: var(--r-md); margin-bottom: 2px; }
   .deadline-item { display: flex; flex-direction: column; gap: 2px; }
   .deadline-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .deadline-pill { font-family: var(--font-condensed); font-size: var(--text-xs); font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; padding: 1px 6px; background: var(--ink); color: var(--card); border-radius: var(--r-sm); }
+  .deadline-pill { font-family: var(--font-ui); font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; padding: 1px 6px; background: var(--ink); color: var(--card); border-radius: var(--r-sm); }
   .deadline-pill.critical { background: var(--alert); }
-  .deadline-title { font-family: var(--font-ui); font-size: var(--text-xs); color: var(--ink); }
-  .deadline-desc { font-family: var(--font-body); font-size: var(--text-xs); color: var(--ink-soft); }
+  .deadline-title { font-family: var(--font-ui); font-size: 11px; color: var(--ink); }
+  .deadline-desc { font-family: var(--font-body); font-size: 11px; color: var(--ink-soft); }
   .deadline-action-card { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border-left: 4px solid var(--alert); background: var(--paper-dark); }
-  .deadline-action-card b { font-family: var(--font-display); font-size: var(--text-sm); color: var(--alert); }
+  .deadline-action-card b { font-family: var(--font-display); font-size: 12.5px; color: var(--alert); }
   .bill { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .bill b { font: 700 clamp(16px, 1.3vw, 20px) var(--font-display); }
   .bill-delta-pill {
@@ -330,7 +330,7 @@
   }
   .info b { font: 700 clamp(16px, 1.35vw, 21px)/1.15 var(--font-display); }
   .line { font: 500 clamp(12px, 0.95vw, 14.5px)/1.2 var(--font-body); color: var(--ink-soft); max-width: 45ch; }
-  .good { color: var(--color-good-fg); }
+  .good { color: var(--sage-dark); }
   .bad { color: var(--alert); }
   .deal { display: flex; align-items: center; gap: clamp(6px, 0.7vw, 8px); padding: clamp(4px, 0.7vh, 8px) clamp(7px, 0.9vw, 10px); }
   .deal div { display: flex; flex-direction: column; flex: 1; max-width: 30ch; gap: 1px; }
