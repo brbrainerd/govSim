@@ -10,6 +10,7 @@
   import type { ExplainerId } from '../content/explainers';
   import { pickContextualMyth } from '../content/myths';
   import { BLOC_EXPLAINERS, DEAL_TRADEOFFS } from '../content/tradeoffs';
+  import CivicEmblem from '../ui/art/CivicEmblem.svelte';
 
   let {
     session,
@@ -92,7 +93,7 @@
         {#each groups as g (g.id)}
           {@const bMeta = BLOC_EXPLAINERS[g.id]}
           <span title={session.vocabMode === 'wonk' ? bMeta.wonkNote : bMeta.plainNote}>
-            <i style:background="var(--{g.color})"></i><span aria-hidden="true">{bMeta.emoji}</span> <b>{whip.byGroup[g.id]}</b>/{g.seats} · wants {g.wants.toLowerCase()}
+            <i style:background="var(--{g.color})"></i><CivicEmblem kind={bMeta.emoji} size={12} /> <b>{whip.byGroup[g.id]}</b>/{g.seats} · wants {g.wants.toLowerCase()}
           </span>
         {/each}
       </div>
@@ -105,7 +106,7 @@
       onclick={() => showingFilibuster = true}
       data-testid="open-filibuster-modal"
     >
-      {session.vocabMode === 'wonk' ? '' : '🏛️ Filibuster Rule · '}Senate Cloture: {filibusterInfo.threshold} votes ({filibusterInfo.name})
+      {#if session.vocabMode !== 'wonk'}<CivicEmblem kind="🏛️" size={12} /> Filibuster Rule · {/if}Senate Cloture: {filibusterInfo.threshold} votes ({filibusterInfo.name})
     </button>
     <button
       type="button"
@@ -113,7 +114,7 @@
       onclick={() => showingAmendment = true}
       data-testid="open-amendment-modal"
     >
-      {session.vocabMode === 'wonk' ? '' : '📜 Change Constitution · '}Article V Amendments {#if session.current.activeAmendment}· <b>Ratifying ({session.current.activeAmendment.ratifiedStates.length}/38)</b>{/if}
+      {#if session.vocabMode !== 'wonk'}<CivicEmblem kind="📜" size={12} /> Change Constitution · {/if}Article V Amendments {#if session.current.activeAmendment}· <b>Ratifying ({session.current.activeAmendment.ratifiedStates.length}/38)</b>{/if}
     </button>
     {#if onOpenMyth && session.showMyths}
       {#if !session.hasResolvedMyth('debt_ceiling_default')}
@@ -183,8 +184,8 @@
       {@const dMeta = DEAL_TRADEOFFS[d.id]}
       <div class="card deal" title={dMeta.whyClick} data-testid={`deal-card-${d.id}`}>
         <div>
-          <b><span aria-hidden="true">{dMeta.emoji}</span> {session.vocabMode === 'wonk' ? dMeta.wonkLabel : d.title}</b>
-          <span>👍 {dMeta.upside} · ⚠️ {dMeta.catchText}</span>
+          <b><CivicEmblem kind={dMeta.emoji} size={13} /> {session.vocabMode === 'wonk' ? dMeta.wonkLabel : d.title}</b>
+          <span><CivicEmblem kind="up" size={11} /> {dMeta.upside} · <CivicEmblem kind="warn" size={11} /> {dMeta.catchText}</span>
         </div>
         <button class="btn" disabled={done || !session.canDeal(d.id)} onclick={() => session.makeDeal(d.id)}>{done ? 'Done' : `${d.cost} clout`}</button>
       </div>

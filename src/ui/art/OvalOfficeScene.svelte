@@ -82,8 +82,8 @@
     {/each}
     <!-- Warm radial glow for Evil Mode banker's lamp (matching g-evil.png) -->
     <radialGradient id="evil-lamp-glow" cx="50%" cy="45%" r="55%">
-      <stop offset="0%" stop-color="var(--gold)" stop-opacity="0.46" />
-      <stop offset="55%" stop-color="var(--gold)" stop-opacity="0.16" />
+      <stop offset="0%" stop-color="var(--gold)" stop-opacity="0.52" />
+      <stop offset="55%" stop-color="var(--gold)" stop-opacity="0.18" />
       <stop offset="100%" stop-color="var(--gold)" stop-opacity="0" />
     </radialGradient>
   </defs>
@@ -92,7 +92,7 @@
   <rect width="800" height="380" fill="var(--art-wall)" />
   <rect y="0" width="800" height="14" fill="var(--art-trim)" stroke="var(--ink)" stroke-width="1.5" />
 
-  <!-- Curved Dado Rail & Lower Wainscoting Panels -->
+  <!-- Curved Dado Rail & Lower Wainscoting Wall Band (behind curtains & furniture) -->
   <path
     d="M 0 218 Q 400 198 800 218 L 800 312 Q 400 286 0 312 Z"
     fill="var(--art-trim)"
@@ -100,48 +100,19 @@
     stroke-width="2"
   />
   <path
-    d="M 0 224 Q 400 204 800 224"
+    d="M 0 226 Q 400 206 800 226"
     fill="none"
     stroke="var(--ink)"
     stroke-width="1.2"
-    opacity=".45"
+    opacity=".35"
   />
-  {#each [
-    { px: 18, py: 232, pw: 54 },
-    { px: 84, py: 229, pw: 54 },
-    { px: 662, py: 229, pw: 54 },
-    { px: 728, py: 232, pw: 54 },
-  ] as wp (wp.px)}
-    <rect
-      x={wp.px}
-      y={wp.py}
-      width={wp.pw}
-      height="42"
-      rx="2"
-      fill={evilMode ? 'var(--card-alt)' : 'var(--art-wall)'}
-      stroke="var(--ink)"
-      stroke-width="1.4"
-      opacity={evilMode ? 0.55 : 0.8}
-    />
-    <rect
-      x={wp.px + 5}
-      y={wp.py + 5}
-      width={wp.pw - 10}
-      height="32"
-      rx="1"
-      fill="none"
-      stroke="var(--ink)"
-      stroke-width="0.9"
-      opacity=".35"
-    />
-  {/each}
 
-  <!-- Framed Wall Paintings on Far Left & Right (g-evil.png) -->
-  <g class="wall-paintings" opacity=".85">
+  <!-- Framed Wall Paintings on Far Left & Right (g-evil.png & g-home.png) -->
+  <g class="wall-paintings" opacity=".88">
     <rect x="0" y="64" width="24" height="92" rx="2" fill="var(--art-wood)" stroke="var(--ink)" stroke-width="2" />
-    <rect x="3" y="70" width="16" height="80" fill="var(--paper)" stroke="var(--gold)" stroke-width="1" />
+    <rect x="3" y="70" width="16" height="80" fill="var(--card)" stroke="var(--gold)" stroke-width="1.2" />
     <rect x="776" y="64" width="24" height="92" rx="2" fill="var(--art-wood)" stroke="var(--ink)" stroke-width="2" />
-    <rect x="781" y="70" width="16" height="80" fill="var(--paper)" stroke="var(--gold)" stroke-width="1" />
+    <rect x="781" y="70" width="16" height="80" fill="var(--card)" stroke="var(--gold)" stroke-width="1.2" />
   </g>
 
   <!-- 3 Tall Oval Office Bay Windows with Weather & Pleated Curtains (g-home.png, hub2.png, g-evil.png) -->
@@ -149,8 +120,8 @@
     <g clip-path="url(#win{i})">
       {#if evilMode}
         <!-- Dark Night Window in Evil Mode (g-evil.png) -->
-        <rect x={wx} y="24" width="128" height="196" fill="var(--paper)" />
-        <ellipse cx={wx + 64} cy="72" rx="48" ry="20" fill="var(--ink)" opacity=".12" />
+        <rect x={wx} y="24" width="128" height="196" fill="var(--art-sky)" />
+        <ellipse cx={wx + 64} cy="72" rx="48" ry="20" fill="var(--gold)" opacity=".08" />
       {:else if weather === 'storm'}
         <rect x={wx} y="24" width="128" height="196" fill="var(--ink-soft)" />
         <ellipse cx={wx + 40} cy="68" rx="44" ry="20" fill="var(--ink)" opacity=".8" />
@@ -183,35 +154,25 @@
     <rect x={wx} y="24" width="128" height="196" rx="4" fill="none" stroke="var(--ink)" stroke-width="2.5" />
   {/each}
 
-  <!-- Floor-to-Ceiling Pleated Curtains Framing Each Window Bay (g-home.png & g-evil.png) -->
-  {#each [162, 308, 448, 592] as dx, idx (dx)}
+  <!-- Full-Height Floor-to-Ceiling Pleated Curtains Framing Each Window Bay (g-home.png, hub2.png, g-evil.png) -->
+  {#each [152, 302, 442, 592] as dx (dx)}
     <g class="curtain-column">
       <path
-        d="M{dx} 14 h48 v214 q-12 6 -24 0 q-12 6 -24 0 Z"
+        d="M{dx} 14 h56 v272 q-14 6 -28 0 q-14 6 -28 0 Z"
         fill={evilMode ? 'var(--alert)' : 'var(--art-curtain)'}
         stroke="var(--ink)"
         stroke-width="2.2"
       />
       <!-- Pleated vertical curtain folds -->
       <path
-        d="M{dx + 12} 18 v206 M{dx + 24} 18 v208 M{dx + 36} 18 v206"
+        d="M{dx + 14} 18 v264 M{dx + 28} 18 v266 M{dx + 42} 18 v264"
         stroke={evilMode ? 'var(--alert-dark)' : 'var(--art-curtain-shade)'}
         stroke-width="3.5"
       />
-      <!-- Gold rope tie-back in Evil Mode & Standard Mode -->
-      <path
-        d="M{dx - 2} 152 Q{dx + 24} 162 {dx + 50} 152 L{dx + 50} 160 Q{dx + 24} 170 {dx - 2} 160 Z"
-        fill="var(--gold)"
-        stroke="var(--ink)"
-        stroke-width="1.5"
-      />
-      {#if idx === 0}
-        <circle cx={dx + 8} cy="168" r="3.5" fill="var(--gold)" stroke="var(--ink)" stroke-width="1" />
-      {/if}
     </g>
   {/each}
 
-  <!-- Scalloped Upper Curtain Valances Across Window Tops (matching g-evil.png & g-home.png) -->
+  <!-- Scalloped Upper Curtain Valances & Theatrical Corner Swag Drapes (matching g-evil.png) -->
   {#if evilMode}
     {#each [186, 326, 466] as vx (vx)}
       <path
@@ -221,6 +182,30 @@
         stroke-width="2.5"
       />
     {/each}
+    <path
+      d="M 0 14 L 185 14 Q 135 96 64 156 L 0 185 Z"
+      fill="var(--alert)"
+      stroke="var(--ink)"
+      stroke-width="2"
+    />
+    <path
+      d="M 38 14 Q 95 78 40 152 M 85 14 Q 120 68 58 148 M 132 14 Q 145 52 88 114"
+      fill="none"
+      stroke="var(--alert-dark)"
+      stroke-width="2.5"
+    />
+    <path
+      d="M 800 14 L 615 14 Q 665 96 736 156 L 800 185 Z"
+      fill="var(--alert)"
+      stroke="var(--ink)"
+      stroke-width="2"
+    />
+    <path
+      d="M 762 14 Q 705 78 760 152 M 715 14 Q 680 68 742 148 M 668 14 Q 655 52 712 114"
+      fill="none"
+      stroke="var(--alert-dark)"
+      stroke-width="2.5"
+    />
   {/if}
 
   <!-- Hardwood Floor & Curved Oval Office Carpet (g-home.png & g-evil.png) -->
@@ -234,22 +219,22 @@
     stroke="var(--ink)"
     stroke-width="2.5"
   />
-  <!-- Outer Double Gold Carpet Border (g-home.png) -->
+  <!-- Outer Double Gold Carpet Border (g-home.png & g-evil.png) -->
   <ellipse cx="400" cy="358" rx="358" ry="56" fill="none" stroke="var(--gold)" stroke-width="5" />
   <ellipse cx="400" cy="358" rx="344" ry="50" fill="none" stroke="var(--gold)" stroke-width="1.8" />
 
   <!-- Presidential Eagle Seal in Foreground of Carpet (exact match to .design-targets/g-home.png!) -->
   {#if !evilMode}
-    <g class="carpet-seal" transform="translate(400, 366)">
-      <ellipse cx="0" cy="0" rx="108" ry="30" fill="var(--art-carpet)" stroke="var(--gold)" stroke-width="3.5" />
-      <ellipse cx="0" cy="0" rx="96" ry="25" fill="none" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="4 5" />
+    <g class="carpet-seal" transform="translate(400, 360)">
+      <ellipse cx="0" cy="0" rx="104" ry="26" fill="var(--art-carpet)" stroke="var(--gold)" stroke-width="3" />
+      <ellipse cx="0" cy="0" rx="92" ry="21" fill="none" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="4 5" />
       {#each sealStars as angle (angle)}
-        <circle cx={Math.cos(angle) * 84} cy={Math.sin(angle) * 21} r="2.2" fill="var(--gold)" />
+        <circle cx={Math.cos(angle) * 80} cy={Math.sin(angle) * 18} r="2" fill="var(--gold)" />
       {/each}
       <!-- Spread-Wing Heraldic Gold Eagle in Seal Center -->
-      <path d="M -52 -2 Q -24 -14 -8 -4 L 8 -4 Q 24 -14 52 -2 Q 28 4 12 2 L -12 2 Q -28 4 -52 -2 Z" fill="var(--gold)" />
-      <ellipse cx="0" cy="2" rx="14" ry="7" fill="var(--gold)" stroke="var(--ink)" stroke-width="1" />
-      <circle cx="0" cy="-8" r="5" fill="var(--gold)" />
+      <path d="M -48 -2 Q -22 -12 -8 -4 L 8 -4 Q 22 -12 48 -2 Q 26 4 12 2 L -12 2 Q -26 4 -48 -2 Z" fill="var(--gold)" />
+      <ellipse cx="0" cy="2" rx="13" ry="6" fill="var(--gold)" stroke="var(--ink)" stroke-width="1" />
+      <circle cx="0" cy="-7" r="4.5" fill="var(--gold)" />
     </g>
   {/if}
 
@@ -259,12 +244,12 @@
       <rect x="304" y="196" width="192" height="10" rx="2" fill="var(--art-wood-light)" stroke="var(--ink)" stroke-width="2" />
       <rect x="312" y="206" width="176" height="36" fill="var(--art-wood-dark)" stroke="var(--ink)" stroke-width="2" />
       <!-- Left Framed Portrait on Credenza -->
-      <g transform="translate(324, 166) rotate(-4)">
+      <g transform="translate(322, 166) rotate(-4)">
         <rect x="0" y="0" width="24" height="30" rx="2" fill="var(--hair-2)" stroke="var(--ink)" stroke-width="2" />
         <rect x="4" y="4" width="16" height="22" fill="var(--card)" stroke="var(--ink)" stroke-width="1" />
       </g>
       <!-- Right Framed Portrait on Credenza -->
-      <g transform="translate(452, 166) rotate(4)">
+      <g transform="translate(454, 166) rotate(4)">
         <rect x="0" y="0" width="24" height="30" rx="2" fill="var(--hair-2)" stroke="var(--ink)" stroke-width="2" />
         <rect x="4" y="4" width="16" height="22" fill="var(--card)" stroke="var(--ink)" stroke-width="1" />
       </g>
@@ -304,24 +289,24 @@
     </g>
   {/if}
 
-  <!-- High-Back Leather Executive Chair Behind Resolute Desk (g-home.png, hub2.png, g-evil.png) -->
+  <!-- Rounded Leather Executive Chair Tucked Behind President's Shoulders (g-home.png, hub2.png, g-evil.png) -->
   <g data-testid="oval-exec-chair">
     <rect
-      x="352"
-      y={evilMode ? 96 : 122}
-      width="96"
-      height="120"
-      rx="16"
+      x="362"
+      y={evilMode ? 124 : 144}
+      width="76"
+      height="86"
+      rx="18"
       fill="var(--art-wood-dark)"
       stroke="var(--ink)"
-      stroke-width="2.5"
+      stroke-width="2.2"
     />
     <rect
-      x="360"
-      y={evilMode ? 104 : 130}
-      width="80"
-      height="104"
-      rx="10"
+      x="369"
+      y={evilMode ? 131 : 151}
+      width="62"
+      height="72"
+      rx="12"
       fill="var(--ink)"
       opacity=".25"
       stroke="var(--gold)"
@@ -334,9 +319,9 @@
     look={president}
     pose={evilMode ? 'cash' : 'desk'}
     prop={evilMode ? 'cash_fan' : null}
-    x={350}
-    y={evilMode ? 76 : 92}
-    scale={evilMode ? 0.88 : 0.84}
+    x={348}
+    y={evilMode ? 80 : 94}
+    scale={evilMode ? 0.88 : 0.86}
     delay={0.4}
   />
 
@@ -347,47 +332,38 @@
     <rect x="242" y="230" width="308" height="8" fill="var(--art-wood-dark)" stroke="var(--ink)" stroke-width="2" />
 
     <!-- Main Desk Body -->
-    <rect x="246" y="238" width="300" height="96" fill="var(--art-wood)" stroke="var(--ink)" stroke-width="2.4" />
+    <rect x="246" y="238" width="300" height="88" fill="var(--art-wood)" stroke="var(--ink)" stroke-width="2.4" />
 
     <!-- Carved Ornate Frieze Strip Under Desktop (g-home.png) -->
     <rect x="252" y="242" width="288" height="10" fill="var(--art-wood-dark)" opacity=".55" stroke="var(--ink)" stroke-width="1.2" />
 
     <!-- Left & Right Recessed Pedestal Panels (g-home.png & g-evil.png) -->
     {#each [260, 464] as px (px)}
-      <rect x={px} y="258" width="68" height="62" rx="2" fill="var(--art-wood-dark)" opacity=".42" stroke="var(--ink)" stroke-width="1.8" />
-      <rect x={px + 6} y="264" width="56" height="50" rx="1" fill="none" stroke="var(--ink)" stroke-width="1.2" opacity=".6" />
+      <rect x={px} y="256" width="68" height="58" rx="2" fill="var(--art-wood-dark)" opacity=".45" stroke="var(--ink)" stroke-width="1.8" />
+      <rect x={px + 6} y="262" width="56" height="46" rx="1" fill="none" stroke="var(--ink)" stroke-width="1.2" opacity=".6" />
     {/each}
 
     <!-- Center Front Panel with Carved Presidential Eagle Seal Relief (exact match to g-home.png!) -->
-    <rect x="342" y="256" width="108" height="66" rx="2" fill="var(--art-wood-dark)" opacity=".45" stroke="var(--ink)" stroke-width="1.8" />
+    <rect x="342" y="254" width="108" height="62" rx="2" fill="var(--art-wood-dark)" opacity=".48" stroke="var(--ink)" stroke-width="1.8" />
     <path
-      d="M 352 264 L 440 264 L 440 314 L 352 314 Z"
+      d="M 352 262 L 440 262 L 440 308 L 352 308 Z"
       fill="none"
       stroke="var(--ink)"
       stroke-width="1.4"
       opacity=".65"
     />
     <!-- Carved Eagle Relief Medallion in Center Desk Panel -->
-    <g transform="translate(396, 290)" opacity=".75">
-      <circle cx="0" cy="0" r="18" fill="var(--art-wood)" stroke="var(--ink)" stroke-width="1.6" />
-      <path d="M -13 -3 Q -6 -10 0 -3 Q 6 -10 13 -3 Q 7 5 0 8 Q -7 5 -13 -3 Z" fill="var(--art-wood-light)" stroke="var(--ink)" stroke-width="1.2" />
+    <g transform="translate(396, 286)" opacity=".8">
+      <circle cx="0" cy="0" r="17" fill="var(--art-wood)" stroke="var(--ink)" stroke-width="1.6" />
+      <path d="M -12 -3 Q -6 -10 0 -3 Q 6 -10 12 -3 Q 7 5 0 8 Q -7 5 -12 -3 Z" fill="var(--art-wood-light)" stroke="var(--ink)" stroke-width="1.2" />
     </g>
 
     <!-- Heavy Molded Desk Base Plinth (g-home.png) -->
-    <rect x="240" y="326" width="312" height="10" rx="2" fill="var(--art-wood-dark)" stroke="var(--ink)" stroke-width="2.2" />
+    <rect x="240" y="320" width="312" height="10" rx="2" fill="var(--art-wood-dark)" stroke="var(--ink)" stroke-width="2.2" />
   </g>
 
   <!-- Standard Mode Desk Props (hub2.png & g-home.png) -->
   {#if !evilMode}
-    <!-- President's Clasped Hands Resting on Top of the Resolute Desk (g-home.png!) -->
-    <g class="desk-hands" transform="translate(396, 215)">
-      <path d="M -26 3 L -10 -3 L 10 -3 L 26 3 Z" fill="var(--ink)" stroke="var(--ink)" stroke-width="1.5" />
-      <rect x="-15" y="-4" width="7" height="7" rx="1.5" fill="var(--art-shirt)" stroke="var(--ink)" stroke-width="1" />
-      <rect x="8" y="-4" width="7" height="7" rx="1.5" fill="var(--art-shirt)" stroke="var(--ink)" stroke-width="1" />
-      <ellipse cx="-4" cy="0" rx="8" ry="5" fill="var(--{president.skin})" stroke="var(--ink)" stroke-width="1.5" />
-      <ellipse cx="4" cy="0" rx="8" ry="5" fill="var(--{president.skin})" stroke="var(--ink)" stroke-width="1.5" />
-    </g>
-
     <!-- Gold "PRESIDENT" Desk Nameplate (exact match to hub2.png!) -->
     <g transform="translate(366, 208)">
       <rect x="0" y="0" width="60" height="13" rx="2" fill="var(--gold)" stroke="var(--ink)" stroke-width="1.6" />
@@ -423,7 +399,7 @@
     <g data-testid="oval-evil-lamp-cone">
       <!-- Radial ambient light glow behind lamp & cash -->
       <circle cx="305" cy="182" r="95" fill="url(#evil-lamp-glow)" />
-      <polygon points="292,162 232,232 368,232" fill="var(--gold)" opacity=".18" />
+      <polygon points="292,162 232,232 368,232" fill="var(--gold)" opacity=".22" />
       <!-- Molded Brass Lamp Base & Curved Stem -->
       <ellipse cx="282" cy="222" rx="18" ry="5.5" fill="var(--gold-dark)" stroke="var(--ink)" stroke-width="2" />
       <path d="M270 220 Q282 212 294 220 Z" fill="var(--gold)" stroke="var(--ink)" stroke-width="1.6" />
@@ -467,7 +443,7 @@
       <rect x="4" y="16" width="64" height="14" fill="var(--art-wood-dark)" opacity=".5" stroke="var(--ink)" stroke-width="1.2" />
       <circle cx="58" cy="23" r="2.2" fill="var(--alert)" />
       <!-- Dark Open Shredder Mouth Window with Vertical Paper Strips & Crumpled Pile (g-evil.png!) -->
-      <rect x="8" y="36" width="56" height="84" rx="2" fill="var(--paper)" stroke="var(--ink)" stroke-width="2" />
+      <rect x="8" y="36" width="56" height="84" rx="2" fill="var(--canvas)" stroke="var(--ink)" stroke-width="2" />
       <!-- Hanging Shredded Paper Strips -->
       <g class="shred-strips">
         {#each [14, 20, 26, 32, 38, 44, 50, 56] as sx, si (sx)}
@@ -489,7 +465,7 @@
       />
       <path
         d="M14 118 L24 110 L38 114 L50 108 L60 118 Z"
-        fill="var(--ink-soft)"
+        fill="var(--paper)"
         stroke="var(--ink)"
         stroke-width="1.2"
       />
@@ -503,8 +479,8 @@
       pose="point"
       prop="clipboard"
       {talking}
-      x={510}
-      y={114}
+      x={518}
+      y={110}
       scale={0.86}
     />
   {/if}

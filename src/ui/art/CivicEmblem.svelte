@@ -19,24 +19,42 @@
 
   const normalized = $derived.by(() => {
     const k = kind.trim();
-    if (k === '🏗️' || k === 'industrial' || k.includes('infra') || k.includes('rail') || k.includes('housing')) return 'industrial';
+    if (
+      k === '🏗️' ||
+      k === '🏭' ||
+      k === '⛽' ||
+      k === '🛢️' ||
+      k === 'industrial' ||
+      k.includes('infra') ||
+      k.includes('rail') ||
+      k.includes('housing') ||
+      k.includes('buy_american') ||
+      k.includes('lands')
+    )
+      return 'industrial';
     if (
       k === '⚖️' ||
+      k === '✂️' ||
+      k === '✍️' ||
+      k === '📜' ||
       k === 'institutionalist' ||
       k === 'purist' ||
       k === 'gavel' ||
       k === 'scroll' ||
       k.includes('inspector') ||
       k.includes('bipartisan') ||
-      k.includes('court')
+      k.includes('court') ||
+      k.includes('deregulation')
     )
       return 'scales';
     if (
       k === '📣' ||
+      k === '💊' ||
       k === 'populist' ||
       k === 'main_street' ||
       k.includes('junk_fee') ||
       k.includes('insulin') ||
+      k.includes('drug') ||
       k.includes('rally') ||
       k.includes('press')
     )
@@ -56,6 +74,7 @@
     if (
       k === '🌐' ||
       k === '🚢' ||
+      k === '🗺️' ||
       k === 'globalist' ||
       k === 'compass' ||
       k.includes('port') ||
@@ -68,6 +87,8 @@
       k === '🌱' ||
       k === '🔋' ||
       k === '⚡' ||
+      k === '🚐' ||
+      k === '🕊️' ||
       k === 'green' ||
       k === 'green_transition' ||
       k.includes('clean') ||
@@ -79,6 +100,8 @@
     if (
       k === '🛡️' ||
       k === '💻' ||
+      k === '🛂' ||
+      k === '⚔️' ||
       k === 'security' ||
       k === 'national_security' ||
       k.includes('cyber') ||
@@ -88,7 +111,16 @@
     )
       return 'shield';
     if (k === '🤝' || k === 'dealmaker' || k.includes('whip') || k.includes('coalition')) return 'handshake';
-    if (k === '🏛️' || k === 'insider' || k === 'capitol' || k.includes('commission') || k.includes('senate')) return 'capitol';
+    if (
+      k === '🏛️' ||
+      k === '🗳️' ||
+      k === '🧊' ||
+      k === 'insider' ||
+      k === 'capitol' ||
+      k.includes('commission') ||
+      k.includes('senate')
+    )
+      return 'capitol';
     if (
       k === '🕶️' ||
       k === '🕵️' ||
@@ -104,6 +136,7 @@
       k === '💰' ||
       k === '💎' ||
       k === '🏦' ||
+      k === '💵' ||
       k === 'kleptocracy' ||
       k === 'treasury' ||
       k.includes('offshore') ||
@@ -136,7 +169,7 @@
     if (k === '⏭️' || k === 'skip') return 'skip';
     if (k === '🗣️' || k === 'speech') return 'speech';
     if (k === '🎓' || k === 'grad') return 'grad';
-    if (k === 'bolt') return 'bolt';
+    if (k === '💡' || k === 'bolt') return 'bolt';
     if (k === 'star_gold' || k === '★') return 'star_gold';
     if (k === 'star_silver') return 'star_silver';
     if (k === 'star_empty' || k === '☆') return 'star_empty';

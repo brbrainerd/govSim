@@ -109,9 +109,9 @@
 </nav>
 
 <style>
-  nav { display: flex; flex-direction: column; justify-content: space-between; gap: clamp(4px, 0.8vh, 10px); padding-right: clamp(10px, 1.2vw, 18px); border-right: 2px solid var(--ink); min-height: 0; overflow-y: auto; }
+  nav { display: flex; flex-direction: column; justify-content: space-between; gap: clamp(4px, 0.8vh, 10px); padding-right: clamp(10px, 1.2vw, 18px); border-right: 2px solid var(--paper-ink-soft); min-height: 0; overflow-y: auto; }
   .screens-list { display: flex; flex-direction: column; gap: clamp(4px, 0.7vh, 8px); }
-  .group { font: 600 clamp(11px, 0.8vw, 13px) var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); margin: clamp(4px, 0.5vh, 6px) 0 6px 4px; }
+  .group { font: 700 clamp(11px, 0.8vw, 13px) var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--paper-ink); margin: clamp(4px, 0.5vh, 6px) 0 6px 4px; }
   .tab {
     position: relative; display: flex; align-items: center; gap: clamp(6px, 0.8vw, 10px); min-height: clamp(36px, 4.5vh, 46px); padding: clamp(5px, 0.7vh, 8px) clamp(8px, 0.9vw, 12px); margin-top: 6px; text-align: left;
     background: var(--card); color: var(--ink); border: var(--rule) solid var(--ink); border-radius: 4px 12px 12px 12px;
@@ -124,10 +124,8 @@
     border: var(--rule) solid var(--ink); border-bottom: 0; border-radius: 7px 9px 0 0;
   }
   .tab:hover:not(:disabled) { transform: translateX(4px); }
-  .tab[aria-current='page'] { background: var(--alert); color: var(--card); border-color: var(--alert-dark); }
-  :global([data-theme="evil"]) .tab[aria-current='page'] { color: var(--ink); border-color: var(--ink); }
-  .tab[aria-current='page']::before { border-color: var(--alert-dark); }
-  :global([data-theme="evil"]) .tab[aria-current='page']::before { border-color: var(--ink); }
+  .tab[aria-current='page'] { background: var(--alert); color: var(--card); border-color: var(--ink); }
+  .tab[aria-current='page']::before { border-color: var(--ink); }
   .tab:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
   .name { flex: 1; }
   .lock { white-space: nowrap; font: 700 11px var(--font-body); text-transform: none; letter-spacing: 0; background: var(--paper); border-radius: 6px; padding: 2px 5px; }
@@ -149,7 +147,7 @@
     gap: 4px;
     margin-top: clamp(12px, 1.5vh, 20px);
     padding-top: 8px;
-    border-top: 1px dashed var(--ink-soft);
+    border-top: 1px dashed var(--paper-ink-soft);
   }
   .util-btn {
     display: flex;
@@ -157,7 +155,7 @@
     gap: 6px;
     background: none;
     border: none;
-    color: var(--ink-soft);
+    color: var(--paper-ink-soft);
     font: 600 clamp(12px, 0.9vw, 14px) var(--font-ui);
     text-transform: uppercase;
     letter-spacing: .05em;
@@ -167,6 +165,6 @@
   }
   .util-btn:hover {
     color: var(--ink);
-    background: var(--paper-warm);
+    background: var(--card);
   }
 </style>

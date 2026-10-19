@@ -259,6 +259,7 @@
 
 <style>
   .bar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; gap: clamp(6px, 1vw, 14px); padding: clamp(4px, 0.8vh, 10px) clamp(10px, 1.5vw, 22px) clamp(2px, 0.4vh, 6px); max-width: 100vw; box-sizing: border-box; }
+  :global([data-theme="evil"]) .bar { background: var(--gold); border-bottom: 2.5px solid var(--ink); }
   .resources, .time { display: flex; align-items: center; gap: clamp(8px, 1.2vw, 18px); padding-top: 4px; min-width: 0; }
   .time { justify-content: flex-end; gap: clamp(6px, 1vw, 14px); }
   .stat { display: flex; align-items: center; gap: clamp(5px, 0.6vw, 8px); flex-shrink: 0; }
@@ -388,14 +389,14 @@
     text-decoration: none;
   }
   .evil-stat { border-left: 1px dashed var(--ink-soft); padding-left: 10px; }
-  .evil-num { color: var(--gold-dark); font-weight: 700; }
+  .evil-num { color: var(--alert); font-weight: 700; }
   .heat-num { color: var(--ink); font-weight: 700; }
   .critical-heat .heat-num { color: var(--alert); font-weight: 800; }
-  .evil-score { font: 600 clamp(12px, 0.9vw, 15px) var(--font-ui); color: var(--alert); letter-spacing: 0.04em; }
-  .evil-score b { color: var(--alert-dark); }
+  .evil-score { font: 700 clamp(12px, 0.9vw, 15px) var(--font-ui); color: var(--ink); letter-spacing: 0.04em; }
+  .evil-score b { color: var(--alert); }
   .special-counsel-badge {
     background: var(--alert);
-    color: var(--paper);
+    color: var(--card);
     font: 700 clamp(10px, 0.75vw, 11px)/1 var(--font-ui);
     padding: 3px 8px;
     border-radius: var(--r-sm);
@@ -427,7 +428,7 @@
     font: 700 10.5px/1.1 var(--font-ui);
     text-transform: uppercase;
     letter-spacing: .04em;
-    background: var(--paper);
+    background: var(--card);
     color: var(--ink);
     border: 1.5px solid var(--ink);
     border-radius: 999px;
@@ -438,16 +439,5 @@
   .calm-pill:hover, .calm-pill.active {
     background: var(--ink);
     color: var(--card);
-  }
-  :global([data-theme="evil"]) .calm-pill {
-    background: var(--ink);
-    color: var(--paper);
-    border-color: var(--paper);
-  }
-  :global([data-theme="evil"]) .calm-pill:hover,
-  :global([data-theme="evil"]) .calm-pill.active {
-    background: var(--paper);
-    color: var(--ink);
-    border-color: var(--ink);
   }
 </style>

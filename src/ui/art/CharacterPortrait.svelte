@@ -74,7 +74,7 @@
 
   <!-- Outer Medallion Ring (matching D.png President Expressions & g-newgame.png) -->
   <circle cx="40" cy="40" r="38" fill="var(--card)" stroke={effectiveRing} stroke-width="2.5" />
-  <circle cx="40" cy="40" r="35" fill="var(--art-carpet)" stroke="var(--ink)" stroke-width="1.5" />
+  <circle cx="40" cy="40" r="35" fill="var(--art-carpet)" />
 
   <g clip-path="url(#{clipId})">
     <!-- Rich Navy Medallion Backdrop (D.png bottom row) -->

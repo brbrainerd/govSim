@@ -112,6 +112,9 @@
           stagedCount={session.stagedActionsSummary.length}
           presidentLook={session.presidentLook}
         />
+        <div class="bubble" class:evil-bubble={session.isEvilMode} role="status">
+          {session.aiTurnPayload?.advisorBubble ?? briefingInfo.bubble}
+        </div>
       </div>
       <div class="chyron-strip" data-testid="oval-news-chyron">
         <span class="chyron-tag" class:evil-tag={session.isEvilMode}>{session.aiTurnPayload ? 'AI LIVE' : 'LIVE'}</span>
@@ -119,9 +122,6 @@
           <span class="ai-director-inline-badge" data-testid="ai-director-badge">AI DIRECTOR LIVE</span>
         {/if}
         <span class="chyron-text">{session.aiTurnPayload?.chyron ?? chyron}</span>
-      </div>
-      <div class="bubble" class:evil-bubble={session.isEvilMode} role="status">
-        {session.aiTurnPayload?.advisorBubble ?? briefingInfo.bubble}
       </div>
     </div>
     <div class="doing" class:evil-doing={session.isEvilMode}>
@@ -417,22 +417,18 @@
 {/if}
 
 <style>
-  .stage { position: relative; height: clamp(170px, 30vh, 310px); padding: clamp(6px, 1vh, 10px); min-height: 0; flex-shrink: 1; }
-  .scene { height: 100%; border-radius: 8px; overflow: hidden; border: 2px solid var(--ink); }
+  .stage { position: relative; display: flex; flex-direction: column; gap: 4px; height: clamp(185px, 31vh, 320px); padding: clamp(5px, 0.8vh, 8px); min-height: 0; flex-shrink: 1; }
+  :global([data-theme="evil"]) .stage { background: var(--alert-dark); border-color: var(--alert); }
+  .scene { position: relative; flex: 1; min-height: 0; border-radius: 8px; overflow: hidden; border: 2px solid var(--ink); }
   .chyron-strip {
-    position: absolute;
-    bottom: clamp(10px, 1.5vh, 16px);
-    left: clamp(12px, 1.5vw, 20px);
-    right: clamp(12px, 1.5vw, 20px);
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 3px 10px;
+    padding: 2px 8px;
     background: var(--ink);
     color: var(--card);
-    border-radius: var(--r-sm);
-    box-shadow: 2px 2px 0 var(--paper);
-    z-index: 2;
+    border-radius: 6px;
+    flex-shrink: 0;
     overflow: hidden;
   }
   .chyron-tag {
@@ -445,9 +441,6 @@
     border-radius: 3px;
     flex-shrink: 0;
   }
-  .chyron-tag.evil-tag {
-    color: var(--ink);
-  }
   .chyron-text {
     font: 600 clamp(11px, 0.9vw, 13px)/1.2 var(--font-ui);
     letter-spacing: 0.02em;
@@ -457,8 +450,8 @@
   }
   .bubble {
     position: absolute;
-    right: clamp(14px, 1.8vw, 24px);
-    top: clamp(12px, 1.6vh, 20px);
+    right: clamp(10px, 1.4vw, 18px);
+    top: clamp(8px, 1.2vh, 14px);
     max-width: 22ch;
     padding: clamp(6px, 0.9vh, 10px) clamp(8px, 1vw, 14px);
     background: var(--card);
@@ -471,20 +464,21 @@
     z-index: 2;
   }
   .bubble.evil-bubble {
-    border-color: var(--gold);
-    background: var(--paper);
+    border-color: var(--ink);
+    background: var(--card);
   }
   .bubble::after { content: ''; position: absolute; bottom: -12px; left: 24px; border: 12px solid transparent; border-top-color: var(--ink); border-bottom: 0; }
   .doing { min-height: 0; }
   .doing-head { display: flex; justify-content: space-between; align-items: baseline; }
-  h3 { margin: 0; font: 700 clamp(18px, 1.5vw, 22px) var(--font-display); }
-  .doing-head a { font: 600 clamp(14px, 1.1vw, 17px) var(--font-ui); color: var(--ink); }
+  h3 { margin: 0; font: 700 clamp(18px, 1.5vw, 22px) var(--font-display); color: var(--paper-ink); }
+  .doing-head a { font: 600 clamp(14px, 1.1vw, 17px) var(--font-ui); color: var(--paper-ink); }
   .tiles { display: grid; grid-template-columns: minmax(150px, 1.2fr) repeat(4, minmax(0, 1fr)); gap: clamp(6px, 1vw, 14px); margin-top: clamp(4px, 0.6vh, 8px); }
   .score { display: flex; align-items: center; gap: 4px; }
   .score-text { display: flex; flex-direction: column; line-height: 1; }
-  .score-text b { font: 700 clamp(30px, 3.2vw, 44px) var(--font-ui); }
-  .score-text span { font: 600 clamp(14px, 1.2vw, 18px) var(--font-ui); color: var(--ink-soft); }
+  .score-text b { font: 700 clamp(30px, 3.2vw, 44px) var(--font-ui); color: var(--paper-ink); }
+  .score-text span { font: 600 clamp(14px, 1.2vw, 18px) var(--font-ui); color: var(--paper-ink-soft); }
   .score-text em { font: 600 clamp(14px, 1.1vw, 18px) var(--font-ui); font-style: normal; color: var(--sage-dark); margin-top: 2px; }
+  :global([data-theme="evil"]) .score-text em { color: var(--gold); }
   .score-text em.down { color: var(--alert); }
   .tile { display: flex; flex-direction: column; align-items: center; text-align: center; padding: clamp(4px, 0.8vh, 8px) clamp(4px, 0.5vw, 8px); gap: 2px; min-width: 0; }
   .tile .label { font-size: clamp(11px, 0.85vw, 13px); line-height: 1.1; color: var(--ink); text-wrap: balance; height: 2.2em; display: grid; place-items: center; }
@@ -509,10 +503,6 @@
     color: var(--ink);
     cursor: pointer;
     box-shadow: 1px 1px 0 var(--ink);
-  }
-  :global([data-theme="evil"]) .perk-draft-pill {
-    color: var(--paper);
-    border-color: var(--paper);
   }
   .perk-draft-pill:hover {
     background: var(--paper-warm);
@@ -657,7 +647,7 @@
     gap: 4px;
     font: 700 11px var(--font-ui);
     letter-spacing: 0.08em;
-    color: var(--gold);
+    color: var(--alert-dark);
     text-transform: uppercase;
   }
 
@@ -779,7 +769,7 @@
     margin-top: 2px;
     background: var(--alert);
     border-color: var(--alert-dark);
-    color: var(--ink);
+    color: var(--card);
   }
 
   .corrupt-levers-btn:hover {

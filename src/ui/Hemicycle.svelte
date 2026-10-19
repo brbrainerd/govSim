@@ -88,7 +88,7 @@
       style:top="{wedges[i]!.top}%"
       style:transform={wedges[i]!.shift}
     >
-      <svg width="44" height="68" viewBox="0 0 120 190" aria-hidden="true">
+      <svg width="52" height="78" viewBox="0 0 120 190" aria-hidden="true">
         <Character look={{ ...looks[i]!, mood: leaderMood }} pose={leaderPose} mood={leaderMood} delay={i * 0.7} />
       </svg>
       <span class="chip" style:background="var(--{g.color})" class:dark={g.color === 'ink' || g.color === 'alert'}>{g.name}</span>
@@ -112,12 +112,12 @@
 
 <style>
   .arc {
-    margin: clamp(32px, 5vh, 46px) auto clamp(2px, 0.5vh, 6px);
+    margin: clamp(38px, 6.5vh, 56px) auto clamp(4px, 0.8vh, 10px);
     position: relative;
     aspect-ratio: 640 / 340;
     align-self: center;
-    width: min(100%, 640px);
-    max-height: clamp(146px, 27vh, 270px);
+    width: min(92%, 660px);
+    max-height: clamp(220px, 39vh, 330px);
   }
   .arc > svg {
     width: 100%;

@@ -493,7 +493,7 @@
 </div>
 
 <style>
-  .newgame { height: 100dvh; max-height: 100dvh; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) clamp(256px, 21vw, 296px); gap: clamp(12px, 1.8vw, 22px); padding: clamp(10px, 1.4vh, 18px) clamp(16px, 2.5vw, 28px); }
+  .newgame { height: 100dvh; max-height: 100dvh; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) clamp(305px, 25vw, 360px); gap: clamp(12px, 1.8vw, 22px); padding: clamp(10px, 1.4vh, 18px) clamp(16px, 2.5vw, 28px); }
   .options { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(8px, 1vw, 12px); max-width: 48rem; }
   .option { display: flex; align-items: center; gap: clamp(8px, 1vw, 12px); padding: clamp(7px, 1vh, 11px) clamp(12px, 1.5vw, 18px); cursor: pointer; }
   .option b { font: 700 clamp(17px, 1.6vw, 20px) var(--font-display); color: var(--ink); }
@@ -728,7 +728,7 @@
   .stamp.evil-stamp { background: var(--alert-dark); border-color: var(--ink); }
 
   .portico-banner {
-    height: clamp(135px, 21vh, 185px);
+    height: clamp(210px, 31vh, 265px);
     padding: 0;
     overflow: hidden;
     flex-shrink: 0;
@@ -739,8 +739,8 @@
   .look-card {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: clamp(8px, 1.1vh, 12px);
+    gap: 4px;
+    padding: clamp(6px, 0.9vh, 10px);
     flex-shrink: 0;
   }
   .look-row {

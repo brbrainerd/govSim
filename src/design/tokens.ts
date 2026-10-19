@@ -3,11 +3,16 @@
 
 const base = {
   // UI
+  canvas: '#F4E8CE',
   paper: '#F4E8CE',
+  'paper-warm': '#EFE0C2',
+  'paper-dark': '#E6D6B2',
   card: '#FFF8EA',
   'card-alt': '#F3ECE0',
   ink: '#1F2F55',
   'ink-soft': '#4A5677',
+  'paper-ink': '#1F2F55',
+  'paper-ink-soft': '#4A5677',
   alert: '#B5402F',
   'alert-dark': '#8E2F22',
   gold: '#D9A23B',
@@ -71,32 +76,47 @@ const base = {
 
 export type Token = keyof typeof base;
 
+// Evil Mode matches .design-targets/g-evil.png:
+// - Outer canvas (--canvas) is dark charcoal-espresso (#1A1410) with gold halftone dots.
+// - Cards (--card), sub-surfaces (--paper, --card-alt), and SVG paper/lamp fills stay warm cream parchment (#F5EBD6 / #E6D5B8).
+// - Ink (--ink) stays dark espresso-black (#1E1612) so cards and SVG illustrations never invert into a photo-negative.
+// - Headlines/labels sitting directly on the dark outer canvas use --paper-ink (#F5EBD6) and --paper-ink-soft (#D5C29A).
 export const themes = {
   day: base,
   evil: {
     ...base,
-    paper: '#1A1410',
-    card: '#251C16',
-    'card-alt': '#2E231C',
-    ink: '#EADBB8',
-    'ink-soft': '#B9A988',
-    alert: '#7A1E1E',
-    'alert-dark': '#5A1414',
-    gold: '#C9A23A',
-    'gold-dark': '#9B7924',
-    sky: '#8C7B5A',
-    sage: '#6E7F4A',
-    'sage-dark': '#8EA064',
-    dot: 'rgba(201,162,58,.14)',
-    scrim: 'rgba(0,0,0,.75)',
-    'sage-tint': 'rgba(110,127,74,.2)',
-    'alert-tint': 'rgba(122,30,30,.25)',
-    'ink-tint': 'rgba(234,219,184,.12)',
-    'art-wall': '#2B211A',
-    'art-sky': '#1B2236',
+    canvas: '#1A1410',
+    paper: '#E6D5B8',
+    'paper-warm': '#DEC9A4',
+    'paper-dark': '#D2B98E',
+    card: '#F5EBD6',
+    'card-alt': '#E8D9BC',
+    ink: '#1E1612',
+    'ink-soft': '#38281A',
+    'paper-ink': '#F5EBD6',
+    'paper-ink-soft': '#D5C29A',
+    alert: '#661214',
+    'alert-dark': '#4E0D0F',
+    gold: '#C8A252',
+    'gold-dark': '#664B14',
+    sky: '#3B7EA8',
+    sage: '#3E7B52',
+    'sage-dark': '#265336',
+    dot: 'rgba(201,162,58,.16)',
+    scrim: 'rgba(12,9,7,.78)',
+    'sage-tint': 'rgba(62,123,82,.16)',
+    'alert-tint': 'rgba(122,30,30,.15)',
+    'ink-tint': 'rgba(30,22,18,.12)',
+    'art-wall': '#584222',
+    'art-trim': '#3D2D16',
+    'art-sky': '#141821',
     'art-curtain': '#7A1E1E',
-    'art-curtain-shade': '#5A1414',
-    shadow: '4px 4px 0 #000',
+    'art-curtain-shade': '#521212',
+    'art-wood': '#4A2E1B',
+    'art-wood-dark': '#2E1B0F',
+    'art-wood-light': '#68432A',
+    'art-floor': '#462D1B',
+    shadow: '4px 4px 0 #0D0907',
   },
 } satisfies Record<string, Record<Token, string>>;
 

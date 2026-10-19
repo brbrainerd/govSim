@@ -3,7 +3,7 @@
 html, body {
   margin: 0;
   height: 100%;
-  background: var(--paper);
+  background: var(--canvas);
   color: var(--ink);
   font-family: var(--font-body);
   overflow: hidden;
@@ -11,11 +11,12 @@ html, body {
 .halftone { background-image: radial-gradient(var(--dot) 1.1px, transparent 1.3px); background-size: 6px 6px; }
 
 /* Info card: cream, double rule, flat offset shadow */
-.card { position: relative; background: var(--card); border: var(--rule) solid var(--ink); border-radius: var(--r-md); box-shadow: var(--shadow); }
+.card { position: relative; background: var(--card); color: var(--ink); border: var(--rule) solid var(--ink); border-radius: var(--r-md); box-shadow: var(--shadow); }
 .card::after { content: ''; position: absolute; inset: 4px; border: 1px solid var(--ink); border-radius: calc(var(--r-md) - 4px); pointer-events: none; opacity: .55; }
 
 .label { font: 600 clamp(12px, 0.9vw, 14px)/1.1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
-.h { font: 700 clamp(22px, 2.2vw, 30px)/1.15 var(--font-display); color: var(--ink); margin: 0; max-width: 45ch; }
+.h { font: 700 clamp(22px, 2.2vw, 30px)/1.15 var(--font-display); color: var(--paper-ink); margin: 0; max-width: 45ch; }
+.card .h { color: var(--ink); }
 .num { font: 700 clamp(24px, 2.4vw, 34px)/1 var(--font-ui); color: var(--ink); }
 
 /* Maximum line length for readability */
@@ -30,11 +31,6 @@ p, .line, .prose { max-width: 65ch; }
 }
 .stamp:hover:not(:disabled) { transform: translateY(-2px); }
 .stamp:disabled { opacity: .5; cursor: not-allowed; }
-:root[data-theme="evil"] .stamp,
-[data-theme="evil"] .stamp {
-  color: var(--ink);
-  outline-color: var(--ink);
-}
 
 /* Option button: small navy */
 .btn { font: 600 clamp(14px, 1.1vw, 17px)/1 var(--font-ui); letter-spacing: .03em; color: var(--card); background: var(--ink); border: 0; border-radius: 8px; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.1vw, 16px); min-height: clamp(32px, 4vh, 40px); cursor: pointer; box-shadow: 2px 2px 0 var(--gold-dark); }
@@ -47,9 +43,9 @@ p, .line, .prose { max-width: 65ch; }
   align-items: center;
   gap: 5px;
   font: 600 clamp(12px, 0.95vw, 13.5px)/1.1 var(--font-ui);
-  color: var(--ink-soft);
+  color: var(--paper-ink-soft);
   background: transparent;
-  border: 1.5px dashed var(--ink-soft);
+  border: 1.5px dashed var(--paper-ink-soft);
   border-radius: 999px;
   padding: 4px 12px;
   min-height: 26px;
@@ -77,4 +73,3 @@ p, .line, .prose { max-width: 65ch; }
   white-space: nowrap;
   border-width: 0;
 }
-

@@ -1,7 +1,7 @@
 <script lang="ts">
   // Circular portrait of the Federal Reserve Chair matching .design-targets/D.png (#3) & g-powers.png.
   // Continuous finger/thumb-shaped head, big round wire-frame spectacles, dot eyes, grey cardigan over white V-collar shirt,
-  // framed in a royal-navy medallion with subtle stance yield curve.
+  // framed in a royal-navy medallion with subtle stance yield curve. Flat vector character anatomy (no cartoon outlines).
   // All colors strictly from tokens via CSS variables.
 
   let {
@@ -51,10 +51,10 @@
     <!-- White V-collar shirt -->
     <polygon points="27,52 49,52 38,70" fill="var(--art-shirt)" />
     <path d="M30 52 L35 61 L38 56 L41 61 L46 52" fill="none" stroke="var(--hair-2)" stroke-width="1.2" />
-    <path d="M27 52 L38 71 L49 52" fill="none" stroke="var(--ink)" stroke-width="1.2" opacity=".4" />
+    <path d="M27 52 L38 71 L49 52" fill="none" stroke="var(--art-charcoal)" stroke-width="1.4" opacity=".45" />
 
     <!-- Seamless Collar-to-Thumb-Head Contour Seam (no stick neck!) -->
-    <path d="M18 51 Q38 57 58 51 L58 53.5 Q38 59.5 18 53.5 Z" fill="var(--ink)" opacity=".15" />
+    <path d="M18 51 Q38 57 58 51 L58 53.5 Q38 59.5 18 53.5 Z" fill="var(--hair-3)" opacity=".16" />
 
     <!-- Continuous 40px-wide Finger/Thumb Head Dome (exact match to D.png #3 & g-powers.png!) -->
     <path
@@ -64,8 +64,8 @@
     <!-- Subtle right-side cylindrical shading -->
     <path
       d="M48 16 A20 20 0 0 1 58 33 L58 52 Q53 54 48 55 Z"
-      fill="var(--ink)"
-      opacity=".06"
+      fill="var(--hair-3)"
+      opacity=".07"
     />
 
     <!-- Stance-reactive eyebrows -->

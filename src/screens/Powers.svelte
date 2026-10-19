@@ -7,6 +7,7 @@
   import { speechApprovalGain, speechCost } from '../engine/powers';
   import CourtBench from '../ui/art/CourtBench.svelte';
   import FedPortrait from '../ui/art/FedPortrait.svelte';
+  import CivicEmblem from '../ui/art/CivicEmblem.svelte';
   import ScreenLayout from '../ui/ScreenLayout.svelte';
   import JudicialReformModal from '../ui/JudicialReformModal.svelte';
   import EvilLeversSection from '../ui/EvilLeversSection.svelte';
@@ -81,7 +82,11 @@
         <div class="section-header">
           <div class="header-titles">
             <span class="section-tag">
-              {session.vocabMode === 'wonk' ? 'ARTICLE II SECTION 1 · EXECUTIVE DIRECTIVES' : '✍️ SOLO PRESIDENTIAL ACTIONS · NO CONGRESS NEEDED'}
+              {#if session.vocabMode === 'wonk'}
+                ARTICLE II SECTION 1 · EXECUTIVE DIRECTIVES
+              {:else}
+                <CivicEmblem kind="✍️" size={11} /> SOLO PRESIDENTIAL ACTIONS · NO CONGRESS NEEDED
+              {/if}
             </span>
             <h3 class="section-title">Executive Orders</h3>
           </div>
@@ -119,7 +124,7 @@
             >
               <div class="card-top">
                 <span class="order-name">
-                  <span class="order-emoji" aria-hidden="true">{order.emoji}</span>
+                  <CivicEmblem kind={order.emoji} size={13} />
                   {order.name}
                 </span>
                 <span class="clout-badge">{order.cloutCost} clout</span>
@@ -138,7 +143,7 @@
                   {#each getActionDoctrineTags(order.id) as tagId (tagId)}
                     {@const fam = DOCTRINE_FAMILIES[tagId]}
                     <span class="risk-pill" data-testid={`eo-doctrine-${order.id}-${tagId}`} title={fam.summary}>
-                      {fam.emoji} {fam.label}
+                      <CivicEmblem kind={fam.emoji} size={11} /> {fam.label}
                     </span>
                   {/each}
                 {/if}
@@ -171,7 +176,7 @@
           </div>
           <div class="inst-info">
             <div class="inst-header">
-              <span class="inst-tag">🏦 CENTRAL BANK</span>
+              <span class="inst-tag"><CivicEmblem kind="🏦" size={11} /> CENTRAL BANK</span>
               <h4 class="inst-name">The Fed (independent)</h4>
             </div>
             <p class="inst-desc">Sets short-term borrowing costs to steady prices and support employment.</p>
@@ -180,7 +185,7 @@
                 class="fed-btn"
                 class:active={session.draft.fedPressure}
                 disabled={session.over || (!canAffordFedPressure && !session.draft.fedPressure)}
-                title="👍 Nudges rates down for fast jobs · ⚠️ Costs 15 Clout & spooks inflation hawks"
+                title="Upside: Nudges rates down for fast jobs · Catch: Costs 15 Clout & spooks inflation hawks"
                 onclick={() => session.setFedPressure(!session.draft.fedPressure)}
               >
                 <Landmark size={14} />
@@ -200,7 +205,7 @@
         <div class="institution-card court-card">
           <div class="court-header-row">
             <div>
-              <span class="inst-tag">⚖️ {session.vocabMode === 'wonk' ? 'ARTICLE III' : 'HIGH COURT'}</span>
+              <span class="inst-tag"><CivicEmblem kind="⚖️" size={11} /> {session.vocabMode === 'wonk' ? 'ARTICLE III' : 'HIGH COURT'}</span>
               <h4 class="inst-name">Supreme Court · leans {composition.conservative}–{composition.liberal}</h4>
             </div>
             {#if pendingChallengesCount > 0}
@@ -236,14 +241,14 @@
         <!-- Electoral Reforms Card (REF-03) -->
         <div class="institution-card electoral-card" data-testid="electoral-reforms-card">
           <div class="electoral-header">
-            <span class="inst-tag">🗳️ ELECTORAL REFORMS</span>
+            <span class="inst-tag"><CivicEmblem kind="🗳️" size={11} /> ELECTORAL REFORMS</span>
             <h4 class="inst-name">Democracy &amp; Voting System Grants</h4>
           </div>
           <div class="electoral-grid">
             <div class="electoral-item" class:enacted={isEnacted('rcv_incentives')} title={REFORM_TRADEOFFS.rcv_incentives.whyClick}>
               <div class="electoral-text">
-                <b>{REFORM_TRADEOFFS.rcv_incentives.emoji} Ranked-Choice Voting Grants</b>
-                <span>👍 {REFORM_TRADEOFFS.rcv_incentives.upside} · ⚠️ {REFORM_TRADEOFFS.rcv_incentives.catchText}</span>
+                <b><CivicEmblem kind={REFORM_TRADEOFFS.rcv_incentives.emoji} size={11} /> Ranked-Choice Voting Grants</b>
+                <span><CivicEmblem kind="up" size={10} /> {REFORM_TRADEOFFS.rcv_incentives.upside} · <CivicEmblem kind="warn" size={10} /> {REFORM_TRADEOFFS.rcv_incentives.catchText}</span>
               </div>
               <button
                 type="button"
@@ -256,8 +261,8 @@
             </div>
             <div class="electoral-item" class:enacted={isEnacted('independent_redistricting')} title={REFORM_TRADEOFFS.independent_redistricting.whyClick}>
               <div class="electoral-text">
-                <b>{REFORM_TRADEOFFS.independent_redistricting.emoji} Independent Redistricting</b>
-                <span>👍 {REFORM_TRADEOFFS.independent_redistricting.upside} · ⚠️ {REFORM_TRADEOFFS.independent_redistricting.catchText}</span>
+                <b><CivicEmblem kind={REFORM_TRADEOFFS.independent_redistricting.emoji} size={11} /> Independent Redistricting</b>
+                <span><CivicEmblem kind="up" size={10} /> {REFORM_TRADEOFFS.independent_redistricting.upside} · <CivicEmblem kind="warn" size={10} /> {REFORM_TRADEOFFS.independent_redistricting.catchText}</span>
               </div>
               <button
                 type="button"
@@ -270,8 +275,8 @@
             </div>
             <div class="electoral-item" class:enacted={isEnacted('small_dollar_matching')} title={REFORM_TRADEOFFS.small_dollar_matching.whyClick}>
               <div class="electoral-text">
-                <b>{REFORM_TRADEOFFS.small_dollar_matching.emoji} Small-Dollar Donor Matching</b>
-                <span>👍 {REFORM_TRADEOFFS.small_dollar_matching.upside} · ⚠️ {REFORM_TRADEOFFS.small_dollar_matching.catchText}</span>
+                <b><CivicEmblem kind={REFORM_TRADEOFFS.small_dollar_matching.emoji} size={11} /> Small-Dollar Donor Matching</b>
+                <span><CivicEmblem kind="up" size={10} /> {REFORM_TRADEOFFS.small_dollar_matching.upside} · <CivicEmblem kind="warn" size={10} /> {REFORM_TRADEOFFS.small_dollar_matching.catchText}</span>
               </div>
               <button
                 type="button"
@@ -289,7 +294,7 @@
         <div class="institution-card foreign-policy-card" data-testid="foreign-policy-section">
           <div class="forpol-header">
             <span class="inst-tag">
-              🛡️ {session.vocabMode === 'wonk' ? 'ARTICLE II SECTION 2 · COMMANDER IN CHIEF & DIPLOMACY' : 'MILITARY READINESS & FOREIGN SANCTIONS'}
+              <CivicEmblem kind="🛡️" size={11} /> {session.vocabMode === 'wonk' ? 'ARTICLE II SECTION 2 · COMMANDER IN CHIEF & DIPLOMACY' : 'MILITARY READINESS & FOREIGN SANCTIONS'}
             </span>
             <h4 class="inst-name">Defense Posture &amp; Targeted Sanctions</h4>
           </div>
@@ -308,8 +313,8 @@
                   title={DEFENSE_POSTURE_TRADEOFFS.peacetime.whyClick}
                   onclick={() => session.setDefensePosture('peacetime')}
                 >
-                  <span class="posture-title">{DEFENSE_POSTURE_TRADEOFFS.peacetime.emoji} Peacetime Drawdown</span>
-                  <span class="posture-sub">👍 -$25B/yr deficit · ⚠️ Less crisis deterrence</span>
+                  <span class="posture-title"><CivicEmblem kind={DEFENSE_POSTURE_TRADEOFFS.peacetime.emoji} size={12} /> Peacetime Drawdown</span>
+                  <span class="posture-sub"><CivicEmblem kind="up" size={10} /> -$25B/yr deficit · <CivicEmblem kind="warn" size={10} /> Less crisis deterrence</span>
                 </button>
                 <button
                   type="button"
@@ -320,8 +325,8 @@
                   title={DEFENSE_POSTURE_TRADEOFFS.standard.whyClick}
                   onclick={() => session.setDefensePosture('standard')}
                 >
-                  <span class="posture-title">{DEFENSE_POSTURE_TRADEOFFS.standard.emoji} Standard Readiness</span>
-                  <span class="posture-sub">👍 $0 baseline · Steady deterrence</span>
+                  <span class="posture-title"><CivicEmblem kind={DEFENSE_POSTURE_TRADEOFFS.standard.emoji} size={12} /> Standard Readiness</span>
+                  <span class="posture-sub"><CivicEmblem kind="up" size={10} /> $0 baseline · Steady deterrence</span>
                 </button>
                 <button
                   type="button"
@@ -332,8 +337,8 @@
                   title={DEFENSE_POSTURE_TRADEOFFS.surge.whyClick}
                   onclick={() => session.setDefensePosture('surge')}
                 >
-                  <span class="posture-title">{DEFENSE_POSTURE_TRADEOFFS.surge.emoji} Forward Surge</span>
-                  <span class="posture-sub">👍 High deterrence · ⚠️ +$35B/yr deficit</span>
+                  <span class="posture-title"><CivicEmblem kind={DEFENSE_POSTURE_TRADEOFFS.surge.emoji} size={12} /> Forward Surge</span>
+                  <span class="posture-sub"><CivicEmblem kind="up" size={10} /> High deterrence · <CivicEmblem kind="warn" size={10} /> +$35B/yr deficit</span>
                 </button>
               </div>
             </div>
@@ -351,12 +356,12 @@
                   <div class="sanction-item" class:active title={sMeta.whyClick}>
                     <div class="sanction-info">
                       <div class="sanction-title-row">
-                        <b><span aria-hidden="true">{sMeta.emoji}</span> {sanction.name}</b>
+                        <b><CivicEmblem kind={sMeta.emoji} size={12} /> {sanction.name}</b>
                         <span class="sanction-cost-pill">10 Clout</span>
                       </div>
                       <p class="sanction-desc">{sanction.description}</p>
                       <div class="sanction-chips">
-                        <span class="fallout-chip upside-chip">👍 {sMeta.upside}</span>
+                        <span class="fallout-chip upside-chip"><CivicEmblem kind="up" size={10} /> {sMeta.upside}</span>
                         <span class="fallout-chip inflation">
                           +{sanction.inflationImpact.toFixed(2)}% {session.vocabMode === 'wonk' ? 'CPI Inflation' : 'Prices'}
                         </span>
@@ -422,12 +427,12 @@
         {/if}
         <div class="preview-head-row">
           <span class="label">What it means</span>
-          <span class="preview-emoji" aria-hidden="true">{selectedOrder.emoji}</span>
+          <CivicEmblem kind={selectedOrder.emoji} size={16} />
         </div>
         <h4 class="preview-title">{selectedOrder.name}</h4>
         <p class="preview-desc">{selectedOrder.description}</p>
         <p class="preview-why" data-testid="powers-why-click">
-          <b>💡 Why click this:</b> {selectedOrder.whyClick}
+          <b><CivicEmblem kind="💡" size={12} /> Why click this:</b> {selectedOrder.whyClick}
         </p>
 
         <TradeoffPill
@@ -439,12 +444,24 @@
         />
 
         <div class="legal-box">
-          <span class="box-tag">{session.vocabMode === 'wonk' ? 'STATUTORY AUTHORITY' : '📜 LEGAL HOOK (WHY YOU CAN SIGN THIS)'}</span>
+          <span class="box-tag">
+            {#if session.vocabMode === 'wonk'}
+              STATUTORY AUTHORITY
+            {:else}
+              <CivicEmblem kind="📜" size={10} /> LEGAL HOOK (WHY YOU CAN SIGN THIS)
+            {/if}
+          </span>
           <span class="legal-basis">{selectedOrder.legalBasis}</span>
         </div>
 
         <div class="risk-box">
-          <span class="box-tag">{session.vocabMode === 'wonk' ? 'JUDICIAL VULNERABILITY' : '⚖️ COURT CHALLENGE RISK'}</span>
+          <span class="box-tag">
+            {#if session.vocabMode === 'wonk'}
+              JUDICIAL VULNERABILITY
+            {:else}
+              <CivicEmblem kind="⚖️" size={10} /> COURT CHALLENGE RISK
+            {/if}
+          </span>
           <p class="risk-explanation">
             {#if selectedOrder.courtRisk === 'High'}
               {session.vocabMode === 'wonk'
@@ -537,7 +554,7 @@
   .powers-container {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 8px;
     min-height: 0;
     flex-shrink: 0;
   }
@@ -545,8 +562,8 @@
   .orders-section {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    flex: 1;
+    gap: 5px;
+    flex-shrink: 0;
     min-height: 0;
   }
 
@@ -554,29 +571,29 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    padding-bottom: 4px;
+    padding-bottom: 2px;
     border-bottom: 2px solid var(--ink);
   }
 
   .section-tag {
     font-family: var(--font-ui);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     color: var(--ink-soft);
   }
 
   .section-title {
     font-family: var(--font-display);
-    font-size: 20px;
+    font-size: 16.5px;
     color: var(--ink);
     margin: 0;
-    line-height: 1.1;
+    line-height: 1.05;
   }
 
   .active-count {
     font-family: var(--font-ui);
-    font-size: 13px;
+    font-size: 12px;
     color: var(--ink-soft);
   }
 
@@ -585,8 +602,8 @@
   }
 
   .mirage-lever-btn {
-    padding: 3px 9px;
-    font: 600 11px/1.1 var(--font-ui);
+    padding: 2px 8px;
+    font: 600 10.5px/1.1 var(--font-ui);
     letter-spacing: 0.03em;
     background: transparent;
     color: var(--ink-soft);
@@ -604,12 +621,9 @@
 
   .orders-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    overflow-y: auto;
-    padding-right: 4px;
-    flex: 1;
-    min-height: 110px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 5px;
+    flex-shrink: 0;
   }
 
   .order-card {
@@ -619,11 +633,12 @@
     background: var(--card);
     border: 2px solid var(--ink);
     border-radius: var(--r-sm);
-    padding: 7px 9px;
+    padding: 4px 6px;
     text-align: left;
     cursor: pointer;
     box-shadow: 2px 2px 0 var(--ink);
     transition: transform var(--dur-fast), border-color var(--dur-fast), background-color var(--dur-fast);
+    min-width: 0;
   }
 
   .order-card:hover {
@@ -638,66 +653,73 @@
   }
 
   .order-card.active {
-    border-left: 6px solid var(--sage-dark);
+    border-left: 5px solid var(--sage-dark);
   }
 
   .order-card.challenged {
-    border-left: 6px solid var(--alert);
+    border-left: 5px solid var(--alert);
   }
 
   .card-top {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 6px;
-    margin-bottom: 4px;
+    gap: 3px;
+    margin-bottom: 2px;
   }
 
   .order-name {
     font-family: var(--font-display);
-    font-size: 13.5px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--ink);
-    line-height: 1.15;
+    line-height: 1.1;
   }
 
   .clout-badge {
     font-family: var(--font-ui);
-    font-size: 11px;
+    font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
     background: var(--paper);
     border: 1px solid var(--ink);
-    padding: 1px 5px;
-    border-radius: 4px;
+    padding: 1px 3px;
+    border-radius: 3px;
     white-space: nowrap;
     color: var(--ink);
+    flex-shrink: 0;
   }
 
   .order-desc {
     font-family: var(--font-body);
-    font-size: 11.5px;
-    line-height: 1.25;
+    font-size: 10px;
+    line-height: 1.15;
     color: var(--ink-soft);
-    margin: 0 0 6px 0;
+    margin: 0 0 3px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .card-footer {
     display: flex;
+    flex-wrap: nowrap;
     justify-content: space-between;
     align-items: center;
-    gap: 6px;
+    gap: 2px;
+    overflow: hidden;
   }
 
   .risk-pill {
     font-family: var(--font-ui);
-    font-size: 11px;
+    font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
-    padding: 2px 6px;
-    border-radius: 4px;
-    letter-spacing: 0.05em;
+    padding: 1px 3px;
+    border-radius: 3px;
+    letter-spacing: 0.02em;
     color: var(--ink);
+    white-space: nowrap;
   }
 
   .risk-low {
@@ -718,13 +740,14 @@
   .status-badge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     font-family: var(--font-ui);
-    font-size: 11px;
+    font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 1px 3px;
+    border-radius: 3px;
+    white-space: nowrap;
   }
 
   .status-badge.signed {
@@ -750,8 +773,8 @@
   /* Institutional bottom strip */
   .institutions-strip {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 6px;
     flex-shrink: 0;
   }
 
@@ -759,57 +782,57 @@
     background: var(--card);
     border: 2px solid var(--ink);
     border-radius: var(--r-sm);
-    padding: 8px 10px;
+    padding: 6px 8px;
     box-shadow: 2px 2px 0 var(--ink);
   }
 
   .fed-card {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
   }
 
   .inst-header {
     display: flex;
     flex-direction: column;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
   }
 
   .inst-tag {
     font-family: var(--font-ui);
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     color: var(--ink-soft);
   }
 
   .inst-name {
     font-family: var(--font-display);
-    font-size: 14px;
+    font-size: 13px;
     color: var(--ink);
     margin: 0;
   }
 
   .inst-desc {
     font-family: var(--font-body);
-    font-size: 12px;
-    line-height: 1.3;
+    font-size: 11px;
+    line-height: 1.2;
     color: var(--ink-soft);
-    margin: 0 0 6px 0;
+    margin: 0 0 4px 0;
   }
 
   .fed-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     font-family: var(--font-ui);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     background: var(--paper);
     border: 1.5px solid var(--ink);
     border-radius: 4px;
-    padding: 4px 10px;
+    padding: 3px 8px;
     color: var(--ink);
     cursor: pointer;
     box-shadow: 1px 1px 0 var(--ink);
@@ -828,7 +851,7 @@
   .court-card {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
   }
 
   .court-header-row {

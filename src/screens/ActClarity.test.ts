@@ -23,7 +23,7 @@ describe('Act screens trade-off clarity & vocabMode (Phase 36, UI-CLARITY-01..03
 
     expect(plainHtml).toContain('data-testid="budget-tradeoff-card"');
     expect(plainHtml).toContain('data-testid="tradeoff-card"');
-    expect(plainHtml).toContain('🧾');
+    expect(plainHtml).toContain('civic-emblem');
     expect(plainHtml).toContain('data-emblem="up"');
     expect(plainHtml).toContain('Upside');
     expect(plainHtml).toContain('data-emblem="warn"');

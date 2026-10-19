@@ -84,9 +84,12 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 - ✓ Contextually de-emphasized 24-card Civics Myth catalog (`8 left`, `8 right`, `8 both`) with `By the Numbers`, `Historical Precedent`, `Why the Myth Persists`, and a persistent `showMyths` hide toggle across all surfaces — v1.0
 - ✓ 100-seed Monte Carlo balance verification across Standard, Classic Sim, and all 5 Archetypes, plus multi-viewport (`1376×768` / `1280×720`) computer-vision and 77-test Playwright E2E verification (`AUDIT-01..02`) — v1.0
 
-### Active
+### Active (Milestone v1.1 — Visual Fidelity, Evil Mode Palette & Computer-Vision Flywheel)
 
-(None — Milestone v1.0 complete)
+- [ ] Reusable Before/After Screenshot Computer-Vision Flywheel (`scripts/cv-flywheel.ts`) with quantitative `sharp` + DOM/SVG telemetry and side-by-side **Before | After | Target** comparison sheets (`CV-01..03`)
+- [ ] Non-inverted Evil Mode palette (`src/design/tokens.ts`, `StatusBar.svelte`, `ScreenLayout.svelte`, `OvalOfficeScene.svelte`) matching `.design-targets/g-evil.png` (dark espresso outer `--paper`, warm antique-brass top bar + crimson ribbon, warm cream `--card` with dark `--ink`, olive-brass walls, crimson drapes, and glowing banker's lamp + crisp white shredder paper) (`EVIL-PAL-01..02`)
+- [ ] Borderless flat-vector pill-pawn character rig (`Character.svelte`, `CharacterPortrait.svelte`, `FedPortrait.svelte`, `CourtBench.svelte`) and clean `OvalOfficeScene.svelte` / `OvalOffice.svelte` stage matching `.design-targets/D.png`, `cast.png`, `uikit.png`, `g-home.png`, and `hub2.png` (`PAWN-01..02`)
+- [ ] Above-the-fold `FedPortrait` + `CourtBench` surfacing and `<CivicEmblem>` zero-emoji sweep on `Powers.svelte` (`g-powers.png`) and enlarged White House inauguration poster stage on `NewGame.svelte` (`g-newgame.png`) (`SURF-01..02`)
 
 ### Out of Scope
 

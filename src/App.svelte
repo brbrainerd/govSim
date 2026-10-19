@@ -23,6 +23,7 @@
   let errorMessage = $state<string | null>(null);
   let sharedReplay = $state<{ seed: number; party: string } | null>(null);
   let sharedRunError = $state<string | null>(null);
+  let embedMode = $state<boolean>(false);
 
   $effect(() => {
     applyTheme(session?.isEvilMode ? 'evil' : 'day');
@@ -32,19 +33,32 @@
     activeProfileId = getActiveProfileId();
     autosave = loadAutosave();
 
-    if (typeof window !== 'undefined' && window.location.hash.startsWith('#run=')) {
-      const code = window.location.hash.slice(5);
-      void decodeRunCode(code).then((run) => {
-        if (run) {
-          session = Session.fromRun(run, fromData(us));
-          sharedReplay = { seed: run.seed, party: run.party };
-        } else {
-          sharedRunError = 'Invalid or corrupted shared run link';
-          setTimeout(() => {
-            sharedRunError = null;
-          }, 5000);
-        }
-      });
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const isEmbed = params.get('embed') === '1' || params.get('demo') === '1';
+      embedMode = isEmbed;
+
+      if (window.location.hash.startsWith('#run=')) {
+        const code = window.location.hash.slice(5);
+        void decodeRunCode(code).then((run) => {
+          if (run) {
+            session = Session.fromRun(run, fromData(us));
+            sharedReplay = { seed: run.seed, party: run.party };
+          } else {
+            sharedRunError = 'Invalid or corrupted shared run link';
+            setTimeout(() => {
+              sharedRunError = null;
+            }, 5000);
+          }
+        });
+      } else if (isEmbed && !session) {
+        session = new Session(17760704, fromData(us), {
+          party: 'D',
+          unlockAll: true,
+          livingWorld: true,
+          showMyths: true,
+        });
+      }
     }
 
     const onStorage = () => {

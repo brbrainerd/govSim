@@ -15,6 +15,7 @@
   import TradeoffPill from '../ui/TradeoffPill.svelte';
   import { resolveHouseholdPortrait } from '../ui/art/Character.svelte';
   import CharacterPortrait from '../ui/art/CharacterPortrait.svelte';
+  import CivicEmblem from '../ui/art/CivicEmblem.svelte';
 
   let {
     session,
@@ -90,7 +91,7 @@
       {@const meta = BUDGET_LEVER_TRADEOFFS[l.id]}
       <div class="row" class:changed data-in-force={inForce}>
         <label for={l.id} title={meta ? `${meta.wonkLabel} — ${meta.whyClick}` : undefined}>
-          {#if meta}<span class="lever-emoji" aria-hidden="true">{meta.emoji}</span> {/if}{l.label}
+          {#if meta}<CivicEmblem kind={meta.emoji} size={12} /> {/if}{l.label}
         </label>
         <span class="val">{valueText(l, v, isTax, inForce)}</span>
         <div class="track" style:--fill="{pct(l, v)}%">
@@ -129,7 +130,7 @@
       {@const assist = session.effectiveForeignPolicy.foreignAssistance}
       {@const changed = assist !== assistInForce}
       <div class="row foreign-assistance-row" class:changed>
-        <label for="foreign-assistance-slider">🌍 Foreign Assistance &amp; Aid</label>
+        <label for="foreign-assistance-slider"><CivicEmblem kind="🌐" size={12} /> Foreign Assistance &amp; Aid</label>
         <span class="val">{assist === assistInForce ? 'Same as now ($45B/yr, <1%)' : `${assist > assistInForce ? '+' : ''}${assist - assistInForce}% · ${assist > assistInForce ? 'up' : 'down'}`}</span>
         <div class="track" style:--fill="{(assist / 200) * 100}%">
           {#if assistInForce !== 100}
@@ -162,13 +163,13 @@
           class="pack"
           aria-pressed={session.draft.pack === p}
           disabled={session.over}
-          title={pMeta ? `${pMeta.whyClick} (👍 ${pMeta.upside} · ⚠️ ${pMeta.catchText})` : undefined}
+          title={pMeta ? `${pMeta.whyClick} (Upside: ${pMeta.upside} · Catch: ${pMeta.catchText})` : undefined}
           onclick={() => {
             focusedMode = 'package';
             session.pickPackage(p);
           }}
         >
-          {#if pMeta}<span aria-hidden="true">{pMeta.emoji}</span> {/if}{p}
+          {#if pMeta}<CivicEmblem kind={pMeta.emoji} size={13} /> {/if}{p}
         </button>
       {/each}
     </div>
@@ -251,9 +252,11 @@
         vocabMode={session.vocabMode}
       />
       <span class="route-note" data-testid="budget-whip-preview">
-        {session.whip.short === 0
-          ? '✅ 218+ House votes ready — send to Congress to pass'
-          : `⚠️ ${session.whip.short} House votes short — make deals in Congress`}
+        {#if session.whip.short === 0}
+          <CivicEmblem kind="up" size={11} /> 218+ House votes ready — send to Congress to pass
+        {:else}
+          <CivicEmblem kind="warn" size={11} /> {session.whip.short} House votes short — make deals in Congress
+        {/if}
       </span>
     </div>
     {#if onOpenMyth && session.showMyths && !session.hasResolvedMyth('foreign_aid_deficit')}

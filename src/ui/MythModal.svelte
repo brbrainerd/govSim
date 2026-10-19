@@ -974,10 +974,6 @@
     transition: transform var(--dur-fast), filter var(--dur-fast);
   }
 
-  :global([data-theme="evil"]) .spin-btn {
-    color: var(--ink);
-  }
-
   .spin-btn:hover {
     transform: translateY(-2px);
     filter: brightness(1.15);
