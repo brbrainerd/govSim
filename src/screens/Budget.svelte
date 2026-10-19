@@ -34,6 +34,12 @@
   let showHouseholdModal = $state(false);
   let focusedLeverId = $state<string>('inc');
   let focusedMode = $state<'lever' | 'package'>('lever');
+  let coreLeversOnly = $state(false);
+  const CORE_LEVER_IDS = new Set(['inc', 'bus', 'tar', 'def', 'ssm', 'rds']);
+
+  const hasUnsentBudgetChanges = $derived(
+    session.stagedActionsSummary.some((a) => a.id === 'budget-unsent'),
+  );
 
   const words = $derived(describe(estimate(session.draft.budget)));
   const persona = $derived(session.selectedHouseholdPersona);
@@ -83,12 +89,27 @@
 
 {#snippet sliders(title: string, sub: string, levers: Lever[], isTax: boolean)}
   <section class="card group" aria-label={title}>
-    <h3>{title} <span>· {sub}</span></h3>
+    <div class="group-head">
+      <h3>{title} <span>· {sub}</span></h3>
+      {#if isTax}
+        <button
+          type="button"
+          class="prog-toggle-btn"
+          data-testid="budget-progressive-toggle"
+          aria-pressed={coreLeversOnly}
+          onclick={() => (coreLeversOnly = !coreLeversOnly)}
+          title="Toggle between the 6 biggest kitchen-table levers and all 12 budget sliders"
+        >
+          {coreLeversOnly ? 'Show All 12 Levers ▾' : 'Focus: Core 6 Only ▴'}
+        </button>
+      {/if}
+    </div>
     {#each levers as l (l.id)}
       {@const inForce = session.current.policy[l.id] ?? l.base}
       {@const v = session.draft.budget[l.id] ?? inForce}
       {@const changed = v !== inForce}
       {@const meta = BUDGET_LEVER_TRADEOFFS[l.id]}
+      {#if !coreLeversOnly || CORE_LEVER_IDS.has(l.id) || changed}
       <div class="row" class:changed data-in-force={inForce}>
         <label for={l.id} title={meta ? `${meta.wonkLabel} — ${meta.whyClick}` : undefined}>
           {#if meta}<CivicEmblem kind={meta.emoji} size={12} /> {/if}{l.label}
@@ -124,8 +145,9 @@
           />
         </div>
       </div>
+      {/if}
     {/each}
-    {#if !isTax}
+    {#if !isTax && (!coreLeversOnly || (session.effectiveForeignPolicy.foreignAssistance !== (session.current.foreignPolicy?.foreignAssistance ?? 100)))}
       {@const assistInForce = session.current.foreignPolicy?.foreignAssistance ?? 100}
       {@const assist = session.effectiveForeignPolicy.foreignAssistance}
       {@const changed = assist !== assistInForce}
@@ -251,13 +273,26 @@
         legalBasis={activeTradeoff.legalBasis}
         vocabMode={session.vocabMode}
       />
-      <span class="route-note" data-testid="budget-whip-preview">
-        {#if session.whip.short === 0}
-          <CivicEmblem kind="up" size={11} /> 218+ House votes ready — send to Congress to pass
-        {:else}
-          <CivicEmblem kind="warn" size={11} /> {session.whip.short} House votes short — make deals in Congress
-        {/if}
-      </span>
+      <div
+        class="route-note clearing-banner"
+        class:ready={session.draft.sentToCongress && session.whip.short === 0}
+        class:warn={hasUnsentBudgetChanges || (session.draft.sentToCongress && session.whip.short > 0)}
+        data-testid="budget-whip-preview"
+      >
+        <span data-testid="budget-clearing-banner">
+          {#if session.draft.sentToCongress && session.whip.short === 0}
+            <CivicEmblem kind="up" size={11} /> CLEARS THIS TURN · {session.whip.total}/218 House votes ready
+          {:else if session.draft.sentToCongress && session.whip.short > 0}
+            <CivicEmblem kind="warn" size={11} /> SHORT {session.whip.short} VOTES · Make deals in Congress to pass
+          {:else if hasUnsentBudgetChanges}
+            <CivicEmblem kind="warn" size={11} /> DRAFT UNSENT · Click Send to Congress below ({session.whip.total}/218 votes)
+          {:else if session.whip.short === 0}
+            <CivicEmblem kind="up" size={11} /> 218+ House votes ready — send to Congress to pass
+          {:else}
+            <CivicEmblem kind="warn" size={11} /> {session.whip.short} House votes short — make deals in Congress
+          {/if}
+        </span>
+      </div>
     </div>
     {#if onOpenMyth && session.showMyths && !session.hasResolvedMyth('foreign_aid_deficit')}
       <button
@@ -294,8 +329,24 @@
   .pack[aria-pressed='true'] { background: var(--gold); }
   .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(8px, 1.2vw, 18px); flex-grow: 1; min-height: 0; }
   .group { padding: clamp(8px, 1.2vh, 14px) clamp(10px, 1.2vw, 18px); display: flex; flex-direction: column; gap: clamp(2px, 0.4vh, 5px); min-height: 0; }
-  h3 { margin: 0 0 2px; font: 700 clamp(16px, 1.3vw, 20px) var(--font-display); }
+  .group-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 2px; }
+  h3 { margin: 0; font: 700 clamp(16px, 1.3vw, 20px) var(--font-display); }
   h3 span { font: 400 clamp(13px, 1vw, 16px) var(--font-body); color: var(--ink-soft); }
+  .prog-toggle-btn {
+    padding: 2px 7px;
+    font: 700 10px/1.1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--paper);
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .prog-toggle-btn[aria-pressed='true'] {
+    background: var(--gold);
+  }
   .row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 clamp(6px, 0.8vw, 10px); padding: 1px 4px; border-radius: 8px; }
   .row.changed { background: color-mix(in srgb, var(--gold) 30%, transparent); }
   label { display: inline-flex; align-items: center; gap: 5px; font: 600 clamp(14px, 1.1vw, 18px) var(--font-ui); }
@@ -329,7 +380,9 @@
   .line { font: 600 clamp(13px, 1vw, 16px)/1.2 var(--font-ui); max-width: 45ch; }
   .fine { font-size: clamp(10px, 0.85vw, 12px); color: var(--ink-soft); max-width: 45ch; }
   .tradeoff-panel { display: flex; flex-direction: column; gap: 3px; }
-  .route-note { font: 500 11px/1.2 var(--font-ui); color: var(--ink-soft); text-align: center; }
+  .route-note { font: 600 10.5px/1.2 var(--font-ui); color: var(--ink); text-align: center; padding: 3px 6px; border-radius: 4px; background: var(--paper-dark); border: 1px solid var(--ink); }
+  .route-note.ready { background: var(--sage-tint); border-color: var(--sage-dark); color: var(--ink); }
+  .route-note.warn { background: var(--paper-warm); border-color: var(--alert); color: var(--ink); }
   .good { color: var(--sage-dark); }
   .bad { color: var(--alert); }
   .spacer { flex-grow: 1; min-height: 2px; }

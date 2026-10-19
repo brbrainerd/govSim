@@ -16,6 +16,7 @@
   import DynamicCrisisModal from '../ui/DynamicCrisisModal.svelte';
   import PerkDraftModal from '../ui/PerkDraftModal.svelte';
   import SynergyBar from '../ui/SynergyBar.svelte';
+  import TurnAgendaCard from '../ui/TurnAgendaCard.svelte';
   import { getPerk } from '../content/perks';
   import { pickChyron } from '../content/chyrons';
   import { loadAiConfig } from '../app/ai-providers';
@@ -259,59 +260,39 @@
           {/if}
         </div>
 
-        <div class="evil-card-stats">
-          <div class="stat-mini">
-            <span class="stat-mini-label">Offshore Loot</span>
-            <span class="stat-mini-val" data-testid="oval-stash-val">${stash.toFixed(1)}B</span>
+        <div class="evil-bottom-row">
+          <div class="evil-card-stats">
+            <div class="stat-mini">
+              <span class="stat-mini-label">Offshore Loot</span>
+              <span class="stat-mini-val" data-testid="oval-stash-val">${stash.toFixed(1)}B</span>
+            </div>
+            <div class="stat-mini">
+              <span class="stat-mini-label">Watchdog Probes</span>
+              <span class="stat-mini-val">{evil?.specialCounselAppointed ? 'Investigated' : 'Evading Probes'}</span>
+            </div>
           </div>
-          <div class="stat-mini">
-            <span class="stat-mini-label">Watchdog Probes</span>
-            <span class="stat-mini-val">{evil?.specialCounselAppointed ? 'Investigated' : 'Evading Probes'}</span>
-          </div>
-        </div>
 
-        <button
-          type="button"
-          class="btn corrupt-levers-btn"
-          data-testid="goto-corrupt-levers-btn"
-          onclick={() => go('powers')}
-        >
-          Enact Corrupt Levers
-        </button>
-      </div>
-    {/if}
-    <div class="card info">
-      <div class="turn-head">
-        <span class="label">This turn</span>
-        <span class="scen-pill" data-testid="oval-scenario-badge">{session.activeScenario.name}</span>
-        {#if !session.isClassicSim}
           <button
             type="button"
-            class="perk-draft-pill"
-            class:drafted={Boolean(session.draft.perkPickId)}
-            class:skipped={Boolean(session.draft.perkSkipForClout)}
-            data-testid="open-perk-draft-btn"
-            onclick={() => (showPerkDraftModal = true)}
+            class="btn corrupt-levers-btn"
+            data-testid="goto-corrupt-levers-btn"
+            onclick={() => go('powers')}
           >
-            {#if session.draft.perkPickId}
-              <CivicEmblem kind="up" size={12} /> {getPerk(session.draft.perkPickId)?.name ?? 'Drafted'}
-            {:else if session.draft.perkSkipForClout}
-              <CivicEmblem kind="skip" size={12} /> Draft Skipped (+10 Clout)
-            {:else}
-              <CivicEmblem kind={session.isEvilMode ? 'syndicate' : 'capitol'} size={13} />
-              {session.isEvilMode ? 'Heist Relic Draft' : 'Task Force Draft'} ({session.activePerks.length} Active)
-            {/if}
+            Enact Corrupt Levers
           </button>
-        {/if}
-      </div>
-      {#if guide}
-        <div class="year1-guide" data-testid="year1-onboarding-guide">
-          <b>{guide.step}:</b> <span>{guide.detail}</span>
         </div>
-      {/if}
-      <b>{briefingInfo.thisTurn.title}</b>
-      <span>{briefingInfo.thisTurn.detail}</span>
-    </div>
+      </div>
+    {/if}
+    <TurnAgendaCard
+      {session}
+      thisTurnTitle={briefingInfo.thisTurn.title}
+      thisTurnDetail={briefingInfo.thisTurn.detail}
+      suggestions={briefingInfo.suggestions}
+      {go}
+      {onOpenMyth}
+      {onOpenCrisis}
+      onOpenPerkDraft={() => (showPerkDraftModal = true)}
+    />
     <HouseholdCard {session} onExplore={() => (showHouseholdModal = true)} />
 
     {#if session.aiTurnPayload}
@@ -361,7 +342,7 @@
             <CharacterPortrait
               look={adv.look}
               mood={advisorMood}
-              size={38}
+              size={34}
               badgeText={adv.role}
               ringColor={session.isEvilMode ? 'alert' : 'gold'}
             />
@@ -370,11 +351,11 @@
             <b>{s.title}</b>
             {#if s.play?.pack && packMeta}
               <span class="play-badge" data-testid="advisor-play-badge">
-                <CivicEmblem kind={packMeta.emoji} size={12} /> Play: {s.play.pack} · <CivicEmblem kind="up" size={11} /> {packMeta.upside}
+                <CivicEmblem kind={packMeta.emoji} size={11} /> Play: {s.play.pack} · <CivicEmblem kind="up" size={10} /> {packMeta.upside}
               </span>
             {:else if s.play?.autoWhip}
               <span class="play-badge" data-testid="advisor-play-badge">
-                <CivicEmblem kind="handshake" size={12} /> Play: Auto-whip · <CivicEmblem kind="up" size={11} /> Enough votes to pass
+                <CivicEmblem kind="handshake" size={11} /> Play: Auto-whip · <CivicEmblem kind="up" size={10} /> Enough votes to pass
               </span>
             {/if}
           </div>
@@ -486,72 +467,22 @@
   .spark { width: 70%; height: clamp(16px, 2vh, 22px); }
   .dir { font: 600 clamp(12px, 0.9vw, 15px) var(--font-ui); color: var(--alert); }
   .dir.good { color: var(--sage-dark); }
-  .info { display: flex; flex-direction: column; gap: 3px; padding: clamp(6px, 0.9vh, 10px); text-align: center; }
-  .turn-head { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .scen-pill { font: 700 10px/1 var(--font-ui); text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px; background: var(--paper); border: 1px solid var(--ink); color: var(--ink); }
-  .perk-draft-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font: 700 10px/1 var(--font-ui);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 3px 7px;
-    border-radius: 4px;
-    background: var(--gold);
-    border: 1.5px solid var(--ink);
-    color: var(--ink);
-    cursor: pointer;
-    box-shadow: 1px 1px 0 var(--ink);
-  }
-  .perk-draft-pill:hover {
-    background: var(--paper-warm);
-  }
-  .perk-draft-pill.drafted {
-    background: var(--sage-tint);
-    border-color: var(--sage-dark);
-  }
-  .perk-draft-pill.skipped {
-    background: var(--paper-dark);
-  }
-  .year1-guide {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    padding: 4px 8px;
-    background: var(--paper-dark);
-    border-left: 3px solid var(--gold);
-    border-radius: var(--r-sm);
-    text-align: left;
-    font-size: clamp(10.5px, 0.85vw, 12px);
-    line-height: 1.2;
-    color: var(--ink);
-  }
-  .year1-guide b {
-    font-family: var(--font-ui);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--ink-soft);
-  }
-  .info b { font: 700 clamp(15px, 1.25vw, 18px)/1.15 var(--font-display); }
-  .info span:last-child { font-size: clamp(11.5px, 0.9vw, 13.5px); line-height: 1.2; color: var(--ink-soft); max-width: 35ch; }
-  .option { display: flex; flex-direction: column; align-items: stretch; gap: clamp(3px, 0.5vh, 6px); padding: clamp(5px, 0.8vh, 9px) clamp(7px, 0.9vw, 10px); text-align: left; }
-  .option-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .option { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; padding: clamp(4px, 0.65vh, 7px) clamp(7px, 0.8vw, 10px); text-align: left; }
+  .option-row { display: flex; align-items: center; gap: 7px; min-width: 0; flex: 1; }
   .advisor-medallion { flex-shrink: 0; display: inline-flex; }
   .option-text { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; flex: 1; min-width: 0; }
-  .option b { font: 700 clamp(13px, 1.1vw, 16px)/1.15 var(--font-display); }
-  .option .btn { align-self: center; width: 100%; padding: 4px 10px; font-size: clamp(12px, 0.95vw, 14px); }
+  .option b { font: 700 clamp(12.5px, 1vw, 14.5px)/1.15 var(--font-display); }
+  .option .btn { align-self: center; width: auto; flex-shrink: 0; padding: 5px 10px; font-size: clamp(11.5px, 0.9vw, 13px); white-space: nowrap; }
   .play-badge { font: 700 9.5px/1.1 var(--font-ui); color: var(--sage-dark); text-transform: uppercase; letter-spacing: 0.03em; }
 
   .geopolitical-alert {
     background: var(--paper-dark);
     border: 2px solid var(--alert);
     border-left: 6px solid var(--alert);
-    padding: clamp(8px, 1.2vh, 12px);
+    padding: clamp(5px, 0.8vh, 8px) clamp(8px, 0.9vw, 10px);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     box-shadow: 2px 2px 0 var(--ink);
   }
 
@@ -595,7 +526,7 @@
   .alert-headline {
     font-family: var(--font-body);
     font-size: var(--text-xs);
-    line-height: 1.35;
+    line-height: 1.25;
     color: var(--ink);
   }
 
@@ -622,10 +553,10 @@
     background: var(--card);
     border: 2px solid var(--gold);
     border-left: 6px solid var(--gold);
-    padding: clamp(8px, 1.2vh, 12px);
+    padding: 4px 8px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 2px;
     box-shadow: 2px 2px 0 var(--ink);
   }
 
@@ -638,22 +569,22 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
 
   .evil-intel-tag {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font: 700 11px var(--font-ui);
+    font: 700 10px var(--font-ui);
     letter-spacing: 0.08em;
     color: var(--alert-dark);
     text-transform: uppercase;
   }
 
   .evil-heat-pill {
-    font: 700 12px var(--font-ui);
-    padding: 2px 8px;
+    font: 700 10.5px var(--font-ui);
+    padding: 1px 6px;
     border-radius: 4px;
     background: var(--paper);
     border: 1px solid var(--ink);
@@ -675,15 +606,15 @@
   .heat-gauge-wrap {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
   }
 
   .heat-gauge-track {
     position: relative;
-    height: 10px;
+    height: 6px;
     background: var(--paper);
-    border: 1.5px solid var(--ink);
-    border-radius: 5px;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
     overflow: hidden;
   }
 
@@ -711,11 +642,7 @@
   }
 
   .heat-gauge-labels {
-    position: relative;
-    display: flex;
-    justify-content: space-between;
-    font: 600 10px var(--font-ui);
-    color: var(--ink-soft);
+    display: none;
   }
 
   .threshold-label {
@@ -724,8 +651,8 @@
   }
 
   .evil-status-callout {
-    font: 600 12px/1.2 var(--font-ui);
-    padding: 4px 6px;
+    font: 600 10px/1.1 var(--font-ui);
+    padding: 1px 4px;
     background: var(--paper);
     border-radius: 4px;
   }
@@ -740,36 +667,46 @@
     font-weight: 700;
   }
 
-  .evil-card-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+  .evil-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 8px;
-    padding: 4px 0;
+  }
+
+  .evil-card-stats {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
   }
 
   .stat-mini {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 0;
   }
 
   .stat-mini-label {
-    font: 600 11px var(--font-ui);
+    font: 600 9.5px var(--font-ui);
     color: var(--ink-soft);
     text-transform: uppercase;
   }
 
   .stat-mini-val {
-    font: 700 15px var(--font-ui);
+    font: 700 13px var(--font-ui);
     color: var(--ink);
   }
 
   .corrupt-levers-btn {
-    width: 100%;
-    margin-top: 2px;
+    width: auto;
+    flex-shrink: 0;
+    padding: 4px 8px;
+    font-size: 11px;
     background: var(--alert);
     border-color: var(--alert-dark);
     color: var(--card);
+    white-space: nowrap;
   }
 
   .corrupt-levers-btn:hover {

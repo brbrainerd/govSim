@@ -1,61 +1,43 @@
-# Requirements: govSim v1.1 Visual Fidelity, Evil Mode Palette & Computer-Vision Flywheel
+# Requirements: govSim — Milestone v1.2
 
 **Defined:** 2026-10-18
-**Core Value:** Leave America more prosperous than doing nothing — and learn how the levers really work along the way.
+**Core Value:** Combine high-craft pre-generated Americana environment art with live animated SVG foregrounds, and make every turn effortless to navigate through Civ-style per-turn triggers, a live "What Will Clear This Turn" stacked index card (`uikit.png` / `hub2.png`), and progressive disclosure on dense policy screens.
 
-## v1.1 Requirements
+## v1.2 Requirements
 
-Requirements for Milestone v1.1 ("Visual Fidelity, Evil Mode Palette & Computer-Vision Flywheel").
+### Phase 52: Layered Environment Art, Animated Atmospheric Overlays & Dimensional Foreground Rigs (`ENV`)
+- [x] **ENV-01**: Integrate high-craft generated vintage Americana environment plates (`public/assets/environments/oval-day-bg.jpg`, `oval-evil-bg.jpg`, `newgame-portico-bg.jpg`) as `Layer 0` architectural backdrops in `OvalOfficeScene.svelte` and `NewGame.svelte`, preserving responsive framing and zero network egress.
+- [x] **ENV-02**: Layer reactive animated SVG/CSS midground props & weather (`Layer 1`) over the environment plates: animated weather/lighting outside the Oval Office windows (sunbeams in high approval, rain streaks & lightning flash during crises, ominous amber glow in Evil Mode), swaying flags, carved Presidential Seal relief on the Resolute Desk, growing legislative dossier stack matching `stagedCount`, ringing red Crisis phone, and animated Evil Mode paper shredder + cash stacks.
+- [x] **ENV-03**: Upgrade foreground character & stage rigs (`Layer 2` in `Character.svelte`, `OvalOfficeScene.svelte`, `NewGame.svelte`) with subtle ground contact shadows, lapel/collar depth shading, and smooth idle/speaking animations (disabled automatically in `Calm mode`).
 
-### Reusable Before/After Screenshot Computer-Vision Flywheel (`CV`)
+### Phase 53: Civ-Style Per-Turn Trigger Cadence & Smart Turn Blocker Stamp (`TRIG`)
+- [x] **TRIG-01**: Implement a deterministic **Civ-Style Per-Turn Trigger Cadence** (`src/app/turn-triggers.ts` + `resolveTurnTrigger`) that surfaces **at most one primary spotlight trigger per turn** (prioritizing Unresolved Crisis -> Unsent Budget / Failing Bill -> Milestone Event -> Ready Clearing -> Task Force Draft -> Advisor Priority, and automatically deferring non-urgent Task Force prompts off Turn 1 and off Crisis turns).
+- [x] **TRIG-02**: Upgrade `StatusBar.svelte`'s primary Turn Stamp area with a live clearing sub-badge (`✓ N clearing` / `! 1 unsent`) and `TurnAgendaCard.svelte`'s spotlight trigger pill that dynamically guides the player through unresolved turn blockers before ending the quarter.
+- [x] **TRIG-03**: Add 1-click play staging on `TurnAgendaCard.svelte` and compact single-row horizontal Advisor Play banners in `OvalOffice.svelte`.
 
-- [x] **CV-01**: A reusable Playwright + pixel/DOM telemetry script (`scripts/cv-flywheel.ts`) captures deterministic `before` and `after` screenshots across `1376×768` and `1280×720` for key surfaces (`newgame`, `oval-day`, `oval-evil`, `powers`, `congress`, `budget`).
-- [x] **CV-02**: The flywheel computes quantitative DOM & pixel metrics (`cardLuminance`, `paperLuminance`, `cardIsCreamParchment`, `characterOuterStrokeCount`, `chyronOverlapsScenePx`, `fedPortraitAboveFold`, `courtBenchAboveFold`, `rawEmojiCountInCards`, `outerOverflowPx`) and emits a structured JSON + Markdown comparison report (`test-results/cv-flywheel/cv-report.md`).
-- [x] **CV-03**: The flywheel generates side-by-side **Before | After | Target** comparison sheets (`test-results/cv-flywheel/compare/compare-*.png`) pairing live screenshots against `.design-targets/g-home.png`, `g-evil.png`, `g-powers.png`, `g-newgame.png`, `g-congress.png`, and `g-budget.png`.
+### Phase 54: "What Will Clear This Turn" Stacked Index Card & Turn Resolution Preview (`CLEAR`)
+- [x] **CLEAR-01**: Build `src/ui/TurnAgendaCard.svelte` — the **`★ PENDING & CLEARING ★` Stacked Index Card** modeled directly on `.design-targets/uikit.png` and `hub2.png` — featuring layered index-card paper edges and a scannable checklist (`[✓]`, `[!]`, `[ ]`).
+- [x] **CLEAR-02**: Surface explicit per-item **clearing status badges and projected outcomes** in `TurnAgendaCard.svelte` and `StatusBar.svelte`'s Staged Decisions popover (`CLEARS THIS TURN ✓`, `PASSES (224/218) ✓`, `SHORT N VOTES ⚠`, `DRAFT UNSENT !`, plus net Clout delta and 1-click jump / `×` unstage controls).
+- [x] **CLEAR-03**: Declutter `OvalOffice.svelte`'s right column (`{#snippet next()}`) with `TurnAgendaCard`, compact 1-line `HouseholdCard`, and compact single-row `.card.option` Advisor Plays, guaranteeing zero right-column overflow at `1376×768` and `1280×720`.
 
-### Evil Mode Non-Inverted Palette & Surface Remediation (`EVIL-PAL`)
-
-- [x] **EVIL-PAL-01**: Fix Evil Mode's inverted photo-negative palette in `src/design/tokens.ts` and `src/design/global.css`: keep the outer `--canvas` dark espresso (`#1A1410`), restore `--card` to warm cream parchment (`#F5EBD6`) and `--paper` to warm aged parchment (`#E6D5B8`) with dark `--ink` (`#1E1612`), and add `--paper-ink` (`#F5EBD6`) / `--paper-ink-soft` (`#D5C29A`) for text directly on `--canvas`.
-- [x] **EVIL-PAL-02**: Style Evil Mode's top `StatusBar.svelte` with warm antique-brass (`var(--paper-warm)`) and dark ink, and style the Evil Mode `Ribbon.svelte` banner in rich crimson (`var(--alert)` / `var(--alert-dark)`) with cream lettering, matching `.design-targets/g-evil.png`.
-- [x] **EVIL-PAL-03**: Align Evil Mode's `OvalOfficeScene.svelte` tokens and stage frame with `.design-targets/g-evil.png`: warm olive-brass walls (`#3D311E`), rich crimson drapes (`#7E191B`) with theatrical corner swag drapes, dark walnut Resolute Desk (`#3A2416`), glowing cream banker's lamp shade (`#F3DE9A`), and crisp cream shredder paper (`#F5EBD6`).
-
-### Borderless Flat-Vector Pill-Pawn Character Rig (`CHAR`)
-
-- [x] **CHAR-01**: Remove cartoon black `stroke="var(--ink)"` outer borders from `Character.svelte`, `CharacterPortrait.svelte`, `FedPortrait.svelte`, and `CourtBench.svelte` (`characterOuterStrokeCount === 0`), matching `uikit.png` ("Pill people as per ref image 2, flat vector, no outlines") and `D.png`.
-- [x] **CHAR-02**: Give `PRESIDENT_LOOKS[0..2]` and male character presets in `Character.svelte` and `FedPortrait.svelte` the iconic smooth, unadorned thumb/finger dome head from `.design-targets/D.png` (`#1 President`, `#2 COS`, `#3 Fed Chair`, `#5 Blue Bloc`, `#6 Red Bloc`) and `g-newgame.png`, while keeping swept bob/bun/long/afro hair on female characters (`#4 News Anchor`, `#7 Citizen`, `PRESIDENT_LOOKS[3]`).
-- [x] **CHAR-03**: Refine flat-vector suit lapels, V-neck shirt collars, ties, wide toothy `scheming` grin, and handheld props (`clipboard`, `mic`, `cash_fan`, `gavel`) in `Character.svelte` using clean layered fills and subtle cylindrical shading (`opacity=".07"`..`".24"`).
-
-### Oval Office Scene & Non-Overlapping Chyron (`OVAL`)
-
-- [x] **OVAL-01**: Remove the 4 floating rectangles in front of the curtains in `OvalOfficeScene.svelte`, widen and lengthen the pleated curtains to full height (`y=14..286`), and narrow/lower the executive chair behind the President's shoulders to match `g-home.png` and `hub2.png`.
-- [x] **OVAL-02**: Move `.chyron-strip` in `OvalOffice.svelte` out of `position: absolute` overlap so it sits cleanly below `.scene` (`chyronOverlapsScenePx === 0`), leaving the Resolute Desk and Presidential Carpet Seal unobstructed.
-
-### Powers & NewGame Layout Density & Zero-Emoji Sweep (`GUI`)
-
-- [x] **GUI-01**: Compact `Powers.svelte`'s Executive Orders grid (5 columns × 2 rows) and card padding so the Institutional Power Strip (`FedPortrait` + `CourtBench`) is completely visible above the fold at both `1376×768` and `1280×720` (`fedPortraitAboveFold === true`, `courtBenchAboveFold === true`), matching `.design-targets/g-powers.png`.
-- [x] **GUI-02**: Enlarge the White House inauguration stage hero (`portico-banner` `>= 210px` height in a wider poster column) on `NewGame.svelte` (`g-newgame.png`) and enlarge `Hemicycle.svelte` on `Congress.svelte` (`g-congress.png`) while maintaining zero outer viewport scroll at `1280×720`.
-- [x] **GUI-03**: Replace all remaining raw Unicode emojis inside cards on `Powers.svelte`, `Congress.svelte`, and `Budget.svelte` with `<CivicEmblem>` vector icons (`rawEmojiCountInCards === 0`).
+### Phase 55: Progressive Disclosure on Action Screens (`Budget`, `Powers`, `Congress`) & Before/After CV Verification (`PROG`)
+- [x] **PROG-01**: Add progressive disclosure to `Budget.svelte` (`Focus: Core 6 Only` / `Show All 12 Levers` toggle, auto-showing modified levers) plus a live `"Clearing Status"` indicator (`data-testid="budget-clearing-banner"`) above the `Send to Congress` stamp.
+- [x] **PROG-02**: Add a live **"What Clears This Turn"** status pill (`data-testid="congress-clearing-banner"`) and progressive deal trade-off toggle (`data-testid="congress-progressive-toggle"`) to `Congress.svelte`.
+- [x] **PROG-03**: Extend `scripts/cv-flywheel.ts` and `tests/cv-flywheel.spec.ts` to capture the Milestone `v1.2` **After** screenshots across `1376×768` and `1280×720`, generate side-by-side **Before | After | Target** comparison sheets, and verify all unit, determinism, and Playwright E2E gates pass.
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CV-01 | Phase 48 | Complete |
-| CV-02 | Phase 48 | Complete |
-| CV-03 | Phase 48 | Complete |
-| EVIL-PAL-01 | Phase 49 | Complete |
-| EVIL-PAL-02 | Phase 49 | Complete |
-| EVIL-PAL-03 | Phase 49 | Complete |
-| CHAR-01 | Phase 50 | Complete |
-| CHAR-02 | Phase 50 | Complete |
-| CHAR-03 | Phase 50 | Complete |
-| OVAL-01 | Phase 50 | Complete |
-| OVAL-02 | Phase 50 | Complete |
-| GUI-01 | Phase 51 | Complete |
-| GUI-02 | Phase 51 | Complete |
-| GUI-03 | Phase 51 | Complete |
-
-**Coverage:**
-- v1.1 requirements: 14 total
-- Mapped to phases: 14
-- Complete: 14 (100%)
+| ENV-01 | Phase 52 | Complete |
+| ENV-02 | Phase 52 | Complete |
+| ENV-03 | Phase 52 | Complete |
+| TRIG-01 | Phase 53 | Complete |
+| TRIG-02 | Phase 53 | Complete |
+| TRIG-03 | Phase 53 | Complete |
+| CLEAR-01 | Phase 54 | Complete |
+| CLEAR-02 | Phase 54 | Complete |
+| CLEAR-03 | Phase 54 | Complete |
+| PROG-01 | Phase 55 | Complete |
+| PROG-02 | Phase 55 | Complete |
+| PROG-03 | Phase 55 | Complete |

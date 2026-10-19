@@ -59,9 +59,9 @@
     mood: advisorMood,
   });
 
-  const windows = [196, 336, 476];
+  const windows = [225, 356, 488];
   const stripes = Array.from({ length: 9 }, (_, i) => i);
-  const sealStars = Array.from({ length: 16 }, (_, i) => (i * Math.PI * 2) / 16);
+  const dossierLayers = $derived(Array.from({ length: Math.min(4, Math.max(0, stagedCount)) }, (_, i) => i));
 </script>
 
 <svg
@@ -77,7 +77,7 @@
   <defs>
     {#each windows as wx, i (i)}
       <clipPath id="win{i}">
-        <rect x={wx} y="24" width="128" height="196" rx="4" />
+        <path d="M{wx} 102 A38 38 0 0 1 {wx + 76} 102 L{wx + 76} 234 L{wx} 234 Z" />
       </clipPath>
     {/each}
     <!-- Warm radial glow for Evil Mode banker's lamp (matching g-evil.png) -->
@@ -86,157 +86,86 @@
       <stop offset="55%" stop-color="var(--gold)" stop-opacity="0.18" />
       <stop offset="100%" stop-color="var(--gold)" stop-opacity="0" />
     </radialGradient>
+    <!-- Sunbeam gradient for sunny high-approval days -->
+    <linearGradient id="sunbeam-grad" x1="0%" y1="0%" x2="20%" y2="100%">
+      <stop offset="0%" stop-color="var(--gold)" stop-opacity="0.24" />
+      <stop offset="100%" stop-color="var(--gold)" stop-opacity="0" />
+    </linearGradient>
   </defs>
 
-  <!-- Curved Architectural Back Wall & Wainscoting (matching g-home.png & g-evil.png) -->
+  <!-- LAYER 0: Pre-Generated Vintage Americana Environment Plate (oval-day-bg.jpg / oval-evil-bg.jpg) -->
   <rect width="800" height="380" fill="var(--art-wall)" />
-  <rect y="0" width="800" height="14" fill="var(--art-trim)" stroke="var(--ink)" stroke-width="1.5" />
-
-  <!-- Curved Dado Rail & Lower Wainscoting Wall Band (behind curtains & furniture) -->
-  <path
-    d="M 0 218 Q 400 198 800 218 L 800 312 Q 400 286 0 312 Z"
-    fill="var(--art-trim)"
-    stroke="var(--ink)"
-    stroke-width="2"
-  />
-  <path
-    d="M 0 226 Q 400 206 800 226"
-    fill="none"
-    stroke="var(--ink)"
-    stroke-width="1.2"
-    opacity=".35"
+  <image
+    href={evilMode ? '/assets/environments/oval-evil-bg.jpg' : '/assets/environments/oval-day-bg.jpg'}
+    x="0"
+    y="0"
+    width="800"
+    height="380"
+    preserveAspectRatio="xMidYMid slice"
+    data-testid="oval-env-plate"
   />
 
-  <!-- Framed Wall Paintings on Far Left & Right (g-evil.png & g-home.png) -->
-  <g class="wall-paintings" opacity=".88">
-    <rect x="0" y="64" width="24" height="92" rx="2" fill="var(--art-wood)" stroke="var(--ink)" stroke-width="2" />
-    <rect x="3" y="70" width="16" height="80" fill="var(--card)" stroke="var(--gold)" stroke-width="1.2" />
-    <rect x="776" y="64" width="24" height="92" rx="2" fill="var(--art-wood)" stroke="var(--ink)" stroke-width="2" />
-    <rect x="781" y="70" width="16" height="80" fill="var(--card)" stroke="var(--gold)" stroke-width="1.2" />
-  </g>
-
-  <!-- 3 Tall Oval Office Bay Windows with Weather & Pleated Curtains (g-home.png, hub2.png, g-evil.png) -->
+  <!-- LAYER 1: Reactive Animated Window Weather, Sunbeams & Noir Horizon Overlays -->
   {#each windows as wx, i (i)}
     <g clip-path="url(#win{i})">
       {#if evilMode}
-        <!-- Dark Night Window in Evil Mode (g-evil.png) -->
-        <rect x={wx} y="24" width="128" height="196" fill="var(--art-sky)" />
-        <ellipse cx={wx + 64} cy="72" rx="48" ry="20" fill="var(--gold)" opacity=".08" />
+        <ellipse
+          class="evil-glow"
+          cx={wx + 38}
+          cy="185"
+          rx="44"
+          ry="28"
+          fill="var(--gold)"
+          opacity=".18"
+        />
       {:else if weather === 'storm'}
-        <rect x={wx} y="24" width="128" height="196" fill="var(--ink-soft)" />
-        <ellipse cx={wx + 40} cy="68" rx="44" ry="20" fill="var(--ink)" opacity=".8" />
-        <ellipse cx={wx + 88} cy="62" rx="34" ry="16" fill="var(--ink)" opacity=".7" />
+        <rect x={wx} y="60" width="76" height="176" fill="var(--ink)" opacity=".62" />
+        {#each [14, 34, 54, 68] as rx (rx)}
+          <line
+            class="rain-streak"
+            x1={wx + rx}
+            y1="72"
+            x2={wx + rx - 10}
+            y2="220"
+            stroke="var(--sky)"
+            stroke-width="1.8"
+            stroke-dasharray="9 11"
+          />
+        {/each}
         {#if i === 1}
-          <polygon points="{wx + 66},42 {wx + 54},82 {wx + 68},82 {wx + 48},126 {wx + 78},78 {wx + 64},78" fill="var(--gold)" />
+          <polygon
+            class="lightning-bolt"
+            points="{wx + 42},74 {wx + 30},112 {wx + 44},112 {wx + 26},154 {wx + 54},108 {wx + 40},108"
+            fill="var(--gold)"
+          />
         {/if}
       {:else if weather === 'rain'}
-        <rect x={wx} y="24" width="128" height="196" fill="var(--art-trim)" />
-        <ellipse cx={wx + 48} cy="70" rx="48" ry="22" fill="var(--ink-soft)" opacity=".4" />
-        {#each [22, 52, 82, 108] as rx (rx)}
-          <line x1={wx + rx} y1="88" x2={wx + rx - 10} y2="176" stroke="var(--sky)" stroke-width="1.8" stroke-dasharray="8 12" />
+        <rect x={wx} y="60" width="76" height="176" fill="var(--ink-soft)" opacity=".38" />
+        {#each [14, 34, 54, 68] as rx (rx)}
+          <line
+            class="rain-streak"
+            x1={wx + rx}
+            y1="72"
+            x2={wx + rx - 8}
+            y2="220"
+            stroke="var(--sky)"
+            stroke-width="1.6"
+            stroke-dasharray="7 12"
+          />
         {/each}
       {:else}
-        <!-- Bright Blue Sky with Fluffy White Clouds (hub2.png & g-home.png) -->
-        <rect x={wx} y="24" width="128" height="196" fill="var(--art-sky)" />
-        <g class="cloud" style="animation-delay:{-i * 7}s">
-          <ellipse cx={wx + 42} cy="74" rx="28" ry="14" fill="var(--art-cloud)" />
-          <ellipse cx={wx + 62} cy="64" rx="22" ry="14" fill="var(--art-cloud)" />
-          <ellipse cx={wx + 80} cy="74" rx="20" ry="11" fill="var(--art-cloud)" />
+        <g class="cloud" style="animation-delay:{-i * 6}s" opacity=".55">
+          <ellipse cx={wx + 28} cy="108" rx="18" ry="8" fill="var(--art-cloud)" />
+          <ellipse cx={wx + 42} cy="102" rx="14" ry="8" fill="var(--art-cloud)" />
         </g>
-        <rect x={wx} y="182" width="128" height="38" fill="var(--art-grass)" opacity=".55" />
+        <polygon
+          class="sunbeam"
+          points="{wx + 12},66 {wx + 58},66 {wx + 74},232 {wx - 4},232"
+          fill="url(#sunbeam-grad)"
+        />
       {/if}
     </g>
-
-    <!-- Window Mullion Grid -->
-    <g stroke={evilMode ? 'var(--gold-dark)' : 'var(--art-wall)'} stroke-width="5">
-      <path d="M{wx + 64} 24 V220 M{wx} 88 H{wx + 128} M{wx} 152 H{wx + 128}" />
-    </g>
-    <rect x={wx} y="24" width="128" height="196" rx="4" fill="none" stroke="var(--ink)" stroke-width="2.5" />
   {/each}
-
-  <!-- Full-Height Floor-to-Ceiling Pleated Curtains Framing Each Window Bay (g-home.png, hub2.png, g-evil.png) -->
-  {#each [152, 302, 442, 592] as dx (dx)}
-    <g class="curtain-column">
-      <path
-        d="M{dx} 14 h56 v272 q-14 6 -28 0 q-14 6 -28 0 Z"
-        fill={evilMode ? 'var(--alert)' : 'var(--art-curtain)'}
-        stroke="var(--ink)"
-        stroke-width="2.2"
-      />
-      <!-- Pleated vertical curtain folds -->
-      <path
-        d="M{dx + 14} 18 v264 M{dx + 28} 18 v266 M{dx + 42} 18 v264"
-        stroke={evilMode ? 'var(--alert-dark)' : 'var(--art-curtain-shade)'}
-        stroke-width="3.5"
-      />
-    </g>
-  {/each}
-
-  <!-- Scalloped Upper Curtain Valances & Theatrical Corner Swag Drapes (matching g-evil.png) -->
-  {#if evilMode}
-    {#each [186, 326, 466] as vx (vx)}
-      <path
-        d="M{vx} 14 h140 v22 Q{vx + 105} 56 {vx + 70} 34 Q{vx + 35} 56 {vx} 36 Z"
-        fill="var(--alert)"
-        stroke="var(--gold)"
-        stroke-width="2.5"
-      />
-    {/each}
-    <path
-      d="M 0 14 L 185 14 Q 135 96 64 156 L 0 185 Z"
-      fill="var(--alert)"
-      stroke="var(--ink)"
-      stroke-width="2"
-    />
-    <path
-      d="M 38 14 Q 95 78 40 152 M 85 14 Q 120 68 58 148 M 132 14 Q 145 52 88 114"
-      fill="none"
-      stroke="var(--alert-dark)"
-      stroke-width="2.5"
-    />
-    <path
-      d="M 800 14 L 615 14 Q 665 96 736 156 L 800 185 Z"
-      fill="var(--alert)"
-      stroke="var(--ink)"
-      stroke-width="2"
-    />
-    <path
-      d="M 762 14 Q 705 78 760 152 M 715 14 Q 680 68 742 148 M 668 14 Q 655 52 712 114"
-      fill="none"
-      stroke="var(--alert-dark)"
-      stroke-width="2.5"
-    />
-  {/if}
-
-  <!-- Hardwood Floor & Curved Oval Office Carpet (g-home.png & g-evil.png) -->
-  <path d="M 0 302 Q 400 278 800 302 L 800 380 L 0 380 Z" fill="var(--art-floor)" stroke="var(--ink)" stroke-width="2" />
-  <ellipse
-    cx="400"
-    cy="358"
-    rx="388"
-    ry="68"
-    fill={evilMode ? 'var(--alert-dark)' : 'var(--art-carpet)'}
-    stroke="var(--ink)"
-    stroke-width="2.5"
-  />
-  <!-- Outer Double Gold Carpet Border (g-home.png & g-evil.png) -->
-  <ellipse cx="400" cy="358" rx="358" ry="56" fill="none" stroke="var(--gold)" stroke-width="5" />
-  <ellipse cx="400" cy="358" rx="344" ry="50" fill="none" stroke="var(--gold)" stroke-width="1.8" />
-
-  <!-- Presidential Eagle Seal in Foreground of Carpet (exact match to .design-targets/g-home.png!) -->
-  {#if !evilMode}
-    <g class="carpet-seal" transform="translate(400, 360)">
-      <ellipse cx="0" cy="0" rx="104" ry="26" fill="var(--art-carpet)" stroke="var(--gold)" stroke-width="3" />
-      <ellipse cx="0" cy="0" rx="92" ry="21" fill="none" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="4 5" />
-      {#each sealStars as angle (angle)}
-        <circle cx={Math.cos(angle) * 80} cy={Math.sin(angle) * 18} r="2" fill="var(--gold)" />
-      {/each}
-      <!-- Spread-Wing Heraldic Gold Eagle in Seal Center -->
-      <path d="M -48 -2 Q -22 -12 -8 -4 L 8 -4 Q 22 -12 48 -2 Q 26 4 12 2 L -12 2 Q -26 4 -48 -2 Z" fill="var(--gold)" />
-      <ellipse cx="0" cy="2" rx="13" ry="6" fill="var(--gold)" stroke="var(--ink)" stroke-width="1" />
-      <circle cx="0" cy="-7" r="4.5" fill="var(--gold)" />
-    </g>
-  {/if}
 
   <!-- Back Credenza Behind the President with Two Framed Portraits (exact match to g-home.png & hub2.png!) -->
   {#if !evilMode}
@@ -327,6 +256,9 @@
 
   <!-- Grand 3-Bay Carved Mahogany Resolute Desk (exact match to g-home.png, hub2.png & g-evil.png) -->
   <g class="resolute-desk">
+    <!-- Ambient floor contact shadow grounding desk on illustrated carpet -->
+    <ellipse cx="396" cy="328" rx="166" ry="11" fill="var(--ink)" opacity=".28" />
+
     <!-- Top Desktop Cornice & Ledge -->
     <rect x="234" y="218" width="324" height="12" rx="3" fill="var(--art-wood-light)" stroke="var(--ink)" stroke-width="2.4" />
     <rect x="242" y="230" width="308" height="8" fill="var(--art-wood-dark)" stroke="var(--ink)" stroke-width="2" />
@@ -381,6 +313,18 @@
     <g transform="translate(480, 198)">
       <polygon points="0,20 8,6 42,6 36,20" fill="var(--ink-soft)" stroke="var(--ink)" stroke-width="1.8" />
       <rect x="4" y="2" width="34" height="7" rx="3" fill="var(--ink)" stroke="var(--ink)" stroke-width="1.5" />
+    </g>
+  {/if}
+
+  <!-- Reactive Staged Dossier Stack on the Desk (grows with stagedCount so player sees queued actions!) -->
+  {#if dossierLayers.length > 0}
+    <g class="dossier-stack" transform="translate(326, 210)" data-testid="oval-staged-dossiers">
+      {#each dossierLayers as idx (idx)}
+        <g transform="translate({idx * 1.5}, {-idx * 4})">
+          <polygon points="0,8 5,1 32,1 28,8" fill="var(--gold)" stroke="var(--ink)" stroke-width="1.2" />
+          <polygon points="3,6 7,0 29,0 26,6" fill="var(--card)" stroke="var(--ink)" stroke-width="1" />
+        </g>
+      {/each}
     </g>
   {/if}
 
@@ -489,16 +433,25 @@
 <style>
   .sway { transform-box: fill-box; transform-origin: top left; animation: sway 5s ease-in-out infinite; }
   .cloud { animation: drift 26s ease-in-out infinite alternate; }
+  .sunbeam { animation: sunbeam-pulse 6s ease-in-out infinite alternate; }
+  .rain-streak { animation: rain-fall 1.1s linear infinite; }
+  .evil-glow { animation: evil-pulse 4s ease-in-out infinite alternate; }
   .halo { animation: pulse-ring 1.2s ease-in-out infinite alternate; }
   .shred-feed { animation: shred-bob 2.2s ease-in-out infinite alternate; }
   :global([data-calm='true']) .sway,
   :global([data-calm='true']) .cloud,
+  :global([data-calm='true']) .sunbeam,
+  :global([data-calm='true']) .rain-streak,
+  :global([data-calm='true']) .evil-glow,
   :global([data-calm='true']) .halo,
   :global([data-calm='true']) .shred-feed {
     animation: none !important;
   }
   @keyframes sway { 50% { transform: skewY(1.2deg) scaleX(.98); } }
-  @keyframes drift { to { transform: translateX(22px); } }
+  @keyframes drift { to { transform: translateX(18px); } }
+  @keyframes sunbeam-pulse { from { opacity: 0.55; } to { opacity: 0.95; } }
+  @keyframes rain-fall { from { stroke-dashoffset: 20; } to { stroke-dashoffset: 0; } }
+  @keyframes evil-pulse { from { opacity: 0.12; } to { opacity: 0.28; } }
   @keyframes pulse-ring { from { opacity: 0.25; transform: scale(0.9); } to { opacity: 0.85; transform: scale(1.25); } }
   @keyframes shred-bob { from { transform: translateY(-2px); } to { transform: translateY(3px); } }
 </style>

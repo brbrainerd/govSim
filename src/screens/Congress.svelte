@@ -28,6 +28,7 @@
 
   let showingFilibuster = $state(false);
   let showingAmendment = $state(false);
+  let compactDeals = $state(false);
 
   const filibusterRule = $derived(session.draft.filibusterRule ?? session.current.filibusterRule ?? 'sixty_vote');
   const filibusterInfo = $derived(FILIBUSTER_RULES_CATALOG[filibusterRule]);
@@ -71,6 +72,16 @@
             Edit in Budget →
           </button>
         {/if}
+        <button
+          type="button"
+          class="edit-bill-link"
+          data-testid="congress-progressive-toggle"
+          aria-pressed={compactDeals}
+          onclick={() => (compactDeals = !compactDeals)}
+          title="Toggle between compact vote-count deal cards and full trade-off notes"
+        >
+          {compactDeals ? 'Show Deal Trade-Offs ▾' : 'Compact Deals ▴'}
+        </button>
         {#if onOpenMyth && session.showMyths && !session.hasResolvedMyth('veto_line_item')}
           <button
             type="button"
@@ -139,7 +150,23 @@
   {/snippet}
   {#snippet next()}
     <div class="card info" aria-live="polite">
-      <span class="label">What it means</span>
+      <div class="info-head-row">
+        <span class="label">What it means</span>
+        <span
+          class="clearing-pill"
+          class:ready={Boolean(vote?.passed) || (!vote && whip.short === 0)}
+          class:warn={Boolean(vote && !vote.passed) || (!vote && whip.short > 0)}
+          data-testid="congress-clearing-banner"
+        >
+          {#if vote}
+            {vote.passed ? `ENACTED (${vote.total}/218) ✓` : `BLOCKED (${vote.total}/218) ✗`}
+          {:else if whip.short === 0}
+            PASSES ({whip.total}/{TO_PASS}) ✓
+          {:else}
+            SHORT {whip.short} VOTES ⚠
+          {/if}
+        </span>
+      </div>
       {#if session.over}
         <b>Your term is over</b><span class="line">Congress has gone home.</span>
       {:else if vote}
@@ -185,7 +212,9 @@
       <div class="card deal" title={dMeta.whyClick} data-testid={`deal-card-${d.id}`}>
         <div>
           <b><CivicEmblem kind={dMeta.emoji} size={13} /> {session.vocabMode === 'wonk' ? dMeta.wonkLabel : d.title}</b>
-          <span><CivicEmblem kind="up" size={11} /> {dMeta.upside} · <CivicEmblem kind="warn" size={11} /> {dMeta.catchText}</span>
+          {#if !compactDeals}
+            <span><CivicEmblem kind="up" size={11} /> {dMeta.upside} · <CivicEmblem kind="warn" size={11} /> {dMeta.catchText}</span>
+          {/if}
         </div>
         <button class="btn" disabled={done || !session.canDeal(d.id)} onclick={() => session.makeDeal(d.id)}>{done ? 'Done' : `${d.cost} clout`}</button>
       </div>
@@ -264,6 +293,28 @@
   .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--ink); margin-right: 4px; }
   .legend b { color: var(--ink); }
   .info { display: flex; flex-direction: column; gap: 2px; padding: clamp(6px, 0.9vh, 10px) clamp(8px, 1vw, 12px); }
+  .info-head-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .clearing-pill {
+    font: 800 9.5px/1 var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .clearing-pill.ready {
+    background: var(--sage-tint);
+    border-color: var(--sage-dark);
+    color: var(--ink);
+  }
+  .clearing-pill.warn {
+    background: var(--paper-warm);
+    border-color: var(--alert);
+    color: var(--ink);
+  }
   .info b { font: 700 clamp(16px, 1.35vw, 21px)/1.15 var(--font-display); }
   .line { font: 500 clamp(12px, 0.95vw, 14.5px)/1.2 var(--font-body); color: var(--ink-soft); max-width: 45ch; }
   .good { color: var(--color-good-fg); }

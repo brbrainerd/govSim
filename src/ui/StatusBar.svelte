@@ -148,7 +148,7 @@
           {#if trayOpen}
             <div class="staged-popover" data-testid="staged-decisions-popover" role="region" aria-label="Staged decisions this turn">
               <div class="popover-head">
-                <b>This turn's queue</b>
+                <b>Clearing this turn</b>
                 {#if stagedActions.length > 0 && onClearStaged}
                   <button
                     type="button"
@@ -164,7 +164,7 @@
                 {/if}
               </div>
               {#if stagedActions.length === 0}
-                <span class="empty-staged">No decisions queued yet.</span>
+                <span class="empty-staged">No decisions queued — quarter runs on autopilot.</span>
               {:else}
                 <ul class="staged-list">
                   {#each stagedActions as item (item.id)}
@@ -180,7 +180,9 @@
                         }}
                       >
                         <span>{item.label}</span>
-                        <span class="jump-arrow" aria-hidden="true">→</span>
+                        <span class="staged-status-tag" class:warn-tag={item.warning}>
+                          {item.warning ? 'UNSENT !' : 'CLEARS ✓'}
+                        </span>
                       </button>
                     </li>
                   {/each}
@@ -238,7 +240,14 @@
     </div>
     <div class="next">
       <button class="stamp" onclick={onNextTurn} disabled={gameState.turn >= TOTAL_TURNS}>Next turn</button>
-      <div class="next-sub">
+      <div class="next-sub" data-testid="next-turn-clearing-sub">
+        {#if hasUnsentWarning}
+          <span class="sub-warn">! 1 unsent</span>
+          <span class="sep">·</span>
+        {:else if stagedActions.length > 0}
+          <span class="sub-clear">✓ {stagedActions.length} clearing</span>
+          <span class="sep">·</span>
+        {/if}
         <span>3 mo</span>
         {#if onFastForward}
           <span class="sep">·</span>
@@ -370,9 +379,25 @@
     border-color: var(--alert);
     color: var(--alert);
   }
+  .staged-status-tag {
+    font: 800 9px/1 var(--font-ui);
+    letter-spacing: 0.04em;
+    padding: 2px 5px;
+    border-radius: 3px;
+    background: var(--sage-dark);
+    color: var(--card);
+    flex-shrink: 0;
+  }
+  .staged-status-tag.warn-tag {
+    background: var(--alert);
+    color: var(--card);
+  }
   .when { font: 600 clamp(14px, 1.2vw, 18px) var(--font-display); color: var(--ink); white-space: nowrap; }
   .next { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; }
   .next-sub { display: flex; align-items: center; gap: 5px; font: 400 12px var(--font-body); color: var(--ink-soft); white-space: nowrap; }
+  .sub-warn { font: 700 11px/1 var(--font-ui); color: var(--alert); }
+  .sub-clear { font: 700 11px/1 var(--font-ui); color: var(--sage-dark); }
+  :global([data-theme='evil']) .sub-clear { color: var(--ink); }
   .skip-btn {
     background: none;
     border: none;

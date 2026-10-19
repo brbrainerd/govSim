@@ -51,6 +51,8 @@ interface DomMetrics {
   courtBenchAboveFold: boolean;
   porticoHeroHeightPx: number;
   rawEmojiCountInCards: number;
+  hasLayeredEnvPlate?: boolean;
+  hasTurnAgendaCard?: boolean;
 }
 
 interface CaptureRecord {
@@ -225,6 +227,11 @@ async function collectDomMetrics(page: Page, vp: ViewportSpec): Promise<DomMetri
           if (matches) rawEmojiCountInCards += matches.length;
         });
 
+      const hasLayeredEnvPlate = Boolean(
+        document.querySelector('[data-testid="oval-env-plate"], [data-testid="newgame-env-plate"]'),
+      );
+      const hasTurnAgendaCard = Boolean(document.querySelector('[data-testid="turn-agenda-card"]'));
+
       return {
         viewportWidth: width,
         viewportHeight: height,
@@ -243,6 +250,8 @@ async function collectDomMetrics(page: Page, vp: ViewportSpec): Promise<DomMetri
         courtBenchAboveFold,
         porticoHeroHeightPx,
         rawEmojiCountInCards,
+        hasLayeredEnvPlate,
+        hasTurnAgendaCard,
       };
     },
     { width: vp.width, height: vp.height },
@@ -348,7 +357,7 @@ async function runCaptureStage(stage: 'before' | 'after'): Promise<void> {
           dom,
         });
         console.log(
-          `[cv:${stage}] ${spec.id} @ ${vp.label} -> cardCream=${dom.cardIsCreamParchment} (lum=${dom.cardLuminance}), strokes=${dom.characterOuterStrokeCount}, chyronOverlap=${dom.chyronOverlapsScenePx}px, fed/court=${dom.fedPortraitAboveFold}/${dom.courtBenchAboveFold}, emojis=${dom.rawEmojiCountInCards}`,
+          `[cv:${stage}] ${spec.id} @ ${vp.label} -> envPlate=${dom.hasLayeredEnvPlate}, agendaCard=${dom.hasTurnAgendaCard}, outerOverflow=${dom.outerOverflowPx}px, cardCream=${dom.cardIsCreamParchment}, strokes=${dom.characterOuterStrokeCount}, emojis=${dom.rawEmojiCountInCards}`,
         );
       }
 
@@ -420,14 +429,14 @@ async function buildComparisonSheet(
         ctx.drawImage(img, x, y, panelW, panelH);
 
         ctx.fillStyle = badgeColor;
-        ctx.fillRect(x, y, 240, 28);
+        ctx.fillRect(x, y, 250, 28);
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 14px sans-serif';
         ctx.fillText(label, x + 10, y + 19);
       };
 
-      drawPanel(imgBefore, 0, 'BEFORE (v1.0 Baseline)', '#B63A2B');
-      drawPanel(imgAfter, 1, 'AFTER (v1.1 Remediated)', '#2E6B4E');
+      drawPanel(imgBefore, 0, 'BEFORE (v1.1 Baseline)', '#B63A2B');
+      drawPanel(imgAfter, 1, 'AFTER (v1.2 Layered & Clear)', '#2E6B4E');
       if (imgTarget) {
         drawPanel(imgTarget, 2, 'DESIGN TARGET (.design-targets)', '#8A6718');
       }
@@ -463,11 +472,11 @@ async function runCompare(): Promise<void> {
   const page = await browser.newPage();
 
   const mdLines: string[] = [
-    '# Computer-Vision Before/After Flywheel Report (`v1.1`)',
+    '# Computer-Vision Before/After Flywheel Report (`v1.2`)',
     '',
     `Generated: ${new Date().toISOString()}`,
     '',
-    '| Surface | Viewport | Card Parchment (`B -> A`) | Warm Cream Ratio (`B -> A`) | Outer Ink Strokes (`B -> A`) | Chyron Overlap (`B -> A`) | Fed/Court Above Fold (`B -> A`) | Raw Emojis (`B -> A`) |',
+    '| Surface | Viewport | Layered Env Plate (`B -> A`) | Turn Agenda Card (`B -> A`) | Outer Scroll (`B -> A`) | Card Parchment (`B -> A`) | Outer Ink Strokes (`B -> A`) | Raw Emojis (`B -> A`) |',
     '|---|---|---|---|---|---|---|---|',
   ];
 
@@ -483,7 +492,12 @@ async function runCompare(): Promise<void> {
       ? readFileSync(afterRec.targetPath).toString('base64')
       : null;
 
-    const summary = `creamCard: ${beforeRec.dom.cardIsCreamParchment} -> ${afterRec.dom.cardIsCreamParchment} | creamPx: ${beforeRec.pixel.warmCreamPixelRatio} -> ${afterRec.pixel.warmCreamPixelRatio} | strokes: ${beforeRec.dom.characterOuterStrokeCount} -> ${afterRec.dom.characterOuterStrokeCount} | overlap: ${beforeRec.dom.chyronOverlapsScenePx}px -> ${afterRec.dom.chyronOverlapsScenePx}px | emojis: ${beforeRec.dom.rawEmojiCountInCards} -> ${afterRec.dom.rawEmojiCountInCards}`;
+    const bEnv = Boolean(beforeRec.dom.hasLayeredEnvPlate);
+    const aEnv = Boolean(afterRec.dom.hasLayeredEnvPlate);
+    const bAgenda = Boolean(beforeRec.dom.hasTurnAgendaCard);
+    const aAgenda = Boolean(afterRec.dom.hasTurnAgendaCard);
+
+    const summary = `envPlate: ${bEnv} -> ${aEnv} | agendaCard: ${bAgenda} -> ${aAgenda} | scroll: ${beforeRec.dom.outerOverflowPx}px -> ${afterRec.dom.outerOverflowPx}px | creamCard: ${afterRec.dom.cardIsCreamParchment} | strokes: ${afterRec.dom.characterOuterStrokeCount} | emojis: ${afterRec.dom.rawEmojiCountInCards}`;
 
     const sheetBuf = await buildComparisonSheet(
       page,
@@ -498,7 +512,7 @@ async function runCompare(): Promise<void> {
     writeFileSync(join(compareDir, sheetName), sheetBuf);
 
     mdLines.push(
-      `| **${afterRec.surfaceId}** | \`${afterRec.viewport}\` | \`${beforeRec.dom.cardIsCreamParchment}\` → \`${afterRec.dom.cardIsCreamParchment}\` | \`${beforeRec.pixel.warmCreamPixelRatio}\` → \`${afterRec.pixel.warmCreamPixelRatio}\` | \`${beforeRec.dom.characterOuterStrokeCount}\` → \`${afterRec.dom.characterOuterStrokeCount}\` | \`${beforeRec.dom.chyronOverlapsScenePx}px\` → \`${afterRec.dom.chyronOverlapsScenePx}px\` | \`${beforeRec.dom.fedPortraitAboveFold}/${beforeRec.dom.courtBenchAboveFold}\` → \`${afterRec.dom.fedPortraitAboveFold}/${afterRec.dom.courtBenchAboveFold}\` | \`${beforeRec.dom.rawEmojiCountInCards}\` → \`${afterRec.dom.rawEmojiCountInCards}\` |`,
+      `| **${afterRec.surfaceId}** | \`${afterRec.viewport}\` | \`${bEnv}\` → \`${aEnv}\` | \`${bAgenda}\` → \`${aAgenda}\` | \`${beforeRec.dom.outerOverflowPx}px\` → \`${afterRec.dom.outerOverflowPx}px\` | \`${beforeRec.dom.cardIsCreamParchment}\` → \`${afterRec.dom.cardIsCreamParchment}\` | \`${beforeRec.dom.characterOuterStrokeCount}\` → \`${afterRec.dom.characterOuterStrokeCount}\` | \`${beforeRec.dom.rawEmojiCountInCards}\` → \`${afterRec.dom.rawEmojiCountInCards}\` |`,
     );
   }
 

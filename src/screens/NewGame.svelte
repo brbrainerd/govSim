@@ -339,80 +339,55 @@
       >
         <svg viewBox="0 0 320 185" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
           <rect width="320" height="185" fill={evilMode ? 'var(--ink)' : 'var(--paper-warm)'} />
+          <!-- LAYER 0: Pre-Generated Vintage Americana White House Portico Plate -->
+          <image
+            href="/assets/environments/newgame-portico-bg.jpg"
+            x="0"
+            y="0"
+            width="320"
+            height="185"
+            preserveAspectRatio="xMidYMid slice"
+            data-testid="newgame-env-plate"
+          />
+          {#if evilMode}
+            <!-- Noir crimson-amber wash over portico when Satirical Evil Mode is active -->
+            <rect width="320" height="185" fill="var(--alert-dark)" opacity=".38" />
+          {/if}
+
+          <!-- LAYER 1: Animated Inauguration Sky Searchlights -->
+          <g class="searchlights" opacity={evilMode ? '.22' : '.16'}>
+            <polygon points="34,165 82,0 114,0 52,165" fill="var(--gold)" />
+            <polygon points="286,165 206,0 238,0 268,165" fill="var(--gold)" />
+          </g>
+
           <!-- Swallowtail govSim ribbon banner (g-newgame.png) -->
-          <polygon points="18,22 54,18 46,32 54,44 18,42 28,32" fill={evilMode ? 'var(--alert-dark)' : 'var(--ink-soft)'} stroke="var(--ink)" stroke-width="1.8" />
-          <polygon points="302,22 266,18 274,32 266,44 302,42 292,32" fill={evilMode ? 'var(--alert-dark)' : 'var(--ink-soft)'} stroke="var(--ink)" stroke-width="1.8" />
-          <path d="M40 12 Q160 1 280 12 L272 40 Q160 28 48 40 Z" fill={evilMode ? 'var(--alert)' : 'var(--ink)'} stroke="var(--ink)" stroke-width="2" />
-          <circle cx="66" cy="25" r="4" fill="var(--gold)" />
-          <circle cx="254" cy="25" r="4" fill="var(--gold)" />
-          <text x="160" y="29" text-anchor="middle" font-family="var(--font-display)" font-size="18.5" font-weight="800" fill="var(--card)">
+          <polygon points="18,20 54,16 46,30 54,42 18,40 28,30" fill={evilMode ? 'var(--alert-dark)' : 'var(--ink-soft)'} stroke="var(--ink)" stroke-width="1.8" />
+          <polygon points="302,20 266,16 274,30 266,42 302,40 292,30" fill={evilMode ? 'var(--alert-dark)' : 'var(--ink-soft)'} stroke="var(--ink)" stroke-width="1.8" />
+          <path d="M40 10 Q160 0 280 10 L272 38 Q160 26 48 38 Z" fill={evilMode ? 'var(--alert)' : 'var(--ink)'} stroke="var(--ink)" stroke-width="2" />
+          <circle cx="66" cy="23" r="4" fill="var(--gold)" />
+          <circle cx="254" cy="23" r="4" fill="var(--gold)" />
+          <text x="160" y="27" text-anchor="middle" font-family="var(--font-display)" font-size="18.5" font-weight="800" fill="var(--card)">
             {evilMode ? 'govSim · EVIL' : 'govSim'}
           </text>
 
-          <!-- Three waving US flags on roof (left wing, center pediment, right wing) -->
-          {#each [
-            { x: 64, y: 49, w: 14, h: 8 },
-            { x: 160, y: 34, w: 18, h: 10 },
-            { x: 256, y: 49, w: 14, h: 8 },
-          ] as fl (fl.x)}
-            <line x1={fl.x} y1={fl.y} x2={fl.x} y2={fl.y + 18} stroke="var(--ink)" stroke-width="1.6" />
-            <circle cx={fl.x} cy={fl.y} r="1.8" fill="var(--gold)" stroke="var(--ink)" stroke-width="0.9" />
-            <rect x={fl.x + 1} y={fl.y + 1} width={fl.w} height={fl.h} rx="1" fill="var(--alert)" stroke="var(--ink)" stroke-width="1.1" />
-            <line x1={fl.x + 1} y1={fl.y + 1 + fl.h * 0.35} x2={fl.x + 1 + fl.w} y2={fl.y + 1 + fl.h * 0.35} stroke="var(--card)" stroke-width="1.4" />
-            <line x1={fl.x + 1} y1={fl.y + 1 + fl.h * 0.7} x2={fl.x + 1 + fl.w} y2={fl.y + 1 + fl.h * 0.7} stroke="var(--card)" stroke-width="1.4" />
-            <rect x={fl.x + 1} y={fl.y + 1} width={fl.w * 0.44} height={fl.h * 0.55} fill="var(--ink)" />
-          {/each}
-
-          <!-- White House roof balustrade railing -->
-          <rect x="26" y="64" width="268" height="8" fill="var(--card)" stroke="var(--ink)" stroke-width="1.5" />
-          {#each [36, 48, 60, 72, 84, 236, 248, 260, 272, 284] as bx (bx)}
-            <line x1={bx} y1="64" x2={bx} y2="72" stroke="var(--ink)" stroke-width="1.2" />
-          {/each}
-
-          <!-- Neoclassical White House facade & triangular pediment -->
-          <rect x="22" y="72" width="276" height="80" fill="var(--card)" stroke="var(--ink)" stroke-width="2" />
-          <polygon points="82,72 160,46 238,72" fill="var(--card)" stroke="var(--ink)" stroke-width="2" />
-          <polygon points="94,70 160,50 226,70" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.3" />
-          <circle cx="160" cy="62" r="5" fill="var(--card)" stroke="var(--ink)" stroke-width="1.3" />
-
-          <!-- Side wings pedimented windows -->
-          {#each [36, 60, 246, 270] as wx (wx)}
-            <rect x={wx} y="82" width="14" height="18" rx="1" fill="var(--ink)" stroke="var(--ink)" stroke-width="1" />
-            <line x1={wx + 7} y1="82" x2={wx + 7} y2="100" stroke="var(--card)" stroke-width="1" />
-            <line x1={wx} y1="91" x2={wx + 14} y2="91" stroke="var(--card)" stroke-width="1" />
-            <polygon points={`${wx - 2},112 ${wx + 7},106 ${wx + 16},112`} fill="var(--paper)" stroke="var(--ink)" stroke-width="1.1" />
-            <rect x={wx} y="112" width="14" height="24" rx="1" fill="var(--ink)" stroke="var(--ink)" stroke-width="1" />
-            <line x1={wx + 7} y1="112" x2={wx + 7} y2="136" stroke="var(--card)" stroke-width="1" />
-            <line x1={wx} y1="124" x2={wx + 14} y2="124" stroke="var(--card)" stroke-width="1" />
-          {/each}
-
-          <!-- Central doorway fanlight behind President -->
-          <path d="M144 148 L144 106 A 16 14 0 0 1 176 106 L176 148 Z" fill="var(--ink)" />
-          <path d="M147 106 A 13 11 0 0 1 173 106 Z" fill="var(--gold)" opacity="0.7" />
-
-          <!-- Four fluted Ionic portico columns -->
-          {#each [94, 128, 180, 214] as cx (cx)}
-            <rect x={cx} y="72" width="12" height="76" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.7" />
-            <line x1={cx + 4} y1="76" x2={cx + 4} y2="144" stroke="var(--ink)" stroke-width="0.7" opacity="0.45" />
-            <line x1={cx + 8} y1="76" x2={cx + 8} y2="144" stroke="var(--ink)" stroke-width="0.7" opacity="0.45" />
-            <rect x={cx - 3} y="72" width="18" height="5" rx="2" fill="var(--card)" stroke="var(--ink)" stroke-width="1.3" />
-            <rect x={cx - 3} y="143" width="18" height="6" rx="1" fill="var(--card)" stroke="var(--ink)" stroke-width="1.3" />
-          {/each}
-
-          <!-- Lawn / steps foreground -->
-          <rect x="0" y="149" width="320" height="36" fill={evilMode ? 'var(--alert-dark)' : 'var(--paper)'} />
-          <line x1="0" y1="149" x2="320" y2="149" stroke="var(--ink)" stroke-width="2" />
-
-          <!-- Chosen Presidential Character waving (or fanning cash in Evil Mode) -->
+          <!-- LAYER 2: Chosen Presidential Character waving (or fanning cash in Evil Mode) + Inaugural Podium -->
           <Character
             look={activeLook}
             pose={evilMode ? 'cash' : 'wave'}
             prop={evilMode ? 'cash_fan' : null}
             mood={evilMode ? 'scheming' : 'confident'}
-            x={124}
-            y={58}
-            scale={0.58}
+            x={122}
+            y={50}
+            scale={0.62}
           />
+          <!-- Inaugural Mahogany Podium & Presidential Seal in Foreground -->
+          <g transform="translate(132, 138)">
+            <polygon points="0,6 6,0 50,0 56,6" fill="var(--art-wood-light)" stroke="var(--ink)" stroke-width="1.5" />
+            <rect x="4" y="6" width="48" height="42" fill="var(--art-wood)" stroke="var(--ink)" stroke-width="1.6" />
+            <rect x="9" y="11" width="38" height="32" fill="var(--art-wood-dark)" opacity=".45" />
+            <circle cx="28" cy="24" r="9.5" fill="var(--art-carpet)" stroke="var(--gold)" stroke-width="1.6" />
+            <path d="M21 23 Q28 18 35 23 Q28 28 21 23 Z" fill="var(--gold)" />
+          </g>
         </svg>
       </div>
 

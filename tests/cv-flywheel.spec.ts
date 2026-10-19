@@ -21,11 +21,12 @@ test.describe('Milestone v1.1 Visual Fidelity, Evil Mode Palette & CV Flywheel I
         document.documentElement.setAttribute('data-calm', 'true');
       });
 
-      // 1. NewGame: enlarged portico banner & borderless characters
+      // 1. NewGame: enlarged portico banner, layered environment plate, & borderless characters
       const porticoHeight = await page
         .locator('[data-testid="newgame-portico-banner"]')
         .evaluate((el) => Math.round(el.getBoundingClientRect().height));
       expect(porticoHeight).toBeGreaterThanOrEqual(200);
+      await expect(page.locator('[data-testid="newgame-env-plate"]')).toBeAttached();
 
       // Select Evil Mode + Unlock All and start game
       await page.locator('input[name="party"]').first().check();
@@ -39,7 +40,11 @@ test.describe('Milestone v1.1 Visual Fidelity, Evil Mode Palette & CV Flywheel I
         await skipDraft.click();
       }
 
-      // 2. Oval Office (Evil Mode): non-inverted warm cream parchment card + dark ink, zero outer strokes, zero chyron overlap
+      // 2. Oval Office (Evil Mode): layered environment plate, TurnAgendaCard, non-inverted warm cream parchment card + dark ink, zero outer strokes, zero chyron overlap
+      await expect(page.locator('[data-testid="oval-env-plate"]')).toBeAttached();
+      await expect(page.locator('[data-testid="turn-agenda-card"]')).toBeVisible();
+      await expect(page.locator('[data-testid="clearing-summary-footer"]')).toBeVisible();
+
       const evilMetrics = await page.evaluate(() => {
         const parseRgb = (str: string): [number, number, number] => {
           const m = str.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
@@ -48,7 +53,7 @@ test.describe('Milestone v1.1 Visual Fidelity, Evil Mode Palette & CV Flywheel I
         const lum = ([r, g, b]: [number, number, number]): number =>
           0.2126 * r + 0.7152 * g + 0.0722 * b;
 
-        const cardEl = document.querySelector('.card.info, .card.tile') as HTMLElement;
+        const cardEl = document.querySelector('[data-testid="turn-agenda-card"], .card.tile') as HTMLElement;
         const cardLum = lum(parseRgb(getComputedStyle(cardEl).backgroundColor));
         const inkLum = lum(parseRgb(getComputedStyle(cardEl).color));
         const canvasLum = lum(parseRgb(getComputedStyle(document.body).backgroundColor));
@@ -95,6 +100,15 @@ test.describe('Milestone v1.1 Visual Fidelity, Evil Mode Palette & CV Flywheel I
 
       expect(powersMetrics.fedAboveFold).toBe(true);
       expect(powersMetrics.courtAboveFold).toBe(true);
+
+      // 4. Navigate to Budget & Congress: verify progressive disclosure toggles and clearing banners
+      await page.locator('nav button.tab', { hasText: /Budget/i }).click();
+      await expect(page.locator('[data-testid="budget-progressive-toggle"]')).toBeVisible();
+      await expect(page.locator('[data-testid="budget-clearing-banner"]')).toBeVisible();
+
+      await page.locator('nav button.tab', { hasText: /Congress/i }).click();
+      await expect(page.locator('[data-testid="congress-progressive-toggle"]')).toBeVisible();
+      await expect(page.locator('[data-testid="congress-clearing-banner"]')).toBeVisible();
     });
   }
 });

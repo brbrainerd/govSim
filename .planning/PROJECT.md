@@ -83,13 +83,17 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 - ✓ Evil Mode Heist Relics & Fixer Syndicate draft pool (`🏝️ Shell Network`, `🕵️ Fixer Ring`, `🏛️ Captured Regulators`), 5 Presidential Playstyle Archetypes (`src/content/archetypes.ts`), and persistent Silver & Gold Mastery Stars (`HEIST-01..02`, `ARCH-01..02`) — v1.0
 - ✓ Contextually de-emphasized 24-card Civics Myth catalog (`8 left`, `8 right`, `8 both`) with `By the Numbers`, `Historical Precedent`, `Why the Myth Persists`, and a persistent `showMyths` hide toggle across all surfaces — v1.0
 - ✓ 100-seed Monte Carlo balance verification across Standard, Classic Sim, and all 5 Archetypes, plus multi-viewport (`1376×768` / `1280×720`) computer-vision and 77-test Playwright E2E verification (`AUDIT-01..02`) — v1.0
+- ✓ Reusable Before/After Screenshot Computer-Vision Flywheel (`scripts/cv-flywheel.ts`, `pnpm cv:flywheel`) with quantitative DOM/pixel telemetry and side-by-side **Before | After | Target** comparison sheets (`CV-01..03`) — v1.1
+- ✓ Non-inverted Evil Mode palette (`src/design/tokens.ts`, `StatusBar.svelte`, `Ribbon.svelte`, `OvalOfficeScene.svelte`) matching `.design-targets/g-evil.png` with dark espresso `--canvas` and warm cream parchment `--card` (`EVIL-PAL-01..03`) — v1.1
+- ✓ Borderless flat-vector pill-pawn character rig (`Character.svelte`, `CharacterPortrait.svelte`, `FedPortrait.svelte`) with smooth unadorned dome heads and non-overlapping chyron bar (`CHAR-01..03`, `OVAL-01..02`) — v1.1
+- ✓ Compact 5×2 Executive Orders grid with above-the-fold `FedPortrait` + `CourtBench` on `Powers.svelte`, enlarged `NewGame.svelte` portico banner, and zero raw Unicode emojis (`GUI-01..03`) — v1.1
 
-### Active (Milestone v1.1 — Visual Fidelity, Evil Mode Palette & Computer-Vision Flywheel)
+### Active (Milestone v1.2 — Layered Environment Art, Civ-Style Turn Triggers & Progressive Decision Clarity)
 
-- [ ] Reusable Before/After Screenshot Computer-Vision Flywheel (`scripts/cv-flywheel.ts`) with quantitative `sharp` + DOM/SVG telemetry and side-by-side **Before | After | Target** comparison sheets (`CV-01..03`)
-- [ ] Non-inverted Evil Mode palette (`src/design/tokens.ts`, `StatusBar.svelte`, `ScreenLayout.svelte`, `OvalOfficeScene.svelte`) matching `.design-targets/g-evil.png` (dark espresso outer `--paper`, warm antique-brass top bar + crimson ribbon, warm cream `--card` with dark `--ink`, olive-brass walls, crimson drapes, and glowing banker's lamp + crisp white shredder paper) (`EVIL-PAL-01..02`)
-- [ ] Borderless flat-vector pill-pawn character rig (`Character.svelte`, `CharacterPortrait.svelte`, `FedPortrait.svelte`, `CourtBench.svelte`) and clean `OvalOfficeScene.svelte` / `OvalOffice.svelte` stage matching `.design-targets/D.png`, `cast.png`, `uikit.png`, `g-home.png`, and `hub2.png` (`PAWN-01..02`)
-- [ ] Above-the-fold `FedPortrait` + `CourtBench` surfacing and `<CivicEmblem>` zero-emoji sweep on `Powers.svelte` (`g-powers.png`) and enlarged White House inauguration poster stage on `NewGame.svelte` (`g-newgame.png`) (`SURF-01..02`)
+- [ ] Layered generated vintage Americana environment plates (`oval-day-bg.jpg`, `oval-evil-bg.jpg`, `newgame-portico-bg.jpg`) + animated weather/lighting midground + dimensional foreground character/desk rigs (`ENV-01..03`)
+- [ ] Civ-style per-turn trigger cadence (`activeTurnTrigger` — max 1 spotlight trigger per turn) and smart turn-blocker stamp button in `StatusBar.svelte` (`RESOLVE CRISIS !`, `SEND BILL TO CONGRESS →`, `CALL FLOOR VOTE →`, `END QUARTER`) (`TRIG-01..03`)
+- [ ] `★ PENDING & CLEARING THIS TURN ★` stacked index card (`TurnAgendaCard.svelte` matching `uikit.png` / `hub2.png`) with per-item clearing status (`CLEARS THIS TURN ✓`, `SHORT VOTES ⚠`, `DRAFT UNSENT !`), 1-click staging, and decluttered 3-card `OvalOffice.svelte` right column (`CLEAR-01..03`)
+- [ ] Progressive disclosure on `Budget.svelte` and `Congress.svelte` (core kitchen-table levers + expandable advanced/institutional drawers matching `g-budget.png` / `g-congress.png`) and Before/After CV Flywheel verification (`PROG-01..03`)
 
 ### Out of Scope
 
@@ -101,9 +105,9 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 
 ## Context
 
-- Shipped Milestone v1.0 ("High-Craft Character Art, Living Animations, UI/UX Alignment & Incremental Mandate Synergies") with 534 unit/property/balance/readability tests across 89 files, 77 Playwright E2E tests across 32 spec files, 0 axe violations, 0 default network egress, and 8/8 cross-browser determinism hashes.
+- Shipped Milestone v1.1 ("Visual Fidelity, Evil Mode Palette & Computer-Vision Flywheel") with 534 unit/property/balance/readability tests across 89 files, 79 Playwright E2E tests across 33 spec files, 0 axe violations, 0 default network egress, and 8/8 cross-browser determinism hashes.
 - Pure client application (TypeScript + Svelte 5 runes + Vite), zero backend dependencies, zero telemetry.
-- Visual direction C (Americana poster) with dual theme tokens (Day Americana and Dark Oxblood/Gold/Ink for Evil Mode).
+- Visual direction C (Americana poster) with dual theme tokens (Day Americana and Dark Espresso/Brass/Cream for Evil Mode).
 - Zero outer viewport scrolling across 1376×768 and 1280×720 viewports in both Plain Talk and Policy Wonk modes.
 - Determinism verified 8/8 bit-for-bit across Node, Chromium, Firefox, WebKit (minified and unminified).
 
@@ -147,6 +151,19 @@ A player can make real presidential tradeoffs (budget, Congress, executive power
 | Computer-Vision Screenshot Audit Gate (`1280×720` + `1376×768`) | Catches sub-container clipping, SVG boundary overflows, and speech-bubble collisions that DOM scrollHeight assertions miss | ✓ Good (v1.0) |
 | Continuous 72px Thumb-Head Pawn Silhouette + `<CivicEmblem>` SVGs | Matches `.design-targets/D.png` and `cast.png` pawn proportions and replaces raw Unicode emojis with crisp Americana vector art | ✓ Good (v1.0) |
 | Contextual De-Emphasized 24-Card Myth Surfacing + `showMyths` Toggle | Surfaces myths only when contextually triggered, auto-hides resolved myths, and lets players hide myth UI across all surfaces | ✓ Good (v1.0) |
+| Non-Inverted Evil Mode Palette + Borderless Pill-Pawns | Keeps `--card` warm cream parchment with dark ink inside a dark espresso `--canvas` frame (`g-evil.png`) and removes outer character strokes (`uikit.png`) | ✓ Good (v1.1) |
+| Hybrid Layered Generated Environment Plates + Live SVG Foregrounds | Combines painterly Americana architectural room plates (`oval-day-bg.jpg`, `oval-evil-bg.jpg`, `newgame-portico-bg.jpg`) with live animated SVG weather, props, and character rigs | — Pending (v1.2) |
+| Civ-Style Turn Trigger Cadence + `TurnAgendaCard` Clearing Checklist | Surfaces at most one spotlight trigger per turn, transforms the Turn Stamp into a smart blocker guide, and displays a `★ PENDING & CLEARING ★` index card | — Pending (v1.2) |
+
+## Completed Milestone: v1.1 Visual Fidelity, Evil Mode Palette & Computer-Vision Flywheel (Shipped 2026-10-18)
+
+**Goal:** Build a reusable before/after Screenshot Computer-Vision Flywheel (`scripts/cv-flywheel.ts`), fix Evil Mode's inverted photo-negative palette to match `.design-targets/g-evil.png`, remove cartoon outer borders on character rigs to match `.design-targets/D.png` and `uikit.png`, and bring `FedPortrait` + `CourtBench` above the fold on `Powers.svelte`.
+
+**Delivered:**
+- Reusable before/after Screenshot Computer-Vision Flywheel (`scripts/cv-flywheel.ts`, `pnpm cv:flywheel`, `tests/cv-flywheel.spec.ts`) generating quantitative DOM/pixel telemetry and side-by-side **Before | After | Target** comparison sheets (`CV-01..03`)
+- Non-inverted Evil Mode palette (`tokens.ts`, `StatusBar.svelte`, `Ribbon.svelte`, `OvalOfficeScene.svelte`) with dark espresso `--canvas` (`#1A1410`), antique-brass top bar, crimson ribbon, and warm cream parchment `--card` (`#F5EBD6`) (`EVIL-PAL-01..03`)
+- Borderless flat-vector pill-pawn rigs (`characterOuterStrokeCount: 15 -> 0`), smooth unadorned male dome heads, wider curtains, and non-overlapping chyron strip (`CHAR-01..03`, `OVAL-01..02`)
+- Compact 5×2 Executive Orders grid (`fedPortraitAboveFold: true`, `courtBenchAboveFold: true` at `1280×720`), enlarged `NewGame.svelte` portico banner (`151px -> 223px`), and zero raw Unicode emojis (`rawEmojiCountInCards: 57 -> 0`) (`GUI-01..03`)
 
 ## Completed Milestone: v1.0 High-Craft Character Art, Living Animations, UI/UX Alignment & Incremental Mandate Synergies (Shipped 2026-10-18)
 

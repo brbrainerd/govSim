@@ -69,43 +69,45 @@
     </div>
   </div>
 
-  <div class="highlights">
-    {#if topBenefit}
-      <span class="tag benefit">+{topBenefit.label} (${topBenefit.val}/mo)</span>
-    {/if}
-    {#if topDrag}
-      <span class="tag drag">−{topDrag.label} (${topDrag.val}/mo)</span>
-    {/if}
-    {#if !topBenefit && !topDrag}
-      <span class="tag neutral">Baseline policies in force</span>
+  <div class="card-bottom">
+    <div class="highlights">
+      {#if topBenefit}
+        <span class="tag benefit">+{topBenefit.label} (${topBenefit.val}/mo)</span>
+      {/if}
+      {#if topDrag}
+        <span class="tag drag">−{topDrag.label} (${topDrag.val}/mo)</span>
+      {/if}
+      {#if !topBenefit && !topDrag}
+        <span class="tag neutral">Baseline policies in force</span>
+      {/if}
+    </div>
+
+    {#if onExplore}
+      <button
+        type="button"
+        class="btn explore-btn"
+        onclick={onExplore}
+        aria-label="Explore Household Impact details"
+      >
+        Explore Household Impact →
+      </button>
     {/if}
   </div>
-
-  {#if onExplore}
-    <button
-      type="button"
-      class="btn explore-btn"
-      onclick={onExplore}
-      aria-label="Explore Household Impact details"
-    >
-      Explore Household Impact →
-    </button>
-  {/if}
 </div>
 
 <style>
   .household-card {
-    padding: clamp(6px, 0.9vh, 10px);
+    padding: clamp(5px, 0.7vh, 8px) clamp(7px, 0.8vw, 10px);
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
     background: var(--card);
   }
   .card-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
   .citizen-medallion {
     flex-shrink: 0;
@@ -114,20 +116,20 @@
   .persona-identity {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 0;
     flex: 1;
     min-width: 0;
   }
   .persona-name {
     margin: 0;
-    font: 700 clamp(14px, 1.1vw, 16px)/1.2 var(--font-display);
+    font: 700 clamp(13px, 1vw, 15px)/1.15 var(--font-display);
     color: var(--ink);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .location-pill {
-    font: 600 12px/1.2 var(--font-ui);
+    font: 600 11px/1.15 var(--font-ui);
     color: var(--ink-soft);
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -136,7 +138,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    padding: 4px 8px;
+    padding: 3px 7px;
     border-radius: 6px;
     border: 1.5px solid var(--ink);
     background: var(--paper);
@@ -157,21 +159,29 @@
     color: var(--ink);
   }
   .hero-amount {
-    font: 700 clamp(16px, 1.3vw, 20px)/1 var(--font-ui);
+    font: 700 clamp(15px, 1.2vw, 18px)/1 var(--font-ui);
     letter-spacing: 0.02em;
   }
   .hero-unit {
-    font: 600 11px/1.2 var(--font-ui);
+    font: 600 10px/1.15 var(--font-ui);
     opacity: 0.9;
+  }
+  .card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    flex-wrap: wrap;
   }
   .highlights {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
+    min-width: 0;
   }
   .tag {
-    font: 600 11px/1.2 var(--font-ui);
-    padding: 2px 6px;
+    font: 600 10.5px/1.15 var(--font-ui);
+    padding: 2px 5px;
     border-radius: 4px;
     white-space: nowrap;
   }
@@ -190,11 +200,10 @@
     border: 1px dashed var(--ink-soft);
   }
   .explore-btn {
-    width: 100%;
-    margin-top: 2px;
-    text-align: center;
-    font-size: 13px;
-    padding: 6px 10px;
-    min-height: 32px;
+    padding: 4px 8px;
+    font-size: 11.5px;
+    min-height: 26px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 </style>
