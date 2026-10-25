@@ -14,7 +14,10 @@
     "notices": "node scripts/notices.mjs",
     "determinism": "node scripts/determinism.mjs",
     "guard": "node scripts/guard.ts",
-    "cv:flywheel": "node scripts/cv-flywheel.ts"
+    "cv:flywheel": "node scripts/cv-flywheel.ts",
+    "sync:prod": "node --experimental-strip-types ../ngi.video/scripts/sync-prod-observable.mjs --repo=govSim",
+    "sync:prod:plan": "node --experimental-strip-types ../ngi.video/scripts/sync-prod-observable.mjs --repo=govSim --plan-only",
+    "verify:prod": "node --experimental-strip-types ../ngi.video/scripts/sync-prod-observable.mjs --repo=govSim --verify-only"
   },
   "dependencies": {
     "@fontsource/arvo": "5.3.0",
