@@ -54,6 +54,7 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: GOVSIM_CODE_VERSION=${{ github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4

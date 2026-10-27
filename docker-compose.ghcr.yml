@@ -8,7 +8,6 @@ services:
       - "80"
     environment:
       - GOVSIM_PUBLIC_ORIGIN=https://gsim.ngi.video
-      - GOVSIM_CODE_VERSION=${GOVSIM_CODE_VERSION:-unknown}
     labels:
       - traefik.enable=true
       - traefik.docker.network=coolify
